@@ -1,0 +1,61 @@
+import 'package:drift/drift.dart';
+
+import 'exercise.dart';
+import 'workout_plan.dart';
+
+/// The two tables that record *performed* training (as opposed to the planned
+/// programme in workout_plan.dart).
+///
+/// Shape:
+///   WorkoutSession  ──has many──▶  LoggedSet
+///
+/// A [WorkoutSessions] row is one training session — usually started from a
+/// planned [WorkoutDays], but it keeps its own copy of the day's name so the
+/// history stays readable even if that plan is later edited or deleted.
+/// Each [LoggedSets] row is a single set performed during a session (the
+/// weight lifted and reps done for one exercise).
+
+/// One training session — a workout the user starts, logs sets into, and then
+/// finishes.
+class WorkoutSessions extends Table {
+  IntColumn get id => integer().autoIncrement()();
+
+  /// The planned day this session was started from, if any. Nullable and set
+  /// to null (not cascaded) if that day is deleted, so past sessions survive.
+  IntColumn get dayId => integer()
+      .nullable()
+      .references(WorkoutDays, #id, onDelete: KeyAction.setNull)();
+
+  /// A readable label for the session, snapshotted from the day name at start
+  /// time (e.g. "Push"). Kept on the row so history doesn't depend on the plan.
+  TextColumn get name => text().withLength(min: 1, max: 60)();
+
+  /// When the session was started.
+  DateTimeColumn get startedAt =>
+      dateTime().withDefault(currentDateAndTime)();
+
+  /// When the session was finished. Null while it's still in progress.
+  DateTimeColumn get completedAt => dateTime().nullable()();
+}
+
+/// A single set performed in a session: the weight and reps for one exercise.
+class LoggedSets extends Table {
+  IntColumn get id => integer().autoIncrement()();
+
+  /// Owning session. If the session is deleted, its sets go with it.
+  IntColumn get sessionId =>
+      integer().references(WorkoutSessions, #id, onDelete: KeyAction.cascade)();
+
+  /// Which library exercise this set is for (text FK — exercise ids are slugs).
+  TextColumn get exerciseId => text().references(Exercises, #id)();
+
+  /// 1-based position of this set within its exercise for this session
+  /// (set 1, set 2, …).
+  IntColumn get setNumber => integer()();
+
+  /// Weight lifted. A real number so half-kilo / half-pound plates work.
+  RealColumn get weight => real().withDefault(const Constant(0))();
+
+  /// Reps completed for this set.
+  IntColumn get reps => integer().withDefault(const Constant(0))();
+}
