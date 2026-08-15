@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/accent_color.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/format.dart';
+import '../../../shared/utils/units.dart';
 import '../../exercises/data/exercise_repository.dart';
 import '../../muscle_map/data/muscle_volume_repository.dart';
 import '../../muscle_map/widgets/muscle_map_view.dart';
@@ -132,7 +133,7 @@ class _SummaryBody extends ConsumerWidget {
   }
 }
 
-class _StatsRow extends StatelessWidget {
+class _StatsRow extends ConsumerWidget {
   const _StatsRow({
     required this.duration,
     required this.setCount,
@@ -141,10 +142,14 @@ class _StatsRow extends StatelessWidget {
 
   final Duration duration;
   final int setCount;
+
+  /// In kilograms, as stored.
   final double totalVolume;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unit = ref.watch(weightUnitProvider);
+
     return Row(
       children: [
         Expanded(
@@ -167,7 +172,7 @@ class _StatsRow extends StatelessWidget {
           child: _StatTile(
             icon: Icons.fitness_center,
             label: 'Volume',
-            value: '${formatWeight(totalVolume)} kg',
+            value: formatWeightUnit(totalVolume, unit),
           ),
         ),
       ],
@@ -221,15 +226,16 @@ class _StatTile extends ConsumerWidget {
   }
 }
 
-class _ExerciseSummaryTile extends StatelessWidget {
+class _ExerciseSummaryTile extends ConsumerWidget {
   const _ExerciseSummaryTile({required this.name, required this.sets});
 
   final String name;
   final List<LoggedSet> sets;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final unit = ref.watch(weightUnitProvider);
     final volume = sets.fold<double>(0, (sum, s) => sum + s.weight * s.reps);
     // The "top set" is the heaviest; ties broken by the most reps.
     final topSet = sets.reduce((a, b) {
@@ -258,8 +264,9 @@ class _ExerciseSummaryTile extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            'Top set ${formatWeight(topSet.weight)} kg × ${topSet.reps}  •  '
-            '${formatWeight(volume)} kg total',
+            'Top set ${formatWeightUnit(topSet.weight, unit)} '
+            '× ${topSet.reps}  •  '
+            '${formatWeightUnit(volume, unit)} total',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),

@@ -2,98 +2,161 @@
 
 Track progress here. Update after each session.
 
+---
+
 ## 🔴 Not started
 
-### Phase 7 — Calories & Habit Tracker
-- [ ] Weekly overview: calories + habit completion rate chart (fl\_chart)
+### Phase 2b — Exercise Library Erweiterung 🔥 PRIORITÄT
+- [ ] "Add Exercise" Button im Exercises-Tab (FAB oder Header-Button)
+- [ ] Screen: Custom Exercise erstellen (Name, Kategorie, Muskelgruppen, optional GIF aus Galerie)
+- [ ] Custom Exercises in Drift speichern (`isCustom` flag auf Exercise model)
+- [ ] Custom Exercises editieren + löschen (Swipe-to-delete oder Long-press Menü)
+- [ ] Mehrere Übungen gleichzeitig zu einem Split-Tag hinzufügen (Multi-Select im Exercise-Tab, dann "Add to Day" Button)
+- [ ] Übungen direkt aus dem Exercises-Tab zu einem Workout-Tag hinzufügen (Ziel-Tag auswählbar per Bottom Sheet)
+- [ ] Seed Data erweitern — mindestens 60–80 Übungen total
+  - [ ] Chest: Cable Fly, Incline DB Press, Dips, Pec Deck
+  - [ ] Back: Cable Row, T-Bar Row, Lat Pullover, Face Pull
+  - [ ] Legs: Leg Press, Romanian Deadlift, Leg Curl, Leg Extension, Hip Thrust, Bulgarian Split Squat
+  - [ ] Shoulders: Lateral Raise, Front Raise, Arnold Press, Cable Lateral Raise, Rear Delt Fly
+  - [ ] Arms: Preacher Curl, Hammer Curl, Cable Curl, Skull Crusher, Cable Tricep Pushdown, Overhead Tricep Extension
+  - [ ] Core: Plank, Hanging Leg Raise, Cable Crunch, Ab Wheel Rollout, Russian Twist
+  - [ ] Compound: Barbell Row, Power Clean, Push Press, Farmer's Walk
+- [ ] Filter by Category UX verbessern (Chips, Multi-Select)
+- [ ] Suche verbessern (auch nach Muskelgruppe suchen)
 
-### Phase 8 — Body Measurements & Progress Photos
-- [ ] Define BodyMeasurement model (weight, chest, waist, hips, arms, legs + date)
-- [ ] Build measurements input screen (update any field, auto-timestamp)
-- [ ] Build measurements timeline chart per body part (fl\_chart)
-- [ ] Build progress photos screen (pick from gallery, store local path + date)
-- [ ] Build photo comparison view (side-by-side before/after)
+### Phase 3b — Split Erweiterungen 🔥 PRIORITÄT
+- [ ] Rep Range pro Übung im Split einstellen (z.B. 3×8–12 statt fixer Zahl)
+- [ ] Split-Tage zu Wochentagen zuweisen (Mo–So, auch Rest Day markierbar)
+- [ ] Rest Day Logik: wenn kein Split-Tag für heute → Rest Day anzeigen
 
-### Phase 9 — 1RM Calculator
-- [ ] Build 1RM calculator screen (input: weight + reps)
-- [ ] Implement Epley formula: `1RM = weight × (1 + reps / 30)`
-- [ ] Show results for all major formulas (Epley, Brzycki, Lander) with comparison
-- [ ] Add "estimated 1RM" badge on exercise progress charts using best logged set
-- [ ] Allow manual 1RM entry per exercise for users who test true max
+### Phase 14 — Main Tab (Home) 🔥 PRIORITÄT
+- [ ] Home Tab erstellen (erster Tab in der Bottom Nav)
+- [ ] Zeigt ob heute Rest Day oder Trainingstag ist (basierend auf Split-Wochentag-Zuweisung)
+- [ ] Zeigt den heutigen Workout-Tag: Split-Name, Übungsliste, Rep Ranges
+- [ ] Zeigt was als nächstes kommt (morgiger oder übernächster Trainingstag)
+- [ ] Quick-Start Button: startet direkt die heutige Session
+- [ ] Letzte Workout-Session kurz zusammengefasst (Datum, Volumen, Muscle Map Miniatur)
 
-### Phase 10 — Strength Rank per Exercise
-- [ ] Define strength standard tables per exercise (Beginner / Novice / Intermediate / Advanced / Elite)
-- [ ] Base rank on bodyweight ratio (lifted weight ÷ bodyweight)
-- [ ] Build strength rank screen — shows rank per exercise with progress bar to next tier
-- [ ] Show rank badge on exercise detail screen
-- [ ] Prompt user to enter bodyweight if not set (link to measurements)
+### Phase 15 — Progressive Overload 🔥 PRIORITÄT
+- [ ] Progressive Overload Einstellungen pro Übung (aktivierbar im Split-Builder)
+- [ ] Wöchentliche Gewichtssteigerung konfigurierbar (z.B. +2.5 kg/Woche)
+- [ ] Muskelgruppen-basierte Standardwerte für Steigerungsrate:
+  - Beine (Quad, Glute, Hamstring): +2.5–5 kg/Woche
+  - Rücken (Lat, Trap, Lower Back): +2.5 kg/Woche
+  - Brust: +1.25–2.5 kg/Woche
+  - Schultern: +1.25 kg/Woche
+  - Arme (Bicep, Tricep): +0.5–1.25 kg/Woche
+  - Core: kein Auto-Overload (nur Wiederholungen steigern)
+- [ ] App schlägt beim nächsten Workout automatisch das neue Gewicht vor
+- [ ] Overload-Vorschlag kann manuell überschrieben werden (falls Satz nicht sauber)
+- [ ] Deload-Option: nach N Wochen Steigerung automatisch 10% reduzieren
+
+### Phase 16 — Plate Calculator 🔥 PRIORITÄT
+- [ ] Plate Calculator Screen (erreichbar aus 1RM-Rechner und aktiver Workout-Session)
+- [ ] Input: Zielgewicht + Stange (Standard 20 kg / leichte 15 kg / EZ-Bar 10 kg)
+- [ ] Output: Welche Scheiben auf welche Seite (visuell als Stangen-Diagram)
+- [ ] Verfügbare Scheiben konfigurierbar in Settings (welche Gewichte hat der User)
+- [ ] Unterstützt kg und lbs (folgt der globalen Einheit-Einstellung)
+
+### Phase 17 — UI Overhaul 🔥 PRIORITÄT
+- [ ] Theme-System erweitern: mehrere Themes wählbar (nicht nur Akzentfarbe)
+  - Dark Default (aktuell)
+  - Dark High Contrast
+  - AMOLED Black
+  - Light (optional, later)
+- [ ] Theme-Auswahl in Settings mit Live-Preview
+- [ ] Muscle Map: Contrast Mode hinzufügen
+  - Standard Mode: Heatmap (ein Farbton, Intensität variiert)
+  - Contrast Mode: jede Muskelgruppe hat eine eigene Farbe (wie ein anatomisches Diagramm)
+  - Toggle zwischen Modi per Icon-Button auf der Muscle Map
+- [ ] Scroll Wheel für alle Gewichts-Inputs (Gewichte eintragen, Körpergewicht, Größe)
+  - CupertinoPicker-Style Drum Wheel
+  - kg: 0–300 in 0.25-Schritten; lbs: 0–660 in 0.5-Schritten
+  - Körpergröße: 100–250 cm oder 3'0"–8'2"
+- [ ] Scroll Wheel auch im aktiven Workout für Set-Gewichte (schneller als Tastatur)
+
+### Phase 7b — Calories Tracker (bereinigt)
+- [ ] Habit Tracker komplett entfernen (Screen, DB-Tabelle `HabitEntry`, alle Provider + Routes)
+- [ ] Streak-Zähler auf Workout-Streak umbauen (Tage in Folge trainiert — basierend auf geloggten Sessions)
+- [ ] Kalorien-Log bleibt bestehen (Mahlzeiten, Makros, Tagesziel)
+- [ ] Wochenübersicht: nur Kalorien-Chart (Habit-Chart entfernen)
 
 ### Phase 11 — Android Home Screen Widgets
-- [ ] Research Glance API compatibility with current Flutter version
-- [ ] Build "Today's Workout" widget — shows split name + exercises for today
-- [ ] Build "Weekly Volume" widget — total sets/weight this week
-- [ ] Build "Streak" widget — current gym habit streak
-- [ ] Test on physical device, handle widget refresh on workout completion
+- [x] Research Glance API — `glance-appwidget:1.2.0-rc01`, `home_widget: ^0.9.3`
+- [ ] "Today's Workout" Widget — zeigt heutigen Split-Tag + Übungen (nutzt Wochentag-Zuweisung aus Phase 3b)
+- [ ] "Weekly Volume" Widget — Gesamtvolumen diese Woche
+- [ ] "Streak" Widget — aktueller Workout-Streak (nach Phase 7b Umbau)
+- [ ] Widget-Refresh nach Workout-Abschluss
+- [ ] Test auf physischem Gerät
 
 ### Phase 12 — WearOS Companion App
-- [ ] Set up WearOS module in project (separate Flutter app targeting Wear)
-- [ ] Build active workout screen for watch (current exercise, set counter, rest timer)
-- [ ] Sync active session between phone and watch via local broadcast / Wearable Data Layer
-- [ ] Build quick log screen on watch (log set with weight + reps via scroll wheel)
-- [ ] Build rest timer with haptic feedback on watch
-- [ ] Build daily step / heart rate glance screen (if WearOS health APIs available)
+- [ ] WearOS Modul einrichten
+- [ ] Active Workout Screen für die Uhr (Übung, Set-Zähler, Rest Timer)
+- [ ] Sync Phone ↔ Watch (Wearable Data Layer)
+- [ ] Quick Log per Scroll Wheel auf der Uhr
+- [ ] Rest Timer mit haptischem Feedback
+- [ ] Schritte / Herzfrequenz Glance (falls Health APIs verfügbar)
 
 ### Phase 13 — Polish & Release
-- [ ] App icon + splash screen
-- [ ] Onboarding flow (first launch: set name, bodyweight, pick accent color)
-- [ ] Settings screen (accent color picker, units kg/lbs, notification preferences)
-- [ ] Rest timer with notification (configurable per exercise)
-- [ ] Data export (CSV of all logged workouts)
-- [ ] Play Store listing — screenshots, description, privacy policy
-- [ ] Crash reporting (Firebase Crashlytics or Sentry)
+- [x] App Icon + Splash Screen
+- [x] Onboarding Flow — Name, Körpergewicht, Akzentfarbe (persistent)
+- [x] Settings Screen — Akzentfarbe, Name, Rest Timer
+- [x] Einheiten kg/lbs — Storage bleibt immer kg
+- [x] Rest Timer mit Notification — Schema v10, `flutter_local_notifications`
+- [ ] Daten-Export (CSV aller geloggten Workouts)
+- [ ] Play Store Listing — Screenshots, Beschreibung, Datenschutzerklärung
+- [ ] Crash Reporting (Firebase Crashlytics oder Sentry)
+
+---
 
 ## 🟡 In progress
-<!-- Move tasks here when actively working on them -->
+
+---
 
 ## 🟢 Done
 
-### Phase 7 — Calories & Habit Tracker (in progress)
-- [x] Define CalorieEntry and HabitEntry models in Drift
-- [x] Build daily calorie log screen (add meals, track total vs. goal)
-- [x] Build macro breakdown view (protein / carbs / fat)
-- [x] Build habit tracker screen (daily checklist, streak counter)
+### Phase 10 — Strength Rank ✅
+- [x] Strength Standard Tabellen (Beginner → Elite)
+- [x] Rang basiert auf Körpergewicht-Ratio
+- [x] Körpergewicht-Prompt + Geschlecht (neues Settings-Table)
+- [x] Strength Rank Screen mit Fortschrittsbalken
+- [x] Rang-Badge auf Exercise Detail Screen
+
+### Phase 9 — 1RM Calculator ✅
+- [x] 1RM Calculator Screen (Epley, Brzycki, Lander)
+- [x] Geschätztes 1RM Badge in Progress Charts
+- [x] Manuelle 1RM Eingabe pro Übung
+
+### Phase 8 — Body Measurements & Progress Photos ✅
+- [x] BodyMeasurement Model + Input Screen
+- [x] Timeline Charts pro Körperteil
+- [x] Progress Photos + Side-by-Side Vergleich
+
+### Phase 7 — Calories & Habit Tracker ✅ (Habit wird in Phase 7b entfernt)
+- [x] CalorieEntry + HabitEntry Models
+- [x] Kalorien-Log, Makro-Aufschlüsselung
+- [x] Habit Tracker Screen + Streak
+- [x] Wochenübersicht Chart
 
 ### Phase 6 — Progress ✅
-- [x] Build per-exercise progress chart (fl_chart)
-- [x] Show personal records (PR) per exercise
+- [x] Exercise Progress Chart + PR Anzeige
 
-### Phase 5 — Muscle map ✅
-- [x] Source/create SVG body map (front + back) with named paths per muscle group
-- [x] Build muscle map widget (flutter_svg + dynamic color intensity)
-- [x] Wire up volume calculation from logged sets → intensity map
-- [x] Build workout muscle map view + weekly muscle map view
+### Phase 5 — Muscle Map ✅
+- [x] SVG Body Map (vorne + hinten), flutter_svg
+- [x] Volumen → Intensitätskarte
+- [x] Workout + Wochenansicht
 
-### Phase 4 — Workout logging ✅
-- [x] Define WorkoutSession, LoggedSet models
-- [x] Build active workout screen (start session, log sets live)
-- [x] Build workout completion summary screen
-- [x] Persist all logged data to Drift
+### Phase 4 — Workout Logging ✅
+- [x] WorkoutSession + LoggedSet, Active Workout Screen
+- [x] Abschluss-Zusammenfassung, Drift-Persistierung
 
-### Phase 3 — Workout builder ✅
-- [x] Define Split, WorkoutDay, WorkoutExercise models
-- [x] Build split creation screen
-- [x] Build workout day builder (add/remove exercises, set default sets/reps)
-- [x] Build split overview screen
+### Phase 3 — Workout Builder ✅
+- [x] Split, WorkoutDay, WorkoutExercise Models
+- [x] Split + Day Builder Screens
 
-### Phase 2 — Exercise library ✅
-- [x] Define Exercise model (id, name, muscleIds, gifPath, category)
-- [x] Create exercise seed data (20–30 exercises with muscleIds pre-assigned)
-- [x] Build exercise list screen with search + filter by muscle group
-- [x] Build exercise detail screen with GIF preview
+### Phase 2 — Exercise Library ✅
+- [x] Exercise Model + Seed Data (~25 Übungen)
+- [x] List Screen + Detail Screen mit GIF
 
-### Phase 1 — Project foundation ✅
-- [x] Initialize Flutter project (`flutter create gymfy`)
-- [x] Add dependencies to pubspec.yaml (riverpod, drift, go_router, freezed, flutter_svg)
-- [x] Set up dark theme + accent color system in `app/theme/`
-- [x] Set up go_router with placeholder routes in `app/router/`
-- [x] Set up Drift database shell in `shared/database/`
+### Phase 1 — Project Foundation ✅
+- [x] Flutter Projekt, Dependencies, Theme, Router, Drift Shell

@@ -1,5 +1,5 @@
 name: gymfy
-description: "A new Flutter project."
+description: "Track your lifts, your splits, and your progress."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -42,6 +42,12 @@ dependencies:
   freezed_annotation: ^3.1.0
   flutter_svg: ^2.3.0
   fl_chart: ^1.2.0
+  # Progress photos: pick from the gallery, then copy into the app's own
+  # documents directory so the photo survives the original being deleted.
+  image_picker: ^1.2.0
+  path_provider: ^2.1.5
+  flutter_local_notifications: ^22.2.0
+  timezone: ^0.11.1
 
 dev_dependencies:
   flutter_test:
@@ -57,6 +63,47 @@ dev_dependencies:
   riverpod_generator: ^4.0.4
   drift_dev: ^2.34.0
   freezed: ^3.2.6-dev.1
+  # Build-time only: both generate files under android/ and ship no code in the
+  # APK. Source artwork is produced by `dart run tool/generate_icon.dart`.
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.8
+
+# Launcher icon. Regenerate with: dart run flutter_launcher_icons
+flutter_launcher_icons:
+  android: true
+  # iOS isn't a target for this app, so nothing is generated for it.
+  ios: false
+  image_path: assets/icon/gymfy_icon.png
+  # Adaptive icon (Android 8+): the launcher masks the foreground to whatever
+  # shape the device uses, over this flat background. Background is the same
+  # dark surface the app's theme uses, so the icon matches the app it opens.
+  adaptive_icon_background: "#151821"
+  adaptive_icon_foreground: assets/icon/gymfy_icon_foreground.png
+  # Themed icons (Android 13+): the launcher recolours this to the user's
+  # wallpaper palette. The foreground is a flat silhouette already, so it works
+  # as-is — without this the system falls back to a washed-out auto-conversion.
+  adaptive_icon_monochrome: assets/icon/gymfy_icon_foreground.png
+  min_sdk_android: 24
+
+# Splash screen. Regenerate with: dart run flutter_native_splash:create
+#
+# Dark in both system themes on purpose: the app itself is dark-mode-first, so a
+# white splash would flash bright and then drop into a dark app.
+flutter_native_splash:
+  android: true
+  ios: false
+  web: false
+  color: "#151821"
+  color_dark: "#151821"
+  image: assets/icon/gymfy_splash.png
+  image_dark: assets/icon/gymfy_splash.png
+  # Android 12+ draws its own splash and ignores the settings above, so it needs
+  # its own correctly-sized image (1152px, mark inside a 768px circle).
+  android_12:
+    color: "#151821"
+    color_dark: "#151821"
+    image: assets/icon/gymfy_splash_android12.png
+    image_dark: assets/icon/gymfy_splash_android12.png
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

@@ -1,14 +1,22 @@
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../features/calculator/screens/one_rm_calculator_screen.dart';
+import '../../features/calculator/screens/strength_rank_screen.dart';
 import '../../features/calories/screens/calorie_log_screen.dart';
+import '../../features/calories/screens/weekly_overview_screen.dart';
 import '../../features/exercises/screens/exercise_detail_screen.dart';
 import '../../features/exercises/screens/exercise_library_screen.dart';
 import '../../features/habits/screens/habit_tracker_screen.dart';
 import '../../features/more/screens/more_screen.dart';
 import '../../features/muscle_map/screens/muscle_map_screen.dart';
 import '../../features/progress/screens/exercise_progress_screen.dart';
+import '../../features/progress/screens/measurement_history_screen.dart';
+import '../../features/progress/screens/measurements_screen.dart';
+import '../../features/progress/screens/photo_comparison_screen.dart';
+import '../../features/progress/screens/progress_photos_screen.dart';
 import '../../features/progress/screens/progress_screen.dart';
+import '../../features/settings/screens/settings_screen.dart';
 import '../../features/workout/screens/active_workout_screen.dart';
 import '../../features/workout/screens/day_builder_screen.dart';
 import '../../features/workout/screens/split_days_screen.dart';
@@ -111,6 +119,28 @@ GoRouter goRouter(Ref ref) {
                       exerciseId: state.pathParameters['exerciseId']!,
                     ),
                   ),
+                  GoRoute(
+                    path: 'photos',
+                    builder: (context, state) => const ProgressPhotosScreen(),
+                    routes: [
+                      GoRoute(
+                        path: 'compare',
+                        builder: (context, state) =>
+                            const PhotoComparisonScreen(),
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'measurements',
+                    builder: (context, state) => const MeasurementsScreen(),
+                    routes: [
+                      GoRoute(
+                        path: 'history',
+                        builder: (context, state) =>
+                            const MeasurementHistoryScreen(),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ],
@@ -129,6 +159,23 @@ GoRouter goRouter(Ref ref) {
                   GoRoute(
                     path: 'habits',
                     builder: (context, state) => const HabitTrackerScreen(),
+                  ),
+                  GoRoute(
+                    path: 'weekly',
+                    builder: (context, state) => const WeeklyOverviewScreen(),
+                  ),
+                  GoRoute(
+                    path: 'one-rm',
+                    builder: (context, state) =>
+                        const OneRmCalculatorScreen(),
+                  ),
+                  GoRoute(
+                    path: 'rank',
+                    builder: (context, state) => const StrengthRankScreen(),
+                  ),
+                  GoRoute(
+                    path: 'settings',
+                    builder: (context, state) => const SettingsScreen(),
                   ),
                 ],
               ),

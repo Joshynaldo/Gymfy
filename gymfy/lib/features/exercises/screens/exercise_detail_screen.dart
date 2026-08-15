@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/accent_color.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/exercise_display.dart';
+import '../../calculator/widgets/exercise_rank_badge.dart';
+import '../../workout/widgets/exercise_rest_tile.dart';
 import '../data/exercise_repository.dart';
 
 /// Full-screen details for a single exercise: an animated GIF preview (when
@@ -74,6 +76,12 @@ class _ExerciseDetailBody extends ConsumerWidget {
             ),
           ],
         ),
+        const SizedBox(height: 24),
+        // Renders nothing at all for the many exercises with no published
+        // standards, and carries its own bottom spacing so it leaves no gap
+        // behind when it does.
+        ExerciseRankBadge(exerciseId: exercise.id),
+        ExerciseRestTile(exerciseId: exercise.id),
         const SizedBox(height: 24),
         Text('Muscles worked', style: theme.textTheme.titleMedium),
         const SizedBox(height: 12),

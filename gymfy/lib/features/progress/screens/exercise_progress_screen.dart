@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../shared/database/app_database.dart';
+import '../../../shared/utils/dates.dart';
 import '../../../shared/utils/format.dart';
+import '../../../shared/utils/units.dart';
+import '../../calculator/data/one_rm_math.dart';
+import '../../calculator/data/tested_one_rm_repository.dart';
 import '../../exercises/data/exercise_repository.dart';
 import '../data/progress_repository.dart';
 import '../widgets/exercise_progress_chart.dart';
 
-/// Shows one exercise's progress over time: a chart of top-set weight per
-/// session. (Personal records are added in the next task.)
+/// Shows one exercise's progress over time: personal records, an estimated
+/// one-rep max from the best set logged, and a chart of top-set weight per
+/// session.
 class ExerciseProgressScreen extends ConsumerWidget {
   const ExerciseProgressScreen({super.key, required this.exerciseId});
 
@@ -41,6 +48,7 @@ class ExerciseProgressScreen extends ConsumerWidget {
             );
           }
           final records = personalRecordsFrom(points);
+          final bestOneRm = bestEstimatedOneRm(points);
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
@@ -51,6 +59,8 @@ class ExerciseProgressScreen extends ConsumerWidget {
                 _RecordsRow(records: records),
                 const SizedBox(height: 24),
               ],
+              _OneRmBadge(exerciseId: exerciseId, best: bestOneRm),
+              const SizedBox(height: 24),
               Text('Top-set weight', style: theme.textTheme.titleMedium),
               const SizedBox(height: 4),
               Text(
@@ -82,13 +92,269 @@ class ExerciseProgressScreen extends ConsumerWidget {
   }
 }
 
-class _RecordsRow extends StatelessWidget {
+/// What the dialog hands back. A null [weightKg] means "clear it", which is
+/// different from the dialog being dismissed (null result).
+typedef _TestedInput = ({double? weightKg, DateTime testedOn});
+
+/// The exercise's one-rep max: the one you tested if there is one, otherwise
+/// estimated from the best set you've logged. Tap to enter or change a tested
+/// max.
+///
+/// An outline rather than a filled card while it's only an estimate — it sits
+/// next to measured PRs and shouldn't look equally solid. A tested max fills
+/// the outline in, because that one is a fact.
+class _OneRmBadge extends ConsumerWidget {
+  const _OneRmBadge({required this.exerciseId, required this.best});
+
+  final String exerciseId;
+
+  /// Derived from logged sets. Null when nothing usable has been logged.
+  final BestOneRm? best;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final accent = ref.watch(accentColorProvider);
+    final tested = ref.watch(testedOneRmProvider(exerciseId)).value;
+    final unit = ref.watch(weightUnitProvider);
+
+    final label = tested != null ? 'Tested 1RM' : 'Estimated 1RM';
+    final value = tested != null
+        ? formatWeightUnit(tested.weightKg, unit)
+        : best != null
+        ? '≈ ${formatWeightUnit(best!.oneRm, unit)}'
+        : '—';
+
+    return InkWell(
+      onTap: () => _edit(context, ref, tested),
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: accent.withValues(alpha: 0.5)),
+          // Filled once it's a tested fact rather than a calculation.
+          color: tested != null ? accent.withValues(alpha: 0.12) : null,
+        ),
+        child: Row(
+          children: [
+            Icon(
+              tested != null ? Icons.emoji_events : Icons.trending_up,
+              size: 20,
+              color: accent,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        label,
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        value,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: accent,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _subtitle(tested, unit),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.edit_outlined,
+              size: 18,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _subtitle(TestedOneRm? tested, WeightUnit unit) {
+    if (tested != null) {
+      final line = 'Tested on ${formatShortDate(tested.testedOn)}';
+      // Keep the estimate visible as a second opinion — if your log implies
+      // more than your last test, it's time to retest.
+      if (best == null) return line;
+      return '$line • log suggests '
+          '≈ ${formatWeightUnit(best!.oneRm, unit)}';
+    }
+    if (best == null) return 'Tap to enter a max you tested';
+    return best!.reps == 1
+        ? 'You lifted this for a single on ${formatShortDate(best!.date)}'
+        : 'From ${formatWeightUnit(best!.weight, unit)} × ${best!.reps} '
+              'on ${formatShortDate(best!.date)}';
+  }
+
+  Future<void> _edit(
+    BuildContext context,
+    WidgetRef ref,
+    TestedOneRm? tested,
+  ) async {
+    final input = await showDialog<_TestedInput>(
+      context: context,
+      builder: (context) => _TestedOneRmDialog(
+        current: tested,
+        // Pre-fill with the estimate: it's the best guess at what they just
+        // tested, and it saves typing when it's close.
+        suggestion: best == null ? null : roundToPlate(best!.oneRm),
+        unit: ref.read(weightUnitProvider),
+      ),
+    );
+    if (input == null) return;
+
+    final repository = ref.read(testedOneRmRepositoryProvider);
+    if (input.weightKg == null) {
+      await repository.clearForExercise(exerciseId);
+    } else {
+      await repository.setForExercise(
+        exerciseId: exerciseId,
+        weightKg: input.weightKg!,
+        testedOn: input.testedOn,
+      );
+    }
+  }
+}
+
+/// Enter (or clear) a tested one-rep max for this exercise.
+///
+/// Talks to the user in [unit]; everything it hands back is kilograms.
+class _TestedOneRmDialog extends StatefulWidget {
+  const _TestedOneRmDialog({
+    required this.current,
+    required this.suggestion,
+    required this.unit,
+  });
+
+  final TestedOneRm? current;
+
+  /// In kilograms, as stored.
+  final double? suggestion;
+  final WeightUnit unit;
+
+  @override
+  State<_TestedOneRmDialog> createState() => _TestedOneRmDialogState();
+}
+
+class _TestedOneRmDialogState extends State<_TestedOneRmDialog> {
+  late final TextEditingController _weight = TextEditingController(
+    text: () {
+      final start = widget.current?.weightKg ?? widget.suggestion;
+      if (start == null) return '';
+      // Round in the display unit, so a prefilled pounds figure isn't a
+      // converted kilogram value with a trailing decimal.
+      return formatWeightIn(roundToLoadable(start, widget.unit), widget.unit);
+    }(),
+  );
+  late DateTime _testedOn = widget.current?.testedOn ?? dateOnly(DateTime.now());
+
+  @override
+  void dispose() {
+    _weight.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _testedOn,
+      firstDate: DateTime(now.year - 5),
+      // A max you'll test next week isn't a max you have.
+      lastDate: dateOnly(now),
+    );
+    if (picked != null) setState(() => _testedOn = dateOnly(picked));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final weight = parseWeightAsKilograms(_weight.text, widget.unit);
+
+    return AlertDialog(
+      title: const Text('Tested 1RM'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: _weight,
+            autofocus: true,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+            ],
+            decoration: InputDecoration(
+              labelText: 'Weight',
+              suffixText: widget.unit.label,
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 8),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.event),
+            title: Text(formatDayLabel(_testedOn)),
+            trailing: const Icon(Icons.edit_calendar_outlined),
+            onTap: _pickDate,
+          ),
+        ],
+      ),
+      actions: [
+        if (widget.current != null)
+          TextButton(
+            onPressed: () => Navigator.of(context).pop((
+              weightKg: null,
+              testedOn: _testedOn,
+            )),
+            child: const Text('Clear'),
+          ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          // Disabled rather than silently rejecting an unparseable number.
+          onPressed: weight == null
+              ? null
+              : () => Navigator.of(context).pop((
+                  weightKg: weight,
+                  testedOn: _testedOn,
+                )),
+          child: const Text('Save'),
+        ),
+      ],
+    );
+  }
+}
+
+class _RecordsRow extends ConsumerWidget {
   const _RecordsRow({required this.records});
 
   final PersonalRecords records;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unit = ref.watch(weightUnitProvider);
+
     // IntrinsicHeight gives the Row a finite height so the tiles can stretch to
     // match each other; without it, `stretch` inside a scrolling list forces an
     // infinite height and the screen fails to lay out.
@@ -100,7 +366,7 @@ class _RecordsRow extends StatelessWidget {
             child: _RecordTile(
               icon: Icons.fitness_center,
               label: 'Heaviest',
-              value: '${formatWeight(records.heaviestWeight)} kg',
+              value: formatWeightUnit(records.heaviestWeight, unit),
               detail: '× ${records.repsAtHeaviest} '
                   '• ${formatShortDate(records.heaviestDate)}',
             ),
@@ -110,7 +376,7 @@ class _RecordsRow extends StatelessWidget {
             child: _RecordTile(
               icon: Icons.bar_chart,
               label: 'Best volume',
-              value: '${formatWeight(records.bestVolume)} kg',
+              value: formatWeightUnit(records.bestVolume, unit),
               detail: 'in a session '
                   '• ${formatShortDate(records.bestVolumeDate)}',
             ),
