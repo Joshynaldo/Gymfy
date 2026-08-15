@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#151821</color>
+    <!-- The window background behind Flutter while it starts up. Gymfy is
+         dark-mode-first, so this stays dark even when the system is in light
+         mode — otherwise the window flashes white between the splash screen
+         and Flutter's first frame. Same value as the theme's dark surface. -->
+    <color name="splash_background">#151821</color>
+</resources>

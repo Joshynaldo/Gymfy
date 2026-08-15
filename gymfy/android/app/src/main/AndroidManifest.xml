@@ -1,6 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Rest timer notifications. Android 13+ also requires the user to grant
+         this at runtime; the app asks the first time a timer is started, and
+         works without it (the on-screen countdown is the real timer). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Lets a pending rest notification survive a reboot mid-workout. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <application
-        android:label="gymfy"
+        android:label="Gymfy"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -30,6 +36,26 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- Required by flutter_local_notifications for SCHEDULED notifications.
+             The plugin does NOT declare these in its own manifest, so they have
+             to live here. Without them Android fires the alarm and there is
+             nothing registered to receive it: no notification appears, and no
+             error is reported anywhere. Delete these and the rest timer's
+             backstop alert silently stops working. -->
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

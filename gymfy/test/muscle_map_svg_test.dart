@@ -18,28 +18,37 @@ void main() {
     }
   });
 
-  test('every muscle id appears as a data-muscle group somewhere', () {
-    final combined = '$front\n$back';
+  // Collects every id token across both diagrams. A single path may carry
+  // several space-separated ids (one region standing in for several muscles).
+  Set<String> taggedIds() {
+    final tag = RegExp(r'data-muscle="([^"]+)"');
+    final ids = <String>{};
+    for (final svg in [front, back]) {
+      for (final match in tag.allMatches(svg)) {
+        ids.addAll(match.group(1)!.split(' '));
+      }
+    }
+    return ids;
+  }
+
+  test('every muscle id appears as a data-muscle token somewhere', () {
+    final tagged = taggedIds();
     for (final id in MuscleId.all) {
       expect(
-        combined,
-        contains('data-muscle="$id"'),
+        tagged,
+        contains(id),
         reason: 'No path tagged for muscle "$id" in the body SVGs.',
       );
     }
   });
 
   test('no data-muscle tag references an unknown muscle id', () {
-    final tag = RegExp(r'data-muscle="([^"]+)"');
-    for (final svg in [front, back]) {
-      for (final match in tag.allMatches(svg)) {
-        final id = match.group(1)!;
-        expect(
-          MuscleId.all,
-          contains(id),
-          reason: '"$id" is tagged in an SVG but is not a known MuscleId.',
-        );
-      }
+    for (final id in taggedIds()) {
+      expect(
+        MuscleId.all,
+        contains(id),
+        reason: '"$id" is tagged in an SVG but is not a known MuscleId.',
+      );
     }
   });
 }

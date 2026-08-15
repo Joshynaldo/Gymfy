@@ -8,32 +8,50 @@ part of 'accent_color.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Holds the currently-selected accent colour for the whole app.
+/// The currently-selected accent colour for the whole app.
 ///
 /// Read it with:    `final accent = ref.watch(accentColorProvider);`
 /// Change it with:  `ref.read(accentColorProvider.notifier).setAccent(color);`
 ///
-/// (In-memory for now; persistence is wired in when we build the Settings
-/// screen.) Kept alive so the choice survives even if briefly unwatched.
+/// Backed by the settings table, so the choice survives a restart. There is no
+/// in-memory copy: [setAccent] only writes, and the new colour arrives back
+/// through [storedAccentProvider]. That means the stored value and the themed
+/// value cannot drift apart, and the picker needs no state of its own.
+///
+/// The colour is stored as its ARGB integer rather than a palette index, so
+/// reordering [AccentPalette.options] later can't silently change someone's
+/// chosen colour.
 
 @ProviderFor(AccentColor)
 final accentColorProvider = AccentColorProvider._();
 
-/// Holds the currently-selected accent colour for the whole app.
+/// The currently-selected accent colour for the whole app.
 ///
 /// Read it with:    `final accent = ref.watch(accentColorProvider);`
 /// Change it with:  `ref.read(accentColorProvider.notifier).setAccent(color);`
 ///
-/// (In-memory for now; persistence is wired in when we build the Settings
-/// screen.) Kept alive so the choice survives even if briefly unwatched.
+/// Backed by the settings table, so the choice survives a restart. There is no
+/// in-memory copy: [setAccent] only writes, and the new colour arrives back
+/// through [storedAccentProvider]. That means the stored value and the themed
+/// value cannot drift apart, and the picker needs no state of its own.
+///
+/// The colour is stored as its ARGB integer rather than a palette index, so
+/// reordering [AccentPalette.options] later can't silently change someone's
+/// chosen colour.
 final class AccentColorProvider extends $NotifierProvider<AccentColor, Color> {
-  /// Holds the currently-selected accent colour for the whole app.
+  /// The currently-selected accent colour for the whole app.
   ///
   /// Read it with:    `final accent = ref.watch(accentColorProvider);`
   /// Change it with:  `ref.read(accentColorProvider.notifier).setAccent(color);`
   ///
-  /// (In-memory for now; persistence is wired in when we build the Settings
-  /// screen.) Kept alive so the choice survives even if briefly unwatched.
+  /// Backed by the settings table, so the choice survives a restart. There is no
+  /// in-memory copy: [setAccent] only writes, and the new colour arrives back
+  /// through [storedAccentProvider]. That means the stored value and the themed
+  /// value cannot drift apart, and the picker needs no state of its own.
+  ///
+  /// The colour is stored as its ARGB integer rather than a palette index, so
+  /// reordering [AccentPalette.options] later can't silently change someone's
+  /// chosen colour.
   AccentColorProvider._()
     : super(
         from: null,
@@ -61,15 +79,21 @@ final class AccentColorProvider extends $NotifierProvider<AccentColor, Color> {
   }
 }
 
-String _$accentColorHash() => r'02c0424e06dbcf602bdccfee30c8b6f8aeed32a5';
+String _$accentColorHash() => r'f924dda9f0de8becf2f9a9b5ddbf951ff847dbe2';
 
-/// Holds the currently-selected accent colour for the whole app.
+/// The currently-selected accent colour for the whole app.
 ///
 /// Read it with:    `final accent = ref.watch(accentColorProvider);`
 /// Change it with:  `ref.read(accentColorProvider.notifier).setAccent(color);`
 ///
-/// (In-memory for now; persistence is wired in when we build the Settings
-/// screen.) Kept alive so the choice survives even if briefly unwatched.
+/// Backed by the settings table, so the choice survives a restart. There is no
+/// in-memory copy: [setAccent] only writes, and the new colour arrives back
+/// through [storedAccentProvider]. That means the stored value and the themed
+/// value cannot drift apart, and the picker needs no state of its own.
+///
+/// The colour is stored as its ARGB integer rather than a palette index, so
+/// reordering [AccentPalette.options] later can't silently change someone's
+/// chosen colour.
 
 abstract class _$AccentColor extends $Notifier<Color> {
   Color build();

@@ -11,6 +11,8 @@ import 'package:gymfy/features/progress/screens/exercise_progress_screen.dart';
 import 'package:gymfy/shared/database/app_database.dart';
 import 'package:gymfy/shared/models/exercise_category.dart';
 
+import 'support/default_accent.dart';
+
 void main() {
   testWidgets('renders records and chart for an exercise with history', (
     tester,
@@ -39,6 +41,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          defaultAccentOverride,
           exerciseProvider(
             'barbell_back_squat',
           ).overrideWith((ref) => Stream.value(exercise)),

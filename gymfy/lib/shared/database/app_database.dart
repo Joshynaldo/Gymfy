@@ -2,10 +2,15 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../models/app_setting.dart';
+import '../models/body_measurement.dart';
 import '../models/calorie_entry.dart';
 import '../models/exercise.dart';
 import '../models/exercise_category.dart';
 import '../models/habit.dart';
+import '../models/progress_photo.dart';
+import '../models/rest_timer.dart';
+import '../models/tested_one_rm.dart';
 import '../models/workout_log.dart';
 import '../models/workout_plan.dart';
 
@@ -26,6 +31,11 @@ part 'app_database.g.dart';
     CalorieEntries,
     Habits,
     HabitEntries,
+    BodyMeasurements,
+    ProgressPhotos,
+    TestedOneRms,
+    AppSettings,
+    RestTimers,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -36,7 +46,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -64,6 +74,26 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(calorieEntries);
         await m.createTable(habits);
         await m.createTable(habitEntries);
+      }
+      // v6 adds the body-measurements table.
+      if (from < 6) {
+        await m.createTable(bodyMeasurements);
+      }
+      // v7 adds the progress-photos table.
+      if (from < 7) {
+        await m.createTable(progressPhotos);
+      }
+      // v8 adds the manually tested one-rep maxes.
+      if (from < 8) {
+        await m.createTable(testedOneRms);
+      }
+      // v9 adds the key-value settings table.
+      if (from < 9) {
+        await m.createTable(appSettings);
+      }
+      // v10 adds per-exercise rest timer lengths.
+      if (from < 10) {
+        await m.createTable(restTimers);
       }
     },
     // SQLite doesn't enforce foreign keys unless we turn them on per
