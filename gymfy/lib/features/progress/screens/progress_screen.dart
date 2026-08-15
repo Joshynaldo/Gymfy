@@ -17,7 +17,23 @@ class ProgressScreen extends ConsumerWidget {
     final exercisesAsync = ref.watch(exercisesWithHistoryProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Progress')),
+      appBar: AppBar(
+        title: const Text('Progress'),
+        actions: [
+          // An action rather than a list entry, so it's reachable even when
+          // there's no logged history yet and the list shows its empty state.
+          IconButton(
+            icon: const Icon(Icons.photo_library_outlined),
+            tooltip: 'Progress photos',
+            onPressed: () => context.go('/progress/photos'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.straighten),
+            tooltip: 'Measurements',
+            onPressed: () => context.go('/progress/measurements'),
+          ),
+        ],
+      ),
       body: exercisesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(

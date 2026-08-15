@@ -23,9 +23,11 @@ enum BodySide {
 /// placeholder `fill` authored into the SVG files.
 const _restColor = Color(0xFF4C5361);
 
-/// Matches a muscle group's opening tag so we can rewrite just its fill,
-/// e.g. `data-muscle="chest" fill="#4C5361"`.
-final _muscleFill = RegExp(r'data-muscle="([a-z_]+)" fill="#[0-9A-Fa-f]{6}"');
+/// Matches a muscle path's tag so we can rewrite just its fill, e.g.
+/// `data-muscle="chest" fill="#4C5361"`. A single path may carry more than one
+/// space-separated id (e.g. `front_deltoid side_deltoid`) when one anatomical
+/// region on the diagram stands in for several app muscles.
+final _muscleFill = RegExp(r'data-muscle="([a-z_ ]+)" fill="#[0-9A-Fa-f]{6}"');
 
 /// Loads (and caches) the raw SVG text for a body side. Kept in a provider so
 /// the file is read once, not on every rebuild / accent change.
@@ -55,7 +57,7 @@ class MuscleMap extends ConsumerWidget {
     final accent = ref.watch(accentColorProvider);
 
     return AspectRatio(
-      aspectRatio: 220 / 470,
+      aspectRatio: 248.333 / 557.994,
       child: templateAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
@@ -78,10 +80,15 @@ String _tintMuscles(
   Color accent,
 ) {
   return svg.replaceAllMapped(_muscleFill, (match) {
-    final id = match.group(1)!;
-    final t = (intensities[id] ?? 0).clamp(0.0, 1.0);
+    final ids = match.group(1)!.split(' ');
+    // A region tagged with several ids glows as hard as its most-worked muscle.
+    var t = 0.0;
+    for (final id in ids) {
+      final v = (intensities[id] ?? 0).clamp(0.0, 1.0);
+      if (v > t) t = v;
+    }
     final color = Color.lerp(_restColor, accent, t)!;
-    return 'data-muscle="$id" fill="${_toHex(color)}"';
+    return 'data-muscle="${match.group(1)}" fill="${_toHex(color)}"';
   });
 }
 

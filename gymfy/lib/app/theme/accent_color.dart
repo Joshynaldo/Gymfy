@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../../shared/data/settings_repository.dart';
 
 part 'accent_color.g.dart';
 
@@ -22,17 +25,56 @@ class AccentPalette {
   static const Color defaultAccent = blue;
 }
 
-/// Holds the currently-selected accent colour for the whole app.
+/// Setting key for the chosen accent.
+const accentColorSetting = 'accent_color';
+
+/// Reads a stored accent back, or null when there isn't a usable one.
+///
+/// The stored number is only honoured if it still matches a palette option, so a
+/// value left behind by an older build (or a hand-edited database) degrades to
+/// the default instead of theming the app some colour the picker can't show.
+Color? parseAccentColor(String? raw) {
+  if (raw == null) return null;
+  final value = int.tryParse(raw);
+  if (value == null) return null;
+  for (final option in AccentPalette.options) {
+    if (option.toARGB32() == value) return option;
+  }
+  return null;
+}
+
+/// The accent as stored on disk: null while the first read is in flight, and
+/// null again if nothing valid was ever saved.
+final storedAccentProvider = StreamProvider<Color?>((ref) {
+  return ref
+      .watch(settingsRepositoryProvider)
+      .watchRaw(accentColorSetting)
+      .map(parseAccentColor);
+});
+
+/// The currently-selected accent colour for the whole app.
 ///
 /// Read it with:    `final accent = ref.watch(accentColorProvider);`
 /// Change it with:  `ref.read(accentColorProvider.notifier).setAccent(color);`
 ///
-/// (In-memory for now; persistence is wired in when we build the Settings
-/// screen.) Kept alive so the choice survives even if briefly unwatched.
+/// Backed by the settings table, so the choice survives a restart. There is no
+/// in-memory copy: [setAccent] only writes, and the new colour arrives back
+/// through [storedAccentProvider]. That means the stored value and the themed
+/// value cannot drift apart, and the picker needs no state of its own.
+///
+/// The colour is stored as its ARGB integer rather than a palette index, so
+/// reordering [AccentPalette.options] later can't silently change someone's
+/// chosen colour.
 @Riverpod(keepAlive: true)
 class AccentColor extends _$AccentColor {
   @override
-  Color build() => AccentPalette.defaultAccent;
+  Color build() {
+    return ref.watch(storedAccentProvider).value ?? AccentPalette.defaultAccent;
+  }
 
-  void setAccent(Color color) => state = color;
+  Future<void> setAccent(Color color) {
+    return ref
+        .read(settingsRepositoryProvider)
+        .write(accentColorSetting, color.toARGB32().toString());
+  }
 }

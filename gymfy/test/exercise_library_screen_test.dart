@@ -9,6 +9,8 @@ import 'package:gymfy/features/exercises/screens/exercise_library_screen.dart';
 import 'package:gymfy/shared/database/app_database.dart';
 import 'package:gymfy/shared/models/exercise_category.dart';
 
+import 'support/default_accent.dart';
+
 final _sample = <Exercise>[
   Exercise(
     id: 'barbell_bench_press',
@@ -34,6 +36,7 @@ Future<void> _pumpScreen(WidgetTester tester) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        defaultAccentOverride,
         exerciseListProvider.overrideWith((ref) => Stream.value(_sample)),
       ],
       child: const MaterialApp(home: ExerciseLibraryScreen()),

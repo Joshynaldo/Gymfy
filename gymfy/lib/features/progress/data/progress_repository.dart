@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../shared/database/app_database.dart';
+import '../../calculator/data/one_rm_math.dart';
 
 part 'progress_repository.g.dart';
 
@@ -72,6 +73,39 @@ PersonalRecords? personalRecordsFrom(List<ExerciseHistoryPoint> points) {
     bestVolume: bestVolume.totalVolume,
     bestVolumeDate: bestVolume.date,
   );
+}
+
+/// The set that implies the biggest one-rep max, and what that max is.
+typedef BestOneRm = ({
+  double oneRm,
+  double weight,
+  int reps,
+  DateTime date,
+});
+
+/// Finds the logged top set with the highest estimated one-rep max.
+///
+/// Deliberately not "the heaviest set": 90 kg × 5 beats 100 kg × 1 on every
+/// formula, and that's the honest read of which day you were strongest.
+///
+/// Only top sets are available here (one per session), so a monster back-off
+/// set can't win — an acceptable trade for not re-reading every logged set.
+/// Bodyweight sets (weight 0) are skipped since there's nothing to estimate.
+BestOneRm? bestEstimatedOneRm(List<ExerciseHistoryPoint> points) {
+  BestOneRm? best;
+  for (final p in points) {
+    final estimates = estimateOneRm(weight: p.topWeight, reps: p.repsAtTop);
+    if (estimates == null) continue;
+    if (best == null || estimates.average > best.oneRm) {
+      best = (
+        oneRm: estimates.average,
+        weight: p.topWeight,
+        reps: p.repsAtTop,
+        date: p.date,
+      );
+    }
+  }
+  return best;
 }
 
 /// Reads logged history for the progress feature.

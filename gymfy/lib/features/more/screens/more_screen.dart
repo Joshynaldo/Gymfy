@@ -37,6 +37,30 @@ class MoreScreen extends ConsumerWidget {
       subtitle: 'Daily checklist and streaks',
       route: '/more/habits',
     ),
+    _Tool(
+      icon: Icons.bar_chart,
+      title: 'This week',
+      subtitle: 'Calories and habit completion over 7 days',
+      route: '/more/weekly',
+    ),
+    _Tool(
+      icon: Icons.calculate_outlined,
+      title: '1RM calculator',
+      subtitle: 'Estimate your one-rep max from any set',
+      route: '/more/one-rm',
+    ),
+    _Tool(
+      icon: Icons.military_tech_outlined,
+      title: 'Strength rank',
+      subtitle: 'How your big lifts compare to your bodyweight',
+      route: '/more/rank',
+    ),
+    _Tool(
+      icon: Icons.settings_outlined,
+      title: 'Settings',
+      subtitle: 'Accent colour, your name, rest timer alerts',
+      route: '/more/settings',
+    ),
   ];
 
   @override

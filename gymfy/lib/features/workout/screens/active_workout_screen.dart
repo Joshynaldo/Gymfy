@@ -4,11 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../shared/data/notification_service.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/exercise_display.dart';
-import '../../../shared/utils/format.dart';
+import '../../../shared/utils/units.dart';
+import '../../settings/data/notification_preferences.dart';
+import '../data/rest_timer_controller.dart';
+import '../data/rest_timer_repository.dart';
 import '../data/session_repository.dart';
 import '../data/workout_repository.dart';
+import '../widgets/rest_timer_bar.dart';
 
 /// The live workout screen: log sets exercise by exercise while you train.
 ///
@@ -83,23 +88,34 @@ class _ActiveWorkoutView extends ConsumerWidget {
           ),
         ],
       ),
-      body: planned.isEmpty
-          ? const _EmptyState()
-          : ListView(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 32),
-              children: [
-                for (final p in planned)
-                  _ExerciseLogCard(
-                    session: session,
-                    planned: p,
-                    loggedSets: setsByExercise[p.exercise.id] ?? const [],
+      body: Column(
+        children: [
+          // Renders nothing unless a rest timer is running.
+          const RestTimerBar(),
+          Expanded(
+            child: planned.isEmpty
+                ? const _EmptyState()
+                : ListView(
+                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 32),
+                    children: [
+                      for (final p in planned)
+                        _ExerciseLogCard(
+                          session: session,
+                          planned: p,
+                          loggedSets: setsByExercise[p.exercise.id] ?? const [],
+                        ),
+                    ],
                   ),
-              ],
-            ),
+          ),
+        ],
+      ),
     );
   }
 
   Future<void> _finish(BuildContext context, WidgetRef ref) async {
+    // A rest timer outliving the workout it belongs to would be a puzzle, and
+    // its notification would fire long after you've left the gym.
+    ref.read(restTimerProvider.notifier).stop();
     await ref.read(sessionRepositoryProvider).completeSession(session.id);
     if (!context.mounted) return;
     context.go('/workout/summary/${session.id}');
@@ -168,6 +184,7 @@ class _ExerciseLogCard extends ConsumerWidget {
       builder: (context) => _LogSetDialog(
         initialWeight: last?.weight ?? 0,
         initialReps: last?.reps ?? planned.entry.defaultReps,
+        unit: ref.read(weightUnitProvider),
       ),
     );
     if (result == null) return;
@@ -178,6 +195,21 @@ class _ExerciseLogCard extends ConsumerWidget {
       setNumber: loggedSets.length + 1,
       weight: result.weight,
       reps: result.reps,
+    );
+
+    // Logging a set is exactly when rest starts, so the timer needs no button
+    // of its own — one less thing to do between sets.
+    final exercise = planned.exercise;
+    final seconds = ref.read(restForExerciseProvider(exercise.id));
+    if (ref.read(restTimerAlertsProvider).value ?? true) {
+      // Asked here rather than at launch: the permission dialog makes sense in
+      // the moment it's needed, and a user who never rests is never asked.
+      await ref.read(notificationServiceProvider).requestPermission();
+    }
+    await ref.read(restTimerProvider.notifier).start(
+      exerciseId: exercise.id,
+      exerciseName: exercise.name,
+      seconds: seconds,
     );
   }
 }
@@ -191,6 +223,7 @@ class _LoggedSetRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final unit = ref.watch(weightUnitProvider);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 2, 4, 2),
@@ -205,7 +238,7 @@ class _LoggedSetRow extends ConsumerWidget {
           ),
           Expanded(
             child: Text(
-              '${formatWeight(set.weight)} kg × ${set.reps} reps',
+              '${formatWeightUnit(set.weight, unit)} × ${set.reps} reps',
               style: theme.textTheme.bodyLarge,
             ),
           ),
@@ -224,19 +257,29 @@ class _LoggedSetRow extends ConsumerWidget {
 
 /// Dialog to enter the weight and reps for a set. Owns its controllers via a
 /// [StatefulWidget] so they're disposed at the right time.
+///
+/// Talks to the user in [unit] but takes and returns kilograms, so the rest of
+/// the screen never has to think about which unit is on screen.
 class _LogSetDialog extends StatefulWidget {
-  const _LogSetDialog({required this.initialWeight, required this.initialReps});
+  const _LogSetDialog({
+    required this.initialWeight,
+    required this.initialReps,
+    required this.unit,
+  });
 
+  /// In kilograms, as stored.
   final double initialWeight;
   final int initialReps;
+  final WeightUnit unit;
 
   @override
   State<_LogSetDialog> createState() => _LogSetDialogState();
 }
 
 class _LogSetDialogState extends State<_LogSetDialog> {
-  late final _weightController =
-      TextEditingController(text: formatWeight(widget.initialWeight));
+  late final _weightController = TextEditingController(
+    text: formatWeightIn(widget.initialWeight, widget.unit),
+  );
   late final _repsController =
       TextEditingController(text: widget.initialReps.toString());
 
@@ -248,7 +291,10 @@ class _LogSetDialogState extends State<_LogSetDialog> {
   }
 
   void _submit() {
-    final weight = double.tryParse(_weightController.text.replaceAll(',', '.')) ??
+    // Unparseable text keeps the weight it started with rather than logging a
+    // zero — a fat-fingered edit shouldn't quietly wipe out the set.
+    final weight =
+        parseWeightAsKilograms(_weightController.text, widget.unit) ??
         widget.initialWeight;
     final reps = int.tryParse(_repsController.text) ?? widget.initialReps;
     Navigator.of(context).pop((
@@ -274,9 +320,9 @@ class _LogSetDialogState extends State<_LogSetDialog> {
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
               ],
               textAlign: TextAlign.center,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Weight',
-                suffixText: 'kg',
+                suffixText: widget.unit.label,
               ),
               onSubmitted: (_) => _submit(),
             ),

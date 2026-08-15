@@ -6,9 +6,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/features/calories/widgets/macro_breakdown.dart';
 
+import 'support/default_accent.dart';
+
 Future<void> _pump(WidgetTester tester, Widget child) {
   return tester.pumpWidget(
-    ProviderScope(child: MaterialApp(home: Scaffold(body: child))),
+    ProviderScope(
+      overrides: [defaultAccentOverride],
+      child: MaterialApp(home: Scaffold(body: child)),
+    ),
   );
 }
 

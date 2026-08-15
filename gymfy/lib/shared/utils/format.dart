@@ -24,6 +24,19 @@ String formatWeight(double weight) {
       : weight.toStringAsFixed(1);
 }
 
+/// Parses a user-typed weight, accepting a comma as the decimal separator
+/// (German keyboards put comma on the number row). Returns null for anything
+/// that isn't a positive number.
+///
+/// Unit-agnostic: this just reads the number. Use `parseWeightAsKilograms` in
+/// `units.dart` when the value is going into the database, so a weight typed in
+/// pounds isn't stored as kilograms.
+double? parseWeight(String text) {
+  final value = double.tryParse(text.trim().replaceAll(',', '.'));
+  if (value == null || value <= 0) return null;
+  return value;
+}
+
 /// Formats a date + time like "23 Jul 2026 • 18:05". Kept dependency-free (no
 /// intl package) since the app is single-locale for now.
 String formatDateTime(DateTime dt) {
@@ -46,6 +59,9 @@ const _weekdayAbbr = [
   'Sat',
   'Sun',
 ];
+
+/// Formats just the weekday like "Fri" — used by the weekly chart axes.
+String formatWeekdayAbbr(DateTime day) => _weekdayAbbr[day.weekday - 1];
 
 /// Formats a day like "Fri 24 Jul", or "Today" / "Yesterday" relative to
 /// [today] (defaults to now). Used by the day-by-day tracking screens.

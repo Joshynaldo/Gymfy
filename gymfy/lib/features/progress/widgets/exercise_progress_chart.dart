@@ -4,11 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../shared/utils/format.dart';
+import '../../../shared/utils/units.dart';
 import '../data/progress_repository.dart';
 
 /// A line chart of an exercise's top-set weight across sessions over time.
 ///
-/// X is the session (oldest → newest) with dated labels; Y is weight in kg.
+/// X is the session (oldest → newest) with dated labels; Y is weight in the
+/// user's chosen unit.
 /// The line and dots use the app accent colour.
 class ExerciseProgressChart extends ConsumerWidget {
   const ExerciseProgressChart({super.key, required this.points});
@@ -19,13 +21,17 @@ class ExerciseProgressChart extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final accent = ref.watch(accentColorProvider);
+    final unit = ref.watch(weightUnitProvider);
 
+    // Plotted in the display unit rather than in kilograms, so the gridlines
+    // and axis labels land on round numbers in whichever unit is on screen —
+    // converting only the labels would give ticks like 110, 220, 331.
     final spots = [
       for (var i = 0; i < points.length; i++)
-        FlSpot(i.toDouble(), points[i].topWeight),
+        FlSpot(i.toDouble(), weightIn(points[i].topWeight, unit)),
     ];
 
-    final maxWeight = points.map((p) => p.topWeight).reduce((a, b) => a > b ? a : b);
+    final maxWeight = spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
     // Round the top of the axis up to something tidy and leave headroom.
     final maxY = maxWeight <= 0 ? 10.0 : (maxWeight * 1.2);
     final yInterval = _niceInterval(maxY);
@@ -102,7 +108,7 @@ class ExerciseProgressChart extends ConsumerWidget {
             getTooltipItems: (touchedSpots) => touchedSpots.map((spot) {
               final p = points[spot.x.round()];
               return LineTooltipItem(
-                '${formatWeight(p.topWeight)} kg × ${p.repsAtTop}\n'
+                '${formatWeightUnit(p.topWeight, unit)} × ${p.repsAtTop}\n'
                 '${formatShortDate(p.date)}',
                 TextStyle(
                   color: theme.colorScheme.onInverseSurface,
