@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../database/app_database.dart';
@@ -48,6 +49,12 @@ class SettingsRepository {
     await (_db.delete(_db.appSettings)..where((t) => t.name.equals(name))).go();
   }
 }
+
+/// One setting's raw text, watched. The building block every typed preference
+/// provider is built on, so a key is read in exactly one place.
+final rawSettingProvider = StreamProvider.family<String?, String>((ref, key) {
+  return ref.watch(settingsRepositoryProvider).watchRaw(key);
+});
 
 /// App-wide access to the [SettingsRepository].
 @Riverpod(keepAlive: true)

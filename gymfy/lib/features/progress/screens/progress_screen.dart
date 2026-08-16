@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/accent_color.dart';
-import '../../../shared/models/exercise_category.dart';
 import '../../../shared/utils/exercise_display.dart';
 import '../data/progress_repository.dart';
 
@@ -56,7 +55,6 @@ class ProgressScreen extends ConsumerWidget {
               final exercise = exercises[index];
               return _ExerciseTile(
                 name: exercise.name,
-                category: exercise.category,
                 onTap: () => context.go('/progress/exercise/${exercise.id}'),
               );
             },
@@ -68,14 +66,9 @@ class ProgressScreen extends ConsumerWidget {
 }
 
 class _ExerciseTile extends ConsumerWidget {
-  const _ExerciseTile({
-    required this.name,
-    required this.category,
-    required this.onTap,
-  });
+  const _ExerciseTile({required this.name, required this.onTap});
 
   final String name;
-  final ExerciseCategory category;
   final VoidCallback onTap;
 
   @override
@@ -85,7 +78,7 @@ class _ExerciseTile extends ConsumerWidget {
     return ListTile(
       leading: CircleAvatar(
         backgroundColor: accent.withValues(alpha: 0.15),
-        child: Icon(categoryIcon(category), color: accent),
+        child: Icon(exerciseIcon, color: accent),
       ),
       title: Text(name),
       trailing: const Icon(Icons.show_chart),

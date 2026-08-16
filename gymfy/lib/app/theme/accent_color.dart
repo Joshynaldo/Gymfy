@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../shared/data/settings_repository.dart';
+import 'app_theme.dart';
 
 part 'accent_color.g.dart';
 
@@ -28,16 +29,30 @@ class AccentPalette {
 /// Setting key for the chosen accent.
 const accentColorSetting = 'accent_color';
 
+/// Every accent that may legitimately be stored.
+///
+/// The six palette options, plus the accent each editor theme was designed
+/// around. The theme accents aren't in [AccentPalette.options] on purpose —
+/// several are near-duplicates of the base six, and a picker with two similar
+/// purples in it is worse than one — but they still have to survive a
+/// round-trip once a theme suggests one.
+List<Color> get selectableAccents => [
+  ...AccentPalette.options,
+  for (final theme in AppTheme.values)
+    if (theme.suggestedAccent != null) theme.suggestedAccent!,
+];
+
 /// Reads a stored accent back, or null when there isn't a usable one.
 ///
-/// The stored number is only honoured if it still matches a palette option, so a
-/// value left behind by an older build (or a hand-edited database) degrades to
-/// the default instead of theming the app some colour the picker can't show.
+/// The stored number is only honoured if it still matches a colour the app can
+/// actually offer, so a value left behind by an older build (or a hand-edited
+/// database) degrades to the default instead of theming the app some colour
+/// nothing can select again.
 Color? parseAccentColor(String? raw) {
   if (raw == null) return null;
   final value = int.tryParse(raw);
   if (value == null) return null;
-  for (final option in AccentPalette.options) {
+  for (final option in selectableAccents) {
     if (option.toARGB32() == value) return option;
   }
   return null;
