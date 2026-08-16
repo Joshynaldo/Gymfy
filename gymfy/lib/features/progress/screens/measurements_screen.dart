@@ -9,6 +9,7 @@ import '../../../shared/models/body_measurement.dart';
 import '../../../shared/utils/dates.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
+import '../../../shared/widgets/weight_wheel.dart';
 import '../data/measurement_units.dart';
 import '../data/measurements_repository.dart';
 
@@ -305,27 +306,52 @@ class _MeasurementDialogState extends State<_MeasurementDialog> {
     super.dispose();
   }
 
+  /// The wheel's value, in the display unit. Zero means "not set", matching the
+  /// empty text field the other fields use.
+  late double _wheelWeight = widget.field.displayValue(
+    widget.current ?? widget.suggestion ?? 0,
+    widget.unit,
+  );
+
   void _save() => Navigator.of(context).pop((
     // Converted on the way out, so the weight field stores kilograms whatever
-    // unit it was typed in.
-    value: widget.field.parseStored(_controller.text, widget.unit),
+    // unit it was picked in.
+    value: widget.field.isWeight
+        ? (_wheelWeight <= 0
+              ? null
+              : widget.field.storedValue(_wheelWeight, widget.unit))
+        : widget.field.parseStored(_controller.text, widget.unit),
   ));
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(widget.field.label),
-      content: TextField(
-        controller: _controller,
-        autofocus: true,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
-        decoration: InputDecoration(
-          labelText: widget.field.label,
-          suffixText: widget.field.labelIn(widget.unit),
-        ),
-        onSubmitted: (_) => _save(),
-      ),
+      // Only bodyweight gets the wheel. The others are centimetres, and a drum
+      // of quarter-kilos would be offering the wrong steps in the wrong unit —
+      // a circumference wheel is its own job, not this one.
+      content: widget.field.isWeight
+          ? WeightWheel(
+              initialWeight: _wheelWeight,
+              unit: widget.unit,
+              label: widget.field.label,
+              onChanged: (value) => _wheelWeight = value,
+            )
+          : TextField(
+              controller: _controller,
+              autofocus: true,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+              ],
+              decoration: InputDecoration(
+                labelText: widget.field.label,
+                suffixText: widget.field.labelIn(widget.unit),
+              ),
+              onSubmitted: (_) => _save(),
+            ),
       actions: [
         if (widget.current != null)
           TextButton(

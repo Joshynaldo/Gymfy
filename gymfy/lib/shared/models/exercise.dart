@@ -2,8 +2,6 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart';
 
-import 'exercise_category.dart';
-
 /// Stores the `muscleIds` list as a JSON string, since SQLite has no native
 /// list type. e.g. ["chest", "front_deltoid", "triceps"] <-> that same text.
 class MuscleIdsConverter extends TypeConverter<List<String>, String> {
@@ -34,14 +32,47 @@ class Exercises extends Table {
   /// (muscle_ids.dart); stored as a JSON array. Drives the muscle-map heatmap.
   TextColumn get muscleIds => text().map(const MuscleIdsConverter())();
 
-  /// Path to the preview GIF asset, e.g.
-  /// "assets/exercises/barbell_bench_press.gif". Nullable — not every exercise
-  /// has a GIF yet.
+  /// Where the preview image lives. Two shapes, told apart by the prefix:
+  ///
+  /// - `assets/exercises/<id>.gif` — a built-in GIF bundled with the app.
+  /// - an absolute file path — a picture the user chose for a custom exercise,
+  ///   copied into the app's own directory (see `ExerciseRepository.saveImage`).
+  ///
+  /// Nullable: most exercises have no image, which is a normal state and not an
+  /// error. Use `isBundledAsset` to decide how to load it.
   TextColumn get gifPath => text().nullable()();
 
-  /// Movement-pattern grouping, stored as its enum name (push/pull/legs/core).
-  TextColumn get category => textEnum<ExerciseCategory>()();
+  /// True for exercises loaded by putting plates on a bar.
+  ///
+  /// Barbell and EZ-bar movements only. Plate-loaded *machines* (leg press,
+  /// hack squat) are deliberately excluded: their sleds have an unlisted
+  /// starting weight and a varying number of pegs, so "bar + 2 × plates" would
+  /// quietly report a wrong number rather than a useful one.
+  ///
+  /// Drives how the log-set dialog opens — stacking plates for these, typing a
+  /// number for everything else.
+  BoolColumn get isPlateLoaded => boolean().withDefault(const Constant(false))();
+
+  /// True for exercises the user created themselves.
+  ///
+  /// This is what gates editing and deleting: the built-in library is upserted
+  /// from [exerciseSeedData] on every launch, so "editing" a seed exercise would
+  /// silently revert on the next start. Rather than let that happen, the UI only
+  /// offers those actions on custom rows.
+  BoolColumn get isCustom => boolean().withDefault(const Constant(false))();
+
+  /// True once the user has deleted a custom exercise that already has history.
+  ///
+  /// Archived exercises vanish from the library and from every picker, but the
+  /// row stays so past workouts keep their sets and their exercise *name*.
+  /// Deleting a custom exercise that was never logged removes it outright — no
+  /// history to protect, so no tombstone to leave behind.
+  BoolColumn get isArchived => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};
 }
+
+/// Whether [gifPath] points at a GIF bundled in the app (as opposed to a file
+/// the user picked from their gallery). Decides `Image.asset` vs `Image.file`.
+bool isBundledAsset(String path) => path.startsWith('assets/');

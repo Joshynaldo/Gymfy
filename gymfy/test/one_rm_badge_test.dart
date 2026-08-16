@@ -9,7 +9,6 @@ import 'package:gymfy/features/exercises/data/exercise_repository.dart';
 import 'package:gymfy/features/progress/data/progress_repository.dart';
 import 'package:gymfy/features/progress/screens/exercise_progress_screen.dart';
 import 'package:gymfy/shared/database/app_database.dart';
-import 'package:gymfy/shared/models/exercise_category.dart';
 
 import 'support/default_accent.dart';
 
@@ -20,7 +19,9 @@ void main() {
     id: exerciseId,
     name: 'Barbell Bench Press',
     muscleIds: const ['chest'],
-    category: ExerciseCategory.push,
+    isPlateLoaded: false,
+    isCustom: false,
+    isArchived: false,
   );
 
   final history = [
@@ -99,8 +100,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.widgetWithText(AlertDialog, 'Tested 1RM'), findsOneWidget);
-    // Pre-filled with the estimate, so a close retest is one tap to save.
-    expect(find.widgetWithText(TextField, '114.5'), findsOneWidget);
+    // The wheel opens on the estimate, so a close retest is one tap to save.
+    // 114.5 shows as "114" on the whole drum and ".5" on the fraction drum.
+    expect(find.text('114'), findsOneWidget);
+    expect(find.text('.5'), findsOneWidget);
     // Nothing to clear yet.
     expect(find.text('Clear'), findsNothing);
   });

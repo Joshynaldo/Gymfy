@@ -4,11 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/accent_color.dart';
 import '../../../shared/data/settings_repository.dart';
 import '../../../shared/widgets/accent_swatch.dart';
-import '../../onboarding/data/onboarding_repository.dart';
-import '../../workout/data/rest_timer_repository.dart';
 import '../../../shared/utils/units.dart';
+import '../../onboarding/data/onboarding_repository.dart';
+import '../../overload/widgets/overload_settings.dart';
+import '../../plates/widgets/plate_inventory_picker.dart';
+import '../../workout/data/rest_timer_repository.dart';
 import '../../workout/widgets/rest_length_picker.dart';
 import '../data/notification_preferences.dart';
+import '../widgets/theme_picker.dart';
 
 /// Everything the user can change about the app.
 class SettingsScreen extends ConsumerWidget {
@@ -21,11 +24,23 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.only(bottom: 32),
         children: const [
-          _SectionHeader('Appearance'),
+          _SectionHeader('Theme'),
+          ThemePicker(),
+          Divider(height: 1),
+          _SectionHeader('Accent'),
           _AccentPicker(),
           Divider(height: 1),
           _SectionHeader('Units'),
           _UnitPicker(),
+          Divider(height: 1),
+          _SectionHeader('Plates'),
+          PlateInventoryPicker(),
+          Divider(height: 1),
+          _SectionHeader('Progressive overload'),
+          Padding(
+            padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: OverloadSettingsPanel(),
+          ),
           Divider(height: 1),
           _SectionHeader('You'),
           _NameTile(),
@@ -85,7 +100,13 @@ class _AccentPicker extends ConsumerWidget {
             spacing: 16,
             runSpacing: 16,
             children: [
-              for (final option in AccentPalette.options)
+              // The six house colours, plus the current one if a theme
+              // suggested something outside them — otherwise the row would
+              // show nothing selected and look broken.
+              for (final option in {
+                ...AccentPalette.options,
+                selected,
+              })
                 AccentSwatch(
                   color: option,
                   selected: option == selected,

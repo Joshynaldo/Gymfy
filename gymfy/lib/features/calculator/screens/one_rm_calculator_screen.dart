@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../shared/utils/units.dart';
+import '../../../shared/widgets/weight_wheel.dart';
+import '../../plates/screens/plate_calculator_screen.dart';
 import '../data/one_rm_math.dart';
 
 /// Estimates a one-rep max from a set you've actually done.
@@ -19,21 +20,16 @@ class OneRmCalculatorScreen extends ConsumerStatefulWidget {
 }
 
 class _OneRmCalculatorScreenState extends ConsumerState<OneRmCalculatorScreen> {
-  final _weight = TextEditingController();
+  /// The lifted weight in the display unit; zero means nothing picked yet.
+  double _weight = 0;
   int _reps = 5;
-
-  @override
-  void dispose() {
-    _weight.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final unit = ref.watch(weightUnitProvider);
-    // Typed in the display unit; the maths and the estimates are all kilograms.
-    final weight = parseWeightAsKilograms(_weight.text, unit);
+    // Picked in the display unit; the maths and the estimates are all kilograms.
+    final weight = _weight <= 0 ? null : weightToKilograms(_weight, unit);
     final estimates = weight == null
         ? null
         : estimateOneRm(weight: weight, reps: _reps);
@@ -47,22 +43,13 @@ class _OneRmCalculatorScreenState extends ConsumerState<OneRmCalculatorScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                TextField(
-                  controller: _weight,
-                  autofocus: true,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                  ],
-                  decoration: InputDecoration(
-                    labelText: 'Weight lifted',
-                    suffixText: unit.label,
-                    border: const OutlineInputBorder(),
-                  ),
-                  // Rebuild on every keystroke so the estimate tracks typing.
-                  onChanged: (_) => setState(() {}),
+                WeightWheel(
+                  key: ValueKey(unit),
+                  initialWeight: _weight,
+                  unit: unit,
+                  label: 'Weight lifted',
+                  // Rebuild on every notch so the estimate tracks the drum.
+                  onChanged: (value) => setState(() => _weight = value),
                 ),
                 const SizedBox(height: 20),
                 Row(
@@ -167,6 +154,20 @@ class _Result extends ConsumerWidget {
                       'they range $low–$high ${unit.label}',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              // Handed over in the display unit, already rounded to something
+              // loadable — the plate calculator works in what's on the plates.
+              onPressed: () => showPlateCalculator(
+                context,
+                weight: weightIn(roundToLoadable(oneRm, unit), unit),
+              ),
+              icon: const Icon(Icons.donut_large_outlined),
+              label: const Text('What plates is that?'),
             ),
           ),
           if (reps > oneRmReliableReps) ...[

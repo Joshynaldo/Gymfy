@@ -8,9 +8,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/app/theme/accent_color.dart';
 import 'package:gymfy/features/onboarding/data/onboarding_repository.dart';
 import 'package:gymfy/features/onboarding/screens/onboarding_screen.dart';
+import 'package:gymfy/features/overload/data/overload_preference.dart';
 import 'package:gymfy/features/progress/data/measurements_repository.dart';
 import 'package:gymfy/shared/data/settings_repository.dart';
 import 'package:gymfy/shared/database/app_database.dart';
+
+import 'support/weight_wheel.dart';
 
 void main() {
   late AppDatabase db;
@@ -188,7 +191,7 @@ void main() {
       expect(find.text('Next'), findsOneWidget);
     });
 
-    testWidgets('walks forward through all three steps', (tester) async {
+    testWidgets('walks forward through every step', (tester) async {
       await pump(tester);
 
       await tester.tap(find.text('Next'));
@@ -198,10 +201,49 @@ void main() {
 
       await tester.tap(find.text('Next'));
       await tester.pumpAndSettle();
+      expect(
+        find.text('Should Gymfy suggest heavier weights?'),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
       expect(find.text('Pick your colour'), findsOneWidget);
       // The last step offers to finish instead of advancing.
       expect(find.text('Next'), findsNothing);
       expect(find.text('Start lifting'), findsOneWidget);
+    });
+
+    testWidgets('progressive overload starts on and can be turned off', (
+      tester,
+    ) async {
+      await pump(tester);
+      await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
+
+      // Offered already on: it's the behaviour most people want, and the page
+      // explains what it does before asking.
+      expect(container.read(overloadEnabledProvider), isTrue);
+      // The step chooser is right there too — the same panel Settings shows.
+      expect(find.text('How much to add'), findsOneWidget);
+      // ...but not the deload option, which is a question about month three.
+      expect(find.text('Deload'), findsNothing);
+
+      await tester.tap(find.text('Suggest heavier weights'));
+      await tester.runAsync(() => pumpEventQueue());
+      await tester.pumpAndSettle();
+
+      // Written straight through, like the accent picker — there is no save
+      // step in onboarding.
+      expect(container.read(overloadEnabledProvider), isFalse);
+      expect(
+        await container.read(settingsRepositoryProvider).readRaw(
+          overloadEnabledSetting,
+        ),
+        'false',
+      );
     });
 
     testWidgets('and back again', (tester) async {
@@ -217,6 +259,8 @@ void main() {
 
     testWidgets('tapping a colour applies it immediately', (tester) async {
       await pump(tester);
+      await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Next'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Next'));
@@ -238,15 +282,19 @@ void main() {
       expect(container.read(accentColorProvider), target);
     });
 
-    testWidgets('typed answers are saved on finish', (tester) async {
+    testWidgets('answers are saved on finish', (tester) async {
       await pump(tester);
 
       await tester.enterText(find.byType(TextField), 'Joshua');
       await tester.tap(find.text('Next'));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), '82,5');
+      // The bodyweight page is a wheel now, so there is no decimal separator to
+      // get wrong — the half-kilo is a notch, not a keystroke.
+      await pickWeight(tester, whole: 82, fractionIndex: 2);
       await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next')); // past the overload step
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Start lifting'));
@@ -254,14 +302,14 @@ void main() {
       await waitForFinish(tester);
 
       expect(container.read(userNameProvider).value, 'Joshua');
-      // A comma decimal is what a German keyboard offers, and it must not be
-      // silently dropped.
       expect(container.read(latestBodyweightProvider)?.value, 82.5);
     });
 
     testWidgets('everything can be skipped', (tester) async {
       await pump(tester);
 
+      await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Next'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Next'));

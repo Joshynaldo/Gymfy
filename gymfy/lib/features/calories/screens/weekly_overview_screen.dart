@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/utils/format.dart';
+import '../../../shared/widgets/bar_chart.dart';
 import '../data/calorie_repository.dart';
 import '../data/weekly_overview_repository.dart';
-import '../widgets/weekly_bar_chart.dart';
 
-/// The weekly overview: the last seven days of calories against the daily goal,
-/// and the share of habits completed each day.
+/// The weekly overview: the last seven days of calories against the daily goal.
 class WeeklyOverviewScreen extends ConsumerWidget {
   const WeeklyOverviewScreen({super.key});
 
@@ -30,11 +29,7 @@ class WeeklyOverviewScreen extends ConsumerWidget {
         ),
         data: (week) => ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-          children: [
-            _CaloriesSection(week: week),
-            const SizedBox(height: 24),
-            _HabitsSection(week: week),
-          ],
+          children: [_CaloriesSection(week: week)],
         ),
       ),
     );
@@ -66,8 +61,8 @@ class _CaloriesSection extends StatelessWidget {
           ? 'Nothing logged in the last 7 days.'
           : '$average kcal average • $onTarget of ${logged.length} '
                 'logged ${logged.length == 1 ? 'day' : 'days'} within goal',
-      chart: WeeklyBarChart(
-        days: [for (final d in week) d.day],
+      chart: SimpleBarChart(
+        labels: [for (final d in week) formatWeekdayAbbr(d.day)],
         values: [for (final d in week) d.calories == 0 ? null : d.calories.toDouble()],
         maxY: peak * 1.15,
         goal: goal.toDouble(),
@@ -77,42 +72,6 @@ class _CaloriesSection extends StatelessWidget {
             '${week[i].calories} kcal\n${formatDayLabel(week[i].day)}',
       ),
       legend: 'Dashed line = daily goal ($goal kcal)',
-    );
-  }
-}
-
-class _HabitsSection extends StatelessWidget {
-  const _HabitsSection({required this.week});
-
-  final List<DaySummary> week;
-
-  @override
-  Widget build(BuildContext context) {
-    final tracked = week.where((d) => d.habitsPlanned > 0).toList();
-    final totalDone = tracked.fold<int>(0, (s, d) => s + d.habitsDone);
-    final totalPlanned = tracked.fold<int>(0, (s, d) => s + d.habitsPlanned);
-    final rate = totalPlanned == 0 ? 0 : (totalDone / totalPlanned * 100).round();
-    final perfectDays = tracked.where((d) => d.completionRate == 1).length;
-
-    return _Section(
-      title: 'Habit completion',
-      subtitle: tracked.isEmpty
-          ? 'No habits tracked yet — add some on the Habits screen.'
-          : '$rate% completed • $perfectDays perfect '
-                '${perfectDays == 1 ? 'day' : 'days'}',
-      chart: WeeklyBarChart(
-        days: [for (final d in week) d.day],
-        // Percent, so the axis is always 0–100 and weeks compare directly.
-        values: [
-          for (final d in week)
-            d.completionRate == null ? null : d.completionRate! * 100,
-        ],
-        maxY: 100,
-        yLabel: (value) => '${value.round()}%',
-        tooltip: (i) =>
-            '${week[i].habitsDone}/${week[i].habitsPlanned} habits\n'
-            '${formatDayLabel(week[i].day)}',
-      ),
     );
   }
 }

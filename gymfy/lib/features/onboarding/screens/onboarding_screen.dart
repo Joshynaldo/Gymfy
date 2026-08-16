@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../shared/utils/units.dart';
 import '../../../shared/widgets/accent_swatch.dart';
+import '../../../shared/widgets/weight_wheel.dart';
+import '../../overload/widgets/overload_settings.dart';
 import '../data/onboarding_repository.dart';
 
-/// First-launch setup: name, bodyweight, accent colour.
+/// First-launch setup: name, bodyweight, progressive overload, accent colour.
 ///
 /// Shown instead of the app until it's finished. Every answer is skippable —
 /// nothing here is needed to log a workout, and a wall of required fields is a
@@ -23,7 +24,11 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _pages = PageController();
   final _name = TextEditingController();
-  final _weight = TextEditingController();
+
+  /// Bodyweight in the *display* unit. Zero means "skipped" — the page says
+  /// bodyweight is optional, and a wheel always has some value under it, so
+  /// leaving it at the bottom has to mean the same as leaving a field blank.
+  double _weight = 0;
 
   /// Which page is showing, so the buttons and dots can follow along.
   int _page = 0;
@@ -31,13 +36,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   /// Guards the finish button against a double tap while the writes run.
   bool _saving = false;
 
-  static const _lastPage = 2;
+  static const _lastPage = 3;
 
   @override
   void dispose() {
     _pages.dispose();
     _name.dispose();
-    _weight.dispose();
     super.dispose();
   }
 
@@ -63,11 +67,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     // and the app root swaps this screen out for the router.
     await ref.read(onboardingRepositoryProvider).finish(
       name: _name.text,
-      // Typed in whichever unit the page was showing; stored as kilograms.
-      bodyweightKg: parseWeightAsKilograms(
-        _weight.text,
-        ref.read(weightUnitProvider),
-      ),
+      // Picked in whichever unit the page was showing; stored as kilograms.
+      bodyweightKg: _weight <= 0
+          ? null
+          : weightToKilograms(_weight, ref.read(weightUnitProvider)),
     );
   }
 
@@ -86,7 +89,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 onPageChanged: (page) => setState(() => _page = page),
                 children: [
                   _NamePage(controller: _name),
-                  _BodyweightPage(controller: _weight),
+                  _BodyweightPage(
+                    weight: _weight,
+                    onChanged: (value) => _weight = value,
+                  ),
+                  const _OverloadPage(),
                   const _AccentPage(),
                 ],
               ),
@@ -135,7 +142,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 }
 
-/// Shared layout for a step, so all three read as one flow.
+/// Shared layout for a step, so every page reads as one flow.
 class _Step extends StatelessWidget {
   const _Step({
     required this.title,
@@ -206,9 +213,11 @@ class _NamePage extends StatelessWidget {
 /// it here also sets the app-wide preference, so the rest of the app is right
 /// from the first screen.
 class _BodyweightPage extends ConsumerWidget {
-  const _BodyweightPage({required this.controller});
+  const _BodyweightPage({required this.weight, required this.onChanged});
 
-  final TextEditingController controller;
+  /// In the display unit; zero means skipped.
+  final double weight;
+  final ValueChanged<double> onChanged;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -218,8 +227,8 @@ class _BodyweightPage extends ConsumerWidget {
       title: 'How much do you weigh?',
       body:
           'Used to rank your lifts against your own bodyweight, and it becomes '
-          'the first point on your weight chart. Skip it if you would rather '
-          'not — nothing else depends on it.',
+          'the first point on your weight chart. Leave it at zero to skip — '
+          'nothing else depends on it.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -234,18 +243,15 @@ class _BodyweightPage extends ConsumerWidget {
                 setWeightUnit(ref, selection.first),
           ),
           const SizedBox(height: 16),
-          TextField(
-            controller: controller,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-            ],
-            decoration: InputDecoration(
-              labelText: 'Bodyweight',
-              hintText: 'Optional',
-              suffixText: unit.label,
-              border: const OutlineInputBorder(),
-            ),
+          WeightWheel(
+            // Keyed on the unit so switching kg/lbs above rebuilds the drums
+            // with that unit's steps and range, rather than keeping kilogram
+            // quarters on a pound wheel.
+            key: ValueKey(unit),
+            initialWeight: weight,
+            unit: unit,
+            label: 'Bodyweight',
+            onChanged: onChanged,
           ),
         ],
       ),
@@ -256,6 +262,35 @@ class _BodyweightPage extends ConsumerWidget {
 /// The accent picker. Tapping a swatch writes it immediately, so the whole app
 /// — including this screen's own buttons and dots — re-themes on the spot. That
 /// is the preview, so there is no separate "apply" step and nothing to undo.
+/// Progressive overload, on or off.
+///
+/// Asked here rather than left to be discovered, because it changes what the
+/// app does every single session — and asked once for everything rather than
+/// per exercise, since it's a decision about how you train, not about a
+/// particular lift.
+///
+/// Writes straight through like the accent picker: there is no "save" step in
+/// onboarding, and a switch that only takes effect at the end would be a
+/// promise the screen can't show you keeping.
+class _OverloadPage extends StatelessWidget {
+  const _OverloadPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return const _Step(
+      title: 'Should Gymfy suggest heavier weights?',
+      body:
+          'When you hit every set at the top of your rep range, the next '
+          'session opens with a bit more on the bar. It only ever suggests — '
+          'the weight stays yours to change.',
+      // The same panel Settings shows, minus the deload option: that's a
+      // question about month three, and asking it before workout one would be
+      // asking someone to plan a stall they haven't hit yet.
+      child: OverloadSettingsPanel(showDeload: false),
+    );
+  }
+}
+
 class _AccentPage extends ConsumerWidget {
   const _AccentPage();
 

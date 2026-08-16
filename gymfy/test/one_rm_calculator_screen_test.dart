@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/features/calculator/screens/one_rm_calculator_screen.dart';
 
 import 'support/default_accent.dart';
+import 'support/weight_wheel.dart';
 
 void main() {
   Future<void> pump(WidgetTester tester) async {
@@ -31,8 +32,7 @@ void main() {
   ) async {
     await pump(tester);
 
-    await tester.enterText(find.byType(TextField), '100');
-    await tester.pumpAndSettle();
+    await pickWeight(tester, whole: 100);
 
     // Default 5 reps: Epley 116.67, Brzycki 112.5, Lander 113.71 — average
     // 114.29, rounded to the nearest half kilo.
@@ -44,8 +44,7 @@ void main() {
   testWidgets('lists every formula, highest first', (tester) async {
     await pump(tester);
 
-    await tester.enterText(find.byType(TextField), '100');
-    await tester.pumpAndSettle();
+    await pickWeight(tester, whole: 100);
 
     expect(find.text('Formula comparison'), findsOneWidget);
     expect(find.text('Epley'), findsOneWidget);
@@ -64,7 +63,7 @@ void main() {
   testWidgets('a true single needs no estimating', (tester) async {
     await pump(tester);
 
-    await tester.enterText(find.byType(TextField), '140');
+    await pickWeight(tester, whole: 140);
     // Drag the reps slider all the way to the left (1 rep).
     await tester.drag(find.byType(Slider), const Offset(-500, 0));
     await tester.pumpAndSettle();
@@ -79,8 +78,7 @@ void main() {
   testWidgets('warns once the rep count stops being reliable', (tester) async {
     await pump(tester);
 
-    await tester.enterText(find.byType(TextField), '60');
-    await tester.pumpAndSettle();
+    await pickWeight(tester, whole: 60);
     expect(find.textContaining('rough guess'), findsNothing);
 
     // Drag the reps slider to the far end (20 reps).

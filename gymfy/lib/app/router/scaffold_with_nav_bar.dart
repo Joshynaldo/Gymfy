@@ -31,6 +31,11 @@ class ScaffoldWithNavBar extends StatelessWidget {
         // which is driven by the accent — see app_theme.dart.
         destinations: const [
           NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.fitness_center),
             label: 'Workout',
           ),

@@ -85,3 +85,14 @@ String formatDuration(Duration d) {
   final minutes = (totalMinutes % 60).toString().padLeft(2, '0');
   return '$hours h $minutes min';
 }
+
+/// Formats a rep target: `10` for a fixed number, `8–12` for a range.
+///
+/// A null [max] means no range. An en dash rather than a hyphen — it's the
+/// range dash, and at small text sizes a hyphen reads as a minus sign.
+String formatRepTarget(int reps, int? max) =>
+    max == null || max <= reps ? '$reps' : '$reps–$max';
+
+/// Formats a full set target, e.g. `3 × 10` or `3 × 8–12`.
+String formatSetTarget(int sets, int reps, int? max) =>
+    '$sets × ${formatRepTarget(reps, max)}';
