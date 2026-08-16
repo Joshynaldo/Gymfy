@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 /// Shows a simple "enter a name" dialog and returns the trimmed text, or null
 /// if the user cancelled or left it blank.
 ///
-/// Used for creating splits, days and habits. It owns its
+/// Used for creating splits and days. It owns its
 /// [TextEditingController] via a [StatefulWidget] so the controller is disposed
 /// only when the dialog is fully gone — disposing it earlier crashes while the
 /// dialog animates away.

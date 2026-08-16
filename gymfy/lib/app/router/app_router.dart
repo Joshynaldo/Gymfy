@@ -6,14 +6,16 @@ import '../../features/calculator/screens/strength_rank_screen.dart';
 import '../../features/calories/screens/calorie_log_screen.dart';
 import '../../features/calories/screens/weekly_overview_screen.dart';
 import '../../features/exercises/screens/exercise_detail_screen.dart';
+import '../../features/exercises/screens/exercise_form_screen.dart';
 import '../../features/exercises/screens/exercise_library_screen.dart';
-import '../../features/habits/screens/habit_tracker_screen.dart';
+import '../../features/home/screens/home_screen.dart';
 import '../../features/more/screens/more_screen.dart';
 import '../../features/muscle_map/screens/muscle_map_screen.dart';
 import '../../features/progress/screens/exercise_progress_screen.dart';
 import '../../features/progress/screens/measurement_history_screen.dart';
 import '../../features/progress/screens/measurements_screen.dart';
 import '../../features/progress/screens/photo_comparison_screen.dart';
+import '../../features/plates/screens/plate_calculator_screen.dart';
 import '../../features/progress/screens/progress_photos_screen.dart';
 import '../../features/progress/screens/progress_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
@@ -37,13 +39,22 @@ part 'app_router.g.dart';
 @Riverpod(keepAlive: true)
 GoRouter goRouter(Ref ref) {
   return GoRouter(
-    initialLocation: '/workout',
+    initialLocation: '/home',
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             ScaffoldWithNavBar(navigationShell: navigationShell),
         branches: [
-          // Tab 0 — Workout
+          // Tab 0 — Home
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home',
+                builder: (context, state) => const HomeScreen(),
+              ),
+            ],
+          ),
+          // Tab 1 — Workout
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -80,24 +91,38 @@ GoRouter goRouter(Ref ref) {
               ),
             ],
           ),
-          // Tab 1 — Exercises
+          // Tab 2 — Exercises
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/exercises',
                 builder: (context, state) => const ExerciseLibraryScreen(),
                 routes: [
+                  // Must come before ':id', which would otherwise swallow
+                  // "new" and try to look up an exercise with that id.
+                  GoRoute(
+                    path: 'new',
+                    builder: (context, state) => const ExerciseFormScreen(),
+                  ),
                   GoRoute(
                     path: ':id',
                     builder: (context, state) => ExerciseDetailScreen(
                       exerciseId: state.pathParameters['id']!,
                     ),
+                    routes: [
+                      GoRoute(
+                        path: 'edit',
+                        builder: (context, state) => ExerciseFormScreen(
+                          exerciseId: state.pathParameters['id']!,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ],
           ),
-          // Tab 2 — Muscle map
+          // Tab 3 — Muscle map
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -106,7 +131,7 @@ GoRouter goRouter(Ref ref) {
               ),
             ],
           ),
-          // Tab 3 — Progress
+          // Tab 4 — Progress
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -145,7 +170,7 @@ GoRouter goRouter(Ref ref) {
               ),
             ],
           ),
-          // Tab 4 — More (hub for extra tools)
+          // Tab 5 — More (hub for extra tools)
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -157,10 +182,6 @@ GoRouter goRouter(Ref ref) {
                     builder: (context, state) => const CalorieLogScreen(),
                   ),
                   GoRoute(
-                    path: 'habits',
-                    builder: (context, state) => const HabitTrackerScreen(),
-                  ),
-                  GoRoute(
                     path: 'weekly',
                     builder: (context, state) => const WeeklyOverviewScreen(),
                   ),
@@ -168,6 +189,16 @@ GoRouter goRouter(Ref ref) {
                     path: 'one-rm',
                     builder: (context, state) =>
                         const OneRmCalculatorScreen(),
+                  ),
+                  GoRoute(
+                    path: 'plates',
+                    builder: (context, state) => PlateCalculatorScreen(
+                      // Optional prefill, so a weight can be handed over from
+                      // the 1RM calculator or a logged set.
+                      initialWeight: double.tryParse(
+                        state.uri.queryParameters['weight'] ?? '',
+                      ),
+                    ),
                   ),
                   GoRoute(
                     path: 'rank',
