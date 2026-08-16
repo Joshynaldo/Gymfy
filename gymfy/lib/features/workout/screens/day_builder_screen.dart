@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../shared/utils/exercise_display.dart';
+import '../../../shared/utils/format.dart';
 import '../data/session_repository.dart';
 import '../data/workout_repository.dart';
 import 'widgets/exercise_picker.dart';
@@ -105,10 +106,13 @@ class _PlannedExerciseTile extends ConsumerWidget {
     return ListTile(
       leading: CircleAvatar(
         backgroundColor: accent.withValues(alpha: 0.15),
-        child: Icon(categoryIcon(exercise.category), color: accent),
+        child: Icon(exerciseIcon, color: accent),
       ),
       title: Text(exercise.name),
-      subtitle: Text('${entry.defaultSets} sets × ${entry.defaultReps} reps'),
+      subtitle: Text(
+        '${entry.defaultSets} sets × '
+        '${formatRepTarget(entry.defaultReps, entry.defaultRepsMax)} reps',
+      ),
       trailing: IconButton(
         icon: const Icon(Icons.delete_outline),
         tooltip: 'Remove exercise',
@@ -120,11 +124,12 @@ class _PlannedExerciseTile extends ConsumerWidget {
   }
 
   Future<void> _editSetsReps(BuildContext context, WidgetRef ref) async {
-    final result = await showDialog<({int sets, int reps})>(
+    final result = await showDialog<({int sets, int reps, int? repsMax})>(
       context: context,
       builder: (context) => _SetsRepsDialog(
         initialSets: planned.entry.defaultSets,
         initialReps: planned.entry.defaultReps,
+        initialRepsMax: planned.entry.defaultRepsMax,
       ),
     );
     if (result == null) return;
@@ -133,6 +138,7 @@ class _PlannedExerciseTile extends ConsumerWidget {
       planned.entry.id,
       sets: result.sets,
       reps: result.reps,
+      repsMax: result.repsMax,
     );
   }
 }
@@ -145,10 +151,17 @@ const _maxReps = 50;
 /// wheels. Owns its scroll controllers via a [StatefulWidget] so they're
 /// disposed at the right time.
 class _SetsRepsDialog extends StatefulWidget {
-  const _SetsRepsDialog({required this.initialSets, required this.initialReps});
+  const _SetsRepsDialog({
+    required this.initialSets,
+    required this.initialReps,
+    required this.initialRepsMax,
+  });
 
   final int initialSets;
   final int initialReps;
+
+  /// Null when the exercise currently has a fixed target rather than a range.
+  final int? initialRepsMax;
 
   @override
   State<_SetsRepsDialog> createState() => _SetsRepsDialogState();
@@ -163,11 +176,20 @@ class _SetsRepsDialogState extends State<_SetsRepsDialog> {
   late final _repsController = FixedExtentScrollController(
     initialItem: widget.initialReps.clamp(1, _maxReps) - 1,
   );
+  // Opens on a sensible range rather than at 1 when the switch is first turned
+  // on: a couple of reps above the minimum is what people mean by "8–12".
+  late final _repsMaxController = FixedExtentScrollController(
+    initialItem:
+        (widget.initialRepsMax ?? widget.initialReps + 4).clamp(1, _maxReps) - 1,
+  );
+
+  late bool _useRange = widget.initialRepsMax != null;
 
   @override
   void dispose() {
     _setsController.dispose();
     _repsController.dispose();
+    _repsMaxController.dispose();
     super.dispose();
   }
 
@@ -175,6 +197,10 @@ class _SetsRepsDialogState extends State<_SetsRepsDialog> {
     Navigator.of(context).pop((
       sets: _setsController.selectedItem + 1,
       reps: _repsController.selectedItem + 1,
+      // The repository drops a max that isn't above the minimum, so scrolling
+      // the top below the bottom quietly means "no range" rather than saving
+      // something backwards.
+      repsMax: _useRange ? _repsMaxController.selectedItem + 1 : null,
     ));
   }
 
@@ -182,23 +208,46 @@ class _SetsRepsDialogState extends State<_SetsRepsDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Sets & reps'),
-      content: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: _NumberWheel(
-              label: 'Sets',
-              controller: _setsController,
-              maxValue: _maxSets,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Expanded(
+                child: _NumberWheel(
+                  label: 'Sets',
+                  controller: _setsController,
+                  maxValue: _maxSets,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _NumberWheel(
+                  // The label changes with the mode, so the left wheel never
+                  // silently means two different things.
+                  label: _useRange ? 'From' : 'Reps',
+                  controller: _repsController,
+                  maxValue: _maxReps,
+                ),
+              ),
+              if (_useRange) ...[
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _NumberWheel(
+                    label: 'To',
+                    controller: _repsMaxController,
+                    maxValue: _maxReps,
+                  ),
+                ),
+              ],
+            ],
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: _NumberWheel(
-              label: 'Reps',
-              controller: _repsController,
-              maxValue: _maxReps,
-            ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Rep range'),
+            value: _useRange,
+            onChanged: (value) => setState(() => _useRange = value),
           ),
         ],
       ),

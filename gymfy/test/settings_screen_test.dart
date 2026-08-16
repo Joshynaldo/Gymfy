@@ -6,11 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/app/theme/accent_color.dart';
+import 'package:gymfy/app/theme/app_theme.dart';
 import 'package:gymfy/features/onboarding/data/onboarding_repository.dart';
+import 'package:gymfy/features/overload/data/overload_preference.dart';
 import 'package:gymfy/features/settings/data/notification_preferences.dart';
 import 'package:gymfy/features/settings/screens/settings_screen.dart';
 import 'package:gymfy/shared/data/settings_repository.dart';
 import 'package:gymfy/shared/database/app_database.dart';
+import 'package:gymfy/shared/widgets/accent_swatch.dart';
 import 'package:gymfy/shared/utils/units.dart';
 
 void main() {
@@ -81,10 +84,109 @@ void main() {
     testWidgets('shows every section', (tester) async {
       await pump(tester);
 
-      expect(find.text('Appearance'), findsOneWidget);
+      expect(find.text('Theme'), findsOneWidget);
+      expect(find.text('Accent'), findsOneWidget);
       expect(find.text('Units'), findsOneWidget);
+      expect(find.text('Plates'), findsOneWidget);
+      expect(find.text('Progressive overload'), findsOneWidget);
       expect(find.text('You'), findsOneWidget);
       expect(find.text('Rest timer'), findsOneWidget);
+    });
+
+    testWidgets('progressive overload is configured here, not per exercise', (
+      tester,
+    ) async {
+      await pump(tester);
+
+      // The whole panel, not just an on/off — whether, how much and deload all
+      // moved out of the day builder.
+      expect(find.text('Suggest heavier weights'), findsOneWidget);
+      expect(find.text('How much to add'), findsOneWidget);
+      expect(find.text('Deload'), findsOneWidget);
+      for (final mode in OverloadMode.values) {
+        expect(find.text(mode.label), findsOneWidget, reason: mode.name);
+      }
+    });
+
+    testWidgets('turning it off hides the options it would configure', (
+      tester,
+    ) async {
+      await pump(tester);
+
+      await tester.tap(find.text('Suggest heavier weights'));
+      await settle(tester);
+
+      // A greyed-out wall of controls under a switch that's off is worse than
+      // no controls at all.
+      expect(container.read(overloadConfigProvider).enabled, isFalse);
+      expect(find.text('How much to add'), findsNothing);
+      expect(find.text('Deload'), findsNothing);
+    });
+
+    testWidgets('picking a percentage is applied and stored', (tester) async {
+      await pump(tester);
+
+      await tester.tap(find.text(OverloadMode.percent.label));
+      await settle(tester);
+      await tester.tap(find.text('5%'));
+      await settle(tester);
+
+      final config = container.read(overloadConfigProvider);
+      expect(config.mode, OverloadMode.percent);
+      expect(config.percent, 5);
+      expect(config.percentOrNull, 5);
+      // Auto and Fixed must not leak through in percent mode.
+      expect(config.fixedOrNull, isNull);
+    });
+
+    testWidgets('a deload schedule can be set and cleared', (tester) async {
+      await pump(tester);
+
+      await tester.tap(find.text('6 in a row'));
+      await settle(tester);
+      expect(container.read(overloadConfigProvider).deloadWeeks, 6);
+
+      await tester.tap(find.text('Never'));
+      await settle(tester);
+      // Cleared, not left behind — the config writes every key every time.
+      expect(container.read(overloadConfigProvider).deloadWeeks, isNull);
+    });
+
+    testWidgets('offers every theme, with the default selected', (tester) async {
+      await pump(tester);
+
+      for (final theme in AppTheme.values) {
+        expect(find.text(theme.label), findsOneWidget, reason: theme.name);
+      }
+      expect(container.read(appThemeProvider), AppTheme.darkDefault);
+    });
+
+    testWidgets('picking a theme applies and stores it', (tester) async {
+      await pump(tester);
+
+      await tester.tap(find.text(AppTheme.amoled.label));
+      await settle(tester);
+
+      // Applied app-wide immediately — this screen re-themes under your finger,
+      // which is what makes the picker its own preview.
+      expect(container.read(appThemeProvider), AppTheme.amoled);
+      expect(
+        await container.read(settingsRepositoryProvider).readRaw(
+          appThemeSetting,
+        ),
+        AppTheme.amoled.name,
+      );
+    });
+
+    testWidgets('switching back to the default works too', (tester) async {
+      await pump(tester);
+
+      await tester.tap(find.text(AppTheme.highContrast.label));
+      await settle(tester);
+      await tester.tap(find.text(AppTheme.darkDefault.label));
+      await settle(tester);
+
+      expect(container.read(appThemeProvider), AppTheme.darkDefault);
     });
 
     testWidgets('weights start in kilograms', (tester) async {
@@ -134,11 +236,15 @@ void main() {
       final target = AccentPalette.options.firstWhere(
         (c) => c != AccentPalette.defaultAccent,
       );
-      // The unselected swatches are exactly the ones that aren't current.
+      // Scoped to AccentSwatch on purpose: the theme rows are selectable too,
+      // so a bare "first unselected Semantics" would tap the wrong picker.
       await tester.tap(
         find
-            .byWidgetPredicate(
-              (w) => w is Semantics && w.properties.selected == false,
+            .descendant(
+              of: find.byType(AccentSwatch),
+              matching: find.byWidgetPredicate(
+                (w) => w is Semantics && w.properties.selected == false,
+              ),
             )
             .first,
       );
