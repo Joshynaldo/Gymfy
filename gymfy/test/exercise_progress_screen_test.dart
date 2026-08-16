@@ -9,7 +9,6 @@ import 'package:gymfy/features/exercises/data/exercise_repository.dart';
 import 'package:gymfy/features/progress/data/progress_repository.dart';
 import 'package:gymfy/features/progress/screens/exercise_progress_screen.dart';
 import 'package:gymfy/shared/database/app_database.dart';
-import 'package:gymfy/shared/models/exercise_category.dart';
 
 import 'support/default_accent.dart';
 
@@ -21,7 +20,9 @@ void main() {
       id: 'barbell_back_squat',
       name: 'Barbell Back Squat',
       muscleIds: const ['quads'],
-      category: ExerciseCategory.legs,
+      isPlateLoaded: false,
+      isCustom: false,
+      isArchived: false,
     );
     final points = [
       ExerciseHistoryPoint(

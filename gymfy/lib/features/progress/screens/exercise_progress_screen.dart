@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
@@ -7,6 +6,7 @@ import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/dates.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
+import '../../../shared/widgets/weight_wheel.dart';
 import '../../calculator/data/one_rm_math.dart';
 import '../../calculator/data/tested_one_rm_repository.dart';
 import '../../exercises/data/exercise_repository.dart';
@@ -256,22 +256,15 @@ class _TestedOneRmDialog extends StatefulWidget {
 }
 
 class _TestedOneRmDialogState extends State<_TestedOneRmDialog> {
-  late final TextEditingController _weight = TextEditingController(
-    text: () {
-      final start = widget.current?.weightKg ?? widget.suggestion;
-      if (start == null) return '';
-      // Round in the display unit, so a prefilled pounds figure isn't a
-      // converted kilogram value with a trailing decimal.
-      return formatWeightIn(roundToLoadable(start, widget.unit), widget.unit);
-    }(),
-  );
-  late DateTime _testedOn = widget.current?.testedOn ?? dateOnly(DateTime.now());
+  /// The weight in the *display* unit, since that's what the wheel offers.
+  /// Rounded on the way in so a prefilled pounds figure isn't a converted
+  /// kilogram value with a trailing decimal.
+  late double _weight = () {
+    final start = widget.current?.weightKg ?? widget.suggestion ?? 0;
+    return weightIn(roundToLoadable(start, widget.unit), widget.unit);
+  }();
 
-  @override
-  void dispose() {
-    _weight.dispose();
-    super.dispose();
-  }
+  late DateTime _testedOn = widget.current?.testedOn ?? dateOnly(DateTime.now());
 
   Future<void> _pickDate() async {
     final now = DateTime.now();
@@ -287,7 +280,7 @@ class _TestedOneRmDialogState extends State<_TestedOneRmDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final weight = parseWeightAsKilograms(_weight.text, widget.unit);
+    final weight = _weight > 0 ? weightToKilograms(_weight, widget.unit) : null;
 
     return AlertDialog(
       title: const Text('Tested 1RM'),
@@ -295,18 +288,10 @@ class _TestedOneRmDialogState extends State<_TestedOneRmDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          TextField(
-            controller: _weight,
-            autofocus: true,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-            ],
-            decoration: InputDecoration(
-              labelText: 'Weight',
-              suffixText: widget.unit.label,
-            ),
-            onChanged: (_) => setState(() {}),
+          WeightWheel(
+            initialWeight: _weight,
+            unit: widget.unit,
+            onChanged: (value) => setState(() => _weight = value),
           ),
           const SizedBox(height: 8),
           ListTile(

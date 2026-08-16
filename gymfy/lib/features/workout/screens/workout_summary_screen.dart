@@ -63,7 +63,9 @@ class _SummaryBody extends ConsumerWidget {
     final sets = ref.watch(sessionSetsProvider(session.id)).value ??
         const <LoggedSet>[];
     // Names for the per-exercise breakdown; empty map until the library loads.
-    final exercises = ref.watch(exerciseListProvider).value ?? const [];
+    // Archived exercises included on purpose — a session logged before a custom
+    // exercise was deleted must still show its name, not a blank row.
+    final exercises = ref.watch(allExercisesProvider).value ?? const [];
     final nameById = {for (final e in exercises) e.id: e.name};
 
     final totalVolume = sets.fold<double>(
