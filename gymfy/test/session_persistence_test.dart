@@ -6,7 +6,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/features/workout/data/session_repository.dart';
 import 'package:gymfy/features/workout/data/workout_repository.dart';
 import 'package:gymfy/shared/database/app_database.dart';
-import 'package:gymfy/shared/models/exercise_category.dart';
 
 void main() {
   late AppDatabase db;
@@ -27,7 +26,6 @@ void main() {
             id: 'barbell_bench_press',
             name: 'Barbell Bench Press',
             muscleIds: const ['chest', 'triceps'],
-            category: ExerciseCategory.push,
           ),
         );
   });

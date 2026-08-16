@@ -20,23 +20,8 @@ void main() {
     createdAt: day,
   );
 
-  Habit habit(int id, DateTime createdAt) =>
-      Habit(id: id, name: 'Habit $id', position: 0, createdAt: createdAt);
-
-  HabitEntry done(int habitId, DateTime day) =>
-      HabitEntry(id: 0, habitId: habitId, date: day);
-
-  List<DaySummary> build({
-    List<CalorieEntry> calorieEntries = const [],
-    List<Habit> habits = const [],
-    List<HabitEntry> habitEntries = const [],
-  }) {
-    return buildWeekSummaries(
-      today: today,
-      calorieEntries: calorieEntries,
-      habits: habits,
-      habitEntries: habitEntries,
-    );
+  List<DaySummary> build({List<CalorieEntry> calorieEntries = const []}) {
+    return buildWeekSummaries(today: today, calorieEntries: calorieEntries);
   }
 
   test('covers seven days, oldest first, ending today', () {
@@ -64,39 +49,10 @@ void main() {
     expect(week.every((d) => d.calories == 0), isTrue);
   });
 
-  test('a habit only counts from the day it was created', () {
-    // One habit that has existed all week, one created three days ago.
-    final week = build(
-      habits: [habit(1, daysAgo(10)), habit(2, daysAgo(3))],
-      habitEntries: [],
-    );
-    expect(week.first.habitsPlanned, 1); // 6 days ago: only habit 1 existed
-    expect(week[3].habitsPlanned, 2); // 3 days ago: habit 2 created
-    expect(week.last.habitsPlanned, 2);
-  });
-
-  test('completion rate is done over planned', () {
-    final week = build(
-      habits: [habit(1, daysAgo(10)), habit(2, daysAgo(10))],
-      habitEntries: [done(1, daysAgo(0)), done(2, daysAgo(0)), done(1, daysAgo(1))],
-    );
-    expect(week.last.completionRate, 1.0);
-    expect(week[5].completionRate, 0.5);
-    expect(week.first.completionRate, 0.0);
-  });
-
-  test('no habits yet means no rate at all, not zero percent', () {
-    final week = build();
-    expect(week.last.habitsPlanned, 0);
-    expect(week.last.completionRate, isNull);
-  });
-
-  test('duplicate completion rows cannot push a day over 100%', () {
-    final week = build(
-      habits: [habit(1, daysAgo(10))],
-      habitEntries: [done(1, daysAgo(0)), done(1, daysAgo(0))],
-    );
-    expect(week.last.habitsDone, 1);
-    expect(week.last.completionRate, 1.0);
+  test('a day with nothing logged is zero, not missing', () {
+    // The chart needs seven slots either way; it decides for itself that a zero
+    // means "draw no bar".
+    expect(build().length, weeklyOverviewDays);
+    expect(build().every((d) => d.calories == 0), isTrue);
   });
 }

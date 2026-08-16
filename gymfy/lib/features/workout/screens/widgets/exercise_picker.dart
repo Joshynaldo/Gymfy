@@ -101,7 +101,7 @@ class _ExercisePickerSheetState extends ConsumerState<_ExercisePickerSheet> {
                     itemBuilder: (context, index) {
                       final exercise = filtered[index];
                       return ListTile(
-                        leading: Icon(categoryIcon(exercise.category)),
+                        leading: Icon(exerciseIcon),
                         title: Text(exercise.name),
                         subtitle: Text(
                           exercise.muscleIds.map(muscleLabel).join(', '),

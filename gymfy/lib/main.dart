@@ -32,11 +32,12 @@ class GymfyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // The whole app is themed from the user's chosen accent colour. Watching
-    // it here means changing the accent instantly re-themes everything —
-    // including the onboarding screen where it's picked.
+    // The whole app is themed from the user's chosen theme and accent. Watching
+    // both here means either choice instantly re-themes everything — including
+    // the settings screen where they're picked, which is what makes the picker
+    // its own live preview.
     final accent = ref.watch(accentColorProvider);
-    final theme = buildDarkTheme(accent);
+    final theme = buildAppTheme(ref.watch(appThemeProvider), accent);
     final onboarded = ref.watch(onboardingCompleteProvider);
 
     // Onboarding is gated here rather than by a router redirect. A redirect has

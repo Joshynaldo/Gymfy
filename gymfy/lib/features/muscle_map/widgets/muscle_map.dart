@@ -5,6 +5,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../data/muscle_colors.dart';
+
+export '../data/muscle_colors.dart' show MuscleMapMode;
 
 part 'muscle_map.g.dart';
 
@@ -38,18 +41,22 @@ Future<String> bodySvgTemplate(Ref ref, BodySide side) {
 
 /// A body diagram whose muscles are tinted by how hard they've been worked.
 ///
-/// [intensities] maps a `MuscleId` to a 0.0–1.0 value; each muscle is blended
-/// from the neutral rest colour (0) toward the current accent colour (1).
-/// Muscles absent from the map (or set to 0) stay neutral.
+/// [intensities] maps a `MuscleId` to a 0.0–1.0 value. Each muscle is blended
+/// from the neutral rest colour (0) toward a target colour (1) — the accent in
+/// [MuscleMapMode.heatmap], the muscle's own colour in
+/// [MuscleMapMode.contrast]. Muscles absent from the map (or set to 0) stay
+/// neutral in both, so "what have I not trained" reads the same either way.
 class MuscleMap extends ConsumerWidget {
   const MuscleMap({
     super.key,
     required this.side,
     required this.intensities,
+    this.mode = MuscleMapMode.heatmap,
   });
 
   final BodySide side;
   final Map<String, double> intensities;
+  final MuscleMapMode mode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -65,7 +72,12 @@ class MuscleMap extends ConsumerWidget {
               textAlign: TextAlign.center),
         ),
         data: (template) {
-          final svg = _tintMuscles(template, intensities, accent);
+          final svg = tintMuscles(
+            svg: template,
+            intensities: intensities,
+            accent: accent,
+            mode: mode,
+          );
           return SvgPicture.string(svg, fit: BoxFit.contain);
         },
       ),
@@ -74,20 +86,34 @@ class MuscleMap extends ConsumerWidget {
 }
 
 /// Rewrites each muscle group's fill in [svg] to reflect its intensity.
-String _tintMuscles(
-  String svg,
-  Map<String, double> intensities,
-  Color accent,
-) {
+///
+/// Public so it can be tested without rendering: the interesting behaviour is
+/// which hex ends up in the string, not what the picture looks like.
+String tintMuscles({
+  required String svg,
+  required Map<String, double> intensities,
+  required Color accent,
+  MuscleMapMode mode = MuscleMapMode.heatmap,
+}) {
   return svg.replaceAllMapped(_muscleFill, (match) {
     final ids = match.group(1)!.split(' ');
-    // A region tagged with several ids glows as hard as its most-worked muscle.
+    // A region tagged with several ids glows as hard as its most-worked muscle,
+    // and — in contrast mode — takes that muscle's colour. Picking the loudest
+    // one keeps the region's colour and its brightness telling the same story.
     var t = 0.0;
+    var strongest = ids.first;
     for (final id in ids) {
       final v = (intensities[id] ?? 0).clamp(0.0, 1.0);
-      if (v > t) t = v;
+      if (v > t) {
+        t = v;
+        strongest = id;
+      }
     }
-    final color = Color.lerp(_restColor, accent, t)!;
+    final target = switch (mode) {
+      MuscleMapMode.heatmap => accent,
+      MuscleMapMode.contrast => muscleColor(strongest),
+    };
+    final color = Color.lerp(_restColor, target, t)!;
     return 'data-muscle="${match.group(1)}" fill="${_toHex(color)}"';
   });
 }

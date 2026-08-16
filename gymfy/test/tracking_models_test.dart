@@ -1,5 +1,9 @@
-// Verifies the Phase 7 tracking tables (calories + habits) create, persist,
-// and enforce their constraints. In-memory database, no device.
+// Verifies the calorie table creates, persists, and enforces its constraints.
+// In-memory database, no device.
+//
+// The habit tables that used to be tested here were removed in v17 — the streak
+// they existed for is counted from logged workouts now, and lives in
+// workout_streak_test.dart.
 
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
@@ -35,35 +39,19 @@ void main() {
     expect(rows.single.protein, 50);
   });
 
-  test('deleting a habit cascades to its entries', () async {
-    final habitId = await db.into(db.habits).insert(
-      HabitsCompanion.insert(name: 'Drink 3L water'),
-    );
-    await db.into(db.habitEntries).insert(
-      HabitEntriesCompanion.insert(habitId: habitId, date: DateTime(2026, 7, 24)),
-    );
-
-    await (db.delete(db.habits)..where((t) => t.id.equals(habitId))).go();
-
-    final remaining = await db.select(db.habitEntries).get();
-    expect(remaining, isEmpty);
-  });
-
-  test('a habit can only be completed once per day', () async {
-    final habitId = await db.into(db.habits).insert(
-      HabitsCompanion.insert(name: 'Stretch'),
-    );
-    final day = DateTime(2026, 7, 24);
-    await db.into(db.habitEntries).insert(
-      HabitEntriesCompanion.insert(habitId: habitId, date: day),
-    );
-
-    // Second insert for the same habit + day violates the unique key.
-    expect(
-      () => db.into(db.habitEntries).insert(
-        HabitEntriesCompanion.insert(habitId: habitId, date: day),
+  test('macros default to zero rather than being required', () async {
+    // A quick "300 kcal" entry shouldn't demand a macro breakdown nobody has.
+    await db.into(db.calorieEntries).insert(
+      CalorieEntriesCompanion.insert(
+        date: DateTime(2026, 7, 24),
+        name: 'Snack',
+        calories: const Value(300),
       ),
-      throwsA(isA<Exception>()),
     );
+
+    final row = (await db.select(db.calorieEntries).get()).single;
+    expect(row.protein, 0);
+    expect(row.carbs, 0);
+    expect(row.fat, 0);
   });
 }

@@ -27,6 +27,14 @@ class Splits extends Table {
   /// Sort order of this split in the split list (lower = higher up).
   IntColumn get position => integer().withDefault(const Constant(0))();
 
+  /// Whether this is the programme currently being followed.
+  ///
+  /// At most one split is active at a time (enforced in the repository, not by
+  /// the schema — SQLite has no "only one row may be true" constraint). Only the
+  /// active split's [WorkoutDaySchedules] decide what today is, so an old split
+  /// kept around for reference can't fight the current one over Mondays.
+  BoolColumn get isActive => boolean().withDefault(const Constant(false))();
+
   /// When it was created — handy for a default "newest first" ordering.
   DateTimeColumn get createdAt =>
       dateTime().withDefault(currentDateAndTime)();
@@ -45,6 +53,31 @@ class WorkoutDays extends Table {
 
   /// Sort order of this day within its split (lower = earlier in the week).
   IntColumn get position => integer().withDefault(const Constant(0))();
+}
+
+/// Which weekdays a [WorkoutDays] is trained on.
+///
+/// A separate table rather than a column, because one day routinely lands on
+/// several weekdays: a six-day PPL puts Push on Monday *and* Thursday. Storing
+/// a single weekday would force two identical "Push" days, splitting their
+/// logged history across two ids.
+///
+/// A weekday with no row here is a rest day. That's an absence rather than a
+/// stored fact on purpose — there's no way for "rest" and "no workout assigned"
+/// to disagree if only one of them exists.
+class WorkoutDaySchedules extends Table {
+  /// The day being scheduled. Removed with it.
+  IntColumn get dayId =>
+      integer().references(WorkoutDays, #id, onDelete: KeyAction.cascade)();
+
+  /// ISO-8601 weekday: 1 = Monday … 7 = Sunday, matching `DateTime.weekday`
+  /// so "is this day today?" needs no conversion.
+  IntColumn get weekday => integer()();
+
+  /// One row per (day, weekday): assigning the same day to Monday twice is
+  /// meaningless, so the key makes it impossible.
+  @override
+  Set<Column> get primaryKey => {dayId, weekday};
 }
 
 /// One planned exercise slot inside a [WorkoutDay], pointing at a library
@@ -66,6 +99,18 @@ class WorkoutExercises extends Table {
   /// Default number of working sets planned for this exercise.
   IntColumn get defaultSets => integer().withDefault(const Constant(3))();
 
-  /// Default target reps per set.
+  /// Default target reps per set — the bottom of the range when there is one.
   IntColumn get defaultReps => integer().withDefault(const Constant(10))();
+
+  // Progressive overload is configured once for the whole app rather than per
+  // exercise — whether to progress, by how much, and whether to deload all live
+  // in overload/data/overload_preference.dart. Nothing about it is stored here.
+
+  /// Top of the rep range, e.g. 12 in "3 × 8–12". Null means a fixed target
+  /// rather than a range.
+  ///
+  /// Nullable rather than defaulting to the same value as [defaultReps]: a
+  /// fixed 10 should read as "10", not "10–10", and storing them identically
+  /// would leave no way to tell "no range" from "a range of one number".
+  IntColumn get defaultRepsMax => integer().nullable()();
 }

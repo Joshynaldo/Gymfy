@@ -36,11 +36,13 @@ class WorkoutScreen extends ConsumerWidget {
           if (splits.isEmpty) {
             return const _EmptyState();
           }
+          // "What's today?" belongs to the Home tab now — this screen is for
+          // managing the programmes themselves.
           return ListView.separated(
+            padding: const EdgeInsets.only(bottom: 88),
             itemCount: splits.length,
             separatorBuilder: (_, _) => const Divider(height: 1),
-            itemBuilder: (context, index) =>
-                _SplitTile(split: splits[index]),
+            itemBuilder: (context, index) => _SplitTile(split: splits[index]),
           );
         },
       ),
@@ -80,13 +82,46 @@ class _SplitTile extends ConsumerWidget {
         backgroundColor: accent.withValues(alpha: 0.15),
         child: Icon(Icons.calendar_view_week, color: accent),
       ),
-      title: Text(split.name),
+      title: Row(
+        children: [
+          Flexible(child: Text(split.name, overflow: TextOverflow.ellipsis)),
+          // Which programme drives "today" is otherwise invisible from here,
+          // and it's the first thing you want to check when the Home tab shows
+          // the wrong workout.
+          if (split.isActive) ...[
+            const SizedBox(width: 8),
+            _ActiveBadge(accent: accent),
+          ],
+        ],
+      ),
       trailing: IconButton(
         icon: const Icon(Icons.delete_outline),
         tooltip: 'Delete split',
         onPressed: () => _confirmDelete(context, ref, split),
       ),
       onTap: () => context.go('/workout/split/${split.id}'),
+    );
+  }
+}
+
+/// A quiet "Active" pill on the split that's currently being followed.
+class _ActiveBadge extends StatelessWidget {
+  const _ActiveBadge({required this.accent});
+
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        'Active',
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: accent),
+      ),
     );
   }
 }

@@ -32,15 +32,9 @@ class MoreScreen extends ConsumerWidget {
       route: '/more/calories',
     ),
     _Tool(
-      icon: Icons.checklist,
-      title: 'Habits',
-      subtitle: 'Daily checklist and streaks',
-      route: '/more/habits',
-    ),
-    _Tool(
       icon: Icons.bar_chart,
       title: 'This week',
-      subtitle: 'Calories and habit completion over 7 days',
+      subtitle: 'Calories over the last 7 days',
       route: '/more/weekly',
     ),
     _Tool(
@@ -48,6 +42,12 @@ class MoreScreen extends ConsumerWidget {
       title: '1RM calculator',
       subtitle: 'Estimate your one-rep max from any set',
       route: '/more/one-rm',
+    ),
+    _Tool(
+      icon: Icons.donut_large_outlined,
+      title: 'Plate calculator',
+      subtitle: 'What to put on the bar for any weight',
+      route: '/more/plates',
     ),
     _Tool(
       icon: Icons.military_tech_outlined,

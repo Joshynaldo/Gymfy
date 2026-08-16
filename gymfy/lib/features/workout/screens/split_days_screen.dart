@@ -6,8 +6,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../shared/database/app_database.dart';
+import '../../../shared/utils/format.dart';
+import '../../../shared/utils/weekday.dart';
 import '../../../shared/widgets/name_prompt_dialog.dart';
 import '../data/workout_repository.dart';
+import 'widgets/weekday_picker.dart';
 
 /// The split overview: every day in the split shown as a card, each listing
 /// its planned exercises inline so the whole programme is visible at a glance.
@@ -21,14 +24,20 @@ class SplitDaysScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final splitAsync = ref.watch(splitProvider(splitId));
-    final daysAsync = ref.watch(dayListProvider(splitId));
+    final daysAsync = ref.watch(scheduledDaysProvider(splitId));
 
     // Title follows the split's name; falls back gracefully while loading or
     // if the split was deleted out from under us.
-    final title = splitAsync.value?.name ?? 'Split';
+    final split = splitAsync.value;
+    final title = split?.name ?? 'Split';
 
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(
+        title: Text(title),
+        actions: [
+          if (split != null) _ActiveSplitAction(split: split),
+        ],
+      ),
       body: daysAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
@@ -47,8 +56,8 @@ class SplitDaysScreen extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
             children: [
-              for (final day in days)
-                _DayCard(splitId: splitId, day: day),
+              for (final scheduled in days)
+                _DayCard(splitId: splitId, scheduled: scheduled),
             ],
           );
         },
@@ -75,13 +84,61 @@ class SplitDaysScreen extends ConsumerWidget {
   }
 }
 
+/// Marks this split as the one being followed.
+///
+/// Lives in the app bar rather than on the split list, because activating is a
+/// decision you make while looking at a programme, not while scanning past it.
+class _ActiveSplitAction extends ConsumerWidget {
+  const _ActiveSplitAction({required this.split});
+
+  final Split split;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accent = ref.watch(accentColorProvider);
+
+    if (split.isActive) {
+      return Padding(
+        padding: const EdgeInsets.only(right: 12),
+        child: Center(
+          child: Row(
+            children: [
+              Icon(Icons.check_circle, size: 18, color: accent),
+              const SizedBox(width: 6),
+              Text(
+                'Active',
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(color: accent),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return TextButton(
+      onPressed: () async {
+        final messenger = ScaffoldMessenger.of(context);
+        await ref.read(workoutRepositoryProvider).setActiveSplit(split.id);
+        messenger.showSnackBar(
+          SnackBar(content: Text('Now following ${split.name}')),
+        );
+      },
+      child: const Text('Set active'),
+    );
+  }
+}
+
 /// One day, as a card: a header (name + count + actions) and its exercises
 /// listed underneath.
 class _DayCard extends ConsumerWidget {
-  const _DayCard({required this.splitId, required this.day});
+  const _DayCard({required this.splitId, required this.scheduled});
 
   final int splitId;
-  final WorkoutDay day;
+  final ScheduledDay scheduled;
+
+  WorkoutDay get day => scheduled.day;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -89,6 +146,7 @@ class _DayCard extends ConsumerWidget {
     final accent = ref.watch(accentColorProvider);
     final exercisesAsync = ref.watch(dayExercisesProvider(day.id));
     final exercises = exercisesAsync.value ?? const [];
+    final schedule = weekdaySummary(scheduled.weekdays);
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
@@ -108,9 +166,15 @@ class _DayCard extends ConsumerWidget {
               ),
             ),
             subtitle: Text(
-              exercises.length == 1
-                  ? '1 exercise'
-                  : '${exercises.length} exercises',
+              [
+                exercises.length == 1
+                    ? '1 exercise'
+                    : '${exercises.length} exercises',
+                // Named explicitly rather than left blank: "not scheduled" is a
+                // state worth noticing, since the day won't appear on any
+                // weekday until it's fixed.
+                schedule ?? 'Not scheduled',
+              ].join(' • '),
             ),
             trailing: IconButton(
               icon: const Icon(Icons.delete_outline),
@@ -118,6 +182,13 @@ class _DayCard extends ConsumerWidget {
               onPressed: () => _confirmDelete(context, ref),
             ),
             onTap: () => context.go('/workout/split/$splitId/day/${day.id}'),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+            child: WeekdayPicker(
+              selected: scheduled.weekdays,
+              onToggle: (weekday) => _toggleWeekday(ref, weekday),
+            ),
           ),
           if (exercises.isEmpty)
             Padding(
@@ -142,6 +213,13 @@ class _DayCard extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _toggleWeekday(WidgetRef ref, int weekday) {
+    final repository = ref.read(workoutRepositoryProvider);
+    return scheduled.weekdays.contains(weekday)
+        ? repository.clearWeekday(dayId: day.id, weekday: weekday)
+        : repository.assignWeekday(dayId: day.id, weekday: weekday);
   }
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
@@ -197,7 +275,11 @@ class _ExerciseRow extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Text(
-            '${planned.entry.defaultSets} × ${planned.entry.defaultReps}',
+            formatSetTarget(
+              planned.entry.defaultSets,
+              planned.entry.defaultReps,
+              planned.entry.defaultRepsMax,
+            ),
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
               fontFeatures: const [FontFeature.tabularFigures()],
