@@ -1479,6 +1479,18 @@ class $WorkoutExercisesTable extends WorkoutExercises
     requiredDuringInsert: false,
     defaultValue: const Constant(3),
   );
+  static const VerificationMeta _warmupSetsMeta = const VerificationMeta(
+    'warmupSets',
+  );
+  @override
+  late final GeneratedColumn<int> warmupSets = GeneratedColumn<int>(
+    'warmup_sets',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _defaultRepsMeta = const VerificationMeta(
     'defaultReps',
   );
@@ -1509,6 +1521,7 @@ class $WorkoutExercisesTable extends WorkoutExercises
     exerciseId,
     position,
     defaultSets,
+    warmupSets,
     defaultReps,
     defaultRepsMax,
   ];
@@ -1558,6 +1571,12 @@ class $WorkoutExercisesTable extends WorkoutExercises
         ),
       );
     }
+    if (data.containsKey('warmup_sets')) {
+      context.handle(
+        _warmupSetsMeta,
+        warmupSets.isAcceptableOrUnknown(data['warmup_sets']!, _warmupSetsMeta),
+      );
+    }
     if (data.containsKey('default_reps')) {
       context.handle(
         _defaultRepsMeta,
@@ -1605,6 +1624,10 @@ class $WorkoutExercisesTable extends WorkoutExercises
         DriftSqlType.int,
         data['${effectivePrefix}default_sets'],
       )!,
+      warmupSets: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}warmup_sets'],
+      )!,
       defaultReps: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}default_reps'],
@@ -1638,6 +1661,16 @@ class WorkoutExercise extends DataClass implements Insertable<WorkoutExercise> {
   /// Default number of working sets planned for this exercise.
   final int defaultSets;
 
+  /// How many ramp-up sets to plan before the working sets.
+  ///
+  /// Zero for most exercises — you don't warm up for a cable curl.
+  ///
+  /// A target, not pre-created rows. The session shows "Warm-up 1 of 3" and
+  /// keeps offering the button until you've logged that many; it never inserts
+  /// placeholder sets, because a 0 kg row you didn't perform would still count
+  /// toward your session volume and your muscle map.
+  final int warmupSets;
+
   /// Default target reps per set — the bottom of the range when there is one.
   final int defaultReps;
 
@@ -1654,6 +1687,7 @@ class WorkoutExercise extends DataClass implements Insertable<WorkoutExercise> {
     required this.exerciseId,
     required this.position,
     required this.defaultSets,
+    required this.warmupSets,
     required this.defaultReps,
     this.defaultRepsMax,
   });
@@ -1665,6 +1699,7 @@ class WorkoutExercise extends DataClass implements Insertable<WorkoutExercise> {
     map['exercise_id'] = Variable<String>(exerciseId);
     map['position'] = Variable<int>(position);
     map['default_sets'] = Variable<int>(defaultSets);
+    map['warmup_sets'] = Variable<int>(warmupSets);
     map['default_reps'] = Variable<int>(defaultReps);
     if (!nullToAbsent || defaultRepsMax != null) {
       map['default_reps_max'] = Variable<int>(defaultRepsMax);
@@ -1679,6 +1714,7 @@ class WorkoutExercise extends DataClass implements Insertable<WorkoutExercise> {
       exerciseId: Value(exerciseId),
       position: Value(position),
       defaultSets: Value(defaultSets),
+      warmupSets: Value(warmupSets),
       defaultReps: Value(defaultReps),
       defaultRepsMax: defaultRepsMax == null && nullToAbsent
           ? const Value.absent()
@@ -1697,6 +1733,7 @@ class WorkoutExercise extends DataClass implements Insertable<WorkoutExercise> {
       exerciseId: serializer.fromJson<String>(json['exerciseId']),
       position: serializer.fromJson<int>(json['position']),
       defaultSets: serializer.fromJson<int>(json['defaultSets']),
+      warmupSets: serializer.fromJson<int>(json['warmupSets']),
       defaultReps: serializer.fromJson<int>(json['defaultReps']),
       defaultRepsMax: serializer.fromJson<int?>(json['defaultRepsMax']),
     );
@@ -1710,6 +1747,7 @@ class WorkoutExercise extends DataClass implements Insertable<WorkoutExercise> {
       'exerciseId': serializer.toJson<String>(exerciseId),
       'position': serializer.toJson<int>(position),
       'defaultSets': serializer.toJson<int>(defaultSets),
+      'warmupSets': serializer.toJson<int>(warmupSets),
       'defaultReps': serializer.toJson<int>(defaultReps),
       'defaultRepsMax': serializer.toJson<int?>(defaultRepsMax),
     };
@@ -1721,6 +1759,7 @@ class WorkoutExercise extends DataClass implements Insertable<WorkoutExercise> {
     String? exerciseId,
     int? position,
     int? defaultSets,
+    int? warmupSets,
     int? defaultReps,
     Value<int?> defaultRepsMax = const Value.absent(),
   }) => WorkoutExercise(
@@ -1729,6 +1768,7 @@ class WorkoutExercise extends DataClass implements Insertable<WorkoutExercise> {
     exerciseId: exerciseId ?? this.exerciseId,
     position: position ?? this.position,
     defaultSets: defaultSets ?? this.defaultSets,
+    warmupSets: warmupSets ?? this.warmupSets,
     defaultReps: defaultReps ?? this.defaultReps,
     defaultRepsMax: defaultRepsMax.present
         ? defaultRepsMax.value
@@ -1745,6 +1785,9 @@ class WorkoutExercise extends DataClass implements Insertable<WorkoutExercise> {
       defaultSets: data.defaultSets.present
           ? data.defaultSets.value
           : this.defaultSets,
+      warmupSets: data.warmupSets.present
+          ? data.warmupSets.value
+          : this.warmupSets,
       defaultReps: data.defaultReps.present
           ? data.defaultReps.value
           : this.defaultReps,
@@ -1762,6 +1805,7 @@ class WorkoutExercise extends DataClass implements Insertable<WorkoutExercise> {
           ..write('exerciseId: $exerciseId, ')
           ..write('position: $position, ')
           ..write('defaultSets: $defaultSets, ')
+          ..write('warmupSets: $warmupSets, ')
           ..write('defaultReps: $defaultReps, ')
           ..write('defaultRepsMax: $defaultRepsMax')
           ..write(')'))
@@ -1775,6 +1819,7 @@ class WorkoutExercise extends DataClass implements Insertable<WorkoutExercise> {
     exerciseId,
     position,
     defaultSets,
+    warmupSets,
     defaultReps,
     defaultRepsMax,
   );
@@ -1787,6 +1832,7 @@ class WorkoutExercise extends DataClass implements Insertable<WorkoutExercise> {
           other.exerciseId == this.exerciseId &&
           other.position == this.position &&
           other.defaultSets == this.defaultSets &&
+          other.warmupSets == this.warmupSets &&
           other.defaultReps == this.defaultReps &&
           other.defaultRepsMax == this.defaultRepsMax);
 }
@@ -1797,6 +1843,7 @@ class WorkoutExercisesCompanion extends UpdateCompanion<WorkoutExercise> {
   final Value<String> exerciseId;
   final Value<int> position;
   final Value<int> defaultSets;
+  final Value<int> warmupSets;
   final Value<int> defaultReps;
   final Value<int?> defaultRepsMax;
   const WorkoutExercisesCompanion({
@@ -1805,6 +1852,7 @@ class WorkoutExercisesCompanion extends UpdateCompanion<WorkoutExercise> {
     this.exerciseId = const Value.absent(),
     this.position = const Value.absent(),
     this.defaultSets = const Value.absent(),
+    this.warmupSets = const Value.absent(),
     this.defaultReps = const Value.absent(),
     this.defaultRepsMax = const Value.absent(),
   });
@@ -1814,6 +1862,7 @@ class WorkoutExercisesCompanion extends UpdateCompanion<WorkoutExercise> {
     required String exerciseId,
     this.position = const Value.absent(),
     this.defaultSets = const Value.absent(),
+    this.warmupSets = const Value.absent(),
     this.defaultReps = const Value.absent(),
     this.defaultRepsMax = const Value.absent(),
   }) : dayId = Value(dayId),
@@ -1824,6 +1873,7 @@ class WorkoutExercisesCompanion extends UpdateCompanion<WorkoutExercise> {
     Expression<String>? exerciseId,
     Expression<int>? position,
     Expression<int>? defaultSets,
+    Expression<int>? warmupSets,
     Expression<int>? defaultReps,
     Expression<int>? defaultRepsMax,
   }) {
@@ -1833,6 +1883,7 @@ class WorkoutExercisesCompanion extends UpdateCompanion<WorkoutExercise> {
       if (exerciseId != null) 'exercise_id': exerciseId,
       if (position != null) 'position': position,
       if (defaultSets != null) 'default_sets': defaultSets,
+      if (warmupSets != null) 'warmup_sets': warmupSets,
       if (defaultReps != null) 'default_reps': defaultReps,
       if (defaultRepsMax != null) 'default_reps_max': defaultRepsMax,
     });
@@ -1844,6 +1895,7 @@ class WorkoutExercisesCompanion extends UpdateCompanion<WorkoutExercise> {
     Value<String>? exerciseId,
     Value<int>? position,
     Value<int>? defaultSets,
+    Value<int>? warmupSets,
     Value<int>? defaultReps,
     Value<int?>? defaultRepsMax,
   }) {
@@ -1853,6 +1905,7 @@ class WorkoutExercisesCompanion extends UpdateCompanion<WorkoutExercise> {
       exerciseId: exerciseId ?? this.exerciseId,
       position: position ?? this.position,
       defaultSets: defaultSets ?? this.defaultSets,
+      warmupSets: warmupSets ?? this.warmupSets,
       defaultReps: defaultReps ?? this.defaultReps,
       defaultRepsMax: defaultRepsMax ?? this.defaultRepsMax,
     );
@@ -1876,6 +1929,9 @@ class WorkoutExercisesCompanion extends UpdateCompanion<WorkoutExercise> {
     if (defaultSets.present) {
       map['default_sets'] = Variable<int>(defaultSets.value);
     }
+    if (warmupSets.present) {
+      map['warmup_sets'] = Variable<int>(warmupSets.value);
+    }
     if (defaultReps.present) {
       map['default_reps'] = Variable<int>(defaultReps.value);
     }
@@ -1893,6 +1949,7 @@ class WorkoutExercisesCompanion extends UpdateCompanion<WorkoutExercise> {
           ..write('exerciseId: $exerciseId, ')
           ..write('position: $position, ')
           ..write('defaultSets: $defaultSets, ')
+          ..write('warmupSets: $warmupSets, ')
           ..write('defaultReps: $defaultReps, ')
           ..write('defaultRepsMax: $defaultRepsMax')
           ..write(')'))
@@ -2348,6 +2405,21 @@ class $LoggedSetsTable extends LoggedSets
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _isWarmupMeta = const VerificationMeta(
+    'isWarmup',
+  );
+  @override
+  late final GeneratedColumn<bool> isWarmup = GeneratedColumn<bool>(
+    'is_warmup',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_warmup" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2356,6 +2428,7 @@ class $LoggedSetsTable extends LoggedSets
     setNumber,
     weight,
     reps,
+    isWarmup,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2408,6 +2481,12 @@ class $LoggedSetsTable extends LoggedSets
         reps.isAcceptableOrUnknown(data['reps']!, _repsMeta),
       );
     }
+    if (data.containsKey('is_warmup')) {
+      context.handle(
+        _isWarmupMeta,
+        isWarmup.isAcceptableOrUnknown(data['is_warmup']!, _isWarmupMeta),
+      );
+    }
     return context;
   }
 
@@ -2441,6 +2520,10 @@ class $LoggedSetsTable extends LoggedSets
         DriftSqlType.int,
         data['${effectivePrefix}reps'],
       )!,
+      isWarmup: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_warmup'],
+      )!,
     );
   }
 
@@ -2468,6 +2551,17 @@ class LoggedSet extends DataClass implements Insertable<LoggedSet> {
 
   /// Reps completed for this set.
   final int reps;
+
+  /// Whether this was a ramp-up set rather than a working set.
+  ///
+  /// Warm-ups are real work you did and are stored like any other set — they
+  /// still count toward session volume, the muscle map and the recap charts,
+  /// because they happened. What they must not do is pretend to be evidence of
+  /// strength: a 60 kg single on the way to 100 is not a data point on your
+  /// bench chart, is not a PR, and must never talk the overload suggestion
+  /// down. See `isWorkingSet` in `session_repository.dart` for the one place
+  /// that filter is defined.
+  final bool isWarmup;
   const LoggedSet({
     required this.id,
     required this.sessionId,
@@ -2475,6 +2569,7 @@ class LoggedSet extends DataClass implements Insertable<LoggedSet> {
     required this.setNumber,
     required this.weight,
     required this.reps,
+    required this.isWarmup,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2485,6 +2580,7 @@ class LoggedSet extends DataClass implements Insertable<LoggedSet> {
     map['set_number'] = Variable<int>(setNumber);
     map['weight'] = Variable<double>(weight);
     map['reps'] = Variable<int>(reps);
+    map['is_warmup'] = Variable<bool>(isWarmup);
     return map;
   }
 
@@ -2496,6 +2592,7 @@ class LoggedSet extends DataClass implements Insertable<LoggedSet> {
       setNumber: Value(setNumber),
       weight: Value(weight),
       reps: Value(reps),
+      isWarmup: Value(isWarmup),
     );
   }
 
@@ -2511,6 +2608,7 @@ class LoggedSet extends DataClass implements Insertable<LoggedSet> {
       setNumber: serializer.fromJson<int>(json['setNumber']),
       weight: serializer.fromJson<double>(json['weight']),
       reps: serializer.fromJson<int>(json['reps']),
+      isWarmup: serializer.fromJson<bool>(json['isWarmup']),
     );
   }
   @override
@@ -2523,6 +2621,7 @@ class LoggedSet extends DataClass implements Insertable<LoggedSet> {
       'setNumber': serializer.toJson<int>(setNumber),
       'weight': serializer.toJson<double>(weight),
       'reps': serializer.toJson<int>(reps),
+      'isWarmup': serializer.toJson<bool>(isWarmup),
     };
   }
 
@@ -2533,6 +2632,7 @@ class LoggedSet extends DataClass implements Insertable<LoggedSet> {
     int? setNumber,
     double? weight,
     int? reps,
+    bool? isWarmup,
   }) => LoggedSet(
     id: id ?? this.id,
     sessionId: sessionId ?? this.sessionId,
@@ -2540,6 +2640,7 @@ class LoggedSet extends DataClass implements Insertable<LoggedSet> {
     setNumber: setNumber ?? this.setNumber,
     weight: weight ?? this.weight,
     reps: reps ?? this.reps,
+    isWarmup: isWarmup ?? this.isWarmup,
   );
   LoggedSet copyWithCompanion(LoggedSetsCompanion data) {
     return LoggedSet(
@@ -2551,6 +2652,7 @@ class LoggedSet extends DataClass implements Insertable<LoggedSet> {
       setNumber: data.setNumber.present ? data.setNumber.value : this.setNumber,
       weight: data.weight.present ? data.weight.value : this.weight,
       reps: data.reps.present ? data.reps.value : this.reps,
+      isWarmup: data.isWarmup.present ? data.isWarmup.value : this.isWarmup,
     );
   }
 
@@ -2562,14 +2664,15 @@ class LoggedSet extends DataClass implements Insertable<LoggedSet> {
           ..write('exerciseId: $exerciseId, ')
           ..write('setNumber: $setNumber, ')
           ..write('weight: $weight, ')
-          ..write('reps: $reps')
+          ..write('reps: $reps, ')
+          ..write('isWarmup: $isWarmup')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode =>
-      Object.hash(id, sessionId, exerciseId, setNumber, weight, reps);
+      Object.hash(id, sessionId, exerciseId, setNumber, weight, reps, isWarmup);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2579,7 +2682,8 @@ class LoggedSet extends DataClass implements Insertable<LoggedSet> {
           other.exerciseId == this.exerciseId &&
           other.setNumber == this.setNumber &&
           other.weight == this.weight &&
-          other.reps == this.reps);
+          other.reps == this.reps &&
+          other.isWarmup == this.isWarmup);
 }
 
 class LoggedSetsCompanion extends UpdateCompanion<LoggedSet> {
@@ -2589,6 +2693,7 @@ class LoggedSetsCompanion extends UpdateCompanion<LoggedSet> {
   final Value<int> setNumber;
   final Value<double> weight;
   final Value<int> reps;
+  final Value<bool> isWarmup;
   const LoggedSetsCompanion({
     this.id = const Value.absent(),
     this.sessionId = const Value.absent(),
@@ -2596,6 +2701,7 @@ class LoggedSetsCompanion extends UpdateCompanion<LoggedSet> {
     this.setNumber = const Value.absent(),
     this.weight = const Value.absent(),
     this.reps = const Value.absent(),
+    this.isWarmup = const Value.absent(),
   });
   LoggedSetsCompanion.insert({
     this.id = const Value.absent(),
@@ -2604,6 +2710,7 @@ class LoggedSetsCompanion extends UpdateCompanion<LoggedSet> {
     required int setNumber,
     this.weight = const Value.absent(),
     this.reps = const Value.absent(),
+    this.isWarmup = const Value.absent(),
   }) : sessionId = Value(sessionId),
        exerciseId = Value(exerciseId),
        setNumber = Value(setNumber);
@@ -2614,6 +2721,7 @@ class LoggedSetsCompanion extends UpdateCompanion<LoggedSet> {
     Expression<int>? setNumber,
     Expression<double>? weight,
     Expression<int>? reps,
+    Expression<bool>? isWarmup,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2622,6 +2730,7 @@ class LoggedSetsCompanion extends UpdateCompanion<LoggedSet> {
       if (setNumber != null) 'set_number': setNumber,
       if (weight != null) 'weight': weight,
       if (reps != null) 'reps': reps,
+      if (isWarmup != null) 'is_warmup': isWarmup,
     });
   }
 
@@ -2632,6 +2741,7 @@ class LoggedSetsCompanion extends UpdateCompanion<LoggedSet> {
     Value<int>? setNumber,
     Value<double>? weight,
     Value<int>? reps,
+    Value<bool>? isWarmup,
   }) {
     return LoggedSetsCompanion(
       id: id ?? this.id,
@@ -2640,6 +2750,7 @@ class LoggedSetsCompanion extends UpdateCompanion<LoggedSet> {
       setNumber: setNumber ?? this.setNumber,
       weight: weight ?? this.weight,
       reps: reps ?? this.reps,
+      isWarmup: isWarmup ?? this.isWarmup,
     );
   }
 
@@ -2664,6 +2775,9 @@ class LoggedSetsCompanion extends UpdateCompanion<LoggedSet> {
     if (reps.present) {
       map['reps'] = Variable<int>(reps.value);
     }
+    if (isWarmup.present) {
+      map['is_warmup'] = Variable<bool>(isWarmup.value);
+    }
     return map;
   }
 
@@ -2675,7 +2789,8 @@ class LoggedSetsCompanion extends UpdateCompanion<LoggedSet> {
           ..write('exerciseId: $exerciseId, ')
           ..write('setNumber: $setNumber, ')
           ..write('weight: $weight, ')
-          ..write('reps: $reps')
+          ..write('reps: $reps, ')
+          ..write('isWarmup: $isWarmup')
           ..write(')'))
         .toString();
   }
@@ -6855,6 +6970,7 @@ typedef $$WorkoutExercisesTableCreateCompanionBuilder =
       required String exerciseId,
       Value<int> position,
       Value<int> defaultSets,
+      Value<int> warmupSets,
       Value<int> defaultReps,
       Value<int?> defaultRepsMax,
     });
@@ -6865,6 +6981,7 @@ typedef $$WorkoutExercisesTableUpdateCompanionBuilder =
       Value<String> exerciseId,
       Value<int> position,
       Value<int> defaultSets,
+      Value<int> warmupSets,
       Value<int> defaultReps,
       Value<int?> defaultRepsMax,
     });
@@ -6934,6 +7051,11 @@ class $$WorkoutExercisesTableFilterComposer
 
   ColumnFilters<int> get defaultSets => $composableBuilder(
     column: $table.defaultSets,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get warmupSets => $composableBuilder(
+    column: $table.warmupSets,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7018,6 +7140,11 @@ class $$WorkoutExercisesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get warmupSets => $composableBuilder(
+    column: $table.warmupSets,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get defaultReps => $composableBuilder(
     column: $table.defaultReps,
     builder: (column) => ColumnOrderings(column),
@@ -7092,6 +7219,11 @@ class $$WorkoutExercisesTableAnnotationComposer
 
   GeneratedColumn<int> get defaultSets => $composableBuilder(
     column: $table.defaultSets,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get warmupSets => $composableBuilder(
+    column: $table.warmupSets,
     builder: (column) => column,
   );
 
@@ -7187,6 +7319,7 @@ class $$WorkoutExercisesTableTableManager
                 Value<String> exerciseId = const Value.absent(),
                 Value<int> position = const Value.absent(),
                 Value<int> defaultSets = const Value.absent(),
+                Value<int> warmupSets = const Value.absent(),
                 Value<int> defaultReps = const Value.absent(),
                 Value<int?> defaultRepsMax = const Value.absent(),
               }) => WorkoutExercisesCompanion(
@@ -7195,6 +7328,7 @@ class $$WorkoutExercisesTableTableManager
                 exerciseId: exerciseId,
                 position: position,
                 defaultSets: defaultSets,
+                warmupSets: warmupSets,
                 defaultReps: defaultReps,
                 defaultRepsMax: defaultRepsMax,
               ),
@@ -7205,6 +7339,7 @@ class $$WorkoutExercisesTableTableManager
                 required String exerciseId,
                 Value<int> position = const Value.absent(),
                 Value<int> defaultSets = const Value.absent(),
+                Value<int> warmupSets = const Value.absent(),
                 Value<int> defaultReps = const Value.absent(),
                 Value<int?> defaultRepsMax = const Value.absent(),
               }) => WorkoutExercisesCompanion.insert(
@@ -7213,6 +7348,7 @@ class $$WorkoutExercisesTableTableManager
                 exerciseId: exerciseId,
                 position: position,
                 defaultSets: defaultSets,
+                warmupSets: warmupSets,
                 defaultReps: defaultReps,
                 defaultRepsMax: defaultRepsMax,
               ),
@@ -7718,6 +7854,7 @@ typedef $$LoggedSetsTableCreateCompanionBuilder =
       required int setNumber,
       Value<double> weight,
       Value<int> reps,
+      Value<bool> isWarmup,
     });
 typedef $$LoggedSetsTableUpdateCompanionBuilder =
     LoggedSetsCompanion Function({
@@ -7727,6 +7864,7 @@ typedef $$LoggedSetsTableUpdateCompanionBuilder =
       Value<int> setNumber,
       Value<double> weight,
       Value<int> reps,
+      Value<bool> isWarmup,
     });
 
 final class $$LoggedSetsTableReferences
@@ -7795,6 +7933,11 @@ class $$LoggedSetsTableFilterComposer
 
   ColumnFilters<int> get reps => $composableBuilder(
     column: $table.reps,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isWarmup => $composableBuilder(
+    column: $table.isWarmup,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7874,6 +8017,11 @@ class $$LoggedSetsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get isWarmup => $composableBuilder(
+    column: $table.isWarmup,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$WorkoutSessionsTableOrderingComposer get sessionId {
     final $$WorkoutSessionsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -7941,6 +8089,9 @@ class $$LoggedSetsTableAnnotationComposer
 
   GeneratedColumn<int> get reps =>
       $composableBuilder(column: $table.reps, builder: (column) => column);
+
+  GeneratedColumn<bool> get isWarmup =>
+      $composableBuilder(column: $table.isWarmup, builder: (column) => column);
 
   $$WorkoutSessionsTableAnnotationComposer get sessionId {
     final $$WorkoutSessionsTableAnnotationComposer composer = $composerBuilder(
@@ -8023,6 +8174,7 @@ class $$LoggedSetsTableTableManager
                 Value<int> setNumber = const Value.absent(),
                 Value<double> weight = const Value.absent(),
                 Value<int> reps = const Value.absent(),
+                Value<bool> isWarmup = const Value.absent(),
               }) => LoggedSetsCompanion(
                 id: id,
                 sessionId: sessionId,
@@ -8030,6 +8182,7 @@ class $$LoggedSetsTableTableManager
                 setNumber: setNumber,
                 weight: weight,
                 reps: reps,
+                isWarmup: isWarmup,
               ),
           createCompanionCallback:
               ({
@@ -8039,6 +8192,7 @@ class $$LoggedSetsTableTableManager
                 required int setNumber,
                 Value<double> weight = const Value.absent(),
                 Value<int> reps = const Value.absent(),
+                Value<bool> isWarmup = const Value.absent(),
               }) => LoggedSetsCompanion.insert(
                 id: id,
                 sessionId: sessionId,
@@ -8046,6 +8200,7 @@ class $$LoggedSetsTableTableManager
                 setNumber: setNumber,
                 weight: weight,
                 reps: reps,
+                isWarmup: isWarmup,
               ),
           withReferenceMapper: (p0) => p0
               .map(

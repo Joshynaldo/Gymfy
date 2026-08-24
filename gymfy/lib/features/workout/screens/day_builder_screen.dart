@@ -62,20 +62,26 @@ class DayBuilderScreen extends ConsumerWidget {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _addExercise(context, ref),
+        onPressed: () => _addExercises(context, ref),
         icon: const Icon(Icons.add),
-        label: const Text('Add exercise'),
+        label: const Text('Add exercises'),
       ),
     );
   }
 
-  Future<void> _addExercise(BuildContext context, WidgetRef ref) async {
-    final exercise = await showExercisePicker(context);
-    if (exercise == null) return;
+  Future<void> _addExercises(BuildContext context, WidgetRef ref) async {
+    final ids = await showExercisePicker(context);
+    if (ids == null || !context.mounted) return;
 
-    await ref.read(workoutRepositoryProvider).addExerciseToDay(
-      dayId,
-      exercise.id,
+    final messenger = ScaffoldMessenger.of(context);
+    final added = await ref
+        .read(workoutRepositoryProvider)
+        .addExercisesToDay(dayId, ids);
+
+    // Exercises already in the day are skipped, so a flat "4 added" would
+    // sometimes be a lie.
+    messenger.showSnackBar(
+      SnackBar(content: Text(addedToDayMessage(added: added, asked: ids.length))),
     );
   }
 
@@ -110,8 +116,16 @@ class _PlannedExerciseTile extends ConsumerWidget {
       ),
       title: Text(exercise.name),
       subtitle: Text(
-        '${entry.defaultSets} sets × '
-        '${formatRepTarget(entry.defaultReps, entry.defaultRepsMax)} reps',
+        [
+          '${entry.defaultSets} sets × '
+              '${formatRepTarget(entry.defaultReps, entry.defaultRepsMax)} reps',
+          // Only mentioned when there are some — "0 warm-ups" on every cable
+          // curl would be noise on the row it least belongs to.
+          if (entry.warmupSets > 0)
+            entry.warmupSets == 1
+                ? '1 warm-up'
+                : '${entry.warmupSets} warm-ups',
+        ].join(' • '),
       ),
       trailing: IconButton(
         icon: const Icon(Icons.delete_outline),
@@ -124,14 +138,16 @@ class _PlannedExerciseTile extends ConsumerWidget {
   }
 
   Future<void> _editSetsReps(BuildContext context, WidgetRef ref) async {
-    final result = await showDialog<({int sets, int reps, int? repsMax})>(
-      context: context,
-      builder: (context) => _SetsRepsDialog(
-        initialSets: planned.entry.defaultSets,
-        initialReps: planned.entry.defaultReps,
-        initialRepsMax: planned.entry.defaultRepsMax,
-      ),
-    );
+    final result =
+        await showDialog<({int sets, int reps, int? repsMax, int warmups})>(
+          context: context,
+          builder: (context) => _SetsRepsDialog(
+            initialSets: planned.entry.defaultSets,
+            initialReps: planned.entry.defaultReps,
+            initialRepsMax: planned.entry.defaultRepsMax,
+            initialWarmups: planned.entry.warmupSets,
+          ),
+        );
     if (result == null) return;
 
     await ref.read(workoutRepositoryProvider).updatePlannedExercise(
@@ -139,6 +155,7 @@ class _PlannedExerciseTile extends ConsumerWidget {
       sets: result.sets,
       reps: result.reps,
       repsMax: result.repsMax,
+      warmupSets: result.warmups,
     );
   }
 }
@@ -146,6 +163,11 @@ class _PlannedExerciseTile extends ConsumerWidget {
 // Allowed ranges for the sets/reps wheels (both start at 1).
 const _maxSets = 15;
 const _maxReps = 50;
+
+/// Highest planned warm-up count offered. Five is already a long ramp-up; the
+/// session lets you log more than planned anyway, so this caps the *plan*, not
+/// what you can actually do.
+const _maxWarmups = 5;
 
 /// Edits the default sets and reps for a planned exercise using two scroll
 /// wheels. Owns its scroll controllers via a [StatefulWidget] so they're
@@ -155,6 +177,7 @@ class _SetsRepsDialog extends StatefulWidget {
     required this.initialSets,
     required this.initialReps,
     required this.initialRepsMax,
+    required this.initialWarmups,
   });
 
   final int initialSets;
@@ -162,6 +185,9 @@ class _SetsRepsDialog extends StatefulWidget {
 
   /// Null when the exercise currently has a fixed target rather than a range.
   final int? initialRepsMax;
+
+  /// How many ramp-up sets are planned. Zero for most exercises.
+  final int initialWarmups;
 
   @override
   State<_SetsRepsDialog> createState() => _SetsRepsDialogState();
@@ -185,6 +211,8 @@ class _SetsRepsDialogState extends State<_SetsRepsDialog> {
 
   late bool _useRange = widget.initialRepsMax != null;
 
+  late int _warmups = widget.initialWarmups.clamp(0, _maxWarmups);
+
   @override
   void dispose() {
     _setsController.dispose();
@@ -201,6 +229,7 @@ class _SetsRepsDialogState extends State<_SetsRepsDialog> {
       // the top below the bottom quietly means "no range" rather than saving
       // something backwards.
       repsMax: _useRange ? _repsMaxController.selectedItem + 1 : null,
+      warmups: _warmups,
     ));
   }
 
@@ -248,6 +277,27 @@ class _SetsRepsDialogState extends State<_SetsRepsDialog> {
             title: const Text('Rep range'),
             value: _useRange,
             onChanged: (value) => setState(() => _useRange = value),
+          ),
+          // Chips rather than a fourth wheel: nobody plans nine warm-ups, and
+          // three cramped wheels plus a fourth would be unreadable on a phone.
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Warm-up sets',
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            children: [
+              for (var n = 0; n <= _maxWarmups; n++)
+                ChoiceChip(
+                  label: Text('$n'),
+                  selected: _warmups == n,
+                  onSelected: (_) => setState(() => _warmups = n),
+                ),
+            ],
           ),
         ],
       ),

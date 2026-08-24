@@ -17,6 +17,7 @@ void main() {
           setNumber: i,
           weight: weight,
           reps: reps,
+          isWarmup: false,
         ),
     ];
   }
@@ -111,6 +112,7 @@ void main() {
         defaultSets: 3,
         defaultReps: reps,
         defaultRepsMax: repsMax,
+        warmupSets: 0,
       );
     }
 
