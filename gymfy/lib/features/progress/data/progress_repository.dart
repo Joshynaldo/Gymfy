@@ -114,15 +114,18 @@ class ProgressRepository {
 
   final AppDatabase _db;
 
-  /// Every exercise that has at least one logged set, sorted by name. These
-  /// are the exercises worth charting.
+  /// Every exercise that has at least one logged *working* set, sorted by name.
+  /// These are the exercises worth charting.
+  ///
+  /// Warm-ups don't qualify an exercise: an empty chart is a worse answer than
+  /// not offering the chart at all.
   Stream<List<Exercise>> watchExercisesWithHistory() {
     final query = _db.select(_db.loggedSets).join([
       innerJoin(
         _db.exercises,
         _db.exercises.id.equalsExp(_db.loggedSets.exerciseId),
       ),
-    ]);
+    ])..where(_db.loggedSets.isWarmup.equals(false));
 
     return query.watch().map((rows) {
       final byId = <String, Exercise>{};
@@ -138,13 +141,22 @@ class ProgressRepository {
 
   /// One [ExerciseHistoryPoint] per session this exercise was trained in,
   /// oldest first — the series behind the progress chart.
+  ///
+  /// Working sets only. This one query feeds the chart, the personal records
+  /// and the estimated 1RM, so filtering here is what keeps a 60 kg ramp-up
+  /// single off your bench graph and out of your PR history. Volume on these
+  /// points is working volume for the same reason — it is what "best volume
+  /// day" is measured against.
   Stream<List<ExerciseHistoryPoint>> watchExerciseHistory(String exerciseId) {
     final query = _db.select(_db.loggedSets).join([
       innerJoin(
         _db.workoutSessions,
         _db.workoutSessions.id.equalsExp(_db.loggedSets.sessionId),
       ),
-    ])..where(_db.loggedSets.exerciseId.equals(exerciseId));
+    ])..where(
+      _db.loggedSets.exerciseId.equals(exerciseId) &
+          _db.loggedSets.isWarmup.equals(false),
+    );
 
     return query.watch().map((rows) {
       // Group the sets by the session they belong to.

@@ -58,4 +58,15 @@ class LoggedSets extends Table {
 
   /// Reps completed for this set.
   IntColumn get reps => integer().withDefault(const Constant(0))();
+
+  /// Whether this was a ramp-up set rather than a working set.
+  ///
+  /// Warm-ups are real work you did and are stored like any other set — they
+  /// still count toward session volume, the muscle map and the recap charts,
+  /// because they happened. What they must not do is pretend to be evidence of
+  /// strength: a 60 kg single on the way to 100 is not a data point on your
+  /// bench chart, is not a PR, and must never talk the overload suggestion
+  /// down. See `isWorkingSet` in `session_repository.dart` for the one place
+  /// that filter is defined.
+  BoolColumn get isWarmup => boolean().withDefault(const Constant(false))();
 }

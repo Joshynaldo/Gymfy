@@ -44,8 +44,9 @@ class TodayCard extends ConsumerWidget {
         weekday: weekday,
         icon: Icons.help_outline,
         title: 'No active split',
-        message: 'Open a split and tap "Set active" to plan your week.',
-        actionLabel: 'Go to splits',
+        // Names what the Workout tab now asks for, so the two screens agree.
+        message: 'Pick the programme you are following to plan your week.',
+        actionLabel: 'Choose a split',
         onAction: () => context.go('/workout'),
       );
     }

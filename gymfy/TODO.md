@@ -16,6 +16,56 @@ Track progress here. Update after each session.
   - PRs werden über die **komplette** Historie berechnet und danach aufs Fenster gefiltert — ob 100 kg heute ein Rekord sind, hängt von jedem Satz davor ab
   - "Was trainiert" zählt **Sätze, kein Volumen**: ein Satz Kniebeugen bewegt das Fünffache eines Satzes Curls, nach Kilogramm sortiert stünden Beine immer oben. Sätze messen Aufmerksamkeit statt Last
   - `WeeklyBarChart` → `shared/widgets/bar_chart.dart` (`SimpleBarChart`, nimmt Labels statt Daten), damit Kalorien- und Recap-Charts nicht auseinanderlaufen
+- [x] **Workout-Tab neu gebaut** — der Tab zeigt jetzt direkt den **aktiven** Split mit seinen Tagen, statt erst eine Split-Liste. Zwei Taps weniger zum Programm, und für die meisten hatte diese Liste ohnehin genau einen Eintrag
+  - Split-Wechsler (`swap_horiz`) in der AppBar: alle Splits mit Markierung des aktiven, plus "New split" und "Manage splits". Auch bei nur einem Split sichtbar — sonst käme man nie zu einem zweiten
+  - Split-Verwaltung nach `/workout/splits` gezogen (`split_list_screen.dart`); `/workout/split/:id` bleibt für Splits, denen man gerade *nicht* folgt
+  - Tages-Karten in `workout/widgets/split_day_list.dart` ausgelagert — Workout-Tab und Split-Übersicht rendern dieselben Daten, also dasselbe Widget
+  - Zwei eigene Leerzustände: gar kein Split ("New split") vs. Splits ohne aktiven ("Choose a split"). Einen zu raten würde einen still auf ein Programm setzen, das man nicht gewählt hat
+  - Übungs-Picker im Day Builder ist **Mehrfachauswahl**: Suche nach Name *oder* Muskel, Muskel-Filterchips, Auswahl übersteht das Umfiltern, "Add 3" fügt alles in einem Rutsch hinzu. Bereits geplante werden übersprungen, die Snackbar sagt was wirklich passiert ist
+  - Filterlogik in `shared/utils/exercise_search.dart` und `shared/widgets/muscle_filter_bar.dart` — Exercises-Tab und Picker filtern garantiert gleich; "die Bibliothek findet es, der Picker nicht" kann nicht mehr passieren
+- [x] 🔥 **Warm-up sets** — Ramp-up-Sätze werden markiert und bleiben aus den Zahlen raus, die sie nicht sehen sollen. Schema v21: `LoggedSets.isWarmup` + `WorkoutExercises.warmupSets`, beide additiv — jeder bereits geloggte Satz bleibt ein Arbeitssatz
+  - **Raus aus:** geschätztem 1RM, PRs, Progress-Chart und dem Progressive-Overload-Vorschlag. Ein 60-kg-Aufwärmer ist kein Datenpunkt auf der Bankdrücken-Kurve, und ein leichter Aufwärmsatz darf den Vorschlag nicht nach unten ziehen
+  - **Drin in:** Session-Volumen, Muscle Map, Recap-Charts und der Workout-Zusammenfassung — ein Aufwärmsatz ist Arbeit, die du tatsächlich gemacht hast. Die Trennung steht an *einer* Stelle: `isWorkingSet` in `session_repository.dart`
+  - Beide Phasen zählen **unabhängig** ab 1 — Arbeitssätze lesen 1, 2, 3, egal wie lang das Ramp-up war. "Satz 5 von 3" wäre eine seltsame Sache auf der Karte
+  - **Prefill folgt der Phase, nicht der Zeile davor**: nach drei Aufwärmsätzen wird für den ersten Arbeitssatz nicht 60 kg vorgeschlagen. Der Overload-Vorschlag gilt nur für Arbeitssätze
+  - Zwei Buttons pro Übung: "Warm-up 2 of 3" (zählt gegen den geplanten Wert herunter, danach nur noch "Warm-up") und "Add set"
+  - Aufwärmzeilen sind **gedimmt + kleines "W"**; ein Icon je Zeile taggt um. Das ist die häufige Reparatur: die Stange fühlt sich leicht an und der "Aufwärmsatz" war doch der erste Arbeitssatz. Umtaggen nummeriert beide Phasen neu, Löschen schließt die Lücke
+  - Geplante Aufwärmsätze pro Übung im Day Builder (Chips 0–5). **Keine vorab angelegten Zeilen** — ein 0-kg-Platzhalter, den du nie gemacht hast, würde trotzdem im Volumen und auf der Muscle Map landen
+- [x] **Fatigue map** — dieselbe Körperkarte, zweite Lesart: nicht was du trainiert *hast*, sondern was noch auf dir liegt. Umschalter **Volume / Fatigue** oben auf dem Muscles-Tab, `MuscleMapView` bleibt unverändert (nimmt schon ein fertiges `AsyncValue`)
+  - **Exponentieller Zerfall, Halbwertszeit 48 h** — eine Session liest sich am nächsten Morgen fast voll, nach zwei Tagen halb, nach vier Tagen ein Viertel. Nach einer Woche ist sie Rauschen. Abfrage-Fenster 14 Tage: sieben Halbwertszeiten, unter 1 % — weiter zurückzulesen kostet Zeit und ändert nichts
+  - **Sätze, kein Volumen** — nach Kilogramm wären die Beine dauerhaft am Anschlag und die Karte würde jeden Tag dasselbe sagen. Gleiche Begründung wie bei den Recap-Charts
+  - **Absolut, nicht relativ** — anders als die Volumen-Heatmap wird *nicht* auf den größten Wert normiert. Nach einer Ruhewoche ist alles dunkel; normiert würde stattdessen der am wenigsten erholte Muskel hell leuchten und behaupten, er sei durch. Sättigung bei 12 zerfallenen Sätzen, darüber wird geklemmt
+  - Aufwärmsätze zählen nicht — sich ans Arbeitsgewicht heranzutasten ist das Gegenteil von Arbeit ansammeln. Dank `isWorkingSet` eine Zeile
+  - Laufende Sessions zählen sofort mit: du stehst im Studio und die Brust ist schon müde. Anders als beim Overload-Vorschlag gibt es keinen Grund, aufs Beenden zu warten
+  - Eigener Leerzustand: "Everything is recovered" statt "No training logged" — du hast vielleicht hart trainiert und bist einfach wieder bereit
+- [x] 🟩 **Activity heatmap** — GitHub-Jahresansicht unten auf dem Home-Tab, eingefärbt nach trainierter Zeit. 53 Wochen als Spalten, Wochentage als Zeilen, öffnet auf heute
+  - **Feste Schwellen in Minuten** (1–29 / 30–59 / 60–89 / 90+), nicht auf den eigenen besten Tag skaliert. Gleiche Begründung wie bei der Fatigue Map: in einem ruhigen Jahr würde eine 20-Minuten-Session sonst so dunkel wie eine Zwei-Stunden-Einheit — und damit nichts mehr aussagen
+  - Die unterste Stufe ist schon mit einer kurzen Einheit erreichbar. "Ich war da" ist die Unterscheidung, die das Raster am häufigsten treffen soll
+  - Datiert nach `completedAt` wie Streak und Recap: eine Session über Mitternacht zählt einmal, am Tag des Abschlusses. Zwei Sessions an einem Tag addieren sich
+  - **Eine abgeschlossene Session zählt immer**, egal wie kurz — auf mindestens eine Minute aufgerundet statt verworfen. `inMinutes` schneidet ab, ein in 40 Sekunden durchgezogenes Workout kam als 0 raus und verschwand komplett. Genau so sieht das erste Workout nach einer Neuinstallation aus, wodurch das ganze Feature kaputt wirkte. "Abgeschlossen heißt trainiert" ist außerdem die Regel, die der Streak schon benutzt. Nur negative Längen fallen raus (Uhr verstellt)
+  - Laufende Workouts erscheinen nicht: sie haben noch keine Länge, und ein Kästchen, das sich unter dir weiter einfärbt, wäre unruhig
+  - Tippen auf ein Kästchen nennt Tag und Dauer ("Today — 1 h 15 min trained" / "rest day"), nochmal tippen hebt die Auswahl auf. Ein Jahr Quadrate ohne Rückfragemöglichkeit ist ein Bild, kein Protokoll
+  - **`CustomPainter` statt 371 Widgets** — ein Render-Objekt und ein Paint-Pass statt mehrerer hundert Layouts pro Scroll-Frame. Das ist die Stelle, an der es auf alter Android-Hardware sonst hakt
+- [x] 📤 **Share a plan** — More → "Share a plan". Splits ankreuzen, dann **Send file** (`.gymfy`) oder **PDF**, plus **Import a plan**. Neuer Feature-Ordner `features/plan_share/`
+  - **Nur Pläne.** Splits, Tage, Wochentags-Zuordnung, Übungen mit Sätzen/Reps/Aufwärmsätzen. Sessions, geloggte Sätze, Messungen und Fotos werden nicht gefiltert, sondern **gar nicht erst gelesen** — es gibt keinen Pfad, über den sie in die Datei kommen könnten. Ein Test prüft, dass weder Körpergewicht noch das beste Bankdrücken im Export auftauchen
+  - Format: lesbares JSON mit `format`/`version`-Tag. Eine Datei aus einer neueren Version wird **abgelehnt statt geraten** — ein halb importierter Plan ist schlimmer als keiner
+  - **Namenskollision → der Nutzer benennt um.** Dialog mit vorgeschlagenem freien Namen, Textfeld, und "Skip this one". Nie überschreiben, nie still "(2)" anhängen: dein Programm und seins heißen gleich, sind aber nicht dasselbe. Bei zwei gleichnamigen Splits in einer Datei wird zweimal gefragt, die zweite Frage kennt die erste Antwort
+  - Import ist immer ein Insert. Der importierte Split wird **nicht aktiv** — er kann "heute" nicht übernehmen
+  - Custom-Übungen des Absenders werden aus Name + Muskeln neu angelegt, sonst würden beim Import genau die Übungen verschwinden, die das Teilen lohnenswert machen. Eine bereits vorhandene Übung wird **nie** verändert — sein "Cable Fly" benennt deins nicht um
+  - Übungen ohne `exerciseId` werden verworfen statt als namenlose Karteileiche in der Bibliothek zu landen
+  - PDF: schwarz auf weiß, A4, mehrseitig, mit leerer **Weight**-Spalte zum Eintragen mit Bleistift. Gedankenstriche werden zu Bindestrichen — die eingebaute Helvetica kann kein Unicode, "8–12" wäre auf Papier "8 12"
+  - Neue Pakete: `file_picker` (**≥ 12**), `pdf`, `printing` → **`flutter pub get` nötig**
+  - **`share_plus` wieder rausgeflogen — Toolchain-Konflikt, nicht Geschmackssache.** AGP 9 / Gradle 9.1 / Kotlin 2.3.20 in diesem Projekt: `file_picker` 11 nagelt KGP 1.8.22 fest, das Gradle 9 nicht mehr ausführt → sein Kotlin wird nie kompiliert und `FilePickerPlugin` fehlt beim Java-Link. `file_picker` 12 baut sauber, braucht aber `win32 ^6` — jedes `share_plus` unter 13 nagelt `win32 ^5` fest, und `share_plus` 13.3 kompiliert sein eigenes Kotlin unter AGP 9 nicht (`Unresolved reference 'SharePlusPendingIntent'`). Beide zusammen gehen also nicht
+  - Deshalb **"Save file" statt Share-Sheet**: `FilePicker.saveFile` deckt den Export mit ab, der Nutzer wählt den Ort und verschickt aus der Dateien-App weiter. PDFs gehen weiterhin über das System-Sheet von `printing`
+- [ ]  **Filter by equipment** — narrow the library to what you actually own; the options adapt to what you've picked, so every combination on screen has results behind it
+- [ ]  **Timed exercises** — planks, hangs, wall sits and loaded carries or cardio exercises are logged by time, not reps, with a work timer that counts the set itself (separate from the rest timer) and logs the time you actually held. They can carry weight too
+- [ ]  the progress photo comparison shouldnt be side by side the old photo should be on top of the new one with less transparancy so yopu actually can compare
+
+
+
+
+
+
 
 
 

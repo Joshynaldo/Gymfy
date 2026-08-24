@@ -48,6 +48,23 @@ dependencies:
   path_provider: ^2.1.5
   flutter_local_notifications: ^22.2.0
   timezone: ^0.11.1
+  # Saving a plan out and picking one back in. Handles both directions, so
+  # there is no separate share plugin.
+  #
+  # Must be >= 12: version 11 hardcodes Kotlin Gradle Plugin 1.8.22, which
+  # Gradle 9 refuses to run, so its Kotlin never compiles and `FilePickerPlugin`
+  # goes missing at Java link time.
+  #
+  # `share_plus` was tried here and removed. It cannot coexist with this:
+  # file_picker 12 needs win32 ^6 and every share_plus below 13 pins win32 ^5,
+  # while share_plus 13.3 fails to compile its own Kotlin against AGP 9
+  # (`Unresolved reference 'SharePlusPendingIntent'`). `saveFile` covers export
+  # on its own, and PDFs go out through `printing`'s system sheet.
+  file_picker: ^12.0.0
+  # Printing a plan. `pdf` builds the document, `printing` shows the system
+  # print/share sheet for it.
+  pdf: ^3.11.3
+  printing: ^5.14.2
 
 dev_dependencies:
   flutter_test:

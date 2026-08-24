@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../onboarding/data/onboarding_repository.dart';
+import '../widgets/activity_heatmap.dart';
 import '../widgets/last_workout_card.dart';
 import '../widgets/next_up_card.dart';
 import '../widgets/recap_section.dart';
@@ -37,6 +38,9 @@ class HomeScreen extends ConsumerWidget {
           NextUpCard(today: today),
           const LastWorkoutCard(),
           const RecapSection(),
+          // Last: the recap answers "how am I doing lately", and the year view
+          // is the long look back you take after it, not before.
+          ActivityHeatmap(today: today),
         ],
       ),
     );

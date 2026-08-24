@@ -50,6 +50,9 @@ String formatDateTime(DateTime dt) {
 /// Formats a short day + month like "23 Jul" — used for chart axis labels.
 String formatShortDate(DateTime dt) => '${dt.day} ${_monthAbbr[dt.month - 1]}';
 
+/// Just the month, like "Jul" — used along the top of the activity heatmap.
+String formatMonthAbbr(DateTime dt) => _monthAbbr[dt.month - 1];
+
 const _weekdayAbbr = [
   'Mon',
   'Tue',
@@ -96,3 +99,19 @@ String formatRepTarget(int reps, int? max) =>
 /// Formats a full set target, e.g. `3 × 10` or `3 × 8–12`.
 String formatSetTarget(int sets, int reps, int? max) =>
     '$sets × ${formatRepTarget(reps, max)}';
+
+/// Describes the result of adding exercises to a workout day.
+///
+/// `addExercisesToDay` skips exercises the day already has, so a flat
+/// "4 exercises added" would sometimes be a lie. Shared by the Exercises tab's
+/// bulk add and the day builder's picker, so both report it the same way.
+String addedToDayMessage({required int added, required int asked}) {
+  if (added == 0) {
+    return asked == 1
+        ? 'Already in that day'
+        : 'All $asked were already in that day';
+  }
+  final addedText = added == 1 ? '1 exercise added' : '$added exercises added';
+  final skipped = asked - added;
+  return skipped == 0 ? addedText : '$addedText — $skipped already there';
+}

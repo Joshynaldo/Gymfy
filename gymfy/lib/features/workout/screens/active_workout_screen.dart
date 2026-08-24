@@ -175,13 +175,22 @@ class _ExerciseLogCard extends ConsumerWidget {
             _LoggedSetRow(set: set, accent: accent),
           Padding(
             padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: () => _addSet(context, ref),
-                icon: const Icon(Icons.add),
-                label: const Text('Add set'),
-              ),
+            child: Row(
+              children: [
+                // Offered first while the plan still expects warm-ups, and
+                // quietly available afterwards — some days need a fourth.
+                TextButton.icon(
+                  onPressed: () => _addSet(context, ref, isWarmup: true),
+                  icon: const Icon(Icons.local_fire_department_outlined),
+                  label: Text(_warmupLabel),
+                ),
+                const SizedBox(width: 4),
+                TextButton.icon(
+                  onPressed: () => _addSet(context, ref, isWarmup: false),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add set'),
+                ),
+              ],
             ),
           ),
         ],
@@ -189,13 +198,35 @@ class _ExerciseLogCard extends ConsumerWidget {
     );
   }
 
-  Future<void> _addSet(BuildContext context, WidgetRef ref) async {
-    // Prefill from the last set logged *in this session* if there is one — you
-    // are mid-exercise and almost certainly repeating the weight. Only the
-    // first set of the exercise takes the overload suggestion, because that's
-    // the moment the decision is actually being made.
-    final last = loggedSets.isNotEmpty ? loggedSets.last : null;
-    final suggestion = last != null
+  /// Sets already logged in the phase [isWarmup] describes.
+  List<LoggedSet> _phase({required bool isWarmup}) =>
+      loggedSets.where((s) => s.isWarmup == isWarmup).toList();
+
+  /// "Warm-up 2 of 3" while the plan still expects some, plain "Warm-up" after.
+  String get _warmupLabel {
+    final planned = this.planned.entry.warmupSets;
+    final done = _phase(isWarmup: true).length;
+    return done < planned ? 'Warm-up ${done + 1} of $planned' : 'Warm-up';
+  }
+
+  Future<void> _addSet(
+    BuildContext context,
+    WidgetRef ref, {
+    required bool isWarmup,
+  }) async {
+    // Prefill from the last set logged *in this phase* — you are mid-ramp-up or
+    // mid-working-set and almost certainly repeating that weight. Crossing the
+    // divide is the one place it must not carry over: after three warm-ups,
+    // offering 60 kg for your first working set would be worse than offering
+    // nothing.
+    final samePhase = _phase(isWarmup: isWarmup);
+    final last = samePhase.isNotEmpty ? samePhase.last : null;
+
+    // Warm-ups never take the overload suggestion: it is a target for the
+    // working sets, and putting it on the bar for a ramp-up set would make the
+    // ramp-up pointless. The suggestion is also only for the first working set,
+    // because that is the moment the decision is actually being made.
+    final suggestion = (isWarmup || last != null)
         ? null
         : ref
               .read(
@@ -209,6 +240,7 @@ class _ExerciseLogCard extends ConsumerWidget {
     final result = await showDialog<({double weight, int reps})>(
       context: context,
       builder: (context) => _LogSetDialog(
+        isWarmup: isWarmup,
         initialWeight: last?.weight ?? suggestion?.weight ?? 0,
         initialReps: last?.reps ?? planned.entry.defaultReps,
         unit: ref.read(weightUnitProvider),
@@ -221,9 +253,12 @@ class _ExerciseLogCard extends ConsumerWidget {
     await ref.read(sessionRepositoryProvider).logSet(
       sessionId: session.id,
       exerciseId: planned.exercise.id,
-      setNumber: loggedSets.length + 1,
+      // Numbered within its own phase, so working sets read 1, 2, 3 however
+      // long the ramp-up was.
+      setNumber: samePhase.length + 1,
       weight: result.weight,
       reps: result.reps,
+      isWarmup: isWarmup,
     );
 
     // Logging a set is exactly when rest starts, so the timer needs no button
@@ -305,6 +340,12 @@ class _LoggedSetRow extends ConsumerWidget {
     final theme = Theme.of(context);
     final unit = ref.watch(weightUnitProvider);
 
+    // Warm-ups are dimmed rather than hidden or restyled: they're still your
+    // work, just not the part the numbers are about. Muted text plus the badge
+    // makes the divide readable at arm's length without a heavy separator
+    // cutting the card in two.
+    final muted = theme.colorScheme.onSurfaceVariant;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 2, 4, 2),
       child: Row(
@@ -313,14 +354,38 @@ class _LoggedSetRow extends ConsumerWidget {
             width: 28,
             child: Text(
               '${set.setNumber}',
-              style: theme.textTheme.labelLarge?.copyWith(color: accent),
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: set.isWarmup ? muted : accent,
+              ),
             ),
           ),
+          if (set.isWarmup) ...[
+            _WarmupBadge(colour: muted),
+            const SizedBox(width: 8),
+          ],
           Expanded(
             child: Text(
               '${formatWeightUnit(set.weight, unit)} × ${set.reps} reps',
-              style: theme.textTheme.bodyLarge,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: set.isWarmup ? muted : null,
+              ),
             ),
+          ),
+          IconButton(
+            // Re-tagging is the common repair: you ramp up, the bar feels
+            // light, and what you called a warm-up was really your first
+            // working set. Without this the only fix is deleting the row and
+            // logging it again from memory.
+            icon: Icon(
+              set.isWarmup ? Icons.arrow_upward : Icons.local_fire_department,
+            ),
+            iconSize: 20,
+            tooltip: set.isWarmup
+                ? 'Make this a working set'
+                : 'Make this a warm-up',
+            onPressed: () => ref
+                .read(sessionRepositoryProvider)
+                .setWarmup(id: set.id, isWarmup: !set.isWarmup),
           ),
           IconButton(
             icon: const Icon(Icons.close),
@@ -335,6 +400,30 @@ class _LoggedSetRow extends ConsumerWidget {
   }
 }
 
+/// The small "W" that marks a ramp-up row.
+class _WarmupBadge extends StatelessWidget {
+  const _WarmupBadge({required this.colour});
+
+  final Color colour;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+      decoration: BoxDecoration(
+        color: colour.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        'W',
+        style: Theme.of(
+          context,
+        ).textTheme.labelSmall?.copyWith(color: colour),
+      ),
+    );
+  }
+}
+
 /// Dialog to enter the weight and reps for a set. Owns its controllers via a
 /// [StatefulWidget] so they're disposed at the right time.
 ///
@@ -342,12 +431,17 @@ class _LoggedSetRow extends ConsumerWidget {
 /// the screen never has to think about which unit is on screen.
 class _LogSetDialog extends StatefulWidget {
   const _LogSetDialog({
+    required this.isWarmup,
     required this.initialWeight,
     required this.initialReps,
     required this.unit,
     required this.plateLoaded,
     required this.suggestion,
   });
+
+  /// Whether this row is being logged as a ramp-up set. Only changes the title:
+  /// the inputs are identical, because a warm-up is a real set.
+  final bool isWarmup;
 
   /// In kilograms, as stored.
   final double initialWeight;
@@ -400,7 +494,7 @@ class _LogSetDialogState extends State<_LogSetDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Log set'),
+      title: Text(widget.isWarmup ? 'Log warm-up set' : 'Log set'),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,

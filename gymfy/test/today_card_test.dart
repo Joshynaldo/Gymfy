@@ -52,7 +52,7 @@ void main() {
 
     expect(find.text('No active split'), findsOneWidget);
     // Pointing at the fix, not just naming the problem.
-    expect(find.textContaining('Set active'), findsOneWidget);
+    expect(find.text('Choose a split'), findsOneWidget);
   });
 
   testWidgets('an unscheduled weekday is a rest day', (tester) async {

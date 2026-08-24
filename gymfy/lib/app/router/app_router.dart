@@ -17,11 +17,13 @@ import '../../features/progress/screens/measurements_screen.dart';
 import '../../features/progress/screens/photo_comparison_screen.dart';
 import '../../features/plates/screens/plate_calculator_screen.dart';
 import '../../features/progress/screens/progress_photos_screen.dart';
+import '../../features/plan_share/screens/share_plan_screen.dart';
 import '../../features/progress/screens/progress_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../features/workout/screens/active_workout_screen.dart';
 import '../../features/workout/screens/day_builder_screen.dart';
 import '../../features/workout/screens/split_days_screen.dart';
+import '../../features/workout/screens/split_list_screen.dart';
 import '../../features/workout/screens/workout_screen.dart';
 import '../../features/workout/screens/workout_summary_screen.dart';
 import 'scaffold_with_nav_bar.dart';
@@ -61,6 +63,12 @@ GoRouter goRouter(Ref ref) {
                 path: '/workout',
                 builder: (context, state) => const WorkoutScreen(),
                 routes: [
+                  // The split manager. The tab itself shows the active split,
+                  // so this is a pushed screen rather than the tab's root.
+                  GoRoute(
+                    path: 'splits',
+                    builder: (context, state) => const SplitListScreen(),
+                  ),
                   GoRoute(
                     path: 'split/:splitId',
                     builder: (context, state) => SplitDaysScreen(
@@ -203,6 +211,10 @@ GoRouter goRouter(Ref ref) {
                   GoRoute(
                     path: 'rank',
                     builder: (context, state) => const StrengthRankScreen(),
+                  ),
+                  GoRoute(
+                    path: 'share-plan',
+                    builder: (context, state) => const SharePlanScreen(),
                   ),
                   GoRoute(
                     path: 'settings',

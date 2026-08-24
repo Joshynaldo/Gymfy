@@ -36,7 +36,14 @@ class OverloadRepository {
         _db.workoutSessions.id.equalsExp(_db.loggedSets.sessionId) &
             _db.workoutSessions.completedAt.isNotNull(),
       ),
-    ])..where(_db.loggedSets.exerciseId.equals(exerciseId));
+    ])..where(
+      _db.loggedSets.exerciseId.equals(exerciseId) &
+          // Working sets only. Double progression asks "did every planned set
+          // hit the top of the rep range?" — counting ramp-up sets would answer
+          // that with the wrong rows, and a light warm-up would drag the top
+          // weight down and quietly suggest a *decrease*.
+          _db.loggedSets.isWarmup.equals(false),
+    );
     query.orderBy([
       OrderingTerm(
         expression: _db.workoutSessions.completedAt,

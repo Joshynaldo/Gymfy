@@ -412,6 +412,7 @@ class WorkoutRepository {
     required int sets,
     required int reps,
     int? repsMax,
+    int warmupSets = 0,
   }) {
     return (_db.update(_db.workoutExercises)..where((t) => t.id.equals(id)))
         .write(
@@ -421,6 +422,9 @@ class WorkoutRepository {
             defaultRepsMax: Value(
               repsMax != null && repsMax > reps ? repsMax : null,
             ),
+            // Never negative: a "minus one warm-up" would make the session's
+            // "Warm-up 1 of -1" label nonsense.
+            warmupSets: Value(warmupSets < 0 ? 0 : warmupSets),
           ),
         );
   }

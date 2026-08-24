@@ -23,6 +23,10 @@ import 'package:gymfy/shared/database/app_database.dart';
 /// Undoes what version N's migration branch added. Keyed by N, applied in
 /// descending order by [rewindTo].
 const _undoVersion = <int, List<String>>{
+  21: [
+    'ALTER TABLE logged_sets DROP COLUMN is_warmup',
+    'ALTER TABLE workout_exercises DROP COLUMN warmup_sets',
+  ],
   20: [
     'ALTER TABLE workout_exercises ADD COLUMN overload_increment REAL',
     'ALTER TABLE workout_exercises ADD COLUMN overload_percent REAL',
@@ -99,13 +103,13 @@ void main() {
     final db = AppDatabase.forTesting(NativeDatabase.memory());
     addTearDown(db.close);
 
-    expect(db.schemaVersion, 20);
+    expect(db.schemaVersion, 21);
   });
 
   test('every version above the oldest test target can be wound back', () {
     // Guards the helper itself: a new migration with no undo entry would make
     // every rewind test below fail with a confusing SQL error instead of this.
-    for (var v = 10; v <= 20; v++) {
+    for (var v = 10; v <= 21; v++) {
       expect(_undoVersion.keys, contains(v), reason: 'no undo for v$v');
     }
   });
@@ -295,6 +299,60 @@ void main() {
 
     // The calorie log, which shared that phase, is untouched.
     expect(await upgraded.select(upgraded.calorieEntries).get(), hasLength(1));
+  });
+
+  test('upgrading from v20 keeps every existing set a working set', () async {
+    final file = _tempDatabase('v20');
+
+    final old = AppDatabase.forTesting(NativeDatabase(file));
+    await old.into(old.exercises).insert(
+      ExercisesCompanion.insert(
+        id: 'barbell_bench_press',
+        name: 'Barbell Bench Press',
+        muscleIds: const ['chest'],
+      ),
+    );
+    final sessionId = await old
+        .into(old.workoutSessions)
+        .insert(WorkoutSessionsCompanion.insert(name: 'Push'));
+    await old.into(old.loggedSets).insert(
+      LoggedSetsCompanion.insert(
+        sessionId: sessionId,
+        exerciseId: 'barbell_bench_press',
+        setNumber: 1,
+        weight: const Value(100),
+        reps: const Value(5),
+      ),
+    );
+    final splitId = await old
+        .into(old.splits)
+        .insert(SplitsCompanion.insert(name: 'PPL'));
+    final dayId = await old
+        .into(old.workoutDays)
+        .insert(WorkoutDaysCompanion.insert(splitId: splitId, name: 'Push'));
+    await old.into(old.workoutExercises).insert(
+      WorkoutExercisesCompanion.insert(
+        dayId: dayId,
+        exerciseId: 'barbell_bench_press',
+      ),
+    );
+    await rewindTo(old, 20);
+    await old.close();
+
+    final upgraded = AppDatabase.forTesting(NativeDatabase(file));
+    addTearDown(upgraded.close);
+
+    // The safe direction. Guessing that an old 100 kg × 5 was a warm-up would
+    // silently delete it from the user's bench chart and their PR history.
+    final set = (await upgraded.select(upgraded.loggedSets).get()).single;
+    expect(set.weight, 100);
+    expect(set.reps, 5);
+    expect(set.isWarmup, isFalse);
+
+    // And no planned exercise suddenly grows ramp-up rows it never had.
+    final planned = (await upgraded.select(upgraded.workoutExercises).get())
+        .single;
+    expect(planned.warmupSets, 0);
   });
 
   test('a rest override is removed with the exercise it belongs to', () async {

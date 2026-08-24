@@ -18,6 +18,8 @@ class MuscleMapView extends StatefulWidget {
     required this.intensities,
     required this.emptyMessage,
     this.caption,
+    this.contrastCaption =
+        'Each muscle has its own colour. Brighter still means more volume.',
   });
 
   /// The intensities to display (loading / error / data).
@@ -28,6 +30,11 @@ class MuscleMapView extends StatefulWidget {
 
   /// Shown under the map when there IS data. Omit to show nothing.
   final String? caption;
+
+  /// Replaces [caption] while per-muscle colours are on. Defaults to the volume
+  /// wording, which is what every caller but the fatigue map wants — brightness
+  /// means something different there and saying "volume" would be wrong.
+  final String contrastCaption;
 
   @override
   State<MuscleMapView> createState() => _MuscleMapViewState();
@@ -141,9 +148,7 @@ class _MuscleMapViewState extends State<MuscleMapView> {
   String get _captionText {
     final data = widget.intensities.value;
     if (data == null || data.isEmpty) return widget.emptyMessage;
-    if (_isContrast) {
-      return 'Each muscle has its own colour. Brighter still means more volume.';
-    }
+    if (_isContrast) return widget.contrastCaption;
     return widget.caption ?? '';
   }
 }
