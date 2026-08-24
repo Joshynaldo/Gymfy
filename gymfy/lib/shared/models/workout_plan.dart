@@ -99,6 +99,16 @@ class WorkoutExercises extends Table {
   /// Default number of working sets planned for this exercise.
   IntColumn get defaultSets => integer().withDefault(const Constant(3))();
 
+  /// How many ramp-up sets to plan before the working sets.
+  ///
+  /// Zero for most exercises — you don't warm up for a cable curl.
+  ///
+  /// A target, not pre-created rows. The session shows "Warm-up 1 of 3" and
+  /// keeps offering the button until you've logged that many; it never inserts
+  /// placeholder sets, because a 0 kg row you didn't perform would still count
+  /// toward your session volume and your muscle map.
+  IntColumn get warmupSets => integer().withDefault(const Constant(0))();
+
   /// Default target reps per set — the bottom of the range when there is one.
   IntColumn get defaultReps => integer().withDefault(const Constant(10))();
 

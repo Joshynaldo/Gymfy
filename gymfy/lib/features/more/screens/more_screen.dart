@@ -56,6 +56,12 @@ class MoreScreen extends ConsumerWidget {
       route: '/more/rank',
     ),
     _Tool(
+      icon: Icons.ios_share,
+      title: 'Share a plan',
+      subtitle: 'Send your splits to someone, or import theirs',
+      route: '/more/share-plan',
+    ),
+    _Tool(
       icon: Icons.settings_outlined,
       title: 'Settings',
       subtitle: 'Accent colour, your name, rest timer alerts',

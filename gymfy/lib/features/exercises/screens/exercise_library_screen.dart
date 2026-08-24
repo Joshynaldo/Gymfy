@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/accent_color.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/exercise_display.dart';
+import '../../../shared/utils/exercise_search.dart';
+import '../../../shared/utils/format.dart';
+import '../../../shared/widgets/muscle_filter_bar.dart';
 import '../../workout/data/workout_repository.dart';
 import '../data/exercise_repository.dart';
 import 'widgets/add_to_day_sheet.dart';
@@ -74,8 +77,7 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
         ),
         data: (all) {
           // Muscles that actually appear in the data, for the filter chips.
-          final muscles = <String>{for (final e in all) ...e.muscleIds}.toList()
-            ..sort();
+          final muscles = musclesIn(all);
 
           final filtered = all.where(_matches).toList();
 
@@ -84,7 +86,7 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
               _SearchField(
                 onChanged: (value) => setState(() => _query = value),
               ),
-              _MuscleFilterBar(
+              MuscleFilterBar(
                 muscles: muscles,
                 selected: _muscleFilters,
                 onToggle: _toggleMuscle,
@@ -132,30 +134,14 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
     });
   }
 
-  /// Whether an exercise survives the search box and the muscle chips.
-  ///
-  /// The two combine with AND (a search *within* a filtered set), but several
-  /// muscle chips combine with OR: picking Chest and Triceps asks for "anything
-  /// that trains either", which is how you build a push day. Requiring both
-  /// would answer a question almost nobody has, and would usually return
-  /// nothing.
-  bool _matches(Exercise exercise) {
-    final query = _query.trim().toLowerCase();
-    final matchesQuery =
-        query.isEmpty ||
-        exercise.name.toLowerCase().contains(query) ||
-        // Searching by muscle: "delt" finds the lateral raise even though the
-        // word never appears in its name.
-        exercise.muscleIds.any(
-          (muscleId) => muscleLabel(muscleId).toLowerCase().contains(query),
-        );
-
-    final matchesMuscle =
-        _muscleFilters.isEmpty ||
-        exercise.muscleIds.any(_muscleFilters.contains);
-
-    return matchesQuery && matchesMuscle;
-  }
+  /// Whether an exercise survives the search box and the muscle chips. The
+  /// rules live in `shared/utils/exercise_search.dart` so the exercise picker
+  /// filters identically.
+  bool _matches(Exercise exercise) => matchesExerciseSearch(
+    exercise,
+    query: _query,
+    muscleFilters: _muscleFilters,
+  );
 
   void _toggle(String id) {
     setState(() {
@@ -175,21 +161,10 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
 
     setState(_selected.clear);
     messenger.showSnackBar(
-      SnackBar(content: Text(_addedMessage(added: added, asked: ids.length))),
+      SnackBar(
+        content: Text(addedToDayMessage(added: added, asked: ids.length)),
+      ),
     );
-  }
-
-  /// Says what actually happened, since exercises already in the day are
-  /// skipped and a plain "4 added" would sometimes be a lie.
-  String _addedMessage({required int added, required int asked}) {
-    if (added == 0) {
-      return asked == 1
-          ? 'Already in that day'
-          : 'All $asked were already in that day';
-    }
-    final addedText = added == 1 ? '1 exercise added' : '$added exercises added';
-    final skipped = asked - added;
-    return skipped == 0 ? addedText : '$addedText — $skipped already there';
   }
 }
 
@@ -217,63 +192,6 @@ class _SearchField extends StatelessWidget {
             borderSide: BorderSide.none,
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// The horizontal row of muscle filter chips.
-///
-/// Several can be on at once; the selected ones are pulled to the front so a
-/// choice made after scrolling right doesn't disappear off-screen when you
-/// scroll back.
-class _MuscleFilterBar extends StatelessWidget {
-  const _MuscleFilterBar({
-    required this.muscles,
-    required this.selected,
-    required this.onToggle,
-    required this.onClear,
-  });
-
-  final List<String> muscles;
-  final Set<String> selected;
-  final ValueChanged<String> onToggle;
-  final VoidCallback onClear;
-
-  @override
-  Widget build(BuildContext context) {
-    final ordered = [
-      ...muscles.where(selected.contains),
-      ...muscles.where((m) => !selected.contains(m)),
-    ];
-
-    return SizedBox(
-      height: 44,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: FilterChip(
-              label: const Text('All'),
-              selected: selected.isEmpty,
-              // Already showing everything, so this would be a no-op tap. A
-              // disabled chip says "you're here" better than one that does
-              // nothing when pressed.
-              onSelected: selected.isEmpty ? null : (_) => onClear(),
-            ),
-          ),
-          for (final muscle in ordered)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: FilterChip(
-                label: Text(muscleLabel(muscle)),
-                selected: selected.contains(muscle),
-                onSelected: (_) => onToggle(muscle),
-              ),
-            ),
-        ],
       ),
     );
   }

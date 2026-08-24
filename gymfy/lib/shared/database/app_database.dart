@@ -43,7 +43,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 20;
+  int get schemaVersion => 21;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -196,6 +196,15 @@ class AppDatabase extends _$AppDatabase {
             'ALTER TABLE workout_exercises DROP COLUMN $column',
           );
         }
+      }
+      // v21 adds warm-up sets. Both columns are additive and default to
+      // "nothing is a warm-up": every set already on the device stays a working
+      // set, and no planned exercise suddenly grows ramp-up rows. That is the
+      // safe direction — mistaking a working set for a warm-up would quietly
+      // erase it from your progress charts.
+      if (from < 21) {
+        await m.addColumn(loggedSets, loggedSets.isWarmup);
+        await m.addColumn(workoutExercises, workoutExercises.warmupSets);
       }
     },
     // SQLite doesn't enforce foreign keys unless we turn them on per

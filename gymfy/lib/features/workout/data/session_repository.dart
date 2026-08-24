@@ -7,6 +7,18 @@ import '../../../shared/utils/dates.dart';
 
 part 'session_repository.g.dart';
 
+/// Whether a logged set counts as evidence of strength.
+///
+/// The single definition of the warm-up divide. Anything that reads sets to
+/// judge how strong you are — estimated 1RM, personal records, the progress
+/// chart, the progressive-overload suggestion — filters through this. Anything
+/// that reads sets to describe what you *did* — session volume, the muscle map,
+/// the recap charts — does not, because a warm-up is still work you performed.
+///
+/// One function rather than `!set.isWarmup` scattered across five repositories:
+/// the rule is easy to state and easy to forget in one place.
+bool isWorkingSet(LoggedSet set) => !set.isWarmup;
+
 /// Database access for *performed* workouts — sessions and their logged sets.
 /// (Planning lives in workout_repository.dart; this is the logging side.)
 class SessionRepository {
@@ -44,6 +56,7 @@ class SessionRepository {
     required int setNumber,
     required double weight,
     required int reps,
+    bool isWarmup = false,
   }) {
     return _db.into(_db.loggedSets).insert(
       LoggedSetsCompanion.insert(
@@ -52,13 +65,77 @@ class SessionRepository {
         setNumber: setNumber,
         weight: Value(weight),
         reps: Value(reps),
+        isWarmup: Value(isWarmup),
       ),
     );
   }
 
-  /// Deletes a single logged set.
-  Future<void> deleteSet(int id) {
-    return (_db.delete(_db.loggedSets)..where((t) => t.id.equals(id))).go();
+  /// Flips a logged set between warm-up and working, renumbering both phases.
+  ///
+  /// Re-tagging is the common repair: you ramp up, the bar feels light, and the
+  /// set you called a warm-up was really your first working set. Without this
+  /// the only fix is to delete the row and log it again from memory.
+  Future<void> setWarmup({required int id, required bool isWarmup}) async {
+    await _db.transaction(() async {
+      final set = await (_db.select(_db.loggedSets)
+            ..where((t) => t.id.equals(id)))
+          .getSingleOrNull();
+      if (set == null) return;
+
+      await (_db.update(_db.loggedSets)..where((t) => t.id.equals(id))).write(
+        LoggedSetsCompanion(isWarmup: Value(isWarmup)),
+      );
+      await _renumber(sessionId: set.sessionId, exerciseId: set.exerciseId);
+    });
+  }
+
+  /// Deletes a single logged set, then closes the gap it left in the numbering.
+  Future<void> deleteSet(int id) async {
+    await _db.transaction(() async {
+      final set = await (_db.select(_db.loggedSets)
+            ..where((t) => t.id.equals(id)))
+          .getSingleOrNull();
+      if (set == null) return;
+
+      await (_db.delete(_db.loggedSets)..where((t) => t.id.equals(id))).go();
+      await _renumber(sessionId: set.sessionId, exerciseId: set.exerciseId);
+    });
+  }
+
+  /// Renumbers one exercise's sets in a session, counting warm-ups and working
+  /// sets separately.
+  ///
+  /// The two phases are numbered independently so the working sets read 1, 2, 3
+  /// no matter how many ramp-up sets came first — "set 4 of 3" would be a
+  /// strange thing to see on the card, and the number people care about is how
+  /// many *working* sets are done.
+  Future<void> _renumber({
+    required int sessionId,
+    required String exerciseId,
+  }) async {
+    final sets =
+        await (_db.select(_db.loggedSets)
+              ..where(
+                (t) =>
+                    t.sessionId.equals(sessionId) &
+                    t.exerciseId.equals(exerciseId),
+              )
+              ..orderBy([(t) => OrderingTerm(expression: t.id)]))
+            .get();
+
+    var warmups = 0;
+    var working = 0;
+    await _db.batch((batch) {
+      for (final set in sets) {
+        final number = set.isWarmup ? ++warmups : ++working;
+        if (number == set.setNumber) continue;
+        batch.update(
+          _db.loggedSets,
+          LoggedSetsCompanion(setNumber: Value(number)),
+          where: (t) => t.id.equals(set.id),
+        );
+      }
+    });
   }
 
   /// Marks a session finished by stamping `completedAt` with the current time.
