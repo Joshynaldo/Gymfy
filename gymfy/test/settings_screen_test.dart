@@ -91,6 +91,15 @@ void main() {
       expect(find.text('Progressive overload'), findsOneWidget);
       expect(find.text('You'), findsOneWidget);
       expect(find.text('Rest timer'), findsOneWidget);
+      expect(find.text('Data'), findsOneWidget);
+    });
+
+    testWidgets('the data export is reachable from here', (tester) async {
+      await pump(tester);
+
+      // Lives in Settings rather than on the More tab: exporting is a
+      // once-before-a-phone-swap job, not a tool you reach for mid-session.
+      expect(find.text('Export data'), findsOneWidget);
     });
 
     testWidgets('progressive overload is configured here, not per exercise', (
@@ -152,20 +161,43 @@ void main() {
       expect(container.read(overloadConfigProvider).deloadWeeks, isNull);
     });
 
-    testWidgets('offers every theme, with the default selected', (tester) async {
+    /// Opens the theme dropdown and picks [theme] from the menu.
+    ///
+    /// Two taps now the picker is collapsed. `.last` on the menu entry because
+    /// the closed field still shows the current theme's name behind the open
+    /// menu, so its label matches twice.
+    Future<void> pickTheme(WidgetTester tester, AppTheme theme) async {
+      await tester.tap(find.byType(DropdownButtonFormField<AppTheme>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(theme.label).last);
+      await settle(tester);
+    }
+
+    testWidgets('shows the current theme without opening', (tester) async {
       await pump(tester);
 
-      for (final theme in AppTheme.values) {
-        expect(find.text(theme.label), findsOneWidget, reason: theme.name);
-      }
+      // Collapsed, so only the active one is on screen — that's the point of
+      // the dropdown over seven stacked rows.
+      expect(find.text(AppTheme.darkDefault.label), findsOneWidget);
+      expect(find.text(AppTheme.amoled.label), findsNothing);
       expect(container.read(appThemeProvider), AppTheme.darkDefault);
+    });
+
+    testWidgets('offers every theme once opened', (tester) async {
+      await pump(tester);
+
+      await tester.tap(find.byType(DropdownButtonFormField<AppTheme>));
+      await tester.pumpAndSettle();
+
+      for (final theme in AppTheme.values) {
+        expect(find.text(theme.label), findsWidgets, reason: theme.name);
+      }
     });
 
     testWidgets('picking a theme applies and stores it', (tester) async {
       await pump(tester);
 
-      await tester.tap(find.text(AppTheme.amoled.label));
-      await settle(tester);
+      await pickTheme(tester, AppTheme.amoled);
 
       // Applied app-wide immediately — this screen re-themes under your finger,
       // which is what makes the picker its own preview.
@@ -181,10 +213,8 @@ void main() {
     testWidgets('switching back to the default works too', (tester) async {
       await pump(tester);
 
-      await tester.tap(find.text(AppTheme.highContrast.label));
-      await settle(tester);
-      await tester.tap(find.text(AppTheme.darkDefault.label));
-      await settle(tester);
+      await pickTheme(tester, AppTheme.highContrast);
+      await pickTheme(tester, AppTheme.darkDefault);
 
       expect(container.read(appThemeProvider), AppTheme.darkDefault);
     });

@@ -6,11 +6,18 @@ import '../../../shared/utils/format.dart';
 import '../data/photo_repository.dart';
 import '../widgets/photo_file_image.dart';
 
-/// Side-by-side before/after of two progress photos.
+/// Two progress photos stacked on top of each other, with a slider to fade
+/// between them.
 ///
-/// Defaults to the widest span available — oldest on the left, newest on the
-/// right — since that's the comparison people actually want. Either side can be
-/// swapped for any other photo.
+/// Overlaid rather than side by side, which is what this screen used to do. Two
+/// small images a thumb's width apart is the wrong tool for the job: real change
+/// over eight weeks is a couple of centimetres, and spotting that means holding
+/// the outlines against each other, not glancing back and forth between two
+/// half-width photos. Faded on top of one another, the difference is the part
+/// that moves.
+///
+/// Defaults to the widest span available — oldest against newest — since that's
+/// the comparison people actually want. Either photo can be swapped.
 class PhotoComparisonScreen extends ConsumerStatefulWidget {
   const PhotoComparisonScreen({super.key});
 
@@ -26,6 +33,13 @@ class _PhotoComparisonScreenState
   /// deleted elsewhere.
   int? _beforeId;
   int? _afterId;
+
+  /// Where the fade sits: 0 shows only the older photo, 1 only the newer.
+  ///
+  /// Starts in the middle, because a screen that opened on either extreme would
+  /// look like it was showing one photo and hiding the other — the overlay is
+  /// the whole point, so it has to be visible before anything is touched.
+  double _fade = 0.5;
 
   PhotoItem? _resolve(List<PhotoItem> items, int? id, PhotoItem fallback) {
     if (id == null) return fallback;
@@ -66,28 +80,21 @@ class _PhotoComparisonScreenState
               _SpanBanner(before: before, after: after),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _Slot(
-                          label: 'Before',
-                          item: before,
-                          onTap: () => _choose(items, isBefore: true),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _Slot(
-                          label: 'After',
-                          item: after,
-                          onTap: () => _choose(items, isBefore: false),
-                        ),
-                      ),
-                    ],
-                  ),
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                  child: _Overlay(before: before, after: after, fade: _fade),
                 ),
               ),
+              _FadeSlider(
+                fade: _fade,
+                onChanged: (value) => setState(() => _fade = value),
+              ),
+              _Ends(
+                before: before,
+                after: after,
+                onTapBefore: () => _choose(items, isBefore: true),
+                onTapAfter: () => _choose(items, isBefore: false),
+              ),
+              const SizedBox(height: 8),
             ],
           );
         },
@@ -149,63 +156,152 @@ class _SpanBanner extends ConsumerWidget {
   }
 }
 
-/// One half of the comparison: the photo, its date, and a tap to swap it.
-class _Slot extends StatelessWidget {
-  const _Slot({required this.label, required this.item, required this.onTap});
+/// The two photos in one frame, the older fading out as [fade] rises.
+class _Overlay extends StatelessWidget {
+  const _Overlay({
+    required this.before,
+    required this.after,
+    required this.fade,
+  });
+
+  final PhotoItem before;
+  final PhotoItem after;
+  final double fade;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: ColoredBox(
+        color: theme.colorScheme.surfaceContainerHighest,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Both `contain` and both filling the same box, so the two bodies
+            // are drawn at the same scale and centred on the same point. Any
+            // other fit would move one photo relative to the other and invent a
+            // difference that isn't there.
+            PhotoFileImage(path: after.path, opacity: fade),
+            PhotoFileImage(path: before.path, opacity: 1 - fade),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Scrubs between the two photos.
+class _FadeSlider extends ConsumerWidget {
+  const _FadeSlider({required this.fade, required this.onChanged});
+
+  final double fade;
+  final ValueChanged<double> onChanged;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accent = ref.watch(accentColorProvider);
+
+    return Slider(
+      value: fade,
+      activeColor: accent,
+      // Continuous, no divisions: easing the newer photo in a few percent at a
+      // time is how you catch a change that fixed steps would jump straight
+      // over.
+      onChanged: onChanged,
+    );
+  }
+}
+
+/// The two dates under the slider, each a tap target for swapping that photo.
+class _Ends extends StatelessWidget {
+  const _Ends({
+    required this.before,
+    required this.after,
+    required this.onTapBefore,
+    required this.onTapAfter,
+  });
+
+  final PhotoItem before;
+  final PhotoItem after;
+  final VoidCallback onTapBefore;
+  final VoidCallback onTapAfter;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Laid out to match the slider: the older photo is what you see at
+          // the left end, the newer at the right.
+          _End(label: 'Before', item: before, onTap: onTapBefore),
+          _End(
+            label: 'After',
+            item: after,
+            onTap: onTapAfter,
+            alignEnd: true,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _End extends StatelessWidget {
+  const _End({
+    required this.label,
+    required this.item,
+    required this.onTap,
+    this.alignEnd = false,
+  });
 
   final String label;
   final PhotoItem item;
   final VoidCallback onTap;
+  final bool alignEnd;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final note = item.photo.note;
 
-    // The whole slot is the target, caption included — tapping the date to
-    // change the photo is the obvious move.
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: ColoredBox(
-                color: theme.colorScheme.surfaceContainerHighest,
-                // contain, not cover: cropping a body shot to fill the box is
-                // exactly how a comparison starts lying.
-                child: PhotoFileImage(path: item.path),
+    return Flexible(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Column(
+            crossAxisAlignment: alignEnd
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            formatShortDate(item.photo.date),
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodyMedium,
-          ),
-          if (note != null && note.isNotEmpty)
-            Text(
-              note,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+              Text(
+                formatShortDate(item.photo.date),
+                style: theme.textTheme.bodyMedium,
               ),
-            ),
-        ],
+              if (note != null && note.isNotEmpty)
+                Text(
+                  note,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -300,8 +396,8 @@ class _NotEnoughPhotos extends StatelessWidget {
             Text('Nothing to compare yet', style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),
             Text(
-              'Add at least two progress photos and you can put any two of '
-              'them side by side here.',
+              'Add at least two progress photos and you can fade between any '
+              'two of them here.',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
             ),

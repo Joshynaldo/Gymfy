@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../shared/data/settings_repository.dart';
@@ -11,6 +12,7 @@ import '../../plates/widgets/plate_inventory_picker.dart';
 import '../../workout/data/rest_timer_repository.dart';
 import '../../workout/widgets/rest_length_picker.dart';
 import '../data/notification_preferences.dart';
+import '../../../shared/widgets/fade_slide_in.dart';
 import '../widgets/theme_picker.dart';
 
 /// Everything the user can change about the app.
@@ -21,34 +23,62 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
-      body: ListView(
-        padding: const EdgeInsets.only(bottom: 32),
-        children: const [
-          _SectionHeader('Theme'),
-          ThemePicker(),
-          Divider(height: 1),
-          _SectionHeader('Accent'),
-          _AccentPicker(),
-          Divider(height: 1),
-          _SectionHeader('Units'),
-          _UnitPicker(),
-          Divider(height: 1),
-          _SectionHeader('Plates'),
-          PlateInventoryPicker(),
-          Divider(height: 1),
-          _SectionHeader('Progressive overload'),
-          Padding(
-            padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: OverloadSettingsPanel(),
-          ),
-          Divider(height: 1),
-          _SectionHeader('You'),
-          _NameTile(),
-          Divider(height: 1),
-          _SectionHeader('Rest timer'),
-          _RestTimerPreferences(),
-        ],
+      // One animation for the whole screen rather than one per section: a
+      // settings list is read top to bottom in a glance, and eight staggered
+      // sections would draw the eye down the page instead of letting it land.
+      body: FadeSlideIn(
+        child: ListView(
+          padding: const EdgeInsets.only(bottom: 32),
+          children: const [
+            _SectionHeader('Theme'),
+            ThemePicker(),
+            Divider(height: 1),
+            _SectionHeader('Accent'),
+            _AccentPicker(),
+            Divider(height: 1),
+            _SectionHeader('Units'),
+            _UnitPicker(),
+            Divider(height: 1),
+            _SectionHeader('Plates'),
+            PlateInventoryPicker(),
+            Divider(height: 1),
+            _SectionHeader('Progressive overload'),
+            Padding(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: OverloadSettingsPanel(),
+            ),
+            Divider(height: 1),
+            _SectionHeader('You'),
+            _NameTile(),
+            Divider(height: 1),
+            _SectionHeader('Rest timer'),
+            _RestTimerPreferences(),
+            Divider(height: 1),
+            _SectionHeader('Data'),
+            _ExportTile(),
+          ],
+        ),
       ),
+    );
+  }
+}
+
+/// Way out to the data export.
+///
+/// In Settings rather than on the More tab: exporting is something you do once
+/// before switching phones or when you want your numbers in a spreadsheet, not
+/// a tool you reach for mid-session like the plate calculator.
+class _ExportTile extends StatelessWidget {
+  const _ExportTile();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: const Icon(Icons.save_alt),
+      title: const Text('Export data'),
+      subtitle: const Text('Save your whole log as a spreadsheet or JSON'),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => context.go('/more/settings/export'),
     );
   }
 }
@@ -103,10 +133,7 @@ class _AccentPicker extends ConsumerWidget {
               // The six house colours, plus the current one if a theme
               // suggested something outside them — otherwise the row would
               // show nothing selected and look broken.
-              for (final option in {
-                ...AccentPalette.options,
-                selected,
-              })
+              for (final option in {...AccentPalette.options, selected})
                 AccentSwatch(
                   color: option,
                   selected: option == selected,
@@ -167,7 +194,11 @@ class _UnitPicker extends ConsumerWidget {
 class _NameTile extends ConsumerWidget {
   const _NameTile();
 
-  Future<void> _edit(BuildContext context, WidgetRef ref, String? current) async {
+  Future<void> _edit(
+    BuildContext context,
+    WidgetRef ref,
+    String? current,
+  ) async {
     final name = await showDialog<String>(
       context: context,
       builder: (context) => _NameDialog(initial: current ?? ''),
