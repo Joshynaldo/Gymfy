@@ -59,7 +59,12 @@ Track progress here. Update after each session.
   - Deshalb **"Save file" statt Share-Sheet**: `FilePicker.saveFile` deckt den Export mit ab, der Nutzer wählt den Ort und verschickt aus der Dateien-App weiter. PDFs gehen weiterhin über das System-Sheet von `printing`
 - [ ]  **Filter by equipment** — narrow the library to what you actually own; the options adapt to what you've picked, so every combination on screen has results behind it
 - [ ]  **Timed exercises** — planks, hangs, wall sits and loaded carries or cardio exercises are logged by time, not reps, with a work timer that counts the set itself (separate from the rest timer) and logs the time you actually held. They can carry weight too
-- [ ]  the progress photo comparison shouldnt be side by side the old photo should be on top of the new one with less transparancy so yopu actually can compare
+- [x] **Foto-Vergleich als Überlagerung** statt nebeneinander — beide Fotos im selben Rahmen, ein Slider blendet vom alten zum neuen. Zwei kleine Bilder nebeneinander sind das falsche Werkzeug: echte Veränderung über acht Wochen sind ein paar Zentimeter, und die sieht man nur, wenn die Umrisse übereinander liegen
+  - Start bei 50 % — sonst sähe es beim Öffnen aus, als würde ein Foto fehlen
+  - Beide `contain` im selben Rahmen, damit die Körper gleich skaliert und auf denselben Punkt zentriert gezeichnet werden. Jeder andere Fit würde ein Foto gegen das andere verschieben und einen Unterschied erfinden, den es nicht gibt
+  - Die beiden Deckkräfte ergeben immer zusammen 1 — sonst scheint mitten im Überblenden der Hintergrund durch und wäscht beide Körper aus
+  - Deckkraft über `Image.opacity` statt eines `Opacity`-Widgets: letzteres erzwingt ein `saveLayer`, also einen Offscreen-Puffer in Fotogröße, jeden Frame den der Slider sich bewegt. Auf älteren Geräten der Unterschied zwischen flüssig und ruckelig
+  - Datum + Notiz unter den Slider-Enden, beide antippbar zum Wechseln
 
 
 
@@ -99,15 +104,47 @@ Track progress here. Update after each session.
 - [ ] Rest Timer mit haptischem Feedback
 - [ ] Schritte / Herzfrequenz Glance (falls Health APIs verfügbar)
 
+### Phase 18 — Release 🔥
+- [x] **Daten-Export** — More → Settings → **Data → "Export data"**, CSV *und* JSON, gespeichert über `FilePicker.saveFile`. Nichts wird hochgeladen. In Settings statt auf dem More-Tab: Exportieren macht man einmal vor einem Handywechsel, nicht mitten im Training wie den Scheibenrechner
+  - **CSV**: eine Zeile pro Satz, flach und sortierbar — was man in eine Tabellenkalkulation kippt. Spalte heißt `weight_kg`, nicht `weight`: die App speichert immer Kilogramm, und eine Zahl ohne Einheit ist außerhalb der App wertlos. Volumen wird mitgerechnet
+  - **JSON**: Sätze bleiben in ihren Sessions verschachtelt (die Struktur, die die Daten wirklich haben), dazu Körpermaße und Kalorien-Log
+  - **RFC-4180-Escaping**, mit Tests. Eine Session namens "Push, heavy" hätte unquoted jede folgende Spalte um eins verschoben — eine Datei, die sich sauber öffnet und trotzdem komplett falsch ist. Muskeln werden mit Semikolon verbunden, nicht mit Komma
+  - Aufwärmsätze sind **drin und markiert** (`warmup`/`working`). Das sind deine Daten; ein Export, der entscheidet was du sehen darfst, ist einer dem man nicht trauen kann
+  - Unfertige Sessions bleiben draußen — gleiche Regel wie Streak und Recap
+  - Leerer Log → Hinweis statt Datei-Dialog mit anschließender Kopfzeile ohne Inhalt
+  - **Kein Backup, und das steht auch so auf dem Screen**: es gibt keinen Importer, Fotos sind nicht dabei
+- [ ] **Feedback** — offene Frage: `mailto:` (kein Backend, keine Abhängigkeit, öffnet die Mail-App) vs. Formular (braucht Backend) vs. Link auf GitHub Issues. `mailto:` passt zu local-first
+- [ ] ~~Crash Reporting~~ — **für v1 bewusst nicht gebaut.** Nichts verlässt das Gerät, damit bleibt die Datenschutzerklärung ein ehrlicher Absatz und beide Store-Formulare sagen "keine Daten erhoben". Bugs kommen über Feedback rein. Später nachrüstbar, dann als Opt-in
+- [ ] **Buy me a coffee** — ⚠️ **Konto existiert noch nicht**, und Apple lehnt externe Trinkgeld-Links regelmäßig ab (Richtlinie 3.1.1: Trinkgeld an den Entwickler läuft über In-App-Kauf; externe Links nur für gemeinnützige Organisationen). Play Store ist lockerer. Entscheidung nötig, bevor irgendetwas gebaut wird
+- [ ] **UI-Politur** — Richtung festgelegt: **Tiefe und Hierarchie**. Flaches dunkles Design bleibt, aber gruppierte Karten mit Abschnittsüberschriften, klarere Typo-Hierarchie, großzügigere Abstände, Ebenen durch Flächen statt durch Schatten
+  - [x] **Gemeinsame Kartenoptik** in `shared/widgets/app_card.dart` — `AppCard`, `AppTile`, `AppGlyph`, `AppSectionHeader`. Ein Widget statt drei Kopien: drei Listen, die fast-aber-nicht-ganz gleich aussehen, war genau der Zustand, aus dem das hier rausführen soll
+    - **Optik komplett aus `cardTheme`** — Fläche, Radius und Rand wie auf dem Home-Tab, inklusive der Regel, dass nur flache Paletten (AMOLED, High Contrast) überhaupt einen Rand bekommen. `AnimatedContainer` statt `Card`, nur damit die Auswahl einblenden kann; ein `Card` springt
+    - Ausgewählt: Rand in der **Akzentfarbe**. Meist der einzige Rand, den ein Theme zeichnet — dadurch heißt er "das hier hast du gewählt" und ist nicht Deko, die jede Karte trägt
+    - Nur die Akzentfarbe. Zwei Zwischenstände wurden verworfen: **klebende** Überschriften (wirkten wie ein Collapse-/Summary-Element) und Einfärbung nach Muskelfarben (zu bunt)
+  - [x] **Exercises-Tab** — jede Übung eine eigene Karte, **kategorisiert nach Körperregion** mit einfachen, *nicht* klebenden Überschriften samt Zähler. Eingeordnet nach dem ersten Muskel: Bankdrücken steht einmal unter Chest, nicht dreimal. Suchfeld als Pille mit Clear-Button
+  - [x] **Progress-Tab** — dieselben Karten, Chart-Icon statt Chevron: es sagt, was ein Tippen bringt
+  - [x] **More-Tab** — dieselben Karten statt `ListTile` + `Divider`
+  - [x] **Theme-Auswahl als Dropdown** — sieben gestapelte Zeilen waren das Höchste in den Settings und zeigten sechs Optionen, die man *nicht* benutzt, um über die eine zu informieren, die man benutzt. Zugeklappt bleiben aktuelles Theme und Swatch sichtbar. Der Swatch skaliert jetzt über `FittedBox`: seine Balken sind wenige Pixel hoch, und ein Dropdown gibt seinen Zeilen die Höhe, die es will — ungeschützt gab das einen gelb-schwarzen Overflow-Balken
+  - [x] **Kleine Animationen** — `shared/widgets/fade_slide_in.dart`: 200 ms Fade plus 8 px Anheben. Listenzeilen in Exercises/Progress/More kommen an, während man sie erreicht, More staffelt zusätzlich leicht, Settings blendet als Ganzes ein. Bewusst kurz: alles Längere macht aus dem Scrollen eine Diashow
+- [ ] **iOS** — Vorbereitung von Windows aus erledigt, Bauen/Signieren/Einreichen passiert auf dem Mac mini
+  - [x] **Bundle-ID** `com.example.gymfy` → `de.kopten.gymfy` (aus der E-Mail-Domain abgeleitet — **vor der ersten Einreichung prüfen**, danach ist sie unveränderlich)
+  - [x] **`NSPhotoLibraryUsageDescription`** ergänzt. Fehlte komplett: iOS beendet die App beim ersten Foto-Zugriff sofort, und App Review lehnt den Build schon davor ab. Kein `NSCameraUsageDescription` — die App öffnet nirgends die Kamera, und eine Berechtigung zu erklären die nie angefragt wird ist selbst ein Review-Flag
+  - [x] **Deployment Target 13.0 → 14.0.** `file_picker` 12 verlangt 14.0; mit 13.0 wäre der Build auf dem Mac direkt gescheitert
+  - [x] **Notifications waren rein Android.** `InitializationSettings` hatte gar keinen Darwin-Eintrag → der Plugin wäre auf iOS nie initialisiert worden und *jeder* Aufruf hätte still nichts getan. Jetzt: `DarwinInitializationSettings`, iOS-Zweig in `requestPermission`, `DarwinNotificationDetails` auf beiden Alerts
+    - Der laufende Countdown wird auf iOS **bewusst nicht** angezeigt: es gibt dort kein Gegenstück zum Android-Chronometer, eine Notification mit stehender Zeit sähe kaputt aus und müsste von Hand weggewischt werden. Der geplante "Rest over"-Alert feuert weiterhin und trägt das Feature dort allein
+  - [x] Icons + Splash für iOS generiert. `remove_alpha_ios: true` — der App Store lehnt Icons mit Alphakanal ab; auf `#151821` geflacht statt auf Weiß, damit das iOS-Icon aussieht wie das Android-Icon
+  - [x] Orientierung **nicht** eingeschränkt — Android tut es auch nicht, und das still auf einer Plattform zu ändern wäre eine Verhaltensänderung ohne Anlass
+  - [ ] **Auf dem Mac:** `flutter pub get` → `cd ios && pod install`. Falls CocoaPods über das Deployment Target meckert: `platform :ios, '14.0'` in `ios/Podfile` setzen (die Datei entsteht erst beim ersten Build). Dann Signing Team in Xcode wählen und auf dem iPhone starten
+  - [ ] Apple Developer Program (99 $/Jahr) für TestFlight und den Store. Zum reinen Testen auf dem eigenen iPhone reicht ein kostenloser Account (Provisioning läuft dann nach 7 Tagen ab)
+
 ### Phase 13 — Polish & Release
 - [x] App Icon + Splash Screen
 - [x] Onboarding Flow — Name, Körpergewicht, Akzentfarbe (persistent)
 - [x] Settings Screen — Akzentfarbe, Name, Rest Timer
 - [x] Einheiten kg/lbs — Storage bleibt immer kg
 - [x] Rest Timer mit Notification — Schema v10, `flutter_local_notifications`
-- [ ] Daten-Export (CSV aller geloggten Workouts)
-- [ ] Play Store Listing — Screenshots, Beschreibung, Datenschutzerklärung
-- [ ] Crash Reporting (Firebase Crashlytics oder Sentry)
+- [ ] ~~Daten-Export~~ / ~~Crash Reporting~~ — nach Phase 18 verschoben, dort mit den offenen Entscheidungen
+- [ ] Play Store Listing — Screenshots, Beschreibung, Datenschutzerklärung. Die Datenschutzerklärung hängt an der Crash-Reporting-Entscheidung: ohne Crash Reporting ist sie ein Absatz ("nichts verlässt das Gerät"), mit deutlich mehr
 
 ---
 

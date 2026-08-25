@@ -103,6 +103,25 @@ void main() {
     expect(find.text('Barbell Back Squat'), findsOneWidget);
   });
 
+  testWidgets('the search box only offers a clear button once used', (
+    tester,
+  ) async {
+    await _pumpScreen(tester);
+
+    expect(find.byTooltip('Clear search'), findsNothing);
+
+    await tester.enterText(find.byType(TextField), 'squat');
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Clear search'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Clear search'));
+    await tester.pumpAndSettle();
+
+    // Clearing restores the full library, not just the empty field.
+    expect(find.text('Pull-Up'), findsOneWidget);
+    expect(find.byTooltip('Clear search'), findsNothing);
+  });
+
   testWidgets('search box filters by name', (tester) async {
     await _pumpScreen(tester);
 
@@ -204,7 +223,7 @@ void main() {
 
     // The chips are OR among themselves but AND with the search box, so this
     // asks for a chest exercise named "squat" — there isn't one.
-    expect(find.text('No exercises match your filters.'), findsOneWidget);
+    expect(find.text('Nothing matches'), findsOneWidget);
   });
 
   testWidgets('offers a way to add an exercise', (tester) async {
@@ -324,7 +343,7 @@ void main() {
     expect(
       find.ancestor(
         of: find.text('Custom'),
-        matching: find.widgetWithText(ListTile, 'Cable Lateral Raise'),
+        matching: find.widgetWithText(InkWell, 'Cable Lateral Raise'),
       ),
       findsOneWidget,
     );

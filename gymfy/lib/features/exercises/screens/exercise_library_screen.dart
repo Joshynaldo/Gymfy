@@ -9,7 +9,10 @@ import '../../../shared/utils/exercise_search.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/widgets/muscle_filter_bar.dart';
 import '../../workout/data/workout_repository.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/fade_slide_in.dart';
 import '../data/exercise_repository.dart';
+import '../data/muscle_groups.dart';
 import 'widgets/add_to_day_sheet.dart';
 
 /// The Exercises tab: a searchable, filterable list of the whole exercise
@@ -95,21 +98,12 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
               const SizedBox(height: 4),
               Expanded(
                 child: filtered.isEmpty
-                    ? const Center(child: Text('No exercises match your filters.'))
-                    : ListView.separated(
-                        // Room to scroll the last tile clear of the FAB.
-                        padding: const EdgeInsets.only(bottom: 88),
-                        itemCount: filtered.length,
-                        separatorBuilder: (_, _) => const Divider(height: 1),
-                        itemBuilder: (context, index) {
-                          final exercise = filtered[index];
-                          return _ExerciseTile(
-                            exercise: exercise,
-                            selected: _selected.contains(exercise.id),
-                            selecting: _selecting,
-                            onToggle: () => _toggle(exercise.id),
-                          );
-                        },
+                    ? const _NoMatches()
+                    : _CategorisedList(
+                        rows: _rowsFor(filtered),
+                        selected: _selected,
+                        selecting: _selecting,
+                        onToggle: _toggle,
                       ),
               ),
             ],
@@ -149,6 +143,22 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
     });
   }
 
+  /// Flattens the categorised exercises into one list of rows.
+  ///
+  /// Flat so the list can stay lazy — only what's on screen is built, which is
+  /// what keeps scrolling smooth on older hardware with seventy-eight of them.
+  List<_Row> _rowsFor(List<Exercise> exercises) {
+    return [
+      for (final entry in groupExercises(
+        exercises,
+        (e) => e.muscleIds,
+      ).entries) ...[
+        _HeaderRow(group: entry.key, count: entry.value.length),
+        for (final exercise in entry.value) _ExerciseRow(exercise: exercise),
+      ],
+    ];
+  }
+
   Future<void> _addSelectedToDay() async {
     final ids = _selected.toList();
     final dayId = await showAddToDaySheet(context, count: ids.length);
@@ -168,27 +178,68 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
   }
 }
 
-class _SearchField extends StatelessWidget {
+/// The search box: rounded, filled, and clearable.
+class _SearchField extends StatefulWidget {
   const _SearchField({required this.onChanged});
 
   final ValueChanged<String> onChanged;
 
   @override
+  State<_SearchField> createState() => _SearchFieldState();
+}
+
+class _SearchFieldState extends State<_SearchField> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _clear() {
+    _controller.clear();
+    widget.onChanged('');
+    setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
       child: TextField(
-        onChanged: onChanged,
+        controller: _controller,
         textInputAction: TextInputAction.search,
+        onChanged: (value) {
+          widget.onChanged(value);
+          // Only to swap the clear button in and out — the query itself lives
+          // on the screen above.
+          setState(() {});
+        },
         decoration: InputDecoration(
           // Names the second thing it searches, which is otherwise invisible:
           // "chest" finding the bench press looks like magic or a bug.
           hintText: 'Search by name or muscle',
-          prefixIcon: const Icon(Icons.search),
+          prefixIcon: const Icon(Icons.search, size: 20),
+          // Absent until there's something to clear, so the field stays quiet
+          // while you're only reading.
+          suffixIcon: _controller.text.isEmpty
+              ? null
+              : IconButton(
+                  icon: const Icon(Icons.close, size: 18),
+                  tooltip: 'Clear search',
+                  onPressed: _clear,
+                ),
           filled: true,
+          fillColor: theme.colorScheme.surfaceContainerHigh,
           isDense: true,
+          contentPadding: const EdgeInsets.symmetric(vertical: 14),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            // A pill rather than a rounded rectangle — it reads as a search
+            // field on sight, before the magnifier is even noticed.
+            borderRadius: BorderRadius.circular(26),
             borderSide: BorderSide.none,
           ),
         ),
@@ -197,74 +248,120 @@ class _SearchField extends StatelessWidget {
   }
 }
 
-class _ExerciseTile extends ConsumerWidget {
-  const _ExerciseTile({
-    required this.exercise,
+/// One entry in the flattened list: either a category heading or an exercise.
+sealed class _Row {
+  const _Row();
+}
+
+class _HeaderRow extends _Row {
+  const _HeaderRow({required this.group, required this.count});
+
+  final MuscleGroup group;
+  final int count;
+}
+
+class _ExerciseRow extends _Row {
+  const _ExerciseRow({required this.exercise});
+
+  final Exercise exercise;
+}
+
+/// The library: cards under plain category headings.
+class _CategorisedList extends StatelessWidget {
+  const _CategorisedList({
+    required this.rows,
     required this.selected,
     required this.selecting,
     required this.onToggle,
   });
 
-  final Exercise exercise;
-  final bool selected;
-
-  /// Whether the screen is in selection mode. Changes what a plain tap does, so
-  /// the tile needs to know even when it isn't itself selected.
+  final List<_Row> rows;
+  final Set<String> selected;
   final bool selecting;
-  final VoidCallback onToggle;
+  final ValueChanged<String> onToggle;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final accent = ref.watch(accentColorProvider);
-    final muscleIds = exercise.muscleIds;
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      // Room to scroll the last card clear of the FAB.
+      padding: const EdgeInsets.only(bottom: 96),
+      itemCount: rows.length,
+      itemBuilder: (context, index) {
+        final row = rows[index];
+        return FadeSlideIn(
+          child: switch (row) {
+            _HeaderRow() => AppSectionHeader(
+              title: row.group.label,
+              count: row.count,
+            ),
+            _ExerciseRow() => AppTile(
+              icon: exerciseIcon,
+              title: row.exercise.name,
+              subtitle: row.exercise.muscleIds.map(muscleLabel).join(' · '),
+              titleTrailing: row.exercise.isCustom
+                  ? const _CustomBadge()
+                  : null,
+              selected: selected.contains(row.exercise.id),
+              // Long-press starts a selection; once one is running, a plain tap
+              // toggles instead of navigating. Keeping tap as "open" until then
+              // means browsing never costs an extra step.
+              onTap: selecting
+                  ? () => onToggle(row.exercise.id)
+                  : () => context.go('/exercises/${row.exercise.id}'),
+              onLongPress: selecting ? null : () => onToggle(row.exercise.id),
+            ),
+          },
+        );
+      },
+    );
+  }
+}
 
-    return ListTile(
-      selected: selected,
-      selectedTileColor: accent.withValues(alpha: 0.08),
-      leading: CircleAvatar(
-        backgroundColor: selected
-            ? accent
-            : accent.withValues(alpha: 0.15),
-        child: Icon(
-          selected ? Icons.check : exerciseIcon,
-          color: selected ? Colors.white : accent,
+/// Shown when the search and filters between them match nothing.
+class _NoMatches extends StatelessWidget {
+  const _NoMatches();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off,
+              size: 56,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(height: 12),
+            Text('Nothing matches', style: theme.textTheme.titleMedium),
+            const SizedBox(height: 6),
+            Text(
+              'Try a different word, or clear a muscle filter.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
       ),
-      title: Row(
-        children: [
-          Flexible(child: Text(exercise.name, overflow: TextOverflow.ellipsis)),
-          // Marks the rows that can be edited or deleted, so it's never a
-          // surprise that the built-in ones can't be.
-          if (exercise.isCustom) ...[
-            const SizedBox(width: 8),
-            _CustomBadge(accent: accent),
-          ],
-        ],
-      ),
-      subtitle: Text(
-        muscleIds.map(muscleLabel).join(', '),
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-      ),
-      trailing: selecting ? null : const Icon(Icons.chevron_right),
-      // Long-press starts a selection; once one is running, a plain tap toggles
-      // instead of navigating. Keeping tap as "open" until then means the
-      // common case — browsing — never costs an extra step.
-      onTap: selecting ? onToggle : () => context.go('/exercises/${exercise.id}'),
-      onLongPress: selecting ? null : onToggle,
     );
   }
 }
 
 /// A small "Custom" pill. Deliberately quiet — it labels a row, it isn't a
 /// call to action.
-class _CustomBadge extends StatelessWidget {
-  const _CustomBadge({required this.accent});
-
-  final Color accent;
+class _CustomBadge extends ConsumerWidget {
+  const _CustomBadge();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accent = ref.watch(accentColorProvider);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(

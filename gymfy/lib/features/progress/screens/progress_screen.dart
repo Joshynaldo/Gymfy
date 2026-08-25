@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../app/theme/accent_color.dart';
 import '../../../shared/utils/exercise_display.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/fade_slide_in.dart';
 import '../data/progress_repository.dart';
 
 /// The Progress tab: the exercises you've logged, each opening a progress
@@ -48,41 +49,25 @@ class ProgressScreen extends ConsumerWidget {
           if (exercises.isEmpty) {
             return const _EmptyState();
           }
-          return ListView.separated(
+          return ListView.builder(
+            padding: const EdgeInsets.only(top: 8, bottom: 24),
             itemCount: exercises.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final exercise = exercises[index];
-              return _ExerciseTile(
-                name: exercise.name,
-                onTap: () => context.go('/progress/exercise/${exercise.id}'),
+              return FadeSlideIn(
+                child: AppTile(
+                  icon: exerciseIcon,
+                  title: exercise.name,
+                  // A chart icon rather than a chevron: it says what opening
+                  // this gets you, which "›" doesn't.
+                  trailing: const Icon(Icons.show_chart, size: 20),
+                  onTap: () => context.go('/progress/exercise/${exercise.id}'),
+                ),
               );
             },
           );
         },
       ),
-    );
-  }
-}
-
-class _ExerciseTile extends ConsumerWidget {
-  const _ExerciseTile({required this.name, required this.onTap});
-
-  final String name;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final accent = ref.watch(accentColorProvider);
-
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: accent.withValues(alpha: 0.15),
-        child: Icon(exerciseIcon, color: accent),
-      ),
-      title: Text(name),
-      trailing: const Icon(Icons.show_chart),
-      onTap: onTap,
     );
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
@@ -46,24 +48,68 @@ class NotificationService {
     await _plugin.initialize(
       settings: const InitializationSettings(
         android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        // Without a Darwin entry the plugin never initialises on iOS and every
+        // call below quietly does nothing — no error, no notification.
+        //
+        // Permissions are all false here and asked for later, in
+        // [requestPermission]: requesting at initialise would put the system
+        // dialog on screen the first time anything touches this service, which
+        // is long before the user has started a rest.
+        iOS: DarwinInitializationSettings(
+          requestAlertPermission: false,
+          requestBadgePermission: false,
+          requestSoundPermission: false,
+        ),
       ),
     );
     _ready = true;
   }
 
+  /// Alert settings for the "rest over" notification on iOS.
+  ///
+  /// No badge: a count on the app icon would sit there after the rest is over
+  /// and have to be cleared by hand, which is not what a timer should leave
+  /// behind.
+  static const _darwinAlert = DarwinNotificationDetails(
+    presentAlert: true,
+    presentSound: true,
+    presentBadge: false,
+    interruptionLevel: InterruptionLevel.timeSensitive,
+  );
+
   /// Asks for notification permission, returning whether it was granted.
   ///
   /// Android 13+ requires this at runtime; older versions grant it at install
-  /// and the call is a no-op that reports true.
+  /// and the call is a no-op that reports true. iOS always asks, and only once
+  /// — a second call returns the answer already on file rather than showing the
+  /// dialog again.
   Future<bool> requestPermission() async {
     try {
       await _ensureReady();
+
       final android = _plugin
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
           >();
-      if (android == null) return false;
-      return await android.requestNotificationsPermission() ?? false;
+      if (android != null) {
+        return await android.requestNotificationsPermission() ?? false;
+      }
+
+      final ios = _plugin
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >();
+      if (ios != null) {
+        return await ios.requestPermissions(
+              alert: true,
+              sound: true,
+              // Not asked for, because nothing here sets one.
+              badge: false,
+            ) ??
+            false;
+      }
+
+      return false;
     } catch (_) {
       return false;
     }
@@ -76,10 +122,17 @@ class NotificationService {
   /// down to the [when] timestamp on its own. Nothing in Dart has to run for
   /// the numbers to keep moving, so the time stays correct while you're in
   /// another app and even if this app gets frozen in the background.
+  ///
+  /// Does nothing on iOS. There is no equivalent of the chronometer there, so
+  /// the best iOS could manage is a notification showing a time that never
+  /// changes — which is worse than none, because it looks broken and has to be
+  /// dismissed by hand. The scheduled "rest over" alert still fires, so the
+  /// part that matters is unaffected.
   Future<void> showRestRunning({
     required int seconds,
     required String exerciseName,
   }) async {
+    if (Platform.isIOS) return;
     try {
       await _ensureReady();
       final endsAt = DateTime.now().add(Duration(seconds: seconds));
@@ -146,6 +199,7 @@ class NotificationService {
             // notification: swipeable, and gone once tapped.
             timeoutAfter: 60000,
           ),
+          iOS: _darwinAlert,
         ),
       );
     } catch (_) {
@@ -191,6 +245,9 @@ class NotificationService {
             timeoutAfter: 60000,
             category: AndroidNotificationCategory.alarm,
           ),
+          // On iOS this is the *only* rest notification — there's no live
+          // countdown to replace, so it carries the whole feature there.
+          iOS: _darwinAlert,
         ),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       );

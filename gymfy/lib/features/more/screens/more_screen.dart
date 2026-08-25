@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../app/theme/accent_color.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/fade_slide_in.dart';
 
 /// A tool the "More" hub links to.
 class _Tool {
@@ -71,24 +72,24 @@ class MoreScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final accent = ref.watch(accentColorProvider);
-
     return Scaffold(
       appBar: AppBar(title: const Text('More')),
-      body: ListView.separated(
+      body: ListView.builder(
+        padding: const EdgeInsets.only(top: 8, bottom: 24),
         itemCount: _tools.length,
-        separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (context, index) {
           final tool = _tools[index];
-          return ListTile(
-            leading: CircleAvatar(
-              backgroundColor: accent.withValues(alpha: 0.15),
-              child: Icon(tool.icon, color: accent),
+          return FadeSlideIn(
+            // A short stagger down a fixed, always-visible list: the hub
+            // assembles itself as it opens. Capped so the last row isn't still
+            // arriving after you've decided what to tap.
+            delay: Duration(milliseconds: 25 * (index > 6 ? 6 : index)),
+            child: AppTile(
+              icon: tool.icon,
+              title: tool.title,
+              subtitle: tool.subtitle,
+              onTap: () => context.go(tool.route),
             ),
-            title: Text(tool.title),
-            subtitle: Text(tool.subtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.go(tool.route),
           );
         },
       ),

@@ -88,9 +88,13 @@ dev_dependencies:
 # Launcher icon. Regenerate with: dart run flutter_launcher_icons
 flutter_launcher_icons:
   android: true
-  # iOS isn't a target for this app, so nothing is generated for it.
-  ios: false
+  ios: true
   image_path: assets/icon/gymfy_icon.png
+  # The App Store rejects icons with an alpha channel outright. Flattened onto
+  # the app's own dark surface rather than the default white, so the iOS icon
+  # matches the Android one instead of gaining a white box behind the mark.
+  remove_alpha_ios: true
+  background_color_ios: "#151821"
   # Adaptive icon (Android 8+): the launcher masks the foreground to whatever
   # shape the device uses, over this flat background. Background is the same
   # dark surface the app's theme uses, so the icon matches the app it opens.
@@ -108,7 +112,7 @@ flutter_launcher_icons:
 # white splash would flash bright and then drop into a dark app.
 flutter_native_splash:
   android: true
-  ios: false
+  ios: true
   web: false
   color: "#151821"
   color_dark: "#151821"

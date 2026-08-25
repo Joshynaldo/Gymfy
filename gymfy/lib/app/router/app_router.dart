@@ -17,6 +17,7 @@ import '../../features/progress/screens/measurements_screen.dart';
 import '../../features/progress/screens/photo_comparison_screen.dart';
 import '../../features/plates/screens/plate_calculator_screen.dart';
 import '../../features/progress/screens/progress_photos_screen.dart';
+import '../../features/data_export/screens/export_screen.dart';
 import '../../features/plan_share/screens/share_plan_screen.dart';
 import '../../features/progress/screens/progress_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
@@ -219,6 +220,12 @@ GoRouter goRouter(Ref ref) {
                   GoRoute(
                     path: 'settings',
                     builder: (context, state) => const SettingsScreen(),
+                    routes: [
+                      GoRoute(
+                        path: 'export',
+                        builder: (context, state) => const ExportScreen(),
+                      ),
+                    ],
                   ),
                 ],
               ),
