@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/features/calculator/data/rank_inputs.dart';
-import 'package:gymfy/features/calculator/data/strength_standards.dart';
 import 'package:gymfy/features/calculator/data/tested_one_rm_repository.dart';
 import 'package:gymfy/features/calculator/widgets/exercise_rank_badge.dart';
 import 'package:gymfy/features/progress/data/measurements_repository.dart';

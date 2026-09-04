@@ -24,7 +24,7 @@ final class BodySvgTemplateProvider
   /// the file is read once, not on every rebuild / accent change.
   BodySvgTemplateProvider._({
     required BodySvgTemplateFamily super.from,
-    required BodySide super.argument,
+    required (BodyFigure, BodySide) super.argument,
   }) : super(
          retry: null,
          name: r'bodySvgTemplateProvider',
@@ -40,7 +40,7 @@ final class BodySvgTemplateProvider
   String toString() {
     return r'bodySvgTemplateProvider'
         ''
-        '($argument)';
+        '$argument';
   }
 
   @$internal
@@ -50,8 +50,8 @@ final class BodySvgTemplateProvider
 
   @override
   FutureOr<String> create(Ref ref) {
-    final argument = this.argument as BodySide;
-    return bodySvgTemplate(ref, argument);
+    final argument = this.argument as (BodyFigure, BodySide);
+    return bodySvgTemplate(ref, argument.$1, argument.$2);
   }
 
   @override
@@ -65,13 +65,13 @@ final class BodySvgTemplateProvider
   }
 }
 
-String _$bodySvgTemplateHash() => r'96182d972ec034daf695a95dd98feb1648357dec';
+String _$bodySvgTemplateHash() => r'3d6ded50ceecf2181a0ca10e63816e0f3bd2e72a';
 
 /// Loads (and caches) the raw SVG text for a body side. Kept in a provider so
 /// the file is read once, not on every rebuild / accent change.
 
 final class BodySvgTemplateFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<String>, BodySide> {
+    with $FunctionalFamilyOverride<FutureOr<String>, (BodyFigure, BodySide)> {
   BodySvgTemplateFamily._()
     : super(
         retry: null,
@@ -84,8 +84,8 @@ final class BodySvgTemplateFamily extends $Family
   /// Loads (and caches) the raw SVG text for a body side. Kept in a provider so
   /// the file is read once, not on every rebuild / accent change.
 
-  BodySvgTemplateProvider call(BodySide side) =>
-      BodySvgTemplateProvider._(argument: side, from: this);
+  BodySvgTemplateProvider call(BodyFigure figure, BodySide side) =>
+      BodySvgTemplateProvider._(argument: (figure, side), from: this);
 
   @override
   String toString() => r'bodySvgTemplateProvider';

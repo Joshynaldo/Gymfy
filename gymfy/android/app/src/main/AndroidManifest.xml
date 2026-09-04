@@ -67,5 +67,25 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+
+        <!-- Required by url_launcher on Android 11+ (API 30). Package
+             visibility means an app can no longer see which other apps can
+             handle a link unless it says up front what it intends to open.
+             Without these two the launch fails and nothing at all happens on
+             tap — no error, no dialog — which reads as a dead button.
+
+             This is a declaration, not a permission: it grants no access to
+             anything, is invisible to the user, and needs no Play Store
+             disclosure. -->
+        <intent>
+            <!-- Help → "Send feedback". -->
+            <action android:name="android.intent.action.SENDTO"/>
+            <data android:scheme="mailto"/>
+        </intent>
+        <intent>
+            <!-- Help → the developer's GitHub profile. -->
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
     </queries>
 </manifest>

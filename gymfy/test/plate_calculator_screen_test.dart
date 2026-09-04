@@ -54,6 +54,19 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// The loaded total, which the screen draws as three pieces — the word
+  /// "Total", the number at display size, and the unit beside it — rather than
+  /// one sentence. Asserting the number and the unit separately keeps the
+  /// pounds test honest: a conversion bug would still change the number.
+  void expectTotal(WidgetTester tester, String weight, String unit) {
+    expect(find.text('Total'), findsOneWidget);
+    // Read through the key rather than by text: the target wheel is showing
+    // the same number, so matching on text alone cannot tell the answer from
+    // the question.
+    expect(tester.widget<Text>(find.byKey(plateTotalKey)).data, weight);
+    expect(find.text(unit), findsWidgets);
+  }
+
   testWidgets('asks for a weight before saying anything', (tester) async {
     await pump(tester);
 
@@ -66,7 +79,7 @@ void main() {
     // 100 kg on a 20 kg bar is 25 + 15 a side.
     expect(find.text('25 kg × 1'), findsOneWidget);
     expect(find.text('15 kg × 1'), findsOneWidget);
-    expect(find.text('Total 100 kg'), findsOneWidget);
+    expectTotal(tester, '100', 'kg');
   });
 
   testWidgets('counts repeated plates instead of listing them twice', (
@@ -89,7 +102,7 @@ void main() {
     await pump(tester, initialWeight: 20);
 
     expect(find.text('Just the bar'), findsOneWidget);
-    expect(find.text('Total 20 kg'), findsOneWidget);
+    expectTotal(tester, '20', 'kg');
   });
 
   testWidgets('a weight under the bar is explained', (tester) async {
@@ -104,7 +117,7 @@ void main() {
   ) async {
     await pump(tester, initialWeight: 61);
 
-    expect(find.text('Total 60 kg'), findsOneWidget);
+    expectTotal(tester, '60', 'kg');
     expect(find.textContaining('1 kg under your target'), findsOneWidget);
   });
 
@@ -114,7 +127,7 @@ void main() {
     await pickWeight(tester, whole: 60);
 
     expect(find.text('20 kg × 1'), findsOneWidget);
-    expect(find.text('Total 60 kg'), findsOneWidget);
+    expectTotal(tester, '60', 'kg');
   });
 
   testWidgets('the bar can be changed', (tester) async {
@@ -127,7 +140,7 @@ void main() {
     // 60 on a 15 kg bar is 22.5 a side: 20 + 2.5.
     expect(find.text('20 kg × 1'), findsOneWidget);
     expect(find.text('2.5 kg × 1'), findsOneWidget);
-    expect(find.text('Total 60 kg'), findsOneWidget);
+    expectTotal(tester, '60', 'kg');
   });
 
   testWidgets('only the plates you own are suggested', (tester) async {
@@ -149,7 +162,7 @@ void main() {
 
     // Nothing is converted: 225 lb is a 45 lb bar and two 45s a side.
     expect(find.text('45 lbs × 2'), findsOneWidget);
-    expect(find.text('Total 225 lbs'), findsOneWidget);
+    expectTotal(tester, '225', 'lbs');
     expect(find.textContaining('kg'), findsNothing);
   });
 }

@@ -63,6 +63,12 @@ class MoreScreen extends ConsumerWidget {
       route: '/more/share-plan',
     ),
     _Tool(
+      icon: Icons.help_outline,
+      title: 'Help',
+      subtitle: 'About Gymfy and who made it',
+      route: '/more/help',
+    ),
+    _Tool(
       icon: Icons.settings_outlined,
       title: 'Settings',
       subtitle: 'Accent colour, your name, rest timer alerts',

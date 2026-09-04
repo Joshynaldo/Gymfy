@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../shared/data/lifter_sex.dart';
 import '../../../shared/data/settings_repository.dart';
 import '../../../shared/widgets/accent_swatch.dart';
 import '../../../shared/utils/units.dart';
@@ -50,6 +51,7 @@ class SettingsScreen extends ConsumerWidget {
             Divider(height: 1),
             _SectionHeader('You'),
             _NameTile(),
+            _LifterSexTile(),
             Divider(height: 1),
             _SectionHeader('Rest timer'),
             _RestTimerPreferences(),
@@ -349,6 +351,45 @@ class _RestTimerPreferences extends ConsumerWidget {
               : null,
         ),
       ],
+    );
+  }
+}
+
+/// Which body diagram the muscle map draws, and which strength table ranks
+/// your lifts.
+///
+/// Asked during onboarding, but changeable here — and it has to be, because
+/// every install that predates the onboarding question has it unset, and
+/// because "rather not say" is an answer someone may want to revise.
+class _LifterSexTile extends ConsumerWidget {
+  const _LifterSexTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sex = ref.watch(lifterSexProvider).value;
+
+    return ListTile(
+      leading: const Icon(Icons.accessibility_new),
+      title: const Text('Body diagram'),
+      subtitle: Text(
+        sex == null
+            // Named as the consequence rather than as "not set": the map is
+            // drawing something either way, and this says which.
+            ? 'Not set — showing the male diagram, no strength ranks'
+            : '${sex.label} diagram and strength standards',
+      ),
+      trailing: SegmentedButton<LifterSex?>(
+        segments: [
+          for (final option in LifterSex.values)
+            ButtonSegment(value: option, label: Text(option.label)),
+        ],
+        selected: {sex},
+        emptySelectionAllowed: true,
+        showSelectedIcon: false,
+        onSelectionChanged: (selection) => ref
+            .read(settingsRepositoryProvider)
+            .write(lifterSexSetting, selection.first!.name),
+      ),
     );
   }
 }

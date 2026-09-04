@@ -5,22 +5,71 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../shared/data/lifter_sex.dart';
 import '../data/muscle_colors.dart';
 
 export '../data/muscle_colors.dart' show MuscleMapMode;
 
 part 'muscle_map.g.dart';
 
-/// Which body diagram to show.
-enum BodySide {
-  front('assets/svg/body_front.svg'),
-  back('assets/svg/body_back.svg');
+/// Which way round the body is drawn.
+enum BodySide { front, back }
 
-  const BodySide(this.asset);
+/// Which figure the diagram uses.
+///
+/// Two separate sheets from the licensed pack, not one silhouette reshaped:
+/// the pack draws a genuinely different set of muscle groups per figure, and
+/// each sheet has its own viewBox.
+enum BodyFigure { male, female }
 
-  /// The bundled SVG for this side.
-  final String asset;
-}
+/// One bundled diagram: the asset, and the shape it has to be drawn at.
+///
+/// The aspect ratio travels with the asset because it is *not* shared. The male
+/// sheets are 248×558 for both sides; the female ones are 172×546 and 154×539.
+/// A single hardcoded ratio — which is what this used to be — squashes the
+/// female figures noticeably.
+typedef BodyDiagram = ({String asset, double aspectRatio});
+
+const _diagrams = <BodyFigure, Map<BodySide, BodyDiagram>>{
+  BodyFigure.male: {
+    BodySide.front: (
+      asset: 'assets/svg/body_front.svg',
+      aspectRatio: 248.333 / 557.994,
+    ),
+    BodySide.back: (
+      asset: 'assets/svg/body_back.svg',
+      aspectRatio: 248.333 / 557.994,
+    ),
+  },
+  BodyFigure.female: {
+    BodySide.front: (
+      asset: 'assets/svg/body_front_female.svg',
+      aspectRatio: 171.852 / 546.3,
+    ),
+    BodySide.back: (
+      asset: 'assets/svg/body_back_female.svg',
+      aspectRatio: 154.342 / 539.348,
+    ),
+  },
+};
+
+/// The diagram for one figure and side.
+BodyDiagram bodyDiagram(BodyFigure figure, BodySide side) =>
+    _diagrams[figure]![side]!;
+
+/// Which figure to draw for this user.
+///
+/// Falls back to [BodyFigure.male] when the setting is unset — which is what
+/// every install created before onboarding asked the question looks like.
+/// A fallback is unavoidable here: unlike a strength rank, a body map cannot
+/// show "not enough information", it has to draw something. Settings has the
+/// control to change it.
+final bodyFigureProvider = Provider<BodyFigure>((ref) {
+  return switch (ref.watch(lifterSexProvider).value) {
+    LifterSex.female => BodyFigure.female,
+    LifterSex.male || null => BodyFigure.male,
+  };
+});
 
 /// The neutral colour every muscle uses at intensity 0 — must match the
 /// placeholder `fill` authored into the SVG files.
@@ -35,8 +84,8 @@ final _muscleFill = RegExp(r'data-muscle="([a-z_ ]+)" fill="#[0-9A-Fa-f]{6}"');
 /// Loads (and caches) the raw SVG text for a body side. Kept in a provider so
 /// the file is read once, not on every rebuild / accent change.
 @riverpod
-Future<String> bodySvgTemplate(Ref ref, BodySide side) {
-  return rootBundle.loadString(side.asset);
+Future<String> bodySvgTemplate(Ref ref, BodyFigure figure, BodySide side) {
+  return rootBundle.loadString(bodyDiagram(figure, side).asset);
 }
 
 /// A body diagram whose muscles are tinted by how hard they've been worked.
@@ -52,19 +101,26 @@ class MuscleMap extends ConsumerWidget {
     required this.side,
     required this.intensities,
     this.mode = MuscleMapMode.heatmap,
+    this.figure,
   });
 
   final BodySide side;
   final Map<String, double> intensities;
   final MuscleMapMode mode;
 
+  /// Which figure to draw. Defaults to whatever the user told us during
+  /// onboarding — see [bodyFigureProvider].
+  final BodyFigure? figure;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final templateAsync = ref.watch(bodySvgTemplateProvider(side));
+    final BodyFigure drawn = figure ?? ref.watch(bodyFigureProvider);
+    final diagram = bodyDiagram(drawn, side);
+    final templateAsync = ref.watch(bodySvgTemplateProvider(drawn, side));
     final accent = ref.watch(accentColorProvider);
 
     return AspectRatio(
-      aspectRatio: 248.333 / 557.994,
+      aspectRatio: diagram.aspectRatio,
       child: templateAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(

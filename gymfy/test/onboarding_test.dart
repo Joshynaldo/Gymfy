@@ -10,6 +10,7 @@ import 'package:gymfy/features/onboarding/data/onboarding_repository.dart';
 import 'package:gymfy/features/onboarding/screens/onboarding_screen.dart';
 import 'package:gymfy/features/overload/data/overload_preference.dart';
 import 'package:gymfy/features/progress/data/measurements_repository.dart';
+import 'package:gymfy/shared/data/lifter_sex.dart';
 import 'package:gymfy/shared/data/settings_repository.dart';
 import 'package:gymfy/shared/database/app_database.dart';
 
@@ -94,7 +95,7 @@ void main() {
     test('finishing flips the gate', () async {
       await container
           .read(onboardingRepositoryProvider)
-          .finish(name: 'Joshua', bodyweightKg: 82);
+          .finish(name: 'Joshua', bodyweightKg: 82, sex: null);
 
       expect(await firstValue(onboardingCompleteProvider), isTrue);
     });
@@ -104,7 +105,7 @@ void main() {
     test('saves the name and the bodyweight', () async {
       await container
           .read(onboardingRepositoryProvider)
-          .finish(name: 'Joshua', bodyweightKg: 82.5);
+          .finish(name: 'Joshua', bodyweightKg: 82.5, sex: null);
 
       expect(await firstValue(userNameProvider), 'Joshua');
 
@@ -116,7 +117,7 @@ void main() {
     test('a skipped name is not stored as an empty string', () async {
       await container
           .read(onboardingRepositoryProvider)
-          .finish(name: '', bodyweightKg: null);
+          .finish(name: '', bodyweightKg: null, sex: null);
 
       expect(await firstValue(userNameProvider), isNull);
       expect(
@@ -128,7 +129,7 @@ void main() {
     test('a name is trimmed rather than stored with its spaces', () async {
       await container
           .read(onboardingRepositoryProvider)
-          .finish(name: '  Joshua  ', bodyweightKg: null);
+          .finish(name: '  Joshua  ', bodyweightKg: null, sex: null);
 
       expect(await firstValue(userNameProvider), 'Joshua');
     });
@@ -136,7 +137,7 @@ void main() {
     test('whitespace alone counts as skipped', () async {
       await container
           .read(onboardingRepositoryProvider)
-          .finish(name: '   ', bodyweightKg: null);
+          .finish(name: '   ', bodyweightKg: null, sex: null);
 
       expect(await firstValue(userNameProvider), isNull);
     });
@@ -144,7 +145,7 @@ void main() {
     test('a skipped bodyweight leaves no measurement behind', () async {
       await container
           .read(onboardingRepositoryProvider)
-          .finish(name: 'Joshua', bodyweightKg: null);
+          .finish(name: 'Joshua', bodyweightKg: null, sex: null);
 
       // Not a 0 kg row: that would read as a real weigh-in everywhere else,
       // and would be skipped as bodyweight-only by the 1RM estimator.
@@ -155,15 +156,15 @@ void main() {
     test('a zero bodyweight is refused, not written', () async {
       await container
           .read(onboardingRepositoryProvider)
-          .finish(name: null, bodyweightKg: 0);
+          .finish(name: null, bodyweightKg: 0, sex: null);
 
       expect(await latestBodyweight(), isNull);
     });
 
     test('finishing twice does not duplicate anything', () async {
       final repo = container.read(onboardingRepositoryProvider);
-      await repo.finish(name: 'Joshua', bodyweightKg: 82);
-      await repo.finish(name: 'Joshua', bodyweightKg: 83);
+      await repo.finish(name: 'Joshua', bodyweightKg: 82, sex: null);
+      await repo.finish(name: 'Joshua', bodyweightKg: 83, sex: null);
 
       // One row per day, so the second answer overwrites the first.
       expect(await firstValue(measurementHistoryProvider), hasLength(1));
@@ -189,6 +190,54 @@ void main() {
       // Nothing to go back to yet.
       expect(find.text('Back'), findsNothing);
       expect(find.text('Next'), findsOneWidget);
+    });
+
+    testWidgets('asks for sex on the welcome step, and lets you decline', (
+      tester,
+    ) async {
+      await pump(tester);
+
+      expect(find.text('Male'), findsOneWidget);
+      expect(find.text('Female'), findsOneWidget);
+      // Declining has to be a thing you can *press*. Without it, skipping is
+      // indistinguishable from not having got to the question yet.
+      expect(find.text('Rather not say'), findsOneWidget);
+    });
+
+    testWidgets('the chosen sex is saved', (tester) async {
+      await pump(tester);
+      await tester.tap(find.text('Female'));
+      await tester.pumpAndSettle();
+
+      // Straight to the end — the answer has to survive the other three pages.
+      for (var i = 0; i < 3; i++) {
+        await tester.tap(find.text('Next'));
+        await tester.pumpAndSettle();
+      }
+      await tester.tap(find.text('Start lifting'));
+      await tester.pumpAndSettle();
+
+      expect(await firstValue(lifterSexProvider), LifterSex.female);
+    });
+
+    testWidgets('declining stores nothing rather than a default', (
+      tester,
+    ) async {
+      // A recorded "male" that the user never chose would silently pick both
+      // their body diagram and their strength table. Unset is honest, and both
+      // features already know how to handle it.
+      await pump(tester);
+      await tester.tap(find.text('Rather not say'));
+      await tester.pumpAndSettle();
+
+      for (var i = 0; i < 3; i++) {
+        await tester.tap(find.text('Next'));
+        await tester.pumpAndSettle();
+      }
+      await tester.tap(find.text('Start lifting'));
+      await tester.pumpAndSettle();
+
+      expect(await firstValue(lifterSexProvider), isNull);
     });
 
     testWidgets('walks forward through every step', (tester) async {

@@ -65,6 +65,10 @@ dependencies:
   # print/share sheet for it.
   pdf: ^3.11.3
   printing: ^5.14.2
+  # Opening the developer's GitHub profile from Settings. First-party plugin,
+  # so it tracks Flutter's own Gradle and Xcode requirements rather than
+  # pinning its own (which is what broke share_plus and file_picker 11 here).
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:

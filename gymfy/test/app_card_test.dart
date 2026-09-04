@@ -184,6 +184,64 @@ void main() {
       expect(find.byIcon(Icons.show_chart), findsOneWidget);
       expect(find.byIcon(Icons.chevron_right), findsNothing);
     });
+
+    testWidgets('the glyph can be replaced entirely', (tester) async {
+      // The exercise library puts a still of the movement here instead of the
+      // same dumbbell symbol on every row.
+      await _pump(
+        tester,
+        const AppTile(
+          icon: Icons.fitness_center,
+          title: 'Barbell Bench Press',
+          leading: SizedBox.square(dimension: 42, child: Placeholder()),
+        ),
+      );
+
+      expect(find.byType(Placeholder), findsOneWidget);
+      expect(find.byType(AppGlyph), findsNothing);
+      expect(find.byIcon(Icons.fitness_center), findsNothing);
+    });
+  });
+
+  group('AppPanel', () {
+    testWidgets('draws its heading above its content', (tester) async {
+      await _pump(
+        tester,
+        const AppPanel(
+          icon: Icons.table_chart_outlined,
+          title: 'Spreadsheet',
+          subtitle: 'One row per set',
+          child: Text('body'),
+        ),
+      );
+
+      expect(find.text('Spreadsheet'), findsOneWidget);
+      expect(find.text('One row per set'), findsOneWidget);
+      expect(find.byIcon(Icons.table_chart_outlined), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.text('Spreadsheet')).dy,
+        lessThan(tester.getTopLeft(find.text('body')).dy),
+      );
+    });
+
+    testWidgets('a panel with no heading is just a surface', (tester) async {
+      await _pump(tester, const AppPanel(child: Text('body')));
+
+      expect(find.text('body'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('takes its surface from the theme, like every other card', (
+      tester,
+    ) async {
+      // The whole reason this widget exists: five screens had each grown a
+      // `Container` with `surfaceContainerHighest` and a hand-picked radius,
+      // which is a card that ignores the theme. Going through AppCard is what
+      // stops that drifting again.
+      await _pump(tester, const AppPanel(child: Text('body')));
+
+      expect(find.byType(AppCard), findsOneWidget);
+    });
   });
 
   group('AppSectionHeader', () {

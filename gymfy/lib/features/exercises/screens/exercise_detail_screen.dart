@@ -9,8 +9,11 @@ import '../../../app/theme/accent_color.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/models/exercise.dart' show isBundledAsset;
 import '../../../shared/utils/exercise_display.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/fade_slide_in.dart';
 import '../../calculator/widgets/exercise_rank_badge.dart';
 import '../../workout/widgets/exercise_rest_tile.dart';
+import '../../../shared/utils/exercise_preview.dart';
 import '../data/exercise_repository.dart';
 
 /// Full-screen details for a single exercise: an animated GIF preview (when
@@ -141,30 +144,54 @@ class _ExerciseDetailBody extends ConsumerWidget {
     final theme = Theme.of(context);
     final accent = ref.watch(accentColorProvider);
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-      children: [
-        _GifPreview(gifPath: exercise.gifPath, accent: accent),
-        const SizedBox(height: 20),
-        Text(exercise.name, style: theme.textTheme.headlineSmall),
-        const SizedBox(height: 24),
-        // Renders nothing at all for the many exercises with no published
-        // standards, and carries its own bottom spacing so it leaves no gap
-        // behind when it does.
-        ExerciseRankBadge(exerciseId: exercise.id),
-        ExerciseRestTile(exerciseId: exercise.id),
-        const SizedBox(height: 24),
-        Text('Muscles worked', style: theme.textTheme.titleMedium),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final muscleId in exercise.muscleIds)
-              Chip(label: Text(muscleLabel(muscleId))),
-          ],
-        ),
-      ],
+    return FadeSlideIn(
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(4, 12, 4, 32),
+        children: [
+          // The preview sits in a panel like everything else, so the screen
+          // reads as one stack of surfaces rather than a picture with loose
+          // text underneath it.
+          AppPanel(
+            padding: const EdgeInsets.all(12),
+            child: _GifPreview(gifPath: exercise.gifPath, accent: accent),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: Text(
+              exercise.name,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          // Renders nothing at all for the many exercises with no published
+          // standards, and carries its own bottom spacing so it leaves no gap
+          // behind when it does.
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: ExerciseRankBadge(exerciseId: exercise.id),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: ExerciseRestTile(exerciseId: exercise.id),
+          ),
+          AppPanel(
+            icon: Icons.accessibility_new,
+            title: 'Muscles worked',
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final muscleId in exercise.muscleIds)
+                  Chip(
+                    label: Text(muscleLabel(muscleId)),
+                    visualDensity: VisualDensity.compact,
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -185,12 +212,15 @@ class _GifPreview extends StatelessWidget {
     return AspectRatio(
       aspectRatio: 1,
       child: DecoratedBox(
+        // A faint tint rather than `surfaceContainerHighest`: this now sits
+        // inside a card, and the old fill made it a second, slightly different
+        // surface stacked on the first.
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(16),
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           child: switch (gifPath) {
             null => _Placeholder(accent: accent),
             // A custom exercise's image is a file the user picked, not
@@ -208,38 +238,51 @@ class _GifPreview extends StatelessWidget {
   }
 }
 
-/// Loads a GIF asset, falling back to the placeholder if it isn't bundled yet.
+/// Loads the bundled animation, falling back to the placeholder if this
+/// exercise doesn't have one yet.
 ///
 /// We check the asset manifest first because `Image.asset` throws for a
 /// missing asset in a way that can't be caught inline; probing the manifest
-/// lets us decide up front.
+/// lets us decide up front. Both the WebP and the GIF spelling are tried —
+/// see [previewCandidates].
 class _AssetGifOrPlaceholder extends StatelessWidget {
   const _AssetGifOrPlaceholder({required this.path, required this.accent});
 
   final String path;
   final Color accent;
 
-  Future<bool> _assetExists() async {
-    try {
-      await rootBundle.load(path);
-      return true;
-    } catch (_) {
-      return false;
+  /// The first candidate that is actually bundled, or null for none.
+  Future<String?> _bundled() async {
+    for (final candidate in previewCandidates(path)) {
+      try {
+        await rootBundle.load(candidate);
+        return candidate;
+      } catch (_) {
+        // Not bundled. Expected — most projects ship one format, not both.
+      }
     }
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<bool>(
-      future: _assetExists(),
+    return FutureBuilder<String?>(
+      future: _bundled(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
+        if (snapshot.connectionState != ConnectionState.done) {
           return const SizedBox.shrink();
         }
-        if (snapshot.data != true) {
-          return _Placeholder(accent: accent);
-        }
-        return Image.asset(path, fit: BoxFit.contain);
+        final asset = snapshot.data;
+        if (asset == null) return _Placeholder(accent: accent);
+        return Image.asset(
+          asset,
+          fit: BoxFit.contain,
+          // The bundled animations are small — 128px for the WebP set — and
+          // are drawn into a box several times that. Without this the upscale
+          // is done with nearest-neighbour and the limbs come out visibly
+          // stepped.
+          filterQuality: FilterQuality.medium,
+        );
       },
     );
   }

@@ -9,6 +9,8 @@ import '../../../shared/models/body_measurement.dart';
 import '../../../shared/utils/dates.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/fade_slide_in.dart';
 import '../../../shared/widgets/weight_wheel.dart';
 import '../data/measurement_units.dart';
 import '../data/measurements_repository.dart';
@@ -174,34 +176,27 @@ class _DayForm extends StatelessWidget {
     final row = _today;
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+      padding: const EdgeInsets.fromLTRB(4, 0, 4, 24),
       children: [
-        if (row != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              'Last updated ${formatDateTime(row.updatedAt)}',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          )
-        else
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              'Nothing measured on this day yet — tap a row to add it.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+          child: Text(
+            row != null
+                ? 'Last updated ${formatDateTime(row.updatedAt)}'
+                : 'Nothing measured on this day yet — tap a row to add it.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
+        ),
         for (final field in MeasurementField.values)
-          _FieldTile(
-            field: field,
-            current: row == null ? null : valueOf(row, field),
-            previous: previousValue(rows, field, day),
-            onTap: onEdit,
+          FadeSlideIn(
+            child: _FieldTile(
+              field: field,
+              current: row == null ? null : valueOf(row, field),
+              previous: previousValue(rows, field, day),
+              onTap: onEdit,
+            ),
           ),
       ],
     );
@@ -234,15 +229,13 @@ class _FieldTile extends ConsumerWidget {
               field.displayValue(previous!.value, unit)
         : null;
 
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(field.label),
+    return AppTile(
+      icon: _iconFor(field),
+      title: field.label,
       subtitle: previous == null
           ? null
-          : Text(
-              'Was ${field.formatWithUnit(previous!.value, unit)} '
-              'on ${formatShortDate(previous!.day)}',
-            ),
+          : 'Was ${field.formatWithUnit(previous!.value, unit)} '
+                'on ${formatShortDate(previous!.day)}',
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -270,6 +263,17 @@ class _FieldTile extends ConsumerWidget {
     );
   }
 }
+
+/// A glyph per measurement, so the rows are distinguishable at a glance rather
+/// than being six identical squares down the left edge.
+IconData _iconFor(MeasurementField field) => switch (field) {
+  MeasurementField.weight => Icons.monitor_weight_outlined,
+  MeasurementField.chest => Icons.airline_seat_flat_outlined,
+  MeasurementField.waist => Icons.straighten,
+  MeasurementField.hips => Icons.accessibility_new,
+  MeasurementField.arms => Icons.fitness_center,
+  MeasurementField.legs => Icons.directions_walk,
+};
 
 /// Number entry for one measurement. Pre-fills with today's value, or the last
 /// known one, so a small change is a couple of keystrokes.

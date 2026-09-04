@@ -24,6 +24,7 @@ class AppCard extends ConsumerWidget {
     this.onLongPress,
     this.selected = false,
     this.padding = const EdgeInsets.fromLTRB(12, 12, 8, 12),
+    this.margin = const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
   });
 
   final Widget child;
@@ -34,6 +35,11 @@ class AppCard extends ConsumerWidget {
   final bool selected;
 
   final EdgeInsetsGeometry padding;
+
+  /// Space *outside* the card. Overridable for screens whose list already
+  /// carries its own horizontal padding — the default would double up there
+  /// and leave the card visibly narrower than the ones on the browsing tabs.
+  final EdgeInsetsGeometry margin;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -49,7 +55,7 @@ class AppCard extends ConsumerWidget {
     final themeSide = shapeBorder?.side ?? BorderSide.none;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: margin,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
         curve: Curves.easeOut,
@@ -101,9 +107,19 @@ class AppTile extends ConsumerWidget {
     this.onTap,
     this.onLongPress,
     this.selected = false,
+    this.leading,
   });
 
   final IconData icon;
+
+  /// Replaces the [AppGlyph] built from [icon].
+  ///
+  /// For rows that have something better to show than a symbol — the exercise
+  /// library puts a still of the movement here. It is expected to be the same
+  /// 42px square, so the column down the left edge stays straight, and to
+  /// handle [selected] itself.
+  final Widget? leading;
+
   final String title;
 
   /// The muted line under the title. Omit for a one-line tile.
@@ -128,7 +144,7 @@ class AppTile extends ConsumerWidget {
       selected: selected,
       child: Row(
         children: [
-          AppGlyph(icon: icon, selected: selected),
+          leading ?? AppGlyph(icon: icon, selected: selected),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -253,6 +269,92 @@ class AppSectionHeader extends StatelessWidget {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// A card that holds content rather than a row — a chart, a form, a result.
+///
+/// The counterpart to [AppTile]. Several screens had grown their own version of
+/// this: a `Container` with `surfaceContainerHighest` and a radius picked by
+/// hand, which is a card that ignores the theme. On AMOLED it kept a grey
+/// surface the rest of the app had dropped, and on High Contrast it skipped the
+/// outline every other card draws. Routing it through [AppCard] means there is
+/// one answer to "what does a surface look like here".
+class AppPanel extends StatelessWidget {
+  const AppPanel({
+    super.key,
+    required this.child,
+    this.icon,
+    this.title,
+    this.subtitle,
+    this.trailing,
+    this.margin = const EdgeInsets.symmetric(vertical: 6),
+    this.padding = const EdgeInsets.all(16),
+    this.onTap,
+  });
+
+  final Widget child;
+
+  /// Optional heading. Omit all three for a bare surface.
+  final IconData? icon;
+  final String? title;
+  final String? subtitle;
+
+  /// Sits at the right of the heading row — a value, a badge, a small action.
+  final Widget? trailing;
+
+  final EdgeInsetsGeometry margin;
+  final EdgeInsetsGeometry padding;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final hasHeading = title != null || icon != null;
+
+    return AppCard(
+      margin: margin,
+      padding: padding,
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (hasHeading) ...[
+            Row(
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: 20, color: theme.colorScheme.onSurfaceVariant),
+                  const SizedBox(width: 10),
+                ],
+                if (title != null)
+                  Expanded(
+                    child: Text(
+                      title!,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  )
+                else
+                  const Spacer(),
+                ?trailing,
+              ],
+            ),
+            if (subtitle != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                subtitle!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+            const SizedBox(height: 14),
+          ],
+          child,
         ],
       ),
     );

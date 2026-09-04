@@ -20,6 +20,7 @@ Future<void> _pump(
     ProviderScope(
       overrides: [
         defaultAccentOverride,
+        defaultBodyFigureOverride,
         weeklyMuscleIntensitiesProvider.overrideWith(
           (ref) => Stream.value(volume),
         ),

@@ -4,7 +4,6 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/features/calculator/data/rank_inputs.dart';
-import 'package:gymfy/features/calculator/data/strength_standards.dart';
 import 'package:gymfy/features/progress/data/measurements_repository.dart';
 import 'package:gymfy/shared/data/settings_repository.dart';
 import 'package:gymfy/shared/database/app_database.dart';

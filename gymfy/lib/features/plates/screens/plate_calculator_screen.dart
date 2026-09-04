@@ -5,6 +5,8 @@ import '../../../app/theme/accent_color.dart';
 import '../../../shared/data/settings_repository.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/fade_slide_in.dart';
 import '../../../shared/widgets/weight_wheel.dart';
 import '../data/plate_math.dart';
 import '../widgets/barbell_diagram.dart';
@@ -23,6 +25,13 @@ Future<void> showPlateCalculator(BuildContext context, {double? weight}) {
     ),
   );
 }
+
+/// Identifies the loaded total.
+///
+/// Public so tests can read it directly: the target wheel shows the same number
+/// a moment before the bar does, so `find.text('100')` matches twice and cannot
+/// tell "the answer" from "what you asked for".
+const plateTotalKey = Key('plate-total');
 
 /// Works out what to put on the bar for a target weight.
 ///
@@ -55,32 +64,48 @@ class _PlateCalculatorScreenState
 
     return Scaffold(
       appBar: AppBar(title: const Text('Plate calculator')),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-        children: [
-          WeightWheel(
-            key: ValueKey(unit),
-            initialWeight: _target,
-            unit: unit,
-            label: 'Target weight',
-            onChanged: (value) => setState(() => _target = value),
-          ),
-          const SizedBox(height: 20),
-          _BarPicker(unit: unit, selected: bar),
-          const SizedBox(height: 24),
-          if (_target <= 0)
-            _Hint(text: 'Dial in a target weight to see what goes on the bar.')
-          else
-            _Result(
-              load: calculatePlates(
-                target: _target,
-                bar: bar,
-                plates: plates,
+      body: FadeSlideIn(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+          children: [
+            // The two inputs share one panel: they are a single question —
+            // "what am I loading, and onto what" — and splitting them into two
+            // cards made the bar look like a separate setting you had to go
+            // and configure.
+            AppPanel(
+              icon: Icons.tune,
+              title: 'What are you loading?',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  WeightWheel(
+                    key: ValueKey(unit),
+                    initialWeight: _target,
+                    unit: unit,
+                    label: 'Target weight',
+                    onChanged: (value) => setState(() => _target = value),
+                  ),
+                  const SizedBox(height: 20),
+                  _BarPicker(unit: unit, selected: bar),
+                ],
               ),
-              unit: unit,
-              heaviest: plates.isEmpty ? 0 : plates.first,
             ),
-        ],
+            if (_target <= 0)
+              const _Hint(
+                text: 'Dial in a target weight to see what goes on the bar.',
+              )
+            else
+              _Result(
+                load: calculatePlates(
+                  target: _target,
+                  bar: bar,
+                  plates: plates,
+                ),
+                unit: unit,
+                heaviest: plates.isEmpty ? 0 : plates.first,
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -96,26 +121,36 @@ class _BarPicker extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     final bars = unit == WeightUnit.kg ? barsKg : barsLbs;
     final key = unit == WeightUnit.kg ? barKgSetting : barLbsSetting;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Bar', style: Theme.of(context).textTheme.titleMedium),
+        Text(
+          'Bar',
+          style: theme.textTheme.labelLarge?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
         const SizedBox(height: 8),
-        SegmentedButton<double>(
-          segments: [
-            for (final bar in bars)
-              ButtonSegment(
-                value: bar,
-                label: Text('${formatPlate(bar)} ${unit.label}'),
-              ),
-          ],
-          selected: {selected},
-          onSelectionChanged: (selection) => ref
-              .read(settingsRepositoryProvider)
-              .write(key, formatPlate(selection.first)),
+        SizedBox(
+          width: double.infinity,
+          child: SegmentedButton<double>(
+            segments: [
+              for (final bar in bars)
+                ButtonSegment(
+                  value: bar,
+                  label: Text('${formatPlate(bar)} ${unit.label}'),
+                ),
+            ],
+            selected: {selected},
+            showSelectedIcon: false,
+            onSelectionChanged: (selection) => ref
+                .read(settingsRepositoryProvider)
+                .write(key, formatPlate(selection.first)),
+          ),
         ),
       ],
     );
@@ -148,36 +183,69 @@ class _Result extends StatelessWidget {
     final grouped = groupPlates(load.perSide);
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Each side', style: theme.textTheme.titleMedium),
-        const SizedBox(height: 12),
-        BarbellDiagram(perSide: load.perSide, heaviest: heaviest),
-        const SizedBox(height: 16),
-        if (grouped.isNotEmpty)
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
+        // The total leads. It is the number you check before you lift, and it
+        // was previously at the very bottom, under the diagram and the chips.
+        _TotalPanel(load: load, unit: unit),
+        AppPanel(
+          icon: Icons.fitness_center,
+          title: 'Each side',
+          // No "nothing to load" subtitle here: the diagram already says
+          // "Just the bar", and saying it twice on one card reads as a bug.
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              for (final entry in grouped)
-                Chip(
-                  label: Text(
-                    '${formatPlate(entry.plate)} ${unit.label} × ${entry.count}',
-                  ),
+              BarbellDiagram(perSide: load.perSide, heaviest: heaviest),
+              if (grouped.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final entry in grouped)
+                      Chip(
+                        label: Text(
+                          '${formatPlate(entry.plate)} ${unit.label} '
+                          '× ${entry.count}',
+                        ),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                  ],
                 ),
+              ],
             ],
           ),
-        const SizedBox(height: 20),
-        _TotalRow(load: load, unit: unit),
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            load.isExact
+                // Naming the bar separately makes the total checkable at a
+                // glance — the commonest mistake is forgetting the bar.
+                ? 'Bar ${formatPlate(load.bar)} + plates '
+                      '${formatWeight(load.achieved - load.bar)} ${unit.label}'
+                // The shortfall is stated rather than silently rounding,
+                // because "closest I can load" is a different fact from "your
+                // target".
+                : 'Closest loadable — '
+                      '${formatWeight(load.target - load.achieved)} '
+                      '${unit.label} under your target of '
+                      '${formatWeight(load.target)}',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
       ],
     );
   }
 }
 
-/// What the bar actually weighs once loaded — and, when the target can't be
-/// hit exactly, by how much it misses.
-class _TotalRow extends ConsumerWidget {
-  const _TotalRow({required this.load, required this.unit});
+/// What the bar actually weighs once loaded.
+class _TotalPanel extends ConsumerWidget {
+  const _TotalPanel({required this.load, required this.unit});
 
   final PlateLoad load;
   final WeightUnit unit;
@@ -187,31 +255,35 @@ class _TotalRow extends ConsumerWidget {
     final theme = Theme.of(context);
     final accent = ref.watch(accentColorProvider);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Total ${formatWeight(load.achieved)} ${unit.label}',
-          style: theme.textTheme.headlineSmall?.copyWith(color: accent),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          load.isExact
-              // Naming the bar separately makes the total checkable at a glance
-              // — the commonest mistake is forgetting the bar.
-              ? 'Bar ${formatPlate(load.bar)} + plates '
-                    '${formatWeight(load.achieved - load.bar)} ${unit.label}'
-              // The shortfall is stated rather than silently rounding, because
-              // "closest I can load" is a different fact from "your target".
-              : 'Closest loadable — '
-                    '${formatWeight(load.target - load.achieved)} '
-                    '${unit.label} under your target of '
-                    '${formatWeight(load.target)}',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+    return AppPanel(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
+        children: [
+          Text(
+            'Total',
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
-        ),
-      ],
+          const Spacer(),
+          Text(
+            formatWeight(load.achieved),
+            key: plateTotalKey,
+            style: theme.textTheme.displaySmall?.copyWith(
+              color: accent,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            unit.label,
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: accent.withValues(alpha: 0.8),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -225,10 +297,13 @@ class _Hint extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Text(
-      text,
-      style: theme.textTheme.bodyMedium?.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 16, 4, 0),
+      child: Text(
+        text,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }

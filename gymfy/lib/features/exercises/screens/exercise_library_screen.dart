@@ -11,6 +11,7 @@ import '../../../shared/widgets/muscle_filter_bar.dart';
 import '../../workout/data/workout_repository.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/fade_slide_in.dart';
+import '../../../shared/widgets/exercise_thumbnail.dart';
 import '../data/exercise_repository.dart';
 import '../data/muscle_groups.dart';
 import 'widgets/add_to_day_sheet.dart';
@@ -296,6 +297,13 @@ class _CategorisedList extends StatelessWidget {
             ),
             _ExerciseRow() => AppTile(
               icon: exerciseIcon,
+              // A still of the movement rather than the same dumbbell symbol
+              // seventy-eight times. Recognising a lift by its shape is faster
+              // than reading its name, which is the whole job of this list.
+              leading: ExerciseThumbnail(
+                gifPath: row.exercise.gifPath,
+                selected: selected.contains(row.exercise.id),
+              ),
               title: row.exercise.name,
               subtitle: row.exercise.muscleIds.map(muscleLabel).join(' · '),
               titleTrailing: row.exercise.isCustom

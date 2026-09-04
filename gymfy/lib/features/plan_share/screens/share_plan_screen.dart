@@ -7,8 +7,9 @@ import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:printing/printing.dart';
 
-import '../../../app/theme/accent_color.dart';
 import '../../../shared/database/app_database.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/fade_slide_in.dart';
 import '../../workout/data/workout_repository.dart';
 import '../data/plan_document.dart';
 import '../data/plan_pdf.dart';
@@ -49,44 +50,51 @@ class _SharePlanScreenState extends ConsumerState<SharePlanScreen> {
             ),
           ),
         ),
-        data: (splits) => ListView(
-          padding: const EdgeInsets.only(bottom: 24),
-          children: [
-            const _Explainer(),
-            if (splits.isEmpty)
-              const Padding(
-                padding: EdgeInsets.fromLTRB(16, 8, 16, 16),
-                child: Text(
-                  'You have no splits to save yet — but you can still import '
-                  'one from someone else.',
+        data: (splits) => FadeSlideIn(
+          child: ListView(
+            padding: const EdgeInsets.only(top: 4, bottom: 24),
+            children: [
+              const _Explainer(),
+              if (splits.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(20, 8, 20, 16),
+                  child: Text(
+                    'You have no splits to save yet — but you can still '
+                    'import one from someone else.',
+                  ),
+                )
+              else ...[
+                AppSectionHeader(
+                  title: 'Send',
+                  // Counts what is ticked, not how many exist: the number that
+                  // matters here is how many are about to leave the phone.
+                  count: _selected.isEmpty ? null : _selected.length,
                 ),
-              )
-            else ...[
-              for (final split in splits)
-                _SplitCheckbox(
-                  split: split,
-                  selected: _selected.contains(split.id),
-                  onChanged: (_) => setState(() {
-                    if (!_selected.remove(split.id)) _selected.add(split.id);
-                  }),
+                for (final split in splits)
+                  _SplitCheckbox(
+                    split: split,
+                    selected: _selected.contains(split.id),
+                    onChanged: (_) => setState(() {
+                      if (!_selected.remove(split.id)) _selected.add(split.id);
+                    }),
+                  ),
+                const SizedBox(height: 4),
+                _Actions(
+                  enabled: _selected.isNotEmpty && !_busy,
+                  onSave: _saveFile,
+                  onPrint: _printPdf,
                 ),
-              const SizedBox(height: 8),
-              _Actions(
-                enabled: _selected.isNotEmpty && !_busy,
-                onSave: _saveFile,
-                onPrint: _printPdf,
+              ],
+              const AppSectionHeader(title: 'Receive'),
+              AppTile(
+                icon: Icons.download,
+                title: 'Import a plan',
+                subtitle: 'Open a .gymfy file someone sent you',
+                trailing: null,
+                onTap: _busy ? null : _import,
               ),
             ],
-            const Divider(height: 32),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: OutlinedButton.icon(
-                onPressed: _busy ? null : _import,
-                icon: const Icon(Icons.download),
-                label: const Text('Import a plan'),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -301,7 +309,7 @@ class _Explainer extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
       child: Text(
         // Says what is *not* in the file. Someone about to send their programme
         // to a stranger deserves to know that before they tap, not after.
@@ -329,15 +337,17 @@ class _SplitCheckbox extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final accent = ref.watch(accentColorProvider);
-
-    return CheckboxListTile(
-      value: selected,
-      onChanged: onChanged,
-      activeColor: accent,
-      title: Text(split.name),
-      subtitle: split.isActive ? const Text('Active') : null,
-      controlAffinity: ListTileControlAffinity.leading,
+    // An AppTile rather than a CheckboxListTile: the card's own selected state
+    // already means "this one is picked" everywhere else in the app — accent
+    // border, tinted surface, tick in place of the glyph — so a checkbox would
+    // be a second, competing way to say the same thing.
+    return AppTile(
+      icon: Icons.calendar_view_week,
+      title: split.name,
+      subtitle: split.isActive ? 'Active' : null,
+      trailing: null,
+      selected: selected,
+      onTap: () => onChanged(!selected),
     );
   }
 }
