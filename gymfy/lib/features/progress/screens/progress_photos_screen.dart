@@ -126,28 +126,60 @@ class _PhotoTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    final note = item.photo.note;
+
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(14),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         child: Stack(
           fit: StackFit.expand,
           children: [
             PhotoFileImage(path: item.path, thumbnail: true),
             // A date needs to be readable over both bright and dark photos.
+            // A gradient rather than a flat bar: the bar cut a hard grey line
+            // across the bottom of every photo, which is what made the grid
+            // look like a file listing instead of a set of pictures.
             Positioned(
               left: 0,
               right: 0,
               bottom: 0,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                color: Colors.black.withValues(alpha: 0.55),
-                child: Text(
-                  formatShortDate(item.photo.date),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.white,
+                padding: const EdgeInsets.fromLTRB(7, 14, 7, 6),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0),
+                      Colors.black.withValues(alpha: 0.75),
+                    ],
                   ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      formatShortDate(item.photo.date),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    // The note is why you took *this* shot — "front relaxed"
+                    // is the difference between two photos taken the same day.
+                    if (note != null && note.isNotEmpty)
+                      Text(
+                        note,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: Colors.white70,
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),

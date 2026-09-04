@@ -1,34 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../shared/data/settings_repository.dart';
+import '../../../shared/data/lifter_sex.dart';
 import '../../progress/data/measurements_repository.dart';
-import 'strength_standards.dart';
 
-/// The settings key holding the lifter's sex.
-const lifterSexSetting = 'lifter_sex';
-
-/// Parses a stored setting value back into a [LifterSex].
-///
-/// Anything unrecognised (a hand-edited database, a value written by a future
-/// version) reads as "not set", which the UI already knows how to handle.
-LifterSex? parseLifterSex(String? raw) {
-  for (final sex in LifterSex.values) {
-    if (sex.name == raw) return sex;
-  }
-  return null;
-}
-
-/// The lifter's sex, or null until they've told us.
-///
-/// Needed because strength standards differ substantially by sex — see
-/// [strengthStandards]. There's no sensible default to fall back on, so the
-/// rank UI asks rather than assumes.
-final lifterSexProvider = StreamProvider<LifterSex?>((ref) {
-  return ref
-      .watch(settingsRepositoryProvider)
-      .watchRaw(lifterSexSetting)
-      .map(parseLifterSex);
-});
+// The sex itself lives in shared/ — onboarding and the muscle map read it too.
+// Re-exported so the rank code can keep asking one file for its inputs.
+export '../../../shared/data/lifter_sex.dart'
+    show LifterSex, lifterSexProvider, lifterSexSetting, parseLifterSex;
 
 /// Everything a rank needs besides the lift itself. Either field being null is
 /// the signal to show the setup prompt instead of a rank.

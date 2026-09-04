@@ -5,9 +5,10 @@ import '../../../app/theme/accent_color.dart';
 import '../../../shared/data/settings_repository.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/fade_slide_in.dart';
 import '../data/rank_inputs.dart';
 import '../data/ranked_lifts.dart';
-import '../data/strength_standards.dart';
 import '../widgets/rank_setup_prompt.dart';
 
 /// Where your lifts place against published strength standards.
@@ -23,39 +24,52 @@ class StrengthRankScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Strength rank')),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-        children: [
-          if (!ready)
-            RankSetupPrompt(inputs: inputs)
-          else ...[
-            _Basis(inputs: inputs),
-            const SizedBox(height: 16),
-            for (final lift in lifts.ranked) ...[
-              _LiftCard(lift: lift),
-              const SizedBox(height: 12),
-            ],
-            if (lifts.ranked.isEmpty) const _NothingRankedYet(),
-            if (lifts.unlogged.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Text(
-                'Not logged yet: ${lifts.unlogged.join(', ')}',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+      body: FadeSlideIn(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+          children: [
+            if (!ready)
+              RankSetupPrompt(inputs: inputs)
+            else ...[
+              _Basis(inputs: inputs),
+              if (lifts.ranked.isNotEmpty)
+                AppSectionHeader(
+                  title: 'Your lifts',
+                  count: lifts.ranked.length,
+                ),
+              for (final lift in lifts.ranked) _LiftCard(lift: lift),
+              if (lifts.ranked.isEmpty) const _NothingRankedYet(),
+              if (lifts.unlogged.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    'Not logged yet: ${lifts.unlogged.join(', ')}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              // A caveat, not a footnote. Someone reading "Novice" next to
+              // their best squat deserves to see why that word is softer than
+              // it looks, in the same weight as the ranks themselves.
+              AppPanel(
+                icon: Icons.balance,
+                title: 'How to read this',
+                child: Text(
+                  'Standards are population averages from published tables, '
+                  'not physics. Limb lengths and bodyweight both skew them — '
+                  'treat a rank as a rough bracket, not a verdict.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             ],
-            const SizedBox(height: 24),
-            Text(
-              'Standards are population averages from published tables, not '
-              'physics. Limb lengths and bodyweight both skew them — treat a '
-              'rank as a rough bracket, not a verdict.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
           ],
-        ],
+        ),
       ),
     );
   }
@@ -73,32 +87,35 @@ class _Basis extends ConsumerWidget {
     final unit = ref.watch(weightUnitProvider);
     final measuredOn = inputs.measuredOn;
 
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            '${inputs.sex!.label} standards • '
-            '${formatWeightUnit(inputs.bodyweightKg!, unit)} bodyweight'
-            '${measuredOn == null ? '' : ' (${formatShortDate(measuredOn)})'}',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+    return AppPanel(
+      padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              '${inputs.sex!.label} standards • '
+              '${formatWeightUnit(inputs.bodyweightKg!, unit)} bodyweight'
+              '${measuredOn == null ? '' : ' (${formatShortDate(measuredOn)})'}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
-        ),
-        TextButton(
-          // Switching the table is one tap; nothing else about a rank depends
-          // on this setting.
-          onPressed: () => ref.read(settingsRepositoryProvider).write(
-            lifterSexSetting,
-            inputs.sex == LifterSex.male
-                ? LifterSex.female.name
-                : LifterSex.male.name,
+          TextButton(
+            // Switching the table is one tap; nothing else about a rank depends
+            // on this setting.
+            onPressed: () => ref.read(settingsRepositoryProvider).write(
+              lifterSexSetting,
+              inputs.sex == LifterSex.male
+                  ? LifterSex.female.name
+                  : LifterSex.male.name,
+            ),
+            child: Text(
+              'Use ${inputs.sex == LifterSex.male ? 'female' : 'male'}',
+            ),
           ),
-          child: Text(
-            'Use ${inputs.sex == LifterSex.male ? 'female' : 'male'}',
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -117,49 +134,16 @@ class _LiftCard extends ConsumerWidget {
     final rank = lift.rank;
     final next = rank.next;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(16),
-      ),
+    return AppPanel(
+      title: lift.name,
+      subtitle:
+          '${formatWeightUnit(lift.oneRm, unit)} '
+          '${lift.tested ? 'tested' : 'estimated'} • '
+          '${rank.ratio.toStringAsFixed(2)}× bodyweight',
+      trailing: _TierPill(label: rank.tier.label),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(lift.name, style: theme.textTheme.titleSmall),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  rank.tier.label,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: accent,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${formatWeightUnit(lift.oneRm, unit)} '
-            '${lift.tested ? 'tested' : 'estimated'} • '
-            '${rank.ratio.toStringAsFixed(2)}× bodyweight',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
@@ -171,7 +155,7 @@ class _LiftCard extends ConsumerWidget {
               color: accent,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Text(
             next == null
                 ? 'Top tier — nothing above this'
@@ -180,6 +164,34 @@ class _LiftCard extends ConsumerWidget {
             style: theme.textTheme.bodySmall,
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The tier name, in the accent colour.
+class _TierPill extends ConsumerWidget {
+  const _TierPill({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final accent = ref.watch(accentColorProvider);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        label,
+        style: theme.textTheme.labelMedium?.copyWith(
+          color: accent,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
@@ -204,8 +216,10 @@ class _NothingRankedYet extends StatelessWidget {
         Text('No ranked lifts yet', style: theme.textTheme.titleLarge),
         const SizedBox(height: 8),
         Text(
-          'Log a set of one of the big barbell lifts — bench, squat, deadlift, '
-          'overhead press, row or RDL — and its rank appears here.',
+          'Log a set of any barbell or cable lift — bench, squat, deadlift, '
+          'press, row, curl, pulldown — and its rank appears here. Dumbbell, '
+          'machine and bodyweight work is left out: there is no way to compare '
+          'those numbers between two gyms.',
           textAlign: TextAlign.center,
           style: theme.textTheme.bodyMedium,
         ),

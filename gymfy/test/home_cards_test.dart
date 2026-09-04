@@ -160,7 +160,7 @@ void main() {
           // `pumpAndSettle` would never return. What this card is *about* is
           // the text, and muscle_map_widget_test.dart already covers the real
           // SVG.
-          bodySvgTemplateProvider(BodySide.front).overrideWith(
+          bodySvgTemplateProvider(BodyFigure.male, BodySide.front).overrideWith(
             (ref) => '<svg xmlns="http://www.w3.org/2000/svg" '
                 'viewBox="0 0 248 558"></svg>',
           ),

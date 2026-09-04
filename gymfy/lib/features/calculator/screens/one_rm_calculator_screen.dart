@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../shared/utils/units.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/fade_slide_in.dart';
 import '../../../shared/widgets/weight_wheel.dart';
 import '../../plates/screens/plate_calculator_screen.dart';
 import '../data/one_rm_math.dart';
@@ -36,65 +38,70 @@ class _OneRmCalculatorScreenState extends ConsumerState<OneRmCalculatorScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('1RM calculator')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _Card(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                WeightWheel(
-                  key: ValueKey(unit),
-                  initialWeight: _weight,
-                  unit: unit,
-                  label: 'Weight lifted',
-                  // Rebuild on every notch so the estimate tracks the drum.
-                  onChanged: (value) => setState(() => _weight = value),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Text('Reps', style: theme.textTheme.titleSmall),
-                    const Spacer(),
-                    Text(
-                      '$_reps',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+      body: FadeSlideIn(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+          children: [
+            AppPanel(
+              icon: Icons.fitness_center,
+              title: 'The set you did',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  WeightWheel(
+                    key: ValueKey(unit),
+                    initialWeight: _weight,
+                    unit: unit,
+                    label: 'Weight lifted',
+                    // Rebuild on every notch so the estimate tracks the drum.
+                    onChanged: (value) => setState(() => _weight = value),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Text(
+                        'Reps',
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                Slider(
-                  value: _reps.toDouble(),
-                  min: 1,
-                  max: oneRmMaxReps.toDouble(),
-                  divisions: oneRmMaxReps - 1,
-                  label: '$_reps',
-                  onChanged: (value) => setState(() => _reps = value.round()),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          if (estimates == null)
-            _Card(
-              child: Text(
-                'Enter the weight you lifted and how many reps you got, and '
-                'the estimate appears here.',
-                style: theme.textTheme.bodyMedium,
+                      const Spacer(),
+                      Text(
+                        '$_reps',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: _reps.toDouble(),
+                    min: 1,
+                    max: oneRmMaxReps.toDouble(),
+                    divisions: oneRmMaxReps - 1,
+                    label: '$_reps',
+                    onChanged: (value) => setState(() => _reps = value.round()),
+                  ),
+                ],
               ),
-            )
-          else ...[
-            _Result(estimates: estimates, reps: _reps),
-            const SizedBox(height: 16),
-            _FormulaComparison(estimates: estimates),
-            const SizedBox(height: 16),
-            _PercentageTable(
-              oneRm: estimates.average,
-              highlightReps: _reps,
             ),
+            if (estimates == null)
+              AppPanel(
+                child: Text(
+                  'Enter the weight you lifted and how many reps you got, and '
+                  'the estimate appears here.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              )
+            else ...[
+              _Result(estimates: estimates, reps: _reps),
+              _FormulaComparison(estimates: estimates),
+              _PercentageTable(oneRm: estimates.average, highlightReps: _reps),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -118,7 +125,7 @@ class _Result extends ConsumerWidget {
     final low = formatWeightIn(roundToLoadable(estimates.lowest, unit), unit);
     final high = formatWeightIn(roundToLoadable(estimates.highest, unit), unit);
 
-    return _Card(
+    return AppPanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -156,7 +163,7 @@ class _Result extends ConsumerWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           Align(
             alignment: Alignment.centerLeft,
             child: OutlinedButton.icon(
@@ -166,34 +173,58 @@ class _Result extends ConsumerWidget {
                 context,
                 weight: weightIn(roundToLoadable(oneRm, unit), unit),
               ),
-              icon: const Icon(Icons.donut_large_outlined),
+              icon: const Icon(Icons.donut_large_outlined, size: 18),
               label: const Text('What plates is that?'),
             ),
           ),
           if (reps > oneRmReliableReps) ...[
-            const SizedBox(height: 12),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  size: 18,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Above $oneRmReliableReps reps this is a rough guess — the '
-                    'formula was built from heavy sets, and high-rep sets say '
-                    'more about your endurance than your max.',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ],
+            const SizedBox(height: 14),
+            _Caveat(
+              text:
+                  'Above $oneRmReliableReps reps this is a rough guess — the '
+                  'formula was built from heavy sets, and high-rep sets say '
+                  'more about your endurance than your max.',
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// A muted note with a leading icon, set apart from the numbers above it.
+class _Caveat extends StatelessWidget {
+  const _Caveat({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.info_outline,
+            size: 18,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -214,12 +245,12 @@ class _FormulaComparison extends ConsumerWidget {
     final entries = estimates.byFormula.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
-    return _Card(
+    return AppPanel(
+      icon: Icons.functions,
+      title: 'Formula comparison',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Formula comparison', style: theme.textTheme.titleSmall),
-          const SizedBox(height: 12),
           for (final entry in entries)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
@@ -273,22 +304,15 @@ class _PercentageTable extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
     final accent = ref.watch(accentColorProvider);
 
-    return _Card(
+    return AppPanel(
+      icon: Icons.table_rows_outlined,
+      title: 'What to load',
+      subtitle: 'Weights you should manage for a given rep count.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('What to load', style: theme.textTheme.titleSmall),
-          const SizedBox(height: 4),
-          Text(
-            'Weights you should manage for a given rep count.',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 12),
           for (var reps = 1; reps <= 10; reps++)
             _PercentageRow(
               reps: reps,
@@ -330,8 +354,15 @@ class _PercentageRow extends ConsumerWidget {
       fontWeight: highlight ? FontWeight.w700 : null,
     );
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+    return Container(
+      // The highlighted row gets a tinted band rather than only coloured text:
+      // in a ten-row table one recoloured line is easy to scan straight past.
+      decoration: BoxDecoration(
+        color: highlight ? accent.withValues(alpha: 0.10) : null,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+      margin: const EdgeInsets.symmetric(vertical: 1),
       child: Row(
         children: [
           SizedBox(
@@ -349,27 +380,6 @@ class _PercentageRow extends ConsumerWidget {
           Text(formatWeightUnit(weight, unit), style: style),
         ],
       ),
-    );
-  }
-}
-
-/// The card shell used by every block on this screen.
-class _Card extends StatelessWidget {
-  const _Card({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: child,
     );
   }
 }

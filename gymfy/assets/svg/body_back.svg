@@ -1,14 +1,8 @@
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="248.333px" height="557.994px" viewBox="0 0 248.333 557.994" enable-background="new 0 0 248.333 557.994" overflow="visible">
 
 <g id="Body_x5F_base_x5F_back">
-<linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="15.3335" y1="274.7173" x2="232.4595" y2="274.7173">
-<stop offset="0" style="stop-color: rgb(66, 186, 191);"></stop>
-<stop offset="1" style="stop-color: rgb(149, 206, 189);"></stop>
-</linearGradient>
-<linearGradient id="grad" gradientTransform="rotate(90)">
-<stop offset="5%" stop-color="#C70D6C"></stop>
-<stop offset="95%" stop-color="#BB1817"></stop>
-</linearGradient>
+
+
 <path fill="#2E3440" stroke="#232833" stroke-miterlimit="10" d="M148.208,42.832l0.626-6.5c0.25-2.125,1-12.375-3.75-21
  c-3.612-6.558-8.667-9.083-15.834-10.75c-1.476-0.343-5.453-0.611-6.917-0.417c-2.246,0.299-4.574,0.745-6.667,1.5
  c-3.428,1.236-6.233,3.074-9.116,5.324c-1.511,1.179-2.861,2.679-3.842,4.343c-4.125,7-4.875,14.375-4.375,22.125l2.375,15.75
@@ -47,16 +41,10 @@
 
 
 <!-- Deltoid (Left) -->
-<linearGradient id="SVGID_deltoid_left" gradientUnits="userSpaceOnUse" x1="73.0684" y1="102.5601" x2="68.8198" y2="151.1216">
-<stop offset="0" style="stop-color: rgb(181,98,69);"></stop>
-<stop offset="1" style="stop-color: rgb(183,82,44);"></stop>
-</linearGradient>
+
 
 <!-- Deltoid (Right) -->
-<linearGradient id="SVGID_deltoid_right" gradientUnits="userSpaceOnUse" x1="519.7339" y1="102.5601" x2="515.4853" y2="151.1216" gradientTransform="matrix(-1 0 0 1 694.6768 0)">
-<stop offset="0" style="stop-color: rgb(181,98,69);"></stop>
-<stop offset="1" style="stop-color: rgb(183,82,44);"></stop>
-</linearGradient>
+
 
 <g id="deltoid">
 <path data-muscle="rear_deltoid side_deltoid" fill="#4C5361" d="M93.167,107.318c0,0-7.666-0.667-13.166-1.833c-4.532-0.961-10.865-2.825-12.956-3.452
@@ -68,16 +56,10 @@
 </g>
 
 <!-- Infraspinatus & Teres Major (Left) -->
-<linearGradient id="SVGID_infraspinatus_teres_major_left" gradientUnits="userSpaceOnUse" x1="78.5542" y1="107.9058" x2="75.1761" y2="146.5175">
-<stop offset="0" style="stop-color: rgb(181,98,69);"></stop>
-<stop offset="1" style="stop-color: rgb(183,82,44);"></stop>
-</linearGradient>
+
 
 <!-- Infraspinatus & Teres Major (Right) -->
-<linearGradient id="SVGID_infraspinatus_teres_major_right" gradientUnits="userSpaceOnUse" x1="525.2202" y1="107.9048" x2="521.8421" y2="146.5166" gradientTransform="matrix(-1 0 0 1 694.6768 0)">
-<stop offset="0" style="stop-color: rgb(181,98,69);"></stop>
-<stop offset="1" style="stop-color: rgb(183,82,44);"></stop>
-</linearGradient>
+
 
 <g id="infraspinatus_teres_major">
 <path data-muscle="rear_deltoid" fill="#4C5361" d="M56.5,134.482c0,0,2-6.667,4.833-9.833s10.666-7,15.333-7.667s16.833-6.167,18-7.667
@@ -89,16 +71,10 @@
 </g>
 
 <!-- Trapezius (Left) -->
-<linearGradient id="SVGID_trapezius_left" gradientUnits="userSpaceOnUse" x1="105.4185" y1="49.4941" x2="93.6938" y2="183.5076">
-<stop offset="0" style="stop-color: rgb(124,67,89);"></stop>
-<stop offset="1" style="stop-color: rgb(78,46,54);"></stop>
-</linearGradient>
+
 
 <!-- Trapezius (Right) -->
-<linearGradient id="SVGID_trapezius_right" gradientUnits="userSpaceOnUse" x1="584.7524" y1="49.4941" x2="573.0278" y2="183.5076" gradientTransform="matrix(-1 0 0 1 727.0186 0)">
-<stop offset="0" style="stop-color: rgb(124,67,89);"></stop>
-<stop offset="1" style="stop-color: rgb(78,46,54);"></stop>
-</linearGradient>
+
 
 <g id="trapezius_lower">
 <path data-muscle="trapezius" fill="#4C5361" d="M120.375,115.082c1.549,4.417,0.38,11.027-0.417,18c-1,8.75-1.904,31.375-1.875,32.875
@@ -120,16 +96,10 @@
 </g>
 
 <!-- Latissimus Dorsi (Left) -->
-<linearGradient id="SVGID_back_4_" gradientUnits="userSpaceOnUse" x1="101.9858" y1="147.6543" x2="93.3861" y2="245.9497">
-<stop offset="0" style="stop-color: rgb(94,100,75);"></stop>
-<stop offset="1" style="stop-color: rgb(95,103,55);"></stop>
-</linearGradient>
+
 
 <!-- Latissimus Dorsi (Right) -->
-<linearGradient id="SVGID_back_34_" gradientUnits="userSpaceOnUse" x1="581.4858" y1="147.6543" x2="572.8861" y2="245.9497" gradientTransform="matrix(-1 0 0 1 727.2686 0)">
-<stop offset="0" style="stop-color: rgb(94,100,75);"></stop>
-<stop offset="1" style="stop-color: rgb(95,103,55);"></stop>
-</linearGradient>
+
 
 <g id="latissimus_dorsi">
 <path data-muscle="lats" fill="#4C5361" d="M113.743,239.597c0.521,1.219,1.506,4.256,1.981,5.907c0.234,0.813,0.526,1.578,0.609,2.453
@@ -149,16 +119,10 @@
 </g>
 
 <!-- External Oblique (Left) -->
-<linearGradient id="SVGID_back_5_" gradientUnits="userSpaceOnUse" x1="89.8174" y1="204.8501" x2="87.291" y2="233.7266">
-<stop offset="0" style="stop-color: rgb(124,111,80);"></stop>
-<stop offset="1" style="stop-color: rgb(127,113,51);"></stop>
-</linearGradient>
+
 
 <!-- External Oblique (Right) -->
-<linearGradient id="SVGID_back_20_" gradientUnits="userSpaceOnUse" x1="536.4819" y1="204.8501" x2="533.9556" y2="233.7261" gradientTransform="matrix(-1 0 0 1 694.6768 0)">
-<stop offset="0" style="stop-color: rgb(124,111,80);"></stop>
-<stop offset="1" style="stop-color: rgb(127,113,51);"></stop>
-</linearGradient>
+
 
 <g id="external_oblique">
 <path data-muscle="obliques" fill="#4C5361" d="M94.5,227.416c-0.167-0.833-2.333-5.667-2.75-6.25s-4.333-8.083-4.916-8.833s-1.084-2-2.25-4.417
@@ -170,16 +134,10 @@
 </g>
 
 <!-- Gluteus Medius (Left) -->
-<linearGradient id="SVGID_back_6_" gradientUnits="userSpaceOnUse" x1="89.0908" y1="231.0371" x2="86.382" y2="261.9984">
-<stop offset="0" style="stop-color: rgb(126,155,161);"></stop>
-<stop offset="1" style="stop-color: rgb(101,142,165);"></stop>
-</linearGradient>
+
 
 <!-- Gluteus Medius (Right) -->
-<linearGradient id="SVGID_back_21_" gradientUnits="userSpaceOnUse" x1="535.7573" y1="231.0371" x2="533.0486" y2="261.998" gradientTransform="matrix(-1 0 0 1 694.6768 0)">
-<stop offset="0" style="stop-color: rgb(126,155,161);"></stop>
-<stop offset="1" style="stop-color: rgb(101,142,165);"></stop>
-</linearGradient>
+
 
 <g id="gluteus_medius2">
 <path data-muscle="glutes" fill="#4C5361" d="M82.458,230.457c0,0,12.625,5.625,16,9.25c0,0-10,8.75-12.75,10.75s-8,8.625-8.375,10.75
@@ -189,16 +147,10 @@
 </g>
 
 <!-- Gluteus Maximus (Left) -->
-<linearGradient id="SVGID_back_7_" gradientUnits="userSpaceOnUse" x1="103.5537" y1="240.75" x2="98.7226" y2="295.9702">
-<stop offset="0" style="stop-color: rgb(126,155,201);"></stop>
-<stop offset="1" style="stop-color: rgb(101,142,205);"></stop>
-</linearGradient>
+
 
 <!-- Gluteus Maximus (Right) -->
-<linearGradient id="SVGID_back_22_" gradientUnits="userSpaceOnUse" x1="550.2202" y1="240.7495" x2="545.389" y2="295.9697" gradientTransform="matrix(-1 0 0 1 694.6768 0)">
-<stop offset="0" style="stop-color: rgb(126,155,201);"></stop>
-<stop offset="1" style="stop-color: rgb(101,142,205);"></stop>
-</linearGradient>
+
 
 <g id="gluteus_maximus">
 <path data-muscle="glutes" fill="#4C5361" d="M100.208,240.457c0,0-10.375,9.25-14,11.75c0,0-6.375,6.375-8.375,12.75c0,0,0,10,1.5,16
@@ -212,16 +164,10 @@
 </g>
 
 <!-- Triceps (Left) -->
-<linearGradient id="SVGID_triceps_left" gradientUnits="userSpaceOnUse" x1="67.2178" y1="128.4917" x2="59.7506" y2="213.8415">
-<stop offset="0" style="stop-color: rgb(124,111,80);"></stop>
-<stop offset="1" style="stop-color: rgb(127,113,51);"></stop>
-</linearGradient>
+
 
 <!-- Triceps (Right) -->
-<linearGradient id="SVGID_triceps_right" gradientUnits="userSpaceOnUse" x1="513.8833" y1="128.4917" x2="506.4161" y2="213.8415" gradientTransform="matrix(-1 0 0 1 694.6768 0)">
-<stop offset="0" style="stop-color: rgb(124,111,80);"></stop>
-<stop offset="1" style="stop-color: rgb(127,113,51);"></stop>
-</linearGradient>
+
 
 <g id="triceps">
 <path data-muscle="triceps" fill="#4C5361" d="M77.667,148.499c0,0-0.018,0.029-0.047,0.077c-0.181-0.739-0.787-0.927-0.787-0.927
@@ -247,16 +193,10 @@
 </g>
 
 <!-- Brachioradialis (Left) -->
-<linearGradient id="SVGID_back_13_" gradientUnits="userSpaceOnUse" x1="47.019" y1="188.8379" x2="41.849" y2="247.932">
-<stop offset="0" style="stop-color: rgb(66, 186, 191);"></stop>
-<stop offset="1" style="stop-color: rgb(149, 206, 189);"></stop>
-</linearGradient>
+
 
 <!-- Brachioradialis (Right) -->
-<linearGradient id="SVGID_back_26_" gradientUnits="userSpaceOnUse" x1="493.6851" y1="188.8389" x2="488.515" y2="247.9325" gradientTransform="matrix(-1 0 0 1 694.6768 0)">
-<stop offset="0" style="stop-color: rgb(66, 186, 191);"></stop>
-<stop offset="1" style="stop-color: rgb(149, 206, 189);"></stop>
-</linearGradient>
+
 
 <!-- Brachioradialis -->
 <g id="brachioradialis">
@@ -269,16 +209,10 @@
 </g>
 
 <!-- Finger Flexors (Left) -->
-<linearGradient id="SVGID_back_14_" gradientUnits="userSpaceOnUse" x1="67.6968" y1="212.4321" x2="64.7825" y2="245.7429">
-<stop offset="0" style="stop-color: rgb(177,200,135);"></stop>
-<stop offset="1" style="stop-color: rgb(166,196,106);"></stop>
-</linearGradient>
+
 
 <!-- Finger Flexors (Right) -->
-<linearGradient id="SVGID_back_27_" gradientUnits="userSpaceOnUse" x1="514.3628" y1="212.4331" x2="511.4485" y2="245.7434" gradientTransform="matrix(-1 0 0 1 694.6768 0)">
-<stop offset="0" style="stop-color: rgb(177,200,135);"></stop>
-<stop offset="1" style="stop-color: rgb(166,196,106);"></stop>
-</linearGradient>
+
 
 <!-- Finger Flexors -->
 <g id="finger_flexors">
@@ -291,16 +225,10 @@
 </g>
 
 <!-- Finger Extensors (Left) -->
-<linearGradient id="SVGID_finger_extensors_left" gradientUnits="userSpaceOnUse" x1="56.7437" y1="200.8711" x2="50.3853" y2="273.5476">
-<stop offset="0" style="stop-color: rgb(177,240,135);"></stop>
-<stop offset="1" style="stop-color: rgb(166,236,106);"></stop>
-</linearGradient>
+
 
 <!-- Finger Extensors (Right) -->
-<linearGradient id="SVGID_finger_extensors_right" gradientUnits="userSpaceOnUse" x1="503.4077" y1="200.8706" x2="497.0493" y2="273.5476" gradientTransform="matrix(-1 0 0 1 694.6768 0)">
-<stop offset="0" style="stop-color: rgb(177,240,135);"></stop>
-<stop offset="1" style="stop-color: rgb(166,236,106);"></stop>
-</linearGradient>
+
 
 <g id="finger_extensors">
 <path data-muscle="forearms" fill="#4C5361" d="M62.958,230.707c-2-8.375-3.625-19.5-3.625-19.5s-7.375-7-8.75-10.875
@@ -317,16 +245,10 @@
 </g>
 
 <!-- Tensor Fasciae Latae (Left) -->
-<linearGradient id="SVGID_back_8_" gradientUnits="userSpaceOnUse" x1="82.8105" y1="275.0508" x2="74.1936" y2="373.5432">
-<stop offset="0" style="stop-color: rgb(153,128,164);"></stop>
-<stop offset="1" style="stop-color: rgb(154,103,172);"></stop>
-</linearGradient>
+
 
 <!-- Tensor Fasciae Latae (Right) -->
-<linearGradient id="SVGID_back_36_" gradientUnits="userSpaceOnUse" x1="561.1431" y1="275.0508" x2="552.5261" y2="373.5427" gradientTransform="matrix(-1 0 0 1 726.0303 0)">
-<stop offset="0" style="stop-color: rgb(153,128,164);"></stop>
-<stop offset="1" style="stop-color: rgb(154,103,172);"></stop>
-</linearGradient>
+
 
 <!-- Tensor Fasciae Latae -->
 <g id="tensor_fasciae_latae">
@@ -339,16 +261,10 @@
 </g>
 
 <!-- Abductors (Left) -->
-<linearGradient id="SVGID_back_35_" gradientUnits="userSpaceOnUse" x1="119.1519" y1="286.7734" x2="114.0889" y2="344.6432">
-<stop offset="0" style="stop-color: rgb(73,79,117);"></stop>
-<stop offset="1" style="stop-color: rgb(50,55,125);"></stop>
-</linearGradient>
+
 
 <!-- Abductors (Right) -->
-<linearGradient id="SVGID_back_38_" gradientUnits="userSpaceOnUse" x1="597.3901" y1="286.7939" x2="592.3276" y2="344.6588" gradientTransform="matrix(-1 0 0 1 726.0303 0)">
-<stop offset="0" style="stop-color: rgb(73,79,117);"></stop>
-<stop offset="1" style="stop-color: rgb(50,55,125);"></stop>
-</linearGradient>
+
 
 <!-- Abductors -->
 <g id="abductors">
@@ -359,16 +275,10 @@
 </g>
 
 <!-- Hamstrings (Left) -->
-<linearGradient id="SVGID_back_17_" gradientUnits="userSpaceOnUse" x1="105.9561" y1="297.2065" x2="96.5825" y2="404.3461">
-<stop offset="0" style="stop-color: rgb(171,104,149);"></stop>
-<stop offset="1" style="stop-color: rgb(176,36,134);"></stop>
-</linearGradient>
+
 
 <!-- Hamstrings (Right) -->
-<linearGradient id="SVGID_back_37_" gradientUnits="userSpaceOnUse" x1="584.2905" y1="297.2065" x2="574.917" y2="404.3461" gradientTransform="matrix(-1 0 0 1 726.0303 0)">
-<stop offset="0" style="stop-color: rgb(171,104,149);"></stop>
-<stop offset="1" style="stop-color: rgb(176,36,134);"></stop>
-</linearGradient>
+
 
 <g id="hamstrings">
 <path data-muscle="hamstrings" fill="#4C5361" d="M118.333,372.957c0,0,0.375-13.25,0.25-20.25s-1.744-21.257-2-26.125
@@ -388,26 +298,14 @@
 </g>
 
 <!-- Gastrocnemius (Left) -->
-<linearGradient id="SVGID_back_9_" gradientUnits="userSpaceOnUse" x1="101.6567" y1="384.2217" x2="90.2812" y2="514.2444">
-<stop offset="0" style="stop-color: rgb(129,109,152);"></stop>
-<stop offset="1" style="stop-color: rgb(116,80,154);"></stop>
-</linearGradient>
 
-<linearGradient id="SVGID_back_10_" gradientUnits="userSpaceOnUse" x1="116.8521" y1="391.749" x2="108.2598" y2="489.9592">
-<stop offset="0" style="stop-color: rgb(129,109,152);"></stop>
-<stop offset="1" style="stop-color: rgb(116,80,154);"></stop>
-</linearGradient>
+
+
 
 <!-- Gastrocnemius (Right) -->
-<linearGradient id="SVGID_back_23_" gradientUnits="userSpaceOnUse" x1="548.3237" y1="384.2207" x2="536.9481" y2="514.2443" gradientTransform="matrix(-1 0 0 1 694.6768 0)">
-<stop offset="0" style="stop-color: rgb(129,109,152);"></stop>
-<stop offset="1" style="stop-color: rgb(116,80,154);"></stop>
-</linearGradient>
 
-<linearGradient id="SVGID_back_24_" gradientUnits="userSpaceOnUse" x1="563.5181" y1="391.749" x2="554.9258" y2="489.9586" gradientTransform="matrix(-1 0 0 1 694.6768 0)">
-<stop offset="0" style="stop-color: rgb(129,109,152);"></stop>
-<stop offset="1" style="stop-color: rgb(116,80,154);"></stop>
-</linearGradient>
+
+
 
 <g id="gastrocnemius">
 <path data-muscle="calves" fill="#4C5361" d="M106.167,424.504c0-1.5-2.333-30.834-2.333-30.834s-7-11.333-8.5-9.833c0,0-3.667,11.657-9,19.995
@@ -425,26 +323,14 @@
 </g>
 
 <!-- Soleus (Left) -->
-<linearGradient id="SVGID_back_11_" gradientUnits="userSpaceOnUse" x1="102.4219" y1="454.7246" x2="97.9611" y2="505.712">
-<stop offset="0" style="stop-color: rgb(207,116,69);"></stop>
-<stop offset="1" style="stop-color: rgb(215,88,19);"></stop>
-</linearGradient>
 
-<linearGradient id="SVGID_back_12_" gradientUnits="userSpaceOnUse" x1="102.5391" y1="466.1748" x2="98.3828" y2="513.6808">
-<stop offset="0" style="stop-color: rgb(207,116,69);"></stop>
-<stop offset="1" style="stop-color: rgb(215,88,19);"></stop>
-</linearGradient>
+
+
 
 <!-- Soleus (Right) -->
-<linearGradient id="SVGID_back_30_" gradientUnits="userSpaceOnUse" x1="585.1714" y1="455.4746" x2="580.7106" y2="506.4615" gradientTransform="matrix(-1 0 0 1 730.4404 0)">
-<stop offset="0" style="stop-color: rgb(207,116,69);"></stop>
-<stop offset="1" style="stop-color: rgb(215,88,19);"></stop>
-</linearGradient>
 
-<linearGradient id="SVGID_back_31_" gradientUnits="userSpaceOnUse" x1="585.2896" y1="466.9238" x2="581.1333" y2="514.4299" gradientTransform="matrix(-1 0 0 1 730.4404 0)">
-<stop offset="0" style="stop-color: rgb(207,116,69);"></stop>
-<stop offset="1" style="stop-color: rgb(215,88,19);"></stop>
-</linearGradient>
+
+
 
 <!-- Soleus -->
 <g id="soleus">
@@ -478,4 +364,4 @@
 
 
 
-<g id="lower_back"><path data-muscle="lower_back" fill="#4C5361" d="M112,207 a5,5 0 0 1 10,0 v34 a5,5 0 0 1 -10,0 z M126,207 a5,5 0 0 1 10,0 v34 a5,5 0 0 1 -10,0 z"/></g></svg>
+<g id="lower_back"><path data-muscle="lower_back" fill="#4C5361" d="M112.0,204.2 a5.0,5.0 0 0 1 9.9,0 v36.3 a5.0,5.0 0 0 1 -9.9,0 z M125.9,204.2 a5.0,5.0 0 0 1 9.9,0 v36.3 a5.0,5.0 0 0 1 -9.9,0 z"/></g></svg>

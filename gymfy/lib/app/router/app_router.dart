@@ -18,6 +18,7 @@ import '../../features/progress/screens/photo_comparison_screen.dart';
 import '../../features/plates/screens/plate_calculator_screen.dart';
 import '../../features/progress/screens/progress_photos_screen.dart';
 import '../../features/data_export/screens/export_screen.dart';
+import '../../features/help/screens/help_screen.dart';
 import '../../features/plan_share/screens/share_plan_screen.dart';
 import '../../features/progress/screens/progress_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
@@ -216,6 +217,10 @@ GoRouter goRouter(Ref ref) {
                   GoRoute(
                     path: 'share-plan',
                     builder: (context, state) => const SharePlanScreen(),
+                  ),
+                  GoRoute(
+                    path: 'help',
+                    builder: (context, state) => const HelpScreen(),
                   ),
                   GoRoute(
                     path: 'settings',

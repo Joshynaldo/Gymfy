@@ -152,6 +152,7 @@ class _ActivityHeatmapState extends ConsumerState<ActivityHeatmap> {
                   selected: _selected,
                   minutes: minutes,
                   palette: palette,
+                  today: today,
                 ),
               ],
             ),
@@ -343,9 +344,18 @@ class _Caption extends StatelessWidget {
     required this.selected,
     required this.minutes,
     required this.palette,
+    required this.today,
   });
 
   final DateTime? selected;
+
+  /// The same "today" the grid was laid out from.
+  ///
+  /// Passed in rather than read off the clock inside [formatDayLabel]: the grid
+  /// draws its last column from the widget's `today`, and a caption that
+  /// consulted the real date instead could label that column "Mon 24 Aug" while
+  /// the grid treats it as today. Two answers from one screen.
+  final DateTime today;
   final Map<DateTime, int> minutes;
   final List<Color> palette;
 
@@ -360,8 +370,8 @@ class _Caption extends StatelessWidget {
       final trained = minutes[selected] ?? 0;
       return Text(
         trained == 0
-            ? '${formatDayLabel(selected!)} — rest day'
-            : '${formatDayLabel(selected!)} — '
+            ? '${formatDayLabel(selected!, today: today)} — rest day'
+            : '${formatDayLabel(selected!, today: today)} — '
                   '${formatDuration(Duration(minutes: trained))} trained',
         style: style,
       );

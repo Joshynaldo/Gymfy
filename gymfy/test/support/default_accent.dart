@@ -1,6 +1,7 @@
 // Shared overrides for widget tests that render themed UI.
 
 import 'package:gymfy/app/theme/accent_color.dart';
+import 'package:gymfy/shared/data/lifter_sex.dart';
 import 'package:gymfy/shared/utils/units.dart';
 
 /// Pins the accent colour to the default without touching the database.
@@ -30,6 +31,20 @@ final defaultWeightUnitOverride = storedWeightUnitProvider.overrideWith(
 
 /// Both of the above — what a widget test rendering a weight usually wants.
 final defaultDisplayOverrides = [
+  defaultBodyFigureOverride,
   defaultAccentOverride,
   defaultWeightUnitOverride,
 ];
+
+/// Pins the body diagram to the male figure without touching the database.
+///
+/// Same reasoning again: the muscle map picks its diagram from the lifter-sex
+/// setting, so any test that renders a body would otherwise open a real
+/// database to answer a question it isn't about — and leave drift's stream
+/// cleanup timer pending at teardown, which fails the test after it passed.
+///
+/// Tests that are actually *about* which figure is drawn
+/// (`muscle_map_figure_test.dart`) don't use this.
+final defaultBodyFigureOverride = lifterSexProvider.overrideWith(
+  (ref) => Stream.value(null),
+);

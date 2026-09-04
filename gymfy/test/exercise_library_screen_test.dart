@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/features/exercises/data/exercise_repository.dart';
 import 'package:gymfy/features/exercises/screens/exercise_library_screen.dart';
+import 'package:gymfy/shared/widgets/exercise_thumbnail.dart';
 import 'package:gymfy/features/workout/data/workout_repository.dart';
 import 'package:gymfy/shared/database/app_database.dart';
 
@@ -18,6 +19,7 @@ final _sample = <Exercise>[
     id: 'barbell_bench_press',
     name: 'Barbell Bench Press',
     muscleIds: const ['chest', 'triceps'],
+    gifPath: 'assets/exercises/barbell_bench_press.gif',
     isPlateLoaded: false,
     isCustom: false,
     isArchived: false,
@@ -344,6 +346,25 @@ void main() {
       find.ancestor(
         of: find.text('Custom'),
         matching: find.widgetWithText(InkWell, 'Cable Lateral Raise'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('an exercise with an animation shows a still of it', (
+    tester,
+  ) async {
+    await _pumpScreen(tester);
+
+    // Recognising a lift by its shape is quicker than reading its name, which
+    // is what this list is for. Only the bench press has one in the fixtures,
+    // so the others must still fall back to the icon rather than a blank.
+    expect(find.byType(ExerciseThumbnail), findsNWidgets(4));
+    expect(find.byType(Image), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.widgetWithText(InkWell, 'Barbell Bench Press'),
+        matching: find.byType(Image),
       ),
       findsOneWidget,
     );
