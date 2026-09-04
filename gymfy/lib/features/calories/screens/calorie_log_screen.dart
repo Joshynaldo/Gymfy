@@ -6,6 +6,8 @@ import '../../../app/theme/accent_color.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/dates.dart';
 import '../../../shared/utils/format.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/fade_slide_in.dart';
 import '../data/calorie_repository.dart';
 import '../widgets/macro_breakdown.dart';
 
@@ -142,21 +144,26 @@ class _DayContent extends StatelessWidget {
     final fat = entries.fold<int>(0, (s, e) => s + e.fat);
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+      // The list itself carries no horizontal padding any more: cards bring
+      // their own margin, so the meals line up with the cards on every other
+      // tab instead of sitting inset by a further 16.
+      padding: const EdgeInsets.fromLTRB(4, 4, 4, 96),
       children: [
         _CalorieSummary(total: totalCalories, goal: defaultCalorieGoal),
-        const SizedBox(height: 16),
-        MacroBreakdown(protein: protein, carbs: carbs, fat: fat),
-        const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: MacroBreakdown(protein: protein, carbs: carbs, fat: fat),
+        ),
         if (entries.isEmpty)
           const Padding(
             padding: EdgeInsets.only(top: 48),
-            child: Center(
-              child: Text('No meals logged for this day yet.'),
-            ),
+            child: Center(child: Text('No meals logged for this day yet.')),
           )
-        else
-          for (final entry in entries) _MealTile(entry: entry),
+        else ...[
+          AppSectionHeader(title: 'Meals', count: entries.length),
+          for (final entry in entries)
+            FadeSlideIn(child: _MealTile(entry: entry)),
+        ],
       ],
     );
   }
@@ -175,12 +182,7 @@ class _CalorieSummary extends ConsumerWidget {
     final remaining = goal - total;
     final progress = goal <= 0 ? 0.0 : (total / goal).clamp(0.0, 1.0);
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(16),
-      ),
+    return AppPanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -188,7 +190,12 @@ class _CalorieSummary extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Text('$total', style: theme.textTheme.headlineMedium),
+              Text(
+                '$total',
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const SizedBox(width: 4),
               Text(
                 '/ $goal kcal',
@@ -228,19 +235,34 @@ class _MealTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(entry.name),
-      subtitle: Text(
-        'P ${entry.protein}g • C ${entry.carbs}g • F ${entry.fat}g',
-      ),
+    final theme = Theme.of(context);
+
+    return AppTile(
+      icon: Icons.restaurant,
+      title: entry.name,
+      subtitle: 'P ${entry.protein}g • C ${entry.carbs}g • F ${entry.fat}g',
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('${entry.calories} kcal'),
+          // The calorie figure is why the row exists, so it is weighted rather
+          // than left the same size as the macros underneath it.
+          Text(
+            '${entry.calories}',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(width: 3),
+          Text(
+            'kcal',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.delete_outline),
             tooltip: 'Delete entry',
+            visualDensity: VisualDensity.compact,
             onPressed: () =>
                 ref.read(calorieRepositoryProvider).deleteEntry(entry.id),
           ),

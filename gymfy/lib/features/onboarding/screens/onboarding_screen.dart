@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../shared/data/lifter_sex.dart';
 import '../../../shared/utils/units.dart';
 import '../../../shared/widgets/accent_swatch.dart';
 import '../../../shared/widgets/weight_wheel.dart';
@@ -29,6 +30,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   /// bodyweight is optional, and a wheel always has some value under it, so
   /// leaving it at the bottom has to mean the same as leaving a field blank.
   double _weight = 0;
+
+  /// The lifter's sex, or null for skipped / "rather not say".
+  LifterSex? _sex;
 
   /// Which page is showing, so the buttons and dots can follow along.
   int _page = 0;
@@ -71,6 +75,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       bodyweightKg: _weight <= 0
           ? null
           : weightToKilograms(_weight, ref.read(weightUnitProvider)),
+      sex: _sex,
     );
   }
 
@@ -88,7 +93,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 controller: _pages,
                 onPageChanged: (page) => setState(() => _page = page),
                 children: [
-                  _NamePage(controller: _name),
+                  _NamePage(
+                    controller: _name,
+                    sex: _sex,
+                    onSexChanged: (value) => setState(() => _sex = value),
+                  ),
                   _BodyweightPage(
                     weight: _weight,
                     onChanged: (value) => _weight = value,
@@ -180,26 +189,74 @@ class _Step extends StatelessWidget {
 }
 
 class _NamePage extends StatelessWidget {
-  const _NamePage({required this.controller});
+  const _NamePage({
+    required this.controller,
+    required this.sex,
+    required this.onSexChanged,
+  });
 
   final TextEditingController controller;
 
+  /// Null until answered, and answering stays optional.
+  final LifterSex? sex;
+  final ValueChanged<LifterSex?> onSexChanged;
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return _Step(
       title: 'Welcome to Gymfy',
       body:
           'Everything you log stays on this phone — there is no account and '
           'nothing gets uploaded. What should we call you?',
-      child: TextField(
-        controller: controller,
-        textCapitalization: TextCapitalization.words,
-        textInputAction: TextInputAction.next,
-        decoration: const InputDecoration(
-          labelText: 'Your name',
-          hintText: 'Optional',
-          border: OutlineInputBorder(),
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: controller,
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
+              labelText: 'Your name',
+              hintText: 'Optional',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 28),
+          Text(
+            'Body diagram and strength standards',
+            style: theme.textTheme.titleSmall,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            // Says what it is *for*, because that's the only reason it is
+            // asked. Strength standards genuinely differ by sex — a 1.0×
+            // bodyweight bench is intermediate for men and advanced for women
+            // — and the muscle map ships two different anatomical drawings.
+            'Picks which body the muscle map draws, and which strength table '
+            'your lifts are compared against. Optional — skip it and the app '
+            'works the same, minus the ranks.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SegmentedButton<LifterSex?>(
+            segments: [
+              for (final option in LifterSex.values)
+                ButtonSegment(value: option, label: Text(option.label)),
+              // An explicit way out, so skipping is a choice you can see rather
+              // than the absence of one. Without it the only way past is to
+              // leave a control untouched, which reads as an unanswered
+              // question rather than a declined one.
+              const ButtonSegment(value: null, label: Text('Rather not say')),
+            ],
+            selected: {sex},
+            showSelectedIcon: false,
+            onSelectionChanged: (selection) => onSexChanged(selection.first),
+          ),
+        ],
       ),
     );
   }

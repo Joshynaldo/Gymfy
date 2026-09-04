@@ -11,6 +11,13 @@ import 'support/weight_wheel.dart';
 
 void main() {
   Future<void> pump(WidgetTester tester) async {
+    // Taller than the default 800×600 so the formula table and the percentage
+    // table are laid out rather than left unbuilt below the fold. Same reason
+    // the plate calculator's test does it.
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
     await tester.pumpWidget(
       ProviderScope(
         overrides: defaultDisplayOverrides,

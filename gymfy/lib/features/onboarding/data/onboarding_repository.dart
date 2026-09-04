@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../shared/data/lifter_sex.dart';
 import '../../../shared/data/settings_repository.dart';
 import '../../../shared/models/body_measurement.dart';
 import '../../progress/data/measurements_repository.dart';
@@ -45,7 +46,7 @@ class OnboardingRepository {
 
   /// Saves the answers and marks onboarding done.
   ///
-  /// Both answers are optional, because both are skippable in the UI — a blank
+  /// Every answer is optional, because all of them are skippable in the UI — a blank
   /// name or an unparseable weight arrives here as null and is simply not
   /// written, rather than stored as an empty string or a zero.
   ///
@@ -56,10 +57,22 @@ class OnboardingRepository {
   /// is the same row the progress charts and strength ranks read, so day one
   /// becomes the first point on the weight timeline instead of a duplicate
   /// number that can disagree with it.
-  Future<void> finish({required String? name, required double? bodyweightKg}) async {
+  Future<void> finish({
+    required String? name,
+    required double? bodyweightKg,
+    required LifterSex? sex,
+  }) async {
     final trimmed = name?.trim();
     if (trimmed != null && trimmed.isNotEmpty) {
       await _settings.write(userNameSetting, trimmed);
+    }
+
+    // Skipped stays unset rather than defaulting to one of the two. Strength
+    // rank knows how to ask later, and the body map falls back to a diagram
+    // the user can change in Settings — both better than recording an answer
+    // nobody gave.
+    if (sex != null) {
+      await _settings.write(lifterSexSetting, sex.name);
     }
 
     if (bodyweightKg != null && bodyweightKg > 0) {

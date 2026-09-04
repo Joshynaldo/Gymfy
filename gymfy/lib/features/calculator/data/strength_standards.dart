@@ -3,6 +3,13 @@
 // Pure data plus lookups — no Flutter, no database. The ranking maths and the
 // UI come in the next tasks of this phase.
 
+// `LifterSex` moved to shared/ once onboarding and the muscle map needed it as
+// well. Re-exported so callers that reason about standards still get it from
+// the standards file.
+import '../../../shared/data/lifter_sex.dart';
+
+export '../../../shared/data/lifter_sex.dart' show LifterSex;
+
 /// Rank tiers, weakest first.
 ///
 /// Everyone starts at [beginner], so it has no entry ratio — the other four
@@ -22,22 +29,6 @@ enum StrengthTier {
   /// The tier above this one, or null if you're already at the top.
   StrengthTier? get next =>
       this == StrengthTier.elite ? null : StrengthTier.values[index + 1];
-}
-
-/// Which set of ratios to use.
-///
-/// Real-world standards differ substantially by sex — a 1.0× bodyweight bench
-/// is intermediate for men and advanced for women — so one shared table would
-/// be wrong for roughly half of users. Where the app doesn't know, it should
-/// ask rather than assume; the bodyweight prompt in a later task of this phase
-/// is where that happens.
-enum LifterSex {
-  male('Male'),
-  female('Female');
-
-  const LifterSex(this.label);
-
-  final String label;
 }
 
 /// The bodyweight ratios needed to enter each tier for one exercise.
@@ -78,16 +69,35 @@ typedef ExerciseStandards = ({
 
 /// Standards keyed by the seed-data exercise id.
 ///
-/// Deliberately only the barbell compounds. Standards exist because these lifts
-/// are trained and tested the same way everywhere, so the numbers mean
-/// something; ranking a cable fly or a lateral raise would be inventing
-/// authority the data doesn't have. Exercises missing from this map simply get
-/// no rank — see [standardsFor].
+/// Every lift here loads a barbell or a cable stack: a weight that means the
+/// same thing in every gym, is recorded the same way by every lifter, and has
+/// a published table behind it. The ratios follow the widely published tables
+/// (ExRx, Strength Level) rounded to something readable. They're population
+/// averages, not physics: limb lengths and bodyweight both skew them, and a
+/// heavier lifter clears a lower ratio for the same tier. Treat a rank as a
+/// rough bracket.
 ///
-/// The ratios follow the widely published tables (ExRx, Strength Level) rounded
-/// to something readable. They're population averages, not physics: limb
-/// lengths and bodyweight both skew them, and a heavier lifter clears a lower
-/// ratio for the same tier. Treat a rank as a rough bracket.
+/// Exercises missing from this map get no rank at all, which is the honest
+/// outcome rather than a gap to be filled. Three kinds are left out on
+/// purpose, and none of them for lack of effort:
+///
+///   * **Bodyweight lifts** — pull-up, chin-up, dip, push-up. Their real load
+///     is your body plus whatever you hang off it, but the app logs the added
+///     weight. A strict bodyweight pull-up is logged as 0 kg, so a ratio would
+///     read 0.0 and rank Beginner forever no matter how many you did. Ranking
+///     these properly needs the load model to change first.
+///   * **Dumbbell lifts** — published dumbbell tables are per dumbbell, and
+///     the app doesn't record whether you entered one or the pair. Guessing
+///     wrong is a factor-of-two error, which is the difference between Novice
+///     and Elite. A rank that can be that wrong is worse than no rank.
+///   * **Plate-loaded and selectorised machines** — leg press, hack squat, pec
+///     deck. The sled carries an unknown weight of its own and the leverage
+///     differs per machine, so the number on the plates isn't comparable
+///     between two gyms. This is the same reason [isPlateLoaded] skips them.
+///
+/// Isolation work on a bar or a stack *is* included where a table exists
+/// (curls, skull crushers, pulldowns): the objection to ranking a cable fly was
+/// never that it's small, it's that nobody has published what a good one is.
 const strengthStandards = <String, ExerciseStandards>{
   'barbell_bench_press': (
     male: StrengthStandard(
@@ -171,6 +181,241 @@ const strengthStandards = <String, ExerciseStandards>{
       intermediate: 0.95,
       advanced: 1.3,
       elite: 1.7,
+    ),
+  ),
+
+  // ---- Pressing variations ----
+  'incline_barbell_press': (
+    male: StrengthStandard(
+      novice: 0.6,
+      intermediate: 0.85,
+      advanced: 1.25,
+      elite: 1.65,
+    ),
+    female: StrengthStandard(
+      novice: 0.35,
+      intermediate: 0.5,
+      advanced: 0.75,
+      elite: 1.0,
+    ),
+  ),
+  'decline_barbell_press': (
+    male: StrengthStandard(
+      novice: 0.8,
+      intermediate: 1.05,
+      advanced: 1.55,
+      elite: 2.05,
+    ),
+    female: StrengthStandard(
+      novice: 0.45,
+      intermediate: 0.6,
+      advanced: 0.9,
+      elite: 1.2,
+    ),
+  ),
+  'close_grip_bench_press': (
+    male: StrengthStandard(
+      novice: 0.65,
+      intermediate: 0.9,
+      advanced: 1.35,
+      elite: 1.8,
+    ),
+    female: StrengthStandard(
+      novice: 0.35,
+      intermediate: 0.55,
+      advanced: 0.8,
+      elite: 1.05,
+    ),
+  ),
+  'push_press': (
+    male: StrengthStandard(
+      novice: 0.6,
+      intermediate: 0.85,
+      advanced: 1.2,
+      elite: 1.55,
+    ),
+    female: StrengthStandard(
+      novice: 0.35,
+      intermediate: 0.5,
+      advanced: 0.7,
+      elite: 0.95,
+    ),
+  ),
+
+  // ---- Squat and hinge variations ----
+  'front_squat': (
+    male: StrengthStandard(
+      novice: 0.8,
+      intermediate: 1.2,
+      advanced: 1.6,
+      elite: 2.0,
+    ),
+    female: StrengthStandard(
+      novice: 0.5,
+      intermediate: 0.8,
+      advanced: 1.1,
+      elite: 1.4,
+    ),
+  ),
+  'sumo_deadlift': (
+    // Level with the conventional pull: the published tables treat the two as
+    // the same lift, and which one is stronger is a matter of build.
+    male: StrengthStandard(
+      novice: 1.25,
+      intermediate: 1.75,
+      advanced: 2.25,
+      elite: 2.75,
+    ),
+    female: StrengthStandard(
+      novice: 0.75,
+      intermediate: 1.25,
+      advanced: 1.6,
+      elite: 2.1,
+    ),
+  ),
+  'good_morning': (
+    male: StrengthStandard(
+      novice: 0.5,
+      intermediate: 0.8,
+      advanced: 1.2,
+      elite: 1.6,
+    ),
+    female: StrengthStandard(
+      novice: 0.35,
+      intermediate: 0.55,
+      advanced: 0.8,
+      elite: 1.05,
+    ),
+  ),
+  'barbell_hip_thrust': (
+    // The one lift where the female ratios sit closest to the male ones.
+    male: StrengthStandard(
+      novice: 1.25,
+      intermediate: 1.75,
+      advanced: 2.5,
+      elite: 3.25,
+    ),
+    female: StrengthStandard(
+      novice: 1.0,
+      intermediate: 1.5,
+      advanced: 2.15,
+      elite: 2.8,
+    ),
+  ),
+  'power_clean': (
+    male: StrengthStandard(
+      novice: 0.75,
+      intermediate: 1.0,
+      advanced: 1.3,
+      elite: 1.6,
+    ),
+    female: StrengthStandard(
+      novice: 0.5,
+      intermediate: 0.65,
+      advanced: 0.85,
+      elite: 1.1,
+    ),
+  ),
+
+  // ---- Pulling ----
+  'lat_pulldown': (
+    male: StrengthStandard(
+      novice: 0.7,
+      intermediate: 0.95,
+      advanced: 1.25,
+      elite: 1.6,
+    ),
+    female: StrengthStandard(
+      novice: 0.4,
+      intermediate: 0.55,
+      advanced: 0.75,
+      elite: 0.95,
+    ),
+  ),
+  'seated_cable_row': (
+    male: StrengthStandard(
+      novice: 0.65,
+      intermediate: 0.9,
+      advanced: 1.2,
+      elite: 1.5,
+    ),
+    female: StrengthStandard(
+      novice: 0.4,
+      intermediate: 0.55,
+      advanced: 0.72,
+      elite: 0.9,
+    ),
+  ),
+  'barbell_shrug': (
+    male: StrengthStandard(
+      novice: 1.0,
+      intermediate: 1.5,
+      advanced: 2.1,
+      elite: 2.75,
+    ),
+    female: StrengthStandard(
+      novice: 0.6,
+      intermediate: 0.9,
+      advanced: 1.25,
+      elite: 1.65,
+    ),
+  ),
+  'upright_row': (
+    male: StrengthStandard(
+      novice: 0.4,
+      intermediate: 0.6,
+      advanced: 0.85,
+      elite: 1.1,
+    ),
+    female: StrengthStandard(
+      novice: 0.22,
+      intermediate: 0.33,
+      advanced: 0.47,
+      elite: 0.6,
+    ),
+  ),
+
+  // ---- Arms on a bar ----
+  'barbell_biceps_curl': (
+    male: StrengthStandard(
+      novice: 0.35,
+      intermediate: 0.5,
+      advanced: 0.75,
+      elite: 1.0,
+    ),
+    female: StrengthStandard(
+      novice: 0.2,
+      intermediate: 0.28,
+      advanced: 0.4,
+      elite: 0.55,
+    ),
+  ),
+  'preacher_curl': (
+    male: StrengthStandard(
+      novice: 0.3,
+      intermediate: 0.45,
+      advanced: 0.65,
+      elite: 0.85,
+    ),
+    female: StrengthStandard(
+      novice: 0.17,
+      intermediate: 0.25,
+      advanced: 0.36,
+      elite: 0.48,
+    ),
+  ),
+  'skull_crusher': (
+    male: StrengthStandard(
+      novice: 0.3,
+      intermediate: 0.45,
+      advanced: 0.65,
+      elite: 0.9,
+    ),
+    female: StrengthStandard(
+      novice: 0.17,
+      intermediate: 0.25,
+      advanced: 0.36,
+      elite: 0.5,
     ),
   ),
 };

@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/accent_color.dart';
 import '../../../shared/data/settings_repository.dart';
 import '../data/rank_inputs.dart';
-import '../data/strength_standards.dart';
 
 /// Asks for whatever a strength rank still needs.
 ///
