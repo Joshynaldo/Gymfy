@@ -23,6 +23,7 @@ import 'package:gymfy/shared/database/app_database.dart';
 /// Undoes what version N's migration branch added. Keyed by N, applied in
 /// descending order by [rewindTo].
 const _undoVersion = <int, List<String>>{
+  22: ['ALTER TABLE exercises DROP COLUMN bar_weight_kg'],
   21: [
     'ALTER TABLE logged_sets DROP COLUMN is_warmup',
     'ALTER TABLE workout_exercises DROP COLUMN warmup_sets',
@@ -103,13 +104,13 @@ void main() {
     final db = AppDatabase.forTesting(NativeDatabase.memory());
     addTearDown(db.close);
 
-    expect(db.schemaVersion, 21);
+    expect(db.schemaVersion, 22);
   });
 
   test('every version above the oldest test target can be wound back', () {
     // Guards the helper itself: a new migration with no undo entry would make
     // every rewind test below fail with a confusing SQL error instead of this.
-    for (var v = 10; v <= 21; v++) {
+    for (var v = 10; v <= 22; v++) {
       expect(_undoVersion.keys, contains(v), reason: 'no undo for v$v');
     }
   });

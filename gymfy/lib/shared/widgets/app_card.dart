@@ -8,6 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/theme/accent_color.dart';
+import '../../app/theme/glass.dart';
+import '../../app/theme/motion.dart';
+import 'pressable.dart';
 
 /// A tappable card, styled like the ones on the Home tab.
 ///
@@ -50,46 +53,132 @@ class AppCard extends ConsumerWidget {
     // Whatever the theme says a card is. Falls back only if a future theme
     // forgets to define one.
     final shapeBorder = cardTheme.shape as RoundedRectangleBorder?;
-    final shape = shapeBorder?.borderRadius as BorderRadius? ??
-        BorderRadius.circular(16);
+    final shape =
+        shapeBorder?.borderRadius as BorderRadius? ?? BorderRadius.circular(16);
     final themeSide = shapeBorder?.side ?? BorderSide.none;
+
+    final glass = glassOf(context);
+
+    // On a glass theme the card *is* a pane: the fill, the edge and the
+    // highlight all come from the material rather than from the palette, and
+    // the blur behind it is the point. Handing that to GlassSurface keeps the
+    // decision in one place — a card does not need to know which theme is on,
+    // only how a surface looks here.
+    if (glass.enabled) {
+      return Padding(
+        padding: margin,
+        child: Pressable(
+          borderRadius: shape,
+          onTap: onTap,
+          onLongPress: onLongPress,
+          // No ripple anywhere on a card: the press scale has replaced it. A
+          // ripple is light spreading *across* a surface and says nothing
+          // about the surface having been pushed — and here the ink is painted
+          // by a Material behind the pane, so on glass it would surface as a
+          // smudge under the tint and on the flat themes the opaque card
+          // covers it entirely. Painting ink nobody can see is pure cost.
+          splash: false,
+          child: GlassSurface(
+            borderRadius: shape,
+            selected: selected,
+            // Nothing sits behind a card but the backdrop's colour field, and
+            // blurring a smooth field gives back the same smooth field. See
+            // GlassSurface.blurs — this is forty offscreen passes saved on a
+            // scrolling list, for no visible difference.
+            blurs: false,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                // The one thing the material does not supply: which card you
+                // picked. Kept as an accent wash over the glass, so it reads
+                // the same as on every other theme.
+                color: selected
+                    ? accent.withValues(alpha: 0.16)
+                    : Colors.transparent,
+                borderRadius: shape,
+              ),
+              child: _InkHost(padding: padding, child: child),
+            ),
+          ),
+        ),
+      );
+    }
 
     return Padding(
       padding: margin,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        curve: Curves.easeOut,
-        decoration: BoxDecoration(
-          color: selected
-              ? Color.alphaBlend(
-                  accent.withValues(alpha: 0.12),
-                  cardTheme.color ?? theme.colorScheme.surface,
-                )
-              : cardTheme.color ?? theme.colorScheme.surface,
-          borderRadius: shape,
-          // The accent outline is the *only* border most themes draw, and only
-          // while selected — so when it appears it means "this is the one you
-          // picked" rather than being decoration every card wears.
-          border: Border.all(
+      child: Pressable(
+        borderRadius: shape,
+        onTap: onTap,
+        onLongPress: onLongPress,
+        splash: false,
+        child: AnimatedContainer(
+          duration: AppDurations.quick,
+          curve: AppCurves.settle,
+          decoration: BoxDecoration(
             color: selected
-                ? accent
-                : (themeSide.style == BorderStyle.none
-                      ? Colors.transparent
-                      : themeSide.color),
-            width: selected ? 1.6 : (themeSide.width == 0 ? 1 : themeSide.width),
-          ),
-        ),
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: shape,
-          child: InkWell(
+                ? Color.alphaBlend(
+                    accent.withValues(alpha: 0.12),
+                    cardTheme.color ?? theme.colorScheme.surface,
+                  )
+                : cardTheme.color ?? theme.colorScheme.surface,
             borderRadius: shape,
-            onTap: onTap,
-            onLongPress: onLongPress,
-            child: Padding(padding: padding, child: child),
+            // The accent outline is the *only* border most themes draw, and only
+            // while selected — so when it appears it means "this is the one you
+            // picked" rather than being decoration every card wears.
+            border: Border.all(
+              color: selected
+                  ? accent
+                  : (themeSide.style == BorderStyle.none
+                        ? Colors.transparent
+                        : themeSide.color),
+              width: selected
+                  ? 1.6
+                  : (themeSide.width == 0 ? 1 : themeSide.width),
+            ),
           ),
+          // A hairline of light along the top edge, fading out by the middle.
+          // This is the whole trick behind a surface looking like a pane of
+          // something rather than a grey rectangle: real light catches the top
+          // lip of a raised edge and nothing else. One gradient, no images.
+          foregroundDecoration: BoxDecoration(
+            borderRadius: shape,
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.white.withValues(alpha: selected ? 0.10 : 0.055),
+                Colors.white.withValues(alpha: 0),
+              ],
+              stops: const [0, 0.55],
+            ),
+          ),
+          child: _InkHost(padding: padding, child: child),
         ),
       ),
+    );
+  }
+}
+
+/// A transparent [Material] between the card's decoration and its contents.
+///
+/// Needed because [ListTile] — and anything else that paints a selection tint
+/// or an ink splash — draws onto the nearest Material *ancestor*. [Pressable]
+/// provides one, but it sits outside the card's own decorated box, so without
+/// this there is a painted surface in between and Flutter asserts that the
+/// tile's background "may be invisible". It is right: it would be.
+///
+/// The card had one of these before the press animation moved the Material
+/// outwards. This puts it back where the contents can find it.
+class _InkHost extends StatelessWidget {
+  const _InkHost({required this.padding, required this.child});
+
+  final EdgeInsetsGeometry padding;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      type: MaterialType.transparency,
+      child: Padding(padding: padding, child: child),
     );
   }
 }
@@ -210,8 +299,8 @@ class AppGlyph extends ConsumerWidget {
     final accent = ref.watch(accentColorProvider);
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 140),
-      curve: Curves.easeOut,
+      duration: AppDurations.quick,
+      curve: AppCurves.settle,
       width: 42,
       height: 42,
       decoration: BoxDecoration(
@@ -326,7 +415,11 @@ class AppPanel extends StatelessWidget {
             Row(
               children: [
                 if (icon != null) ...[
-                  Icon(icon, size: 20, color: theme.colorScheme.onSurfaceVariant),
+                  Icon(
+                    icon,
+                    size: 20,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                   const SizedBox(width: 10),
                 ],
                 if (title != null)

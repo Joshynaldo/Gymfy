@@ -14,6 +14,10 @@ import '../../../shared/widgets/fade_slide_in.dart';
 import '../../../shared/widgets/weight_wheel.dart';
 import '../data/measurement_units.dart';
 import '../data/measurements_repository.dart';
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../app/theme/glass.dart';
+import '../../../shared/widgets/glass_dialog.dart';
 
 /// The result of the measurement entry dialog. Wrapped in a record so that
 /// "cleared" (a null value) is distinguishable from "cancelled" (a null result).
@@ -41,47 +45,49 @@ class _MeasurementsScreenState extends ConsumerState<MeasurementsScreen> {
   Widget build(BuildContext context) {
     final historyAsync = ref.watch(measurementHistoryProvider);
 
-    return Scaffold(
-      appBar: AppBar(
+    return GlassScaffold(
+      appBar: GlassAppBar(
         title: const Text('Measurements'),
         actions: [
           IconButton(
             icon: const Icon(Icons.show_chart),
             tooltip: 'History',
-            onPressed: () => context.go('/progress/measurements/history'),
+            onPressed: () => context.go('/more/progress/measurements/history'),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          _DayNavigator(
-            day: _day,
-            onPrevious: () => _shiftDay(-1),
-            // Measuring yourself in the future isn't a thing.
-            onNext: _day.isBefore(dateOnly(DateTime.now()))
-                ? () => _shiftDay(1)
-                : null,
-          ),
-          Expanded(
-            child: historyAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(
-                    'Could not load measurements.\n$error',
-                    textAlign: TextAlign.center,
+      // The day stepper is fixed, so it is held clear of the app bar; only the
+      // list below it slides under the bars.
+      body: Padding(
+        padding: topBarInset(context),
+        child: Column(
+          children: [
+            _DayNavigator(
+              day: _day,
+              onPrevious: () => _shiftDay(-1),
+              // Measuring yourself in the future isn't a thing.
+              onNext: _day.isBefore(dateOnly(DateTime.now()))
+                  ? () => _shiftDay(1)
+                  : null,
+            ),
+            Expanded(
+              child: historyAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, _) => Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      'Could not load measurements.\n$error',
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
-              ),
-              data: (rows) => _DayForm(
-                day: _day,
-                rows: rows,
-                onEdit: _editField,
+                data: (rows) =>
+                    _DayForm(day: _day, rows: rows, onEdit: _editField),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -102,11 +108,9 @@ class _MeasurementsScreenState extends ConsumerState<MeasurementsScreen> {
     );
     if (input == null) return; // cancelled
 
-    await ref.read(measurementsRepositoryProvider).setField(
-      day: _day,
-      field: field,
-      value: input.value,
-    );
+    await ref
+        .read(measurementsRepositoryProvider)
+        .setField(day: _day, field: field, value: input.value);
   }
 }
 
@@ -148,11 +152,7 @@ class _DayNavigator extends StatelessWidget {
 
 /// The list of measurement fields for one day.
 class _DayForm extends StatelessWidget {
-  const _DayForm({
-    required this.day,
-    required this.rows,
-    required this.onEdit,
-  });
+  const _DayForm({required this.day, required this.rows, required this.onEdit});
 
   final DateTime day;
   final List<BodyMeasurement> rows;
@@ -176,7 +176,7 @@ class _DayForm extends StatelessWidget {
     final row = _today;
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(4, 0, 4, 24),
+      padding: const EdgeInsets.fromLTRB(4, 0, 4, 24) + bottomBarInset(context),
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
@@ -250,11 +250,11 @@ class _FieldTile extends ConsumerWidget {
               ),
             ),
           Text(
-            current == null
-                ? '—'
-                : field.formatWithUnit(current!, unit),
+            current == null ? '—' : field.formatWithUnit(current!, unit),
             style: theme.textTheme.titleMedium?.copyWith(
-              color: current == null ? theme.colorScheme.onSurfaceVariant : null,
+              color: current == null
+                  ? theme.colorScheme.onSurfaceVariant
+                  : null,
             ),
           ),
         ],
@@ -329,7 +329,7 @@ class _MeasurementDialogState extends State<_MeasurementDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return GlassDialog(
       title: Text(widget.field.label),
       // Only bodyweight gets the wheel. The others are centimetres, and a drum
       // of quarter-kilos would be offering the wrong steps in the wrong unit —

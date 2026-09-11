@@ -52,8 +52,7 @@ class _WeightWheelState extends ConsumerState<WeightWheel> {
   late final List<double> _fractions = widget.unit == WeightUnit.kg
       ? _kgFractions
       : _lbsFractions;
-  late final int _maxWhole =
-      widget.unit == WeightUnit.kg ? _maxKg : _maxLbs;
+  late final int _maxWhole = widget.unit == WeightUnit.kg ? _maxKg : _maxLbs;
 
   late final FixedExtentScrollController _wholeController;
   late final FixedExtentScrollController _fractionController;
@@ -150,6 +149,8 @@ class _WeightWheelState extends ConsumerState<WeightWheel> {
 
 String _fractionLabel(double fraction) {
   if (fraction == 0) return '.0';
-  return '.${(fraction * 100).round().toString().padLeft(2, '0')}'
-      .replaceAll(RegExp(r'0$'), '');
+  return '.${(fraction * 100).round().toString().padLeft(2, '0')}'.replaceAll(
+    RegExp(r'0$'),
+    '',
+  );
 }

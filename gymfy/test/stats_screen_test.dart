@@ -1,15 +1,50 @@
-// The Muscles tab's two readings: volume and fatigue share one body diagram,
-// and switching between them changes the data *and* what the caption claims
+// The Stats tab's muscle map: volume and fatigue share one body diagram, and
+// switching between them changes the data *and* what the caption claims
 // brightness means.
+//
+// The rank and all-time sections above and below the map are covered in
+// `stats_rank_test.dart`; here they are stubbed empty so a caption test isn't
+// also a test of six other providers.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gymfy/features/calculator/data/ranked_lifts.dart';
+import 'package:gymfy/features/home/data/activity_repository.dart';
+import 'package:gymfy/features/home/data/recap.dart';
+import 'package:gymfy/features/home/data/recap_repository.dart';
+import 'package:gymfy/features/muscle_map/data/muscle_colors.dart';
 import 'package:gymfy/features/muscle_map/data/muscle_fatigue_repository.dart';
 import 'package:gymfy/features/muscle_map/data/muscle_volume_repository.dart';
-import 'package:gymfy/features/muscle_map/screens/muscle_map_screen.dart';
+import 'package:gymfy/features/muscle_map/widgets/muscle_map_view.dart';
+import 'package:gymfy/features/progress/data/measurements_repository.dart';
+import 'package:gymfy/features/stats/screens/stats_screen.dart';
+import 'package:gymfy/features/workout/data/session_repository.dart';
+import 'package:gymfy/shared/database/app_database.dart';
 
 import 'support/default_accent.dart';
+
+/// Everything on this screen that would otherwise open a database.
+///
+/// Not laziness: a real database keeps drift's stream-cleanup timer alive, and
+/// the test binding fails a test that ends with a timer pending — so a screen
+/// this well connected has to be stubbed at its leaves or nothing here passes.
+final _quietData = [
+  measurementHistoryProvider.overrideWith(
+    (ref) => Stream.value(const <BodyMeasurement>[]),
+  ),
+  recapSetsProvider.overrideWith((ref) => Stream.value(const <RecapSet>[])),
+  activityMinutesProvider.overrideWith(
+    (ref) => Stream.value(const <DateTime, int>{}),
+  ),
+  workoutStreakProvider.overrideWith((ref) => Stream.value(0)),
+  // Ranking one lift reaches its logged history and its tested max, so this is
+  // overridden whole rather than at each of its several leaves.
+  rankedLiftsProvider.overrideWithValue((
+    ranked: const <RankedLift>[],
+    unlogged: const <String>[],
+  )),
+];
 
 Future<void> _pump(
   WidgetTester tester, {
@@ -19,14 +54,14 @@ Future<void> _pump(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        defaultAccentOverride,
-        defaultBodyFigureOverride,
+        ...defaultDisplayOverrides,
+        ..._quietData,
         weeklyMuscleIntensitiesProvider.overrideWith(
           (ref) => Stream.value(volume),
         ),
         muscleFatigueProvider.overrideWith((ref) => Stream.value(fatigue)),
       ],
-      child: const MaterialApp(home: MuscleMapScreen()),
+      child: const MaterialApp(home: StatsScreen()),
     ),
   );
   // Plain pumps, not pumpAndSettle: the body SVG is a real asset load that the
@@ -93,6 +128,23 @@ void main() {
     expect(find.textContaining('Training volume over the last 7 days'),
         findsOneWidget);
     expect(find.text('Muscle map'), findsOneWidget);
+  });
+
+  testWidgets('fatigue is red and volume follows the accent', (tester) async {
+    // The two readings share one diagram, so colour is what tells them apart
+    // at a glance. In the accent they were the same picture twice.
+    await _pump(tester);
+    expect(
+      tester.widget<MuscleMapView>(find.byType(MuscleMapView)).heatColor,
+      isNull,
+      reason: 'volume should keep following the chosen accent',
+    );
+
+    await _switchToFatigue(tester);
+    expect(
+      tester.widget<MuscleMapView>(find.byType(MuscleMapView)).heatColor,
+      fatigueColor,
+    );
   });
 
   testWidgets('the front/back toggle still works in fatigue mode', (

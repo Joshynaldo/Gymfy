@@ -15,6 +15,14 @@ import '../utils/exercise_preview.dart';
 /// edge of a list stays a straight column.
 const defaultThumbnailSize = 42.0;
 
+/// The tag that links a library row's still to the detail screen's player.
+///
+/// A function rather than a string written out at both ends, because a Hero
+/// whose two halves disagree by one character does not fail — it silently
+/// stops flying, which is indistinguishable from the animation not having been
+/// built yet.
+Object exerciseHeroTag(String exerciseId) => 'exercise-preview-$exerciseId';
+
 /// A still frame of an exercise's animation, for use in a list.
 ///
 /// Deliberately *not* animated. The detail screen plays the loop; a list plays
@@ -30,15 +38,31 @@ class ExerciseThumbnail extends ConsumerWidget {
     super.key,
     required this.gifPath,
     this.selected = false,
+    this.size = defaultThumbnailSize,
+    this.heroTag,
   });
+
+  /// Links this still to the matching preview on the detail screen, so tapping
+  /// the row flies the image up into place instead of cutting to a new screen.
+  ///
+  /// Off by default, and set on exactly one list. Two Heroes with the same tag
+  /// on screen at once is an assertion, and the exercise picker, the day
+  /// builder and the active workout all draw the same exercises — only the
+  /// library, which is what the detail screen is actually pushed from, carries
+  /// the tag.
+  final Object? heroTag;
 
   /// The exercise's declared asset path, or null for one with no animation.
   final String? gifPath;
 
-  /// Multi-select in the library replaces the thumbnail with a tick, the same
-  /// way `AppGlyph` does — the row has to say "picked" more loudly than it
-  /// says which exercise it is.
+  /// Multi-select replaces the thumbnail with a tick, the same way `AppGlyph`
+  /// does — the row has to say "picked" more loudly than it says which
+  /// exercise it is.
   final bool selected;
+
+  /// Side of the square. The pickers use the default; anywhere with more room
+  /// can ask for more without this growing a second layout.
+  final double size;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -48,10 +72,12 @@ class ExerciseThumbnail extends ConsumerWidget {
     if (selected || path == null || !isBundledAsset(path)) {
       // A custom exercise's image is a file the user picked, not a bundled
       // asset, and this widget only reads the bundle. Those keep the icon.
+      // No Hero either: an icon flying into a video would be a lie about what
+      // is on the other side.
       return _Fallback(accent: accent, selected: selected, size: size);
     }
 
-    return ClipRRect(
+    final still = ClipRRect(
       // Same radius as AppGlyph, so a list that mixes thumbnails and icons
       // still reads as one column.
       borderRadius: BorderRadius.circular(size / 3.2),
@@ -65,8 +91,7 @@ class ExerciseThumbnail extends ConsumerWidget {
             // this to the decoder rather than scaling afterwards means the
             // 360px source is resampled once, properly, and never held in
             // memory at full size — 78 rows of 360×360 RGBA would be 40MB.
-            pixelWidth:
-                (size * MediaQuery.devicePixelRatioOf(context)).round(),
+            pixelWidth: (size * MediaQuery.devicePixelRatioOf(context)).round(),
           ),
           fit: BoxFit.cover,
           filterQuality: FilterQuality.medium,
@@ -78,9 +103,20 @@ class ExerciseThumbnail extends ConsumerWidget {
             return const SizedBox.expand();
           },
           errorBuilder: (context, _, _) =>
-              _Fallback(accent: accent, selected: selected),
+              _Fallback(accent: accent, selected: selected, size: size),
         ),
       ),
+    );
+
+    if (heroTag == null) return still;
+
+    return Hero(
+      tag: heroTag!,
+      // The flight is a 42px square growing into a full-width one, so the
+      // shuttle keeps the still rather than swapping to the animation
+      // mid-flight — a loop starting halfway through a scale reads as a glitch.
+      flightShuttleBuilder: (_, _, _, _, _) => still,
+      child: still,
     );
   }
 }

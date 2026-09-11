@@ -87,8 +87,9 @@ class ThemePicker extends ConsumerWidget {
                 ),
                 const SizedBox(width: 8),
                 TextButton(
-                  onPressed: () =>
-                      ref.read(accentColorProvider.notifier).setAccent(suggested),
+                  onPressed: () => ref
+                      .read(accentColorProvider.notifier)
+                      .setAccent(suggested),
                   child: const Text('Use it'),
                 ),
               ],

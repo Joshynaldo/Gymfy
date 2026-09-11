@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app/router/app_router.dart';
 import 'app/theme/accent_color.dart';
 import 'app/theme/app_theme.dart';
+import 'app/theme/hyper_backdrop.dart';
 import 'features/exercises/data/exercise_repository.dart';
 import 'features/onboarding/data/onboarding_repository.dart';
 import 'features/onboarding/screens/onboarding_screen.dart';
@@ -20,10 +21,7 @@ Future<void> main() async {
   await container.read(exerciseRepositoryProvider).seed();
 
   runApp(
-    UncontrolledProviderScope(
-      container: container,
-      child: const GymfyApp(),
-    ),
+    UncontrolledProviderScope(container: container, child: const GymfyApp()),
   );
 }
 
@@ -52,6 +50,9 @@ class GymfyApp extends ConsumerWidget {
         theme: theme,
         darkTheme: theme,
         themeMode: ThemeMode.dark,
+        // The Hyper theme's glass needs a field behind it to refract; every
+        // other theme gets its child back untouched.
+        builder: (context, child) => HyperBackdrop(child: child!),
         home: const OnboardingScreen(),
       ),
       AsyncData(value: true) => MaterialApp.router(
@@ -61,6 +62,7 @@ class GymfyApp extends ConsumerWidget {
         theme: theme,
         darkTheme: theme,
         themeMode: ThemeMode.dark,
+        builder: (context, child) => HyperBackdrop(child: child!),
         routerConfig: ref.watch(goRouterProvider),
       ),
       // The single database read in flight, or it failed. Either way this is a

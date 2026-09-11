@@ -10,6 +10,9 @@ import '../../../shared/utils/format.dart';
 import '../../../shared/utils/weekday.dart';
 import '../data/workout_repository.dart';
 import '../screens/widgets/weekday_picker.dart';
+import '../../../app/theme/glass.dart';
+import '../../../shared/widgets/glass_dialog.dart';
+import '../../../shared/widgets/app_card.dart';
 
 /// Every day of one split, as a scrollable column of cards.
 ///
@@ -40,7 +43,8 @@ class SplitDayList extends ConsumerWidget {
       data: (days) {
         if (days.isEmpty) return const NoDaysYet();
         return ListView(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
+          padding:
+              const EdgeInsets.fromLTRB(12, 12, 12, 96) + barInsets(context),
           children: [
             for (final scheduled in days)
               DayCard(splitId: splitId, scheduled: scheduled),
@@ -54,11 +58,7 @@ class SplitDayList extends ConsumerWidget {
 /// One day, as a card: a header (name + count + actions), the weekday picker,
 /// and its exercises listed underneath.
 class DayCard extends ConsumerWidget {
-  const DayCard({
-    super.key,
-    required this.splitId,
-    required this.scheduled,
-  });
+  const DayCard({super.key, required this.splitId, required this.scheduled});
 
   final int splitId;
   final ScheduledDay scheduled;
@@ -73,9 +73,9 @@ class DayCard extends ConsumerWidget {
     final exercises = exercisesAsync.value ?? const [];
     final schedule = weekdaySummary(scheduled.weekdays);
 
-    return Card(
+    return AppCard(
       margin: const EdgeInsets.symmetric(vertical: 6),
-      clipBehavior: Clip.antiAlias,
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -151,7 +151,7 @@ class DayCard extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
-        return AlertDialog(
+        return GlassDialog(
           title: Text('Delete "${day.name}"?'),
           content: const Text(
             'This removes the day and its exercises. This cannot be undone.',

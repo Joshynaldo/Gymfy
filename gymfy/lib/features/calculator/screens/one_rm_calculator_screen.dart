@@ -8,6 +8,9 @@ import '../../../shared/widgets/fade_slide_in.dart';
 import '../../../shared/widgets/weight_wheel.dart';
 import '../../plates/screens/plate_calculator_screen.dart';
 import '../data/one_rm_math.dart';
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../app/theme/glass.dart';
 
 /// Estimates a one-rep max from a set you've actually done.
 ///
@@ -36,11 +39,12 @@ class _OneRmCalculatorScreenState extends ConsumerState<OneRmCalculatorScreen> {
         ? null
         : estimateOneRm(weight: weight, reps: _reps);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('1RM calculator')),
+    return GlassScaffold(
+      appBar: GlassAppBar(title: const Text('1RM calculator')),
       body: FadeSlideIn(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+          padding:
+              const EdgeInsets.fromLTRB(16, 12, 16, 32) + barInsets(context),
           children: [
             AppPanel(
               icon: Icons.fitness_center,

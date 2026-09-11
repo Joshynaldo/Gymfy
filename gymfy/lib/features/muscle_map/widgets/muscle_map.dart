@@ -91,7 +91,7 @@ Future<String> bodySvgTemplate(Ref ref, BodyFigure figure, BodySide side) {
 /// A body diagram whose muscles are tinted by how hard they've been worked.
 ///
 /// [intensities] maps a `MuscleId` to a 0.0–1.0 value. Each muscle is blended
-/// from the neutral rest colour (0) toward a target colour (1) — the accent in
+/// from the neutral rest colour (0) toward a target colour (1) — [heatColor] in
 /// [MuscleMapMode.heatmap], the muscle's own colour in
 /// [MuscleMapMode.contrast]. Muscles absent from the map (or set to 0) stay
 /// neutral in both, so "what have I not trained" reads the same either way.
@@ -102,11 +102,19 @@ class MuscleMap extends ConsumerWidget {
     required this.intensities,
     this.mode = MuscleMapMode.heatmap,
     this.figure,
+    this.heatColor,
   });
 
   final BodySide side;
   final Map<String, double> intensities;
   final MuscleMapMode mode;
+
+  /// The colour muscles are tinted toward in [MuscleMapMode.heatmap].
+  ///
+  /// Defaults to the accent. The fatigue reading overrides it with a fixed red:
+  /// volume and fatigue share this diagram, so colour is what tells them apart
+  /// at a glance. Ignored in contrast mode, where each muscle brings its own.
+  final Color? heatColor;
 
   /// Which figure to draw. Defaults to whatever the user told us during
   /// onboarding — see [bodyFigureProvider].
@@ -124,14 +132,16 @@ class MuscleMap extends ConsumerWidget {
       child: templateAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
-          child: Text('Could not load the body map.\n$error',
-              textAlign: TextAlign.center),
+          child: Text(
+            'Could not load the body map.\n$error',
+            textAlign: TextAlign.center,
+          ),
         ),
         data: (template) {
           final svg = tintMuscles(
             svg: template,
             intensities: intensities,
-            accent: accent,
+            heatColor: heatColor ?? accent,
             mode: mode,
           );
           return SvgPicture.string(svg, fit: BoxFit.contain);
@@ -148,7 +158,13 @@ class MuscleMap extends ConsumerWidget {
 String tintMuscles({
   required String svg,
   required Map<String, double> intensities,
-  required Color accent,
+
+  /// What a fully-worked muscle is tinted to in [MuscleMapMode.heatmap].
+  ///
+  /// Named for what it does rather than where it usually comes from: it was
+  /// `accent`, which stopped being true once the fatigue reading started
+  /// passing a fixed red.
+  required Color heatColor,
   MuscleMapMode mode = MuscleMapMode.heatmap,
 }) {
   return svg.replaceAllMapped(_muscleFill, (match) {
@@ -166,7 +182,7 @@ String tintMuscles({
       }
     }
     final target = switch (mode) {
-      MuscleMapMode.heatmap => accent,
+      MuscleMapMode.heatmap => heatColor,
       MuscleMapMode.contrast => muscleColor(strongest),
     };
     final color = Color.lerp(_restColor, target, t)!;

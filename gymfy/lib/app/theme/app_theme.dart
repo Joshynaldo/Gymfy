@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/data/settings_repository.dart';
+import 'glass.dart';
+import 'motion.dart';
 
 /// Central definition of Gymfy's look-and-feel.
 ///
@@ -165,6 +167,35 @@ enum AppTheme {
       outline: Color(0xFF504945),
     ),
     suggestedAccent: Color(0xFFFABD2F),
+  ),
+
+  /// Hyper — the glass one, and the only theme that is a *construction* rather
+  /// than a palette.
+  ///
+  /// Everything else here recolours flat opaque cards. This one makes every
+  /// surface translucent and blurs what is behind it, which only works because
+  /// there is something behind it to blur: the app paints a slow atmospheric
+  /// field under the whole screen (see `HyperBackdrop`). Glass over a flat
+  /// black background is just a slightly different grey — the backdrop is not
+  /// decoration, it is the half of the effect that makes the other half read.
+  ///
+  /// The palette is deep indigo rather than neutral so the blur has colour to
+  /// pick up, and the surfaces are near-transparent because the tint is doing
+  /// the work the fill used to do.
+  hyper(
+    'Hyper',
+    'Translucent glass over a living backdrop.',
+    AppPalette(
+      background: Color(0xFF07070F),
+      // Barely there: on this theme the real surface is the tint in
+      // [GlassStyle], and an opaque fill here would paint over the blur.
+      surface: Color(0xFF12121E),
+      surfaceHigh: Color(0xFF1B1B2C),
+      textPrimary: Color(0xFFF2F3FA),
+      textMuted: Color(0xFF9EA0BC),
+      outline: Color(0xFF2B2C45),
+    ),
+    suggestedAccent: Color(0xFF7C6BFF),
   );
 
   const AppTheme(
@@ -220,7 +251,9 @@ final appThemeProvider = Provider<AppTheme>((ref) {
 
 /// Stores a theme choice, from a widget. Mirrors `setWeightUnit` in units.dart.
 Future<void> setAppTheme(WidgetRef ref, AppTheme theme) {
-  return ref.read(settingsRepositoryProvider).write(appThemeSetting, theme.name);
+  return ref
+      .read(settingsRepositoryProvider)
+      .write(appThemeSetting, theme.name);
 }
 
 /// Builds the [ThemeData] for [theme], tinted by [accent].
@@ -231,18 +264,19 @@ ThemeData buildAppTheme(AppTheme theme, Color accent) {
   // Seed a Material 3 dark scheme from the accent, then pin the key roles so
   // the accent stays crisp and the palette's greys aren't overridden by the
   // scheme's generated ones.
-  final scheme = ColorScheme.fromSeed(
-    seedColor: accent,
-    brightness: Brightness.dark,
-  ).copyWith(
-    primary: accent,
-    surface: palette.surface,
-    onSurface: palette.textPrimary,
-    onSurfaceVariant: palette.textMuted,
-    surfaceContainerHighest: palette.surfaceHigh,
-    outline: palette.outline,
-    outlineVariant: palette.outline,
-  );
+  final scheme =
+      ColorScheme.fromSeed(
+        seedColor: accent,
+        brightness: Brightness.dark,
+      ).copyWith(
+        primary: accent,
+        surface: palette.surface,
+        onSurface: palette.textPrimary,
+        onSurfaceVariant: palette.textMuted,
+        surfaceContainerHighest: palette.surfaceHigh,
+        outline: palette.outline,
+        outlineVariant: palette.outline,
+      );
 
   // Derived rather than listed per theme, so a new palette can't accidentally
   // ship invisible cards. A card needs an outline when it doesn't stand out
@@ -250,7 +284,8 @@ ThemeData buildAppTheme(AppTheme theme, Color accent) {
   // high contrast wants a heavier one, since there edges do the work that
   // colour differences do elsewhere.
   final surfaceIsFlat =
-      (palette.surface.computeLuminance() - palette.background.computeLuminance())
+      (palette.surface.computeLuminance() -
+              palette.background.computeLuminance())
           .abs() <
       0.01;
   final cardBorder = switch (theme) {
@@ -259,12 +294,53 @@ ThemeData buildAppTheme(AppTheme theme, Color accent) {
     _ => BorderSide.none,
   };
 
+  // Hyper is the only theme whose surfaces are a material rather than a fill.
+  // Carried on the ThemeData so widgets ask "how does a surface look here"
+  // instead of testing which theme is on.
+  final glass = theme == AppTheme.hyper
+      ? GlassStyle(
+          enabled: true,
+          // Enough that what shows through is colour and movement, never
+          // legible content. A surface you can read the screen through is a
+          // window, not a material.
+          blur: 24,
+          // Cool white at low alpha rather than the accent: tinting the glass
+          // itself with the accent made every pane the same hue as the thing
+          // it contained, and the accent stopped meaning "this matters".
+          tint: const Color(0x14FFFFFF),
+          highlight: const Color(0x2EFFFFFF),
+          edge: const Color(0x24FFFFFF),
+        )
+      : const GlassStyle.off();
+
   return ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
     colorScheme: scheme,
-    scaffoldBackgroundColor: palette.background,
+    extensions: [glass],
+    // Transparent on a glass theme so the backdrop painted underneath shows
+    // through every scaffold; opaque everywhere else, as before.
+    scaffoldBackgroundColor: glass.enabled
+        ? Colors.transparent
+        : palette.background,
     canvasColor: palette.background,
+
+    // Every pushed screen in the app, in one line. go_router builds Material
+    // pages, Material pages ask the theme how to transition, so this reaches
+    // routes that no longer have to know anything about it.
+    //
+    // iOS and macOS are left on Cupertino's own transition on purpose: that
+    // builder is also what installs the swipe-from-the-left-edge back gesture,
+    // and replacing it would trade a nicer animation for a navigation gesture
+    // every iPhone user has in their hands.
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: {
+        TargetPlatform.android: GymfyPageTransitionsBuilder(),
+        TargetPlatform.linux: GymfyPageTransitionsBuilder(),
+        TargetPlatform.windows: GymfyPageTransitionsBuilder(),
+        TargetPlatform.fuchsia: GymfyPageTransitionsBuilder(),
+      },
+    ),
 
     // Flat app bar, no shadow line.
     appBarTheme: AppBarTheme(

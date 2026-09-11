@@ -14,6 +14,22 @@ enum MuscleMapMode {
   contrast,
 }
 
+/// The heat colour for the fatigue reading.
+///
+/// Fixed red rather than the accent, and for once that is the point. Volume and
+/// fatigue share one body diagram, so on a screen where you flip between them
+/// the *colour* has to carry which one you are looking at — in the accent they
+/// were the same picture twice, and a glance could not tell "I trained this
+/// hard" from "this is not recovered". Red is also the one hue nobody has to be
+/// taught here: it means sore, not ready, back off.
+///
+/// None of the six accent options is red, so for most users this reads as a
+/// clearly different colour. It is not guaranteed: pink and orange are the
+/// nearest neighbours, and a theme may suggest an accent of its own. Someone on
+/// pink gets two warm hues rather than two identical ones — worth accepting,
+/// because the alternative is denying them an accent they chose.
+const fatigueColor = Color(0xFFE04B4B);
+
 /// A distinct colour per muscle group, for [MuscleMapMode.contrast].
 ///
 /// Chosen to be far apart from each other rather than anatomically meaningful —
@@ -35,7 +51,6 @@ const _muscleColors = <String, Color>{
   MuscleId.obliques: Color(0xFFF28E2B), // orange
   MuscleId.quads: Color(0xFF17BECF), // cyan
   MuscleId.adductors: Color(0xFF9C755F), // brown
-
   // --- Back ---
   MuscleId.trapezius: Color(0xFFD4A6C8), // light purple
   MuscleId.rearDeltoid: Color(0xFF59A14F), // green
@@ -45,7 +60,6 @@ const _muscleColors = <String, Color>{
   MuscleId.glutes: Color(0xFFBAB0AC), // warm grey
   MuscleId.hamstrings: Color(0xFFD37295), // dark pink
   MuscleId.calves: Color(0xFFFFBE7D), // peach
-
   // --- Neutral ---
   // No exercise in the library trains the neck, so it gets the one colour that
   // recedes rather than competing for attention.

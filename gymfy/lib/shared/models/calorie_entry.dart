@@ -24,6 +24,5 @@ class CalorieEntries extends Table {
   IntColumn get fat => integer().withDefault(const Constant(0))();
 
   /// Exact time the entry was logged — used to order items within a day.
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }

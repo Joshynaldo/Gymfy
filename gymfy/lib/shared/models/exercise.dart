@@ -51,7 +51,23 @@ class Exercises extends Table {
   ///
   /// Drives how the log-set dialog opens — stacking plates for these, typing a
   /// number for everything else.
-  BoolColumn get isPlateLoaded => boolean().withDefault(const Constant(false))();
+  BoolColumn get isPlateLoaded =>
+      boolean().withDefault(const Constant(false))();
+
+  /// What the empty bar or carriage weighs, in kilograms, or null to use the
+  /// gym-wide default for the unit.
+  ///
+  /// Per exercise because "plate-loaded" does not mean "on a barbell". A
+  /// T-bar row, a hack squat, a leg press: plates go on, but there is no 20 kg
+  /// bar in the equation, and the calculator's total was wrong by exactly one
+  /// bar every time. Zero is a legitimate value here and means what it says —
+  /// nothing to add.
+  ///
+  /// Deliberately *not* set by [exerciseSeedData]. The seed upsert rewrites
+  /// every built-in row on launch, but only the columns its companions carry,
+  /// so leaving this one absent is what lets a value the user chose survive.
+  /// `exercise_bar_test.dart` re-seeds and checks exactly that.
+  RealColumn get barWeightKg => real().nullable()();
 
   /// True for exercises the user created themselves.
   ///

@@ -123,5 +123,7 @@ final weightUnitProvider = Provider<WeightUnit>((ref) {
 
 /// Stores the user's choice.
 Future<void> setWeightUnit(WidgetRef ref, WeightUnit unit) {
-  return ref.read(settingsRepositoryProvider).write(weightUnitSetting, unit.name);
+  return ref
+      .read(settingsRepositoryProvider)
+      .write(weightUnitSetting, unit.name);
 }

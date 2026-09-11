@@ -34,7 +34,7 @@ void main() {
     return tintMuscles(
       svg: svgWith(regions),
       intensities: intensities,
-      accent: AccentPalette.blue,
+      heatColor: AccentPalette.blue,
       mode: mode,
     );
   }

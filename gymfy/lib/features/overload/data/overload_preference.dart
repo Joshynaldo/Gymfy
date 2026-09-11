@@ -164,9 +164,6 @@ Future<void> setOverloadConfig(WidgetRef ref, OverloadConfig config) async {
   if (config.deloadWeeks == null) {
     await settings.clear(overloadDeloadSetting);
   } else {
-    await settings.write(
-      overloadDeloadSetting,
-      config.deloadWeeks.toString(),
-    );
+    await settings.write(overloadDeloadSetting, config.deloadWeeks.toString());
   }
 }

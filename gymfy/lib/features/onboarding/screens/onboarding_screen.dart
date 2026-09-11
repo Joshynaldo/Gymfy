@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../shared/data/body_profile.dart';
 import '../../../shared/data/lifter_sex.dart';
 import '../../../shared/utils/units.dart';
 import '../../../shared/widgets/accent_swatch.dart';
+import '../../../shared/widgets/app_picker.dart';
 import '../../../shared/widgets/weight_wheel.dart';
 import '../../overload/widgets/overload_settings.dart';
 import '../data/onboarding_repository.dart';
@@ -33,6 +35,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   /// The lifter's sex, or null for skipped / "rather not say".
   LifterSex? _sex;
+
+  /// Height in centimetres and age in years, or null for skipped.
+  int? _heightCm;
+  int? _age;
 
   /// Which page is showing, so the buttons and dots can follow along.
   int _page = 0;
@@ -69,14 +75,18 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     setState(() => _saving = true);
     // No navigation afterwards: finishing flips onboardingCompleteProvider,
     // and the app root swaps this screen out for the router.
-    await ref.read(onboardingRepositoryProvider).finish(
-      name: _name.text,
-      // Picked in whichever unit the page was showing; stored as kilograms.
-      bodyweightKg: _weight <= 0
-          ? null
-          : weightToKilograms(_weight, ref.read(weightUnitProvider)),
-      sex: _sex,
-    );
+    await ref
+        .read(onboardingRepositoryProvider)
+        .finish(
+          name: _name.text,
+          // Picked in whichever unit the page was showing; stored as kilograms.
+          bodyweightKg: _weight <= 0
+              ? null
+              : weightToKilograms(_weight, ref.read(weightUnitProvider)),
+          sex: _sex,
+          heightCm: _heightCm,
+          birthYear: _age == null ? null : birthYearForAge(_age!),
+        );
   }
 
   @override
@@ -101,6 +111,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   _BodyweightPage(
                     weight: _weight,
                     onChanged: (value) => _weight = value,
+                    heightCm: _heightCm,
+                    onHeightChanged: (value) =>
+                        setState(() => _heightCm = value),
+                    age: _age,
+                    onAgeChanged: (value) => setState(() => _age = value),
                   ),
                   const _OverloadPage(),
                   const _AccentPage(),
@@ -153,11 +168,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
 /// Shared layout for a step, so every page reads as one flow.
 class _Step extends StatelessWidget {
-  const _Step({
-    required this.title,
-    required this.body,
-    required this.child,
-  });
+  const _Step({required this.title, required this.body, required this.child});
 
   final String title;
   final String body;
@@ -270,11 +281,25 @@ class _NamePage extends StatelessWidget {
 /// it here also sets the app-wide preference, so the rest of the app is right
 /// from the first screen.
 class _BodyweightPage extends ConsumerWidget {
-  const _BodyweightPage({required this.weight, required this.onChanged});
+  const _BodyweightPage({
+    required this.weight,
+    required this.onChanged,
+    required this.heightCm,
+    required this.onHeightChanged,
+    required this.age,
+    required this.onAgeChanged,
+  });
 
   /// In the display unit; zero means skipped.
   final double weight;
   final ValueChanged<double> onChanged;
+
+  /// Null until given — the same "skipped" the other answers use.
+  final int? heightCm;
+  final ValueChanged<int?> onHeightChanged;
+
+  final int? age;
+  final ValueChanged<int?> onAgeChanged;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -309,6 +334,54 @@ class _BodyweightPage extends ConsumerWidget {
             unit: unit,
             label: 'Bodyweight',
             onChanged: onChanged,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: AppPickerField(
+                  icon: Icons.height,
+                  label: 'Height',
+                  value: heightCm == null
+                      ? 'Skip'
+                      : formatHeight(heightCm!, unit),
+                  onTap: () async {
+                    final picked = await showNumberPicker(
+                      context: context,
+                      title: 'How tall are you?',
+                      min: minHeightCm,
+                      max: maxHeightCm,
+                      initial: heightCm ?? 175,
+                      format: (cm) => formatHeight(cm, unit),
+                    );
+                    if (picked != null) onHeightChanged(picked);
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: AppPickerField(
+                  icon: Icons.cake_outlined,
+                  label: 'Age',
+                  value: age == null ? 'Skip' : '$age',
+                  onTap: () async {
+                    final picked = await showNumberPicker(
+                      context: context,
+                      title: 'How old are you?',
+                      min: minAge,
+                      max: maxAge,
+                      initial: age ?? 30,
+                      // Stored as a year of birth, so it stays right after
+                      // your next birthday.
+                      helper:
+                          'Kept as your year of birth, so it stays '
+                          'correct.',
+                    );
+                    if (picked != null) onAgeChanged(picked);
+                  },
+                ),
+              ),
+            ],
           ),
         ],
       ),

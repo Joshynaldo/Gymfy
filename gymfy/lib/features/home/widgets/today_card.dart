@@ -10,6 +10,8 @@ import '../../../shared/utils/format.dart';
 import '../../../shared/utils/weekday.dart';
 import '../../workout/data/session_repository.dart';
 import '../../workout/data/workout_repository.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../app/theme/motion.dart';
 
 /// The centrepiece of the Home tab: what today is.
 ///
@@ -32,35 +34,71 @@ class TodayCard extends ConsumerWidget {
     final activeSplit = ref.watch(activeSplitProvider).value;
     final dayAsync = ref.watch(dayForWeekdayProvider(weekday));
 
-    // Held back until the query answers, rather than flashing "Rest day" and
-    // correcting itself a frame later.
-    if (dayAsync.isLoading) {
-      return const _CardShell(child: SizedBox(height: 96));
-    }
     final day = dayAsync.value;
 
-    if (activeSplit == null) {
-      return _MessageCard(
-        weekday: weekday,
-        icon: Icons.help_outline,
-        title: 'No active split',
-        // Names what the Workout tab now asks for, so the two screens agree.
-        message: 'Pick the programme you are following to plan your week.',
-        actionLabel: 'Choose a split',
-        onAction: () => context.go('/workout'),
-      );
-    }
+    // The four states, each with a key naming it. The key is what lets the
+    // switcher below tell "the same card with new numbers" from "a different
+    // card" — without one it would cross-fade every time the volume ticked.
+    final (String state, Widget card) = switch (null) {
+      // Held back until the query answers, rather than flashing "Rest day" and
+      // correcting itself a frame later.
+      _ when dayAsync.isLoading => (
+        'loading',
+        const _CardShell(child: SizedBox(height: 96)),
+      ),
+      _ when activeSplit == null => (
+        'no-split',
+        _MessageCard(
+          weekday: weekday,
+          icon: Icons.help_outline,
+          title: 'No active split',
+          // Names what the Workout tab now asks for, so the two screens agree.
+          message: 'Pick the programme you are following to plan your week.',
+          actionLabel: 'Choose a split',
+          onAction: () => context.go('/workout'),
+        ),
+      ),
+      _ when day == null => (
+        'rest',
+        _MessageCard(
+          weekday: weekday,
+          icon: Icons.bedtime_outlined,
+          title: 'Rest day',
+          message: 'Nothing scheduled in ${activeSplit.name}.',
+        ),
+      ),
+      _ => (
+        'workout',
+        _WorkoutCard(weekday: weekday, split: activeSplit, day: day),
+      ),
+    };
 
-    if (day == null) {
-      return _MessageCard(
-        weekday: weekday,
-        icon: Icons.bedtime_outlined,
-        title: 'Rest day',
-        message: 'Nothing scheduled in ${activeSplit.name}.',
-      );
-    }
-
-    return _WorkoutCard(weekday: weekday, split: activeSplit, day: day);
+    // This card is the first thing on the Home tab and it changes underneath
+    // you: the split loads, a workout starts, the day rolls over. Swapping the
+    // contents between two frames reads as a glitch — as though the screen had
+    // been showing the wrong thing and corrected itself. Crossing over, at the
+    // size it needs, reads as the card knowing something new.
+    return AnimatedSize(
+      duration: motionOf(context, AppDurations.standard),
+      curve: AppCurves.settle,
+      alignment: Alignment.topCenter,
+      child: AnimatedSwitcher(
+        duration: motionOf(context, AppDurations.standard),
+        switchInCurve: AppCurves.settle,
+        switchOutCurve: AppCurves.exit,
+        // The default stacks the outgoing child under the incoming one and
+        // sizes to the largest. Inside an AnimatedSize that fights the resize,
+        // so the outgoing card is taken out of the layout and only painted.
+        layoutBuilder: (current, previous) => Stack(
+          alignment: Alignment.topCenter,
+          children: [
+            for (final child in previous) Positioned.fill(child: child),
+            ?current,
+          ],
+        ),
+        child: KeyedSubtree(key: ValueKey(state), child: card),
+      ),
+    );
   }
 }
 
@@ -267,9 +305,9 @@ class _CardShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: Padding(padding: const EdgeInsets.all(16), child: child),
-    );
+    // AppCard, not a bare Material Card. Home was the last tab still drawing
+    // its own surfaces, so its centrepiece missed the glass pane, the press
+    // scale and the highlight every other card in the app has.
+    return AppCard(padding: const EdgeInsets.all(16), child: child);
   }
 }

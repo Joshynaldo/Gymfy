@@ -10,6 +10,9 @@ import '../../../shared/widgets/fade_slide_in.dart';
 import '../../../shared/widgets/weight_wheel.dart';
 import '../data/plate_math.dart';
 import '../widgets/barbell_diagram.dart';
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../app/theme/glass.dart';
 
 /// Opens the plate calculator over the current screen, prefilled with
 /// [weight] in the display unit.
@@ -51,8 +54,7 @@ class PlateCalculatorScreen extends ConsumerStatefulWidget {
       _PlateCalculatorScreenState();
 }
 
-class _PlateCalculatorScreenState
-    extends ConsumerState<PlateCalculatorScreen> {
+class _PlateCalculatorScreenState extends ConsumerState<PlateCalculatorScreen> {
   /// Target weight in the display unit. Zero means "nothing asked for yet".
   late double _target = widget.initialWeight ?? 0;
 
@@ -62,11 +64,12 @@ class _PlateCalculatorScreenState
     final plates = ref.watch(availablePlatesProvider);
     final bar = ref.watch(barWeightProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Plate calculator')),
+    return GlassScaffold(
+      appBar: GlassAppBar(title: const Text('Plate calculator')),
       body: FadeSlideIn(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+          padding:
+              const EdgeInsets.fromLTRB(16, 12, 16, 32) + barInsets(context),
           children: [
             // The two inputs share one panel: they are a single question —
             // "what am I loading, and onto what" — and splitting them into two
@@ -122,7 +125,10 @@ class _BarPicker extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final bars = unit == WeightUnit.kg ? barsKg : barsLbs;
+    // Includes "None". Plate-loaded does not mean barbell: a hack squat or a
+    // leg press takes plates onto a carriage, and adding a bar that isn't
+    // there made every total wrong by exactly one bar.
+    final bars = barOptionsFor(unit);
     final key = unit == WeightUnit.kg ? barKgSetting : barLbsSetting;
 
     return Column(
@@ -140,10 +146,7 @@ class _BarPicker extends ConsumerWidget {
           child: SegmentedButton<double>(
             segments: [
               for (final bar in bars)
-                ButtonSegment(
-                  value: bar,
-                  label: Text('${formatPlate(bar)} ${unit.label}'),
-                ),
+                ButtonSegment(value: bar, label: Text(formatBar(bar, unit))),
             ],
             selected: {selected},
             showSelectedIcon: false,

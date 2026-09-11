@@ -12,8 +12,23 @@ import 'package:gymfy/shared/database/app_database.dart';
 
 import 'support/default_accent.dart';
 
+/// The labels the bottom bar actually offers.
+///
+/// Read off the destinations rather than searched for as text: Home also
+/// carries a "Progress" link now, so `find.text('Progress')` passes whether or
+/// not the tab exists — which is exactly how this test kept passing after the
+/// tab was removed.
+List<String> _tabLabels(WidgetTester tester) {
+  return tester
+      .widget<NavigationBar>(find.byType(NavigationBar))
+      .destinations
+      .cast<NavigationDestination>()
+      .map((d) => d.label)
+      .toList();
+}
+
 void main() {
-  testWidgets('Gymfy boots and shows the four main tabs', (tester) async {
+  testWidgets('Gymfy boots and shows the five main tabs', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -31,12 +46,33 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // The bottom navigation bar is present...
     expect(find.byType(NavigationBar), findsOneWidget);
+    expect(_tabLabels(tester), [
+      'Home',
+      'Workout',
+      'Exercises',
+      'Stats',
+      'More',
+    ]);
+  });
 
-    // ...with all four main tab labels.
-    for (final label in ['Workout', 'Exercises', 'Muscles', 'Progress']) {
-      expect(find.text(label), findsAtLeastNWidgets(1));
-    }
+  testWidgets('Progress is not a tab any more', (tester) async {
+    // Six destinations crowded the bar into unreadable labels. Progress was
+    // the one to go: it is consulted after training rather than reached for
+    // during it. It lives under More, with a link from Home.
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          defaultAccentOverride,
+          onboardingCompleteProvider.overrideWith((ref) => Stream.value(true)),
+          splitListProvider.overrideWith((ref) => Stream.value(<Split>[])),
+        ],
+        child: const GymfyApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(_tabLabels(tester), isNot(contains('Progress')));
+    expect(_tabLabels(tester), hasLength(5));
   });
 }

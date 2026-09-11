@@ -7,6 +7,9 @@ import '../../../shared/widgets/bar_chart.dart';
 import '../../../shared/widgets/fade_slide_in.dart';
 import '../data/calorie_repository.dart';
 import '../data/weekly_overview_repository.dart';
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../app/theme/glass.dart';
 
 /// The weekly overview: the last seven days of calories against the daily goal.
 class WeeklyOverviewScreen extends ConsumerWidget {
@@ -16,8 +19,8 @@ class WeeklyOverviewScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final weekAsync = ref.watch(weeklyOverviewProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('This week')),
+    return GlassScaffold(
+      appBar: GlassAppBar(title: const Text('This week')),
       body: weekAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
@@ -31,7 +34,8 @@ class WeeklyOverviewScreen extends ConsumerWidget {
         ),
         data: (week) => FadeSlideIn(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            padding:
+                const EdgeInsets.fromLTRB(16, 8, 16, 24) + barInsets(context),
             children: [_CaloriesSection(week: week)],
           ),
         ),
@@ -57,7 +61,10 @@ class _CaloriesSection extends StatelessWidget {
     final onTarget = logged.where((d) => d.calories <= goal).length;
 
     // Leave headroom above whichever is higher: the goal line or the biggest day.
-    final peak = week.fold<int>(goal, (m, d) => d.calories > m ? d.calories : m);
+    final peak = week.fold<int>(
+      goal,
+      (m, d) => d.calories > m ? d.calories : m,
+    );
 
     return AppPanel(
       icon: Icons.local_fire_department_outlined,

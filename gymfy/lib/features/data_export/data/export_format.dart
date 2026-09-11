@@ -83,20 +83,22 @@ String toCsv(List<ExportSet> sets) {
   final buffer = StringBuffer()..writeln(csvColumns.join(','));
 
   for (final set in sets) {
-    buffer.writeln([
-      _date(set.performedAt),
-      _time(set.performedAt),
-      set.sessionName,
-      set.exerciseName,
-      // Semicolons inside the field, not commas: a comma here would be quoted
-      // correctly but still trips up every naive splitter someone points at it.
-      set.muscleIds.join('; '),
-      '${set.setNumber}',
-      set.isWarmup ? 'warmup' : 'working',
-      _number(set.weightKg),
-      '${set.reps}',
-      _number(set.weightKg * set.reps),
-    ].map(csvField).join(','));
+    buffer.writeln(
+      [
+        _date(set.performedAt),
+        _time(set.performedAt),
+        set.sessionName,
+        set.exerciseName,
+        // Semicolons inside the field, not commas: a comma here would be quoted
+        // correctly but still trips up every naive splitter someone points at it.
+        set.muscleIds.join('; '),
+        '${set.setNumber}',
+        set.isWarmup ? 'warmup' : 'working',
+        _number(set.weightKg),
+        '${set.reps}',
+        _number(set.weightKg * set.reps),
+      ].map(csvField).join(','),
+    );
   }
 
   return buffer.toString();
@@ -194,8 +196,7 @@ String exportFileName(String extension, {DateTime? on}) {
   return 'gymfy-workouts-${_date(day)}.$extension';
 }
 
-String _date(DateTime dt) =>
-    '${dt.year}-${_two(dt.month)}-${_two(dt.day)}';
+String _date(DateTime dt) => '${dt.year}-${_two(dt.month)}-${_two(dt.day)}';
 
 String _time(DateTime dt) => '${_two(dt.hour)}:${_two(dt.minute)}';
 

@@ -95,7 +95,7 @@ void main() {
     test('finishing flips the gate', () async {
       await container
           .read(onboardingRepositoryProvider)
-          .finish(name: 'Joshua', bodyweightKg: 82, sex: null);
+          .finish(name: 'Joshua', bodyweightKg: 82, sex: null, heightCm: null, birthYear: null);
 
       expect(await firstValue(onboardingCompleteProvider), isTrue);
     });
@@ -105,7 +105,7 @@ void main() {
     test('saves the name and the bodyweight', () async {
       await container
           .read(onboardingRepositoryProvider)
-          .finish(name: 'Joshua', bodyweightKg: 82.5, sex: null);
+          .finish(name: 'Joshua', bodyweightKg: 82.5, sex: null, heightCm: null, birthYear: null);
 
       expect(await firstValue(userNameProvider), 'Joshua');
 
@@ -117,7 +117,7 @@ void main() {
     test('a skipped name is not stored as an empty string', () async {
       await container
           .read(onboardingRepositoryProvider)
-          .finish(name: '', bodyweightKg: null, sex: null);
+          .finish(name: '', bodyweightKg: null, sex: null, heightCm: null, birthYear: null);
 
       expect(await firstValue(userNameProvider), isNull);
       expect(
@@ -129,7 +129,7 @@ void main() {
     test('a name is trimmed rather than stored with its spaces', () async {
       await container
           .read(onboardingRepositoryProvider)
-          .finish(name: '  Joshua  ', bodyweightKg: null, sex: null);
+          .finish(name: '  Joshua  ', bodyweightKg: null, sex: null, heightCm: null, birthYear: null);
 
       expect(await firstValue(userNameProvider), 'Joshua');
     });
@@ -137,7 +137,7 @@ void main() {
     test('whitespace alone counts as skipped', () async {
       await container
           .read(onboardingRepositoryProvider)
-          .finish(name: '   ', bodyweightKg: null, sex: null);
+          .finish(name: '   ', bodyweightKg: null, sex: null, heightCm: null, birthYear: null);
 
       expect(await firstValue(userNameProvider), isNull);
     });
@@ -145,7 +145,7 @@ void main() {
     test('a skipped bodyweight leaves no measurement behind', () async {
       await container
           .read(onboardingRepositoryProvider)
-          .finish(name: 'Joshua', bodyweightKg: null, sex: null);
+          .finish(name: 'Joshua', bodyweightKg: null, sex: null, heightCm: null, birthYear: null);
 
       // Not a 0 kg row: that would read as a real weigh-in everywhere else,
       // and would be skipped as bodyweight-only by the 1RM estimator.
@@ -156,15 +156,15 @@ void main() {
     test('a zero bodyweight is refused, not written', () async {
       await container
           .read(onboardingRepositoryProvider)
-          .finish(name: null, bodyweightKg: 0, sex: null);
+          .finish(name: null, bodyweightKg: 0, sex: null, heightCm: null, birthYear: null);
 
       expect(await latestBodyweight(), isNull);
     });
 
     test('finishing twice does not duplicate anything', () async {
       final repo = container.read(onboardingRepositoryProvider);
-      await repo.finish(name: 'Joshua', bodyweightKg: 82, sex: null);
-      await repo.finish(name: 'Joshua', bodyweightKg: 83, sex: null);
+      await repo.finish(name: 'Joshua', bodyweightKg: 82, sex: null, heightCm: null, birthYear: null);
+      await repo.finish(name: 'Joshua', bodyweightKg: 83, sex: null, heightCm: null, birthYear: null);
 
       // One row per day, so the second answer overwrites the first.
       expect(await firstValue(measurementHistoryProvider), hasLength(1));

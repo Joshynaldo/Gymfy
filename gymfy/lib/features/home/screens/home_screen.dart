@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../shared/widgets/app_card.dart';
 
 import '../../onboarding/data/onboarding_repository.dart';
 import '../widgets/activity_heatmap.dart';
@@ -8,6 +11,9 @@ import '../widgets/next_up_card.dart';
 import '../widgets/recap_section.dart';
 import '../widgets/streak_badge.dart';
 import '../widgets/today_card.dart';
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../app/theme/glass.dart';
 
 /// The Home tab: today first, then what's coming, then what you last did.
 ///
@@ -26,13 +32,13 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final name = ref.watch(userNameProvider).value;
 
-    return Scaffold(
-      appBar: AppBar(
+    return GlassScaffold(
+      appBar: GlassAppBar(
         title: Text(name == null ? 'Gymfy' : 'Hi, $name'),
         actions: const [StreakBadge()],
       ),
       body: ListView(
-        padding: const EdgeInsets.only(top: 6, bottom: 24),
+        padding: const EdgeInsets.only(top: 6, bottom: 24) + barInsets(context),
         children: [
           TodayCard(today: today),
           NextUpCard(today: today),
@@ -41,8 +47,34 @@ class HomeScreen extends ConsumerWidget {
           // Last: the recap answers "how am I doing lately", and the year view
           // is the long look back you take after it, not before.
           ActivityHeatmap(today: today),
+          // Progress lost its bottom-nav tab, so it needs a way in from the
+          // screen people actually open. Placed at the bottom on purpose: it
+          // follows the recap and the year grid, which is exactly the point at
+          // which "show me the actual numbers" occurs to you.
+          const Padding(
+            padding: EdgeInsets.only(top: 12),
+            child: _ProgressLink(),
+          ),
         ],
       ),
+    );
+  }
+}
+
+/// The way into Progress now that it is no longer a tab.
+class _ProgressLink extends StatelessWidget {
+  const _ProgressLink();
+
+  @override
+  Widget build(BuildContext context) {
+    return AppTile(
+      icon: Icons.show_chart,
+      title: 'Progress',
+      subtitle: 'Charts, personal records, photos and measurements',
+      // `go` rather than a push: this genuinely belongs to the More branch now,
+      // and pushing it on top of Home would leave the nav bar highlighting the
+      // wrong tab while you read it.
+      onTap: () => context.go('/more/progress'),
     );
   }
 }

@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../shared/data/body_profile.dart';
 import '../../../shared/data/lifter_sex.dart';
 import '../../../shared/data/settings_repository.dart';
+import '../../../shared/widgets/app_picker.dart';
 import '../../../shared/widgets/accent_swatch.dart';
 import '../../../shared/utils/units.dart';
 import '../../onboarding/data/onboarding_repository.dart';
@@ -15,6 +17,10 @@ import '../../workout/widgets/rest_length_picker.dart';
 import '../data/notification_preferences.dart';
 import '../../../shared/widgets/fade_slide_in.dart';
 import '../widgets/theme_picker.dart';
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../app/theme/glass.dart';
+import '../../../shared/widgets/glass_dialog.dart';
 
 /// Everything the user can change about the app.
 class SettingsScreen extends ConsumerWidget {
@@ -22,14 +28,14 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+    return GlassScaffold(
+      appBar: GlassAppBar(title: const Text('Settings')),
       // One animation for the whole screen rather than one per section: a
       // settings list is read top to bottom in a glance, and eight staggered
       // sections would draw the eye down the page instead of letting it land.
       body: FadeSlideIn(
         child: ListView(
-          padding: const EdgeInsets.only(bottom: 32),
+          padding: const EdgeInsets.only(bottom: 32) + barInsets(context),
           children: const [
             _SectionHeader('Theme'),
             ThemePicker(),
@@ -52,6 +58,7 @@ class SettingsScreen extends ConsumerWidget {
             _SectionHeader('You'),
             _NameTile(),
             _LifterSexTile(),
+            _BodyProfileTiles(),
             Divider(height: 1),
             _SectionHeader('Rest timer'),
             _RestTimerPreferences(),
@@ -258,7 +265,7 @@ class _NameDialogState extends State<_NameDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return GlassDialog(
       title: const Text('Your name'),
       content: TextField(
         controller: _controller,
@@ -390,6 +397,74 @@ class _LifterSexTile extends ConsumerWidget {
             .read(settingsRepositoryProvider)
             .write(lifterSexSetting, selection.first!.name),
       ),
+    );
+  }
+}
+
+/// Height and age — the two body facts that aren't measurements.
+///
+/// Here rather than on the Measurements screen because neither is something you
+/// re-measure: your height is your height, and an age that needs logging over
+/// time is a birthday, not a data point. Both are asked once during onboarding
+/// and this is where they get corrected.
+class _BodyProfileTiles extends ConsumerWidget {
+  const _BodyProfileTiles();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unit = ref.watch(weightUnitProvider);
+    final height = ref.watch(heightCmProvider).value;
+    final age = ref.watch(ageProvider);
+    final settings = ref.read(settingsRepositoryProvider);
+
+    return Column(
+      children: [
+        ListTile(
+          leading: const Icon(Icons.height),
+          title: const Text('Height'),
+          subtitle: Text(
+            height == null ? 'Not set' : formatHeight(height, unit),
+          ),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () async {
+            final picked = await showNumberPicker(
+              context: context,
+              title: 'How tall are you?',
+              min: minHeightCm,
+              max: maxHeightCm,
+              initial: height ?? 175,
+              format: (cm) => formatHeight(cm, unit),
+            );
+            if (picked != null) {
+              await settings.write(heightCmSetting, '$picked');
+            }
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.cake_outlined),
+          title: const Text('Age'),
+          subtitle: Text(age == null ? 'Not set' : '$age'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () async {
+            final picked = await showNumberPicker(
+              context: context,
+              title: 'How old are you?',
+              min: minAge,
+              max: maxAge,
+              initial: age ?? 30,
+              helper: 'Kept as your year of birth, so it stays correct.',
+            );
+            if (picked != null) {
+              // Stored as a year, never as an age: "31" would be wrong on the
+              // next birthday and nothing would ever fix it.
+              await settings.write(
+                birthYearSetting,
+                '${birthYearForAge(picked)}',
+              );
+            }
+          },
+        ),
+      ],
     );
   }
 }
