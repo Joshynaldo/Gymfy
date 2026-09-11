@@ -68,9 +68,23 @@ class _BodyMapSectionState extends ConsumerState<BodyMapSection> {
           leadingControl: AppSegmented<MapReading>(
             selected: _reading,
             onChanged: (value) => setState(() => _reading = value),
-            segments: const [
-              (value: MapReading.volume, label: 'Volume', leading: null),
-              (value: MapReading.fatigue, label: 'Fatigue', leading: null),
+            // A dot in the colour each reading paints the body. It says
+            // which map you are about to see before you tap, and it is the
+            // only thing on the switch that distinguishes two words that both
+            // just mean "a number per muscle".
+            segments: [
+              (
+                value: MapReading.volume,
+                label: 'Volume',
+                leading: _ReadingDot(
+                  colour: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              (
+                value: MapReading.fatigue,
+                label: 'Fatigue',
+                leading: const _ReadingDot(colour: fatigueColor),
+              ),
             ],
           ),
           intensities: data,
@@ -83,11 +97,14 @@ class _BodyMapSectionState extends ConsumerState<BodyMapSection> {
                     'recently is still weighing on you.'
               : 'No training logged in the last 7 days — finish a '
                     'workout to light up your muscle map.',
+          // Says what brighter means *and* what it is brighter than. The map is
+          // normalised against your hardest-hit muscle, so "more volume" alone
+          // invites reading it as an absolute.
           caption: _isFatigue
-              ? 'How much recent work each muscle is still carrying. '
-                    'Brighter = less recovered. Halves every two days.'
-              : 'Training volume over the last 7 days. Brighter = more '
-                    'volume.',
+              ? 'Brighter means less recovered — recent work halves every '
+                    'two days.'
+              : 'Brighter means more volume this week, relative to your '
+                    'hardest-hit muscle.',
           contrastCaption: _isFatigue
               ? 'Each muscle has its own colour. Brighter still means '
                     'less recovered.'
@@ -445,6 +462,22 @@ class _Stat extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// The colour a reading paints the body, as a dot on its switch.
+class _ReadingDot extends StatelessWidget {
+  const _ReadingDot({required this.colour});
+
+  final Color colour;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(color: colour, shape: BoxShape.circle),
     );
   }
 }

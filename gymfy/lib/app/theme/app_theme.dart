@@ -273,10 +273,10 @@ const _hyperGlass = GlassStyle(
   // Cards and panels. No blur: nothing sits behind a card but the backdrop's
   // own colour field, and blurring a smooth field returns the same field.
   raised: GlassPane(
-    fill: [Color(0x1DFFFFFF), Color(0x0DFFFFFF), Color(0x13FFFFFF)],
+    fill: [Color(0x2BFFFFFF), Color(0x17FFFFFF), Color(0x1FFFFFFF)],
     stops: [0, 0.46, 1],
-    edge: Color(0x18FFFFFF),
-    topEdge: Color(0x4DFFFFFF),
+    edge: Color(0x1FFFFFFF),
+    topEdge: Color(0x59FFFFFF),
     // Tight and almost black. Not a drop shadow in the Material sense — a card
     // this translucent has no business casting one — but a darkening directly
     // under the pane, which is what stops it looking painted onto the field.
@@ -293,10 +293,10 @@ const _hyperGlass = GlassStyle(
   // Rows. Two thirds of a card's fill and no shadow, so a list of them recedes
   // and the one card on the screen is still the thing you look at first.
   quiet: GlassPane(
-    fill: [Color(0x15FFFFFF), Color(0x0AFFFFFF), Color(0x0EFFFFFF)],
+    fill: [Color(0x1FFFFFFF), Color(0x10FFFFFF), Color(0x17FFFFFF)],
     stops: [0, 0.52, 1],
-    edge: Color(0x14FFFFFF),
-    topEdge: Color(0x38FFFFFF),
+    edge: Color(0x1AFFFFFF),
+    topEdge: Color(0x42FFFFFF),
   ),
 
   // The navigation pill and the app bar's scrim. The opaque floor is what makes
