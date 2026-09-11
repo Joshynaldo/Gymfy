@@ -10,6 +10,7 @@ import '../../../shared/models/exercise.dart' show isBundledAsset;
 import '../../../shared/models/muscle_ids.dart';
 import '../../../shared/utils/exercise_display.dart';
 import '../data/exercise_repository.dart';
+import '../../../shared/widgets/app_chip.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../app/theme/glass.dart';
@@ -84,7 +85,7 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
         if (exercise == null) {
           return GlassScaffold(
             appBar: GlassAppBar(title: const Text('Edit exercise')),
-            body: const Center(child: Text('Exercise not found.')),
+            body: (context) => const Center(child: Text('Exercise not found.')),
           );
         }
         _prefill(exercise);
@@ -111,7 +112,7 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
       appBar: GlassAppBar(
         title: Text(widget.isEditing ? 'Edit exercise' : 'New exercise'),
       ),
-      body: ListView(
+      body: (context) => ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 96) + barInsets(context),
         children: [
           TextField(
@@ -140,14 +141,14 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
             runSpacing: 8,
             children: [
               for (final muscleId in MuscleId.all)
-                FilterChip(
-                  label: Text(muscleLabel(muscleId)),
+                AppChip(
+                  label: muscleLabel(muscleId),
                   selected: _muscleIds.contains(muscleId),
-                  onSelected: (selected) => setState(() {
-                    if (selected) {
-                      _muscleIds.add(muscleId);
-                    } else {
+                  onTap: () => setState(() {
+                    if (_muscleIds.contains(muscleId)) {
                       _muscleIds.remove(muscleId);
+                    } else {
+                      _muscleIds.add(muscleId);
                     }
                   }),
                 ),

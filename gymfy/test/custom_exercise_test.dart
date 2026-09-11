@@ -18,10 +18,7 @@ void main() {
     });
 
     test('collapses punctuation rather than carrying it into the id', () {
-      expect(
-        slugifyExerciseName('Cable Fly (Low)'),
-        'custom_cable_fly_low',
-      );
+      expect(slugifyExerciseName('Cable Fly (Low)'), 'custom_cable_fly_low');
     });
 
     test('apostrophes vanish instead of becoming a separator', () {
@@ -44,7 +41,10 @@ void main() {
     test('the prefix keeps custom ids out of the seed namespace', () {
       // This is what stops the startup upsert from overwriting a user's
       // exercise: no seed row can ever have this id.
-      expect(slugifyExerciseName('Barbell Bench Press'), isNot('barbell_bench_press'));
+      expect(
+        slugifyExerciseName('Barbell Bench Press'),
+        isNot('barbell_bench_press'),
+      );
       expect(slugifyExerciseName('anything'), startsWith('custom_'));
     });
   });
@@ -72,18 +72,20 @@ void main() {
 
     /// Logs one set of [exerciseId], which is what makes it undeletable.
     Future<void> logASet(String exerciseId) async {
-      final sessionId = await db.into(db.workoutSessions).insert(
-        WorkoutSessionsCompanion.insert(name: 'Push'),
-      );
-      await db.into(db.loggedSets).insert(
-        LoggedSetsCompanion.insert(
-          sessionId: sessionId,
-          exerciseId: exerciseId,
-          setNumber: 1,
-          weight: const Value(60),
-          reps: const Value(10),
-        ),
-      );
+      final sessionId = await db
+          .into(db.workoutSessions)
+          .insert(WorkoutSessionsCompanion.insert(name: 'Push'));
+      await db
+          .into(db.loggedSets)
+          .insert(
+            LoggedSetsCompanion.insert(
+              sessionId: sessionId,
+              exerciseId: exerciseId,
+              setNumber: 1,
+              weight: const Value(60),
+              reps: const Value(10),
+            ),
+          );
     }
 
     test('a created exercise is marked custom and is pickable', () async {
@@ -176,23 +178,27 @@ void main() {
 
     test('an exercise planned into a split also archives', () async {
       final id = await createFly();
-      final splitId = await db.into(db.splits).insert(
-        SplitsCompanion.insert(name: 'PPL'),
-      );
-      final dayId = await db.into(db.workoutDays).insert(
-        WorkoutDaysCompanion.insert(
-          splitId: splitId,
-          name: 'Push',
-          position: const Value(0),
-        ),
-      );
-      await db.into(db.workoutExercises).insert(
-        WorkoutExercisesCompanion.insert(
-          dayId: dayId,
-          exerciseId: id,
-          position: const Value(0),
-        ),
-      );
+      final splitId = await db
+          .into(db.splits)
+          .insert(SplitsCompanion.insert(name: 'PPL'));
+      final dayId = await db
+          .into(db.workoutDays)
+          .insert(
+            WorkoutDaysCompanion.insert(
+              splitId: splitId,
+              name: 'Push',
+              position: const Value(0),
+            ),
+          );
+      await db
+          .into(db.workoutExercises)
+          .insert(
+            WorkoutExercisesCompanion.insert(
+              dayId: dayId,
+              exerciseId: id,
+              position: const Value(0),
+            ),
+          );
 
       // Planned-but-never-performed counts as history too: hard-deleting would
       // leave a split day pointing at a row that no longer exists.

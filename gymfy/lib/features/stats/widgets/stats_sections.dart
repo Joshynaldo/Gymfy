@@ -6,7 +6,7 @@ import '../../../app/theme/accent_color.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
 import '../../../shared/widgets/app_card.dart';
-import '../../../shared/widgets/fade_slide_in.dart';
+import '../../../shared/widgets/app_segmented.dart';
 import '../../calculator/data/rank_inputs.dart';
 import '../../calculator/data/ranked_lifts.dart';
 import '../../calculator/data/tier_style.dart';
@@ -17,9 +17,6 @@ import '../../muscle_map/data/muscle_volume_repository.dart';
 import '../../muscle_map/widgets/muscle_map_view.dart';
 import '../../workout/data/session_repository.dart';
 import '../data/training_totals.dart';
-import '../../../shared/widgets/glass_app_bar.dart';
-import '../../../shared/widgets/glass_scaffold.dart';
-import '../../../app/theme/glass.dart';
 import '../../../shared/widgets/animated_count.dart';
 
 /// What the body map is colouring.
@@ -31,26 +28,19 @@ enum MapReading {
   fatigue,
 }
 
-/// The Stats tab: where you stand, what you have trained, and what it adds up
-/// to.
+/// The muscle map, with its two readings.
 ///
-/// Grew out of the Muscles tab. The map was a whole bottom-nav slot answering
-/// one question, while the thing people actually want from a stats screen —
-/// how strong am I, and how much have I done — was buried two taps deep under
-/// More. Same tab, wider brief.
-///
-/// Order is deliberate: rank first because it is the headline, the map second
-/// because it is the picture, totals last because they are the long look back.
-class StatsScreen extends ConsumerStatefulWidget {
-  const StatsScreen({super.key});
+/// Was the whole Stats tab; now one segment of Progress. The state is which
+/// reading is showing — view state rather than a stored preference, same as the
+/// front/back toggle inside the map itself.
+class BodyMapSection extends ConsumerStatefulWidget {
+  const BodyMapSection({super.key});
 
   @override
-  ConsumerState<StatsScreen> createState() => _StatsScreenState();
+  ConsumerState<BodyMapSection> createState() => _BodyMapSectionState();
 }
 
-class _StatsScreenState extends ConsumerState<StatsScreen> {
-  /// View state, not a stored preference — same reasoning as the front/back
-  /// toggle inside the map itself.
+class _BodyMapSectionState extends ConsumerState<BodyMapSection> {
   MapReading _reading = MapReading.volume;
 
   bool get _isFatigue => _reading == MapReading.fatigue;
@@ -61,71 +51,65 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
         ? ref.watch(muscleFatigueProvider)
         : ref.watch(weeklyMuscleIntensitiesProvider);
 
-    return GlassScaffold(
-      appBar: GlassAppBar(title: const Text('Stats')),
-      // No SafeArea: it would eat the very insets the list needs to read. On a
-      // glass theme the body runs the full height of the screen and the list
-      // clears the bars itself through `barInsets`; a SafeArea in between would
-      // consume that padding and hand the list a clean zero, putting the first
-      // card back under the title.
-      body: FadeSlideIn(
-        child: ListView(
-          padding:
-              const EdgeInsets.only(top: 4, bottom: 24) + barInsets(context),
-          children: [
-            const _RankSection(),
-            const AppSectionHeader(title: 'Muscle map'),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: SegmentedButton<MapReading>(
-                segments: const [
-                  ButtonSegment(
-                    value: MapReading.volume,
-                    icon: Icon(Icons.local_fire_department_outlined),
-                    label: Text('Volume'),
-                  ),
-                  ButtonSegment(
-                    value: MapReading.fatigue,
-                    icon: Icon(Icons.battery_charging_full),
-                    label: Text('Fatigue'),
-                  ),
-                ],
-                selected: {_reading},
-                showSelectedIcon: false,
-                onSelectionChanged: (selection) =>
-                    setState(() => _reading = selection.first),
+    // One card holding the switches, the body and the caption — rather than a
+    // control floating above a diagram floating above a line of text. The three
+    // are one answer, and on a screen made of panes, a thing with no pane under
+    // it reads as something that has not finished loading.
+    return AppPanel(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
+      child: SizedBox(
+        // A fixed height rather than Expanded: this is a scrolling page, not a
+        // screen the map owns, and an unbounded child inside a ListView has no
+        // height to fill.
+        height: 520,
+        child: MuscleMapView(
+          // The reading switch sits beside the front/back one, on the map's own
+          // header row. Two switches, one line, one card.
+          leadingControl: AppSegmented<MapReading>(
+            selected: _reading,
+            onChanged: (value) => setState(() => _reading = value),
+            // A dot in the colour each reading paints the body. It says
+            // which map you are about to see before you tap, and it is the
+            // only thing on the switch that distinguishes two words that both
+            // just mean "a number per muscle".
+            segments: [
+              (
+                value: MapReading.volume,
+                label: 'Volume',
+                leading: _ReadingDot(
+                  colour: Theme.of(context).colorScheme.primary,
+                ),
               ),
-            ),
-            // A fixed height rather than Expanded: this is a scrolling page
-            // now, not a screen the map owns, and an unbounded child inside a
-            // ListView has no height to fill.
-            SizedBox(
-              height: 460,
-              child: MuscleMapView(
-                intensities: data,
-                // Fatigue is red, always — not the accent. The two readings
-                // share this diagram, so colour is what tells you which one
-                // you are looking at without reading the caption.
-                heatColor: _isFatigue ? fatigueColor : null,
-                emptyMessage: _isFatigue
-                    ? 'Everything is recovered — nothing you have trained '
-                          'recently is still weighing on you.'
-                    : 'No training logged in the last 7 days — finish a '
-                          'workout to light up your muscle map.',
-                caption: _isFatigue
-                    ? 'How much recent work each muscle is still carrying. '
-                          'Brighter = less recovered. Halves every two days.'
-                    : 'Training volume over the last 7 days. Brighter = more '
-                          'volume.',
-                contrastCaption: _isFatigue
-                    ? 'Each muscle has its own colour. Brighter still means '
-                          'less recovered.'
-                    : 'Each muscle has its own colour. Brighter still means '
-                          'more volume.',
+              (
+                value: MapReading.fatigue,
+                label: 'Fatigue',
+                leading: const _ReadingDot(colour: fatigueColor),
               ),
-            ),
-            const _TotalsSection(),
-          ],
+            ],
+          ),
+          intensities: data,
+          // Fatigue is red, always — not the accent. The two readings share
+          // this diagram, so colour is what tells you which one you are
+          // looking at without reading the caption.
+          heatColor: _isFatigue ? fatigueColor : null,
+          emptyMessage: _isFatigue
+              ? 'Everything is recovered — nothing you have trained '
+                    'recently is still weighing on you.'
+              : 'No training logged in the last 7 days — finish a '
+                    'workout to light up your muscle map.',
+          // Says what brighter means *and* what it is brighter than. The map is
+          // normalised against your hardest-hit muscle, so "more volume" alone
+          // invites reading it as an absolute.
+          caption: _isFatigue
+              ? 'Brighter means less recovered — recent work halves every '
+                    'two days.'
+              : 'Brighter means more volume this week, relative to your '
+                    'hardest-hit muscle.',
+          contrastCaption: _isFatigue
+              ? 'Each muscle has its own colour. Brighter still means '
+                    'less recovered.'
+              : 'Each muscle has its own colour. Brighter still means '
+                    'more volume.',
         ),
       ),
     );
@@ -133,8 +117,8 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
 }
 
 /// Where you stand: the headline tier, then a medal per ranked lift.
-class _RankSection extends ConsumerWidget {
-  const _RankSection();
+class RankSection extends ConsumerWidget {
+  const RankSection({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -334,8 +318,8 @@ class _RankRow extends ConsumerWidget {
 }
 
 /// What it all adds up to.
-class _TotalsSection extends ConsumerWidget {
-  const _TotalsSection();
+class TotalsSection extends ConsumerWidget {
+  const TotalsSection({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -478,6 +462,22 @@ class _Stat extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// The colour a reading paints the body, as a dot on its switch.
+class _ReadingDot extends StatelessWidget {
+  const _ReadingDot({required this.colour});
+
+  final Color colour;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(color: colour, shape: BoxShape.circle),
     );
   }
 }

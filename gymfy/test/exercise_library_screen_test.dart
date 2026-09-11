@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gymfy/shared/widgets/app_button.dart';
 import 'package:gymfy/features/exercises/data/exercise_repository.dart';
 import 'package:gymfy/features/exercises/screens/exercise_library_screen.dart';
 import 'package:gymfy/shared/widgets/exercise_thumbnail.dart';
@@ -231,7 +232,7 @@ void main() {
   testWidgets('offers a way to add an exercise', (tester) async {
     await _pumpScreen(tester);
 
-    expect(find.widgetWithText(FloatingActionButton, 'Add exercise'), findsOneWidget);
+    expect(find.widgetWithText(AppButton, 'Add exercise'), findsOneWidget);
   });
 
   testWidgets('long-pressing starts a selection', (tester) async {

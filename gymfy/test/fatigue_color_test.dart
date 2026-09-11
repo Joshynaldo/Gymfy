@@ -19,8 +19,7 @@ import 'package:gymfy/features/muscle_map/widgets/muscle_map_view.dart';
 import 'support/default_accent.dart';
 
 /// A stand-in body with one taggable muscle.
-const _svg =
-    '<svg><path data-muscle="chest" fill="#4C5361"/></svg>';
+const _svg = '<svg><path data-muscle="chest" fill="#4C5361"/></svg>';
 
 String _fillOf(String svg) =>
     RegExp(r'fill="(#[0-9A-F]{6})"').firstMatch(svg)!.group(1)!;
@@ -148,7 +147,10 @@ void main() {
 
       // Null rather than the accent itself: the map resolves the default, so
       // the volume reading keeps following whatever accent is chosen.
-      expect(tester.widget<MuscleMap>(find.byType(MuscleMap)).heatColor, isNull);
+      expect(
+        tester.widget<MuscleMap>(find.byType(MuscleMap)).heatColor,
+        isNull,
+      );
     });
   });
 }

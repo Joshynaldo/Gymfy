@@ -57,7 +57,7 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
 
     return GlassScaffold(
       appBar: GlassAppBar(title: const Text('Compare')),
-      body: photosAsync.when(
+      body: (context) => photosAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: Padding(

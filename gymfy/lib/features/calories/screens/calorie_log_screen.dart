@@ -48,7 +48,7 @@ class _CalorieLogScreenState extends ConsumerState<CalorieLogScreen> {
       appBar: GlassAppBar(title: const Text('Calorie log')),
       // The day stepper is fixed, so it is held clear of the app bar; only the
       // list below it slides under the bars.
-      body: Padding(
+      body: (context) => Padding(
         padding: topBarInset(context),
         child: Column(
           children: [

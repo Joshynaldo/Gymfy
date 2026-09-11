@@ -41,6 +41,13 @@ class _Body extends ConsumerWidget {
         ref.watch(sessionMuscleIntensitiesProvider(session.id)).value ??
         const <String, double>{};
 
+    // A finished session with nothing in it is not a workout you did — it is a
+    // session you started and walked out of, and the card for it reads "Today ·
+    // 0 min / 0 sets · 0 kg" beside a body with no muscle lit. That is four
+    // zeros and a grey figure telling you nothing, on the most valuable card
+    // space in the app.
+    if (sets.isEmpty) return const SizedBox.shrink();
+
     final volume = sets.fold<double>(0, (sum, s) => sum + s.weight * s.reps);
     final completedAt = session.completedAt ?? session.startedAt;
 
@@ -64,7 +71,18 @@ class _Body extends ConsumerWidget {
                 Text(session.name, style: theme.textTheme.titleMedium),
                 const SizedBox(height: 4),
                 Text(
-                  formatDayLabel(completedAt),
+                  // How long it took, beside when it was. The date alone
+                  // answers "did I train" and leaves out the half of the
+                  // question that is "how much of a session was it" — a
+                  // twenty-minute Tuesday and a ninety-minute one are not the
+                  // same entry in your week.
+                  [
+                    formatDayLabel(completedAt),
+                    if (session.completedAt != null)
+                      formatDuration(
+                        session.completedAt!.difference(session.startedAt),
+                      ),
+                  ].join(' · '),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),

@@ -4,7 +4,9 @@
 
 import 'dart:io';
 
+import 'package:flutter/material.dart' show Color;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gymfy/features/muscle_map/widgets/muscle_map.dart';
 import 'package:gymfy/shared/models/muscle_ids.dart';
 
 void main() {
@@ -50,5 +52,83 @@ void main() {
         reason: '"$id" is tagged in an SVG but is not a known MuscleId.',
       );
     }
+  });
+
+  // The figure is drawn over two different things depending on the theme: a
+  // near-black card on the flat ones, a bright moving field on Hyper. The slate
+  // the sheets are authored in reads as "muscle I haven't trained" on the first
+  // and as a hole cut in the screen on the second, so the palette travels in
+  // rather than being fixed in the files. Making it merely translucent was not
+  // enough — 86% of a very dark colour is still a very dark colour.
+  group('the figure takes the palette it is given', () {
+    test('an untrained muscle is painted the rest colour it was passed', () {
+      final tinted = tintMuscles(
+        svg: front,
+        intensities: const {},
+        heatColor: const Color(0xFF7C6BFF),
+        restColor: const Color(0xFF9BA3B6),
+      );
+
+      expect(tinted, contains('fill="#9BA3B6"'));
+      expect(
+        tinted,
+        isNot(contains('data-muscle="chest" fill="#4C5361"')),
+        reason: 'the authored rest colour survived the tint',
+      );
+    });
+
+    test('the silhouette is repainted too, not just the muscles', () {
+      // It carries its own fill and no data-muscle tag, so the tinting pass
+      // walks straight past it — which left a black head, hands and feet on a
+      // body whose muscles had been lifted.
+      expect(front, contains('fill="#2E3440"'));
+
+      final tinted = tintMuscles(
+        svg: front,
+        intensities: const {},
+        heatColor: const Color(0xFF7C6BFF),
+        bodyColor: const Color(0xFF666F82),
+      );
+
+      expect(tinted, contains('fill="#666F82"'));
+      expect(tinted, isNot(contains('fill="#2E3440"')));
+    });
+
+    test('an untrained muscle is transparent, a worked one solid', () {
+      // The point of the whole exercise, and the part that took four goes to
+      // find: an untrained muscle has nothing to report, so it lets the pane
+      // through instead of reporting a colour. Volume is what makes it solid,
+      // and the accent belongs only to muscles that earned it.
+      final tinted = tintMuscles(
+        svg: front,
+        intensities: const {'chest': 1, 'abs': 0},
+        heatColor: const Color(0xFF7C6BFF),
+        restOpacity: 0.17,
+      );
+
+      String tagFor(String muscle) => RegExp(
+        'data-muscle="[^"]*$muscle[^"]*"[^>]*',
+      ).firstMatch(tinted)!.group(0)!;
+
+      // Fully worked: the accent, and no fill-opacity at all. Solid is the
+      // *absence* of the attribute, which is what keeps the flat themes'
+      // output byte-for-byte what it was.
+      expect(tagFor('chest'), contains('fill="#7C6BFF"'));
+      expect(tagFor('chest'), isNot(contains('fill-opacity')));
+
+      expect(tagFor('abs'), contains('fill-opacity="0.170"'));
+    });
+
+    test('and by default the sheets are left exactly as authored', () {
+      // The six flat themes are meant to come out of the redesign unchanged.
+      final tinted = tintMuscles(
+        svg: front,
+        intensities: const {},
+        heatColor: const Color(0xFF7C6BFF),
+      );
+
+      expect(tinted, contains('fill="#2E3440"'));
+      expect(tinted, contains('fill="#4C5361"'));
+    });
   });
 }

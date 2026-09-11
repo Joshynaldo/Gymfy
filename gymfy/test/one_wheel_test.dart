@@ -22,10 +22,13 @@ void main() {
   test('only NumberWheel builds a ListWheelScrollView', () {
     final offenders = <String>[];
 
-    for (final file in Directory('lib')
-        .listSync(recursive: true)
-        .whereType<File>()
-        .where((f) => f.path.endsWith('.dart') && !f.path.endsWith('.g.dart'))) {
+    for (final file
+        in Directory('lib')
+            .listSync(recursive: true)
+            .whereType<File>()
+            .where(
+              (f) => f.path.endsWith('.dart') && !f.path.endsWith('.g.dart'),
+            )) {
       final normalised = file.path.replaceAll('/', r'\');
       if (normalised.endsWith(_wheelImplementation)) continue;
       if (file.readAsStringSync().contains('ListWheelScrollView')) {

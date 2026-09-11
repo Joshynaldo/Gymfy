@@ -22,16 +22,18 @@ void main() {
   });
 
   test('calorie entries persist with macros', () async {
-    await db.into(db.calorieEntries).insert(
-      CalorieEntriesCompanion.insert(
-        date: DateTime(2026, 7, 24),
-        name: 'Chicken & rice',
-        calories: const Value(650),
-        protein: const Value(50),
-        carbs: const Value(70),
-        fat: const Value(12),
-      ),
-    );
+    await db
+        .into(db.calorieEntries)
+        .insert(
+          CalorieEntriesCompanion.insert(
+            date: DateTime(2026, 7, 24),
+            name: 'Chicken & rice',
+            calories: const Value(650),
+            protein: const Value(50),
+            carbs: const Value(70),
+            fat: const Value(12),
+          ),
+        );
 
     final rows = await db.select(db.calorieEntries).get();
     expect(rows, hasLength(1));
@@ -41,13 +43,15 @@ void main() {
 
   test('macros default to zero rather than being required', () async {
     // A quick "300 kcal" entry shouldn't demand a macro breakdown nobody has.
-    await db.into(db.calorieEntries).insert(
-      CalorieEntriesCompanion.insert(
-        date: DateTime(2026, 7, 24),
-        name: 'Snack',
-        calories: const Value(300),
-      ),
-    );
+    await db
+        .into(db.calorieEntries)
+        .insert(
+          CalorieEntriesCompanion.insert(
+            date: DateTime(2026, 7, 24),
+            name: 'Snack',
+            calories: const Value(300),
+          ),
+        );
 
     final row = (await db.select(db.calorieEntries).get()).single;
     expect(row.protein, 0);

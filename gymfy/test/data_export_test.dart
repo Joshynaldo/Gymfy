@@ -245,13 +245,15 @@ void main() {
       sessions = SessionRepository(db);
       workout = WorkoutRepository(db);
 
-      await db.into(db.exercises).insert(
-        ExercisesCompanion.insert(
-          id: 'barbell_bench_press',
-          name: 'Barbell Bench Press',
-          muscleIds: const ['chest', 'triceps'],
-        ),
-      );
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'barbell_bench_press',
+              name: 'Barbell Bench Press',
+              muscleIds: const ['chest', 'triceps'],
+            ),
+          );
       final splitId = await workout.createSplit('PPL');
       dayId = await workout.createDay(splitId, 'Push');
     });
@@ -292,19 +294,23 @@ void main() {
     });
 
     test('includes measurements and meals', () async {
-      await db.into(db.bodyMeasurements).insert(
-        BodyMeasurementsCompanion.insert(
-          date: DateTime(2026, 8, 24),
-          weightKg: const Value(84.2),
-        ),
-      );
-      await db.into(db.calorieEntries).insert(
-        CalorieEntriesCompanion.insert(
-          date: DateTime(2026, 8, 24),
-          name: 'Chicken & rice',
-          calories: const Value(650),
-        ),
-      );
+      await db
+          .into(db.bodyMeasurements)
+          .insert(
+            BodyMeasurementsCompanion.insert(
+              date: DateTime(2026, 8, 24),
+              weightKg: const Value(84.2),
+            ),
+          );
+      await db
+          .into(db.calorieEntries)
+          .insert(
+            CalorieEntriesCompanion.insert(
+              date: DateTime(2026, 8, 24),
+              name: 'Chicken & rice',
+              calories: const Value(650),
+            ),
+          );
 
       final data = await export.load();
 
