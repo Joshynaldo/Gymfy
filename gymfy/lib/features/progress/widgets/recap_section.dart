@@ -151,17 +151,15 @@ class _VolumeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final values = [
-      for (final b in recap.buckets)
-        // Zero draws no bar rather than a flat line on the axis: a rest day and
-        // a day you trained nothing into are the same thing, and neither is a
-        // data point worth drawing.
-        b.volumeKg == 0 ? null : weightIn(b.volumeKg, unit),
-    ];
-    final peak = values.whereType<double>().fold<double>(
-      0,
-      (m, v) => v > m ? v : m,
-    );
+    // Rest days are zeros, not gaps.
+    //
+    // They were nulls, and the line simply skipped them — so a week with
+    // Sunday and Friday in it was drawn as one straight diagonal between the
+    // two, which reads as five days of steady decline rather than five days of
+    // nothing. A volume chart's zero is not missing data; it is the honest
+    // answer to "how much did you lift on Tuesday".
+    final values = [for (final b in recap.buckets) weightIn(b.volumeKg, unit)];
+    final peak = values.fold<double>(0, (m, v) => v > m ? v : m);
 
     return _RecapCard(
       title: 'Volume',
@@ -191,8 +189,8 @@ class _VolumeLine extends ConsumerWidget {
     required this.peak,
   });
 
-  /// Null where nothing was logged — a rest day is not a zero, it is an absence.
-  final List<double?> values;
+  /// One per bucket, zeros included — see the note where they are built.
+  final List<double> values;
   final List<String> labels;
   final double peak;
 
@@ -200,8 +198,7 @@ class _VolumeLine extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final accent = ref.watch(accentColorProvider);
     final spots = <FlSpot>[
-      for (var i = 0; i < values.length; i++)
-        if (values[i] != null) FlSpot(i.toDouble(), values[i]!),
+      for (var i = 0; i < values.length; i++) FlSpot(i.toDouble(), values[i]),
     ];
 
     if (spots.length < 2) {

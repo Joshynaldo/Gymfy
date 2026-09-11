@@ -121,8 +121,13 @@ class _BackdropPainter extends CustomPainter {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            _shift(accent, 6, 0.42).withValues(alpha: 0.55),
-            _shift(accent, -10, 0.24).withValues(alpha: 0.42),
+            // Light enough that the *middle* of the screen is coloured, not
+            // just the corners an orb happens to sit in. That was the last of
+            // the milkiness problem: a card in the gap between two orbs was
+            // still a translucent pane over near-black, so its interior came
+            // out neutral charcoal while its edges glowed.
+            _shift(accent, 6, 0.72).withValues(alpha: 0.62),
+            _shift(accent, -10, 0.46).withValues(alpha: 0.5),
           ],
         ).createShader(rect),
     );
