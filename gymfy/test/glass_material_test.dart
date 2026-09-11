@@ -6,7 +6,11 @@
 // with nothing behind it skip the blur" and "do the flat themes still get
 // nothing at all" are exactly the things that quietly stop being true.
 
+import 'dart:typed_data' show Uint8List;
+import 'dart:ui' show ImageByteFormat;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/app/theme/accent_color.dart';
@@ -20,6 +24,8 @@ GlassStyle _glass(AppTheme theme) =>
     buildAppTheme(theme, AccentPalette.blue).extension<GlassStyle>()!;
 
 void main() {
+  _shadowTests();
+
   group('the four surfaces', () {
     test('a row is dimmer than a card', () {
       // The whole point of the second tier. If a library row carries a card's
@@ -198,5 +204,78 @@ void main() {
       expect(resting, isNot(AccentPalette.blue));
       expect(picked, AccentPalette.blue);
     });
+  });
+}
+
+/// A card's shadow must stay outside the card.
+///
+/// Flutter's `BoxShadow` paints the whole blurred rounded rectangle *behind*
+/// the box. CSS clips an outer box-shadow to outside it — so the design's
+/// `rgba(0,0,0,0.9)` halo, ported literally, became a near-opaque black card
+/// sitting behind a translucent one. Every pane came out charcoal in the middle
+/// and lit at the edges, whatever the field behind it was doing.
+///
+/// Painted rather than inspected: this is a question about pixels, and the
+/// widget tree looked perfectly correct the whole time it was wrong.
+void _shadowTests() {
+  testWidgets('a card does not darken its own interior', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [defaultAccentOverride],
+        child: MaterialApp(
+          theme: buildAppTheme(AppTheme.hyper, AccentPalette.blue),
+          home: const Scaffold(
+            backgroundColor: Color(0xFF6A5AE0),
+            body: Center(
+              child: SizedBox(
+                width: 200,
+                height: 200,
+                child: RepaintBoundary(
+                  child: GlassSurface(
+                    borderRadius: BorderRadius.all(Radius.circular(24)),
+                    child: SizedBox.expand(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    // Inside runAsync: rasterising is real asynchronous work, and the test
+    // binding's fake clock never lets it finish otherwise — the await simply
+    // hangs until the test times out.
+    final boundary =
+        tester.firstRenderObject(find.byType(RepaintBoundary))
+            as RenderRepaintBoundary;
+    late Uint8List pixels;
+    late int width;
+    late int height;
+    await tester.runAsync(() async {
+      final image = await boundary.toImage();
+      final data = await image.toByteData(format: ImageByteFormat.rawRgba);
+      pixels = data!.buffer.asUint8List();
+      width = image.width;
+      height = image.height;
+      image.dispose();
+    });
+
+    // The middle of the card, in the ground colour it is laid over.
+    final middle = (width * (height ~/ 2) + width ~/ 2) * 4;
+    final red = pixels[middle];
+    final blue = pixels[middle + 2];
+
+    expect(
+      blue,
+      greaterThan(0x50),
+      reason:
+          'the card reads as #${red.toRadixString(16)}..'
+          '${blue.toRadixString(16)} — a translucent pane over a violet ground '
+          'cannot be this dark unless something black is painted behind it',
+    );
+    // Still violet: the ground shows through rather than being replaced.
+    expect(blue, greaterThan(red));
   });
 }
