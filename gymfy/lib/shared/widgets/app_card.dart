@@ -427,21 +427,32 @@ class AppSectionHeader extends StatelessWidget {
           : const EdgeInsets.fromLTRB(20, 18, 20, 6),
       child: Row(
         children: [
-          Text(
-            title,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-              // Slightly tracked out on the flat themes: at that size it is the
-              // difference between a heading and just another bold line. Hyper
-              // gets its separation from the scale instead — 17 against 15 —
-              // and tracking on top of that reads as shouting.
-              letterSpacing: glass.enabled ? null : 0.6,
+          // Expanded rather than a bare Text plus a Spacer. Two unconstrained
+          // labels in one Row is a horizontal overflow waiting for a long
+          // heading, a wide count, a narrow phone or larger text — and with
+          // all four it does not need to be close. The title is the half that
+          // gives, because the count beside it is short and fixed.
+          Expanded(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                // Slightly tracked out on the flat themes: at that size it is
+                // the difference between a heading and just another bold line.
+                // Hyper gets its separation from the scale instead — 17 against
+                // 15 — and tracking on top of that reads as shouting.
+                letterSpacing: glass.enabled ? null : 0.6,
+              ),
             ),
           ),
           if (count != null || countLabel != null) ...[
-            const Spacer(),
+            const SizedBox(width: 12),
             Text(
               countLabel ?? '$count',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),

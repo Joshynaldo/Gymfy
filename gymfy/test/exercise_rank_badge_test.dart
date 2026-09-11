@@ -82,7 +82,7 @@ void main() {
       history: [set(12, 10)],
     );
 
-    expect(find.text('Your rank'), findsNothing);
+    expect(find.text('STRENGTH RANK'), findsNothing);
     expect(find.text('This lift can be ranked'), findsNothing);
   });
 
@@ -90,7 +90,7 @@ void main() {
     await pump(tester, sex: null, bodyweight: null, history: [set(100, 5)]);
 
     expect(find.text('This lift can be ranked'), findsOneWidget);
-    expect(find.text('Your rank'), findsNothing);
+    expect(find.text('STRENGTH RANK'), findsNothing);
   });
 
   testWidgets('nudges when the bodyweight alone is missing', (tester) async {
@@ -104,7 +104,7 @@ void main() {
   ) async {
     await pump(tester);
 
-    expect(find.text('Your rank'), findsNothing);
+    expect(find.text('STRENGTH RANK'), findsNothing);
     expect(find.text('This lift can be ranked'), findsNothing);
   });
 
@@ -115,7 +115,7 @@ void main() {
     // clears the male intermediate bar (1.0x) but not advanced (1.5x).
     await pump(tester, history: [set(100, 5)]);
 
-    expect(find.text('Your rank'), findsOneWidget);
+    expect(find.text('STRENGTH RANK'), findsOneWidget);
     expect(find.text('Intermediate'), findsOneWidget);
     expect(find.textContaining('estimated'), findsOneWidget);
     expect(find.textContaining('1.43× bodyweight'), findsOneWidget);
@@ -148,7 +148,9 @@ void main() {
     await pump(tester, tested: 170);
 
     expect(find.text('Elite'), findsOneWidget);
-    expect(find.text('Top tier — nothing above this'), findsOneWidget);
+    // Shorter now that it sits opposite the ratio rather than on its own
+    // line: at the right-hand edge of a row, "Top tier" is the whole answer.
+    expect(find.text('Top tier'), findsOneWidget);
     expect(find.textContaining('kg to '), findsNothing);
   });
 

@@ -14,6 +14,7 @@ import '../../stats/widgets/stats_sections.dart';
 import '../data/progress_repository.dart';
 import '../widgets/activity_heatmap.dart';
 import '../widgets/recap_section.dart';
+import '../widgets/streak_card.dart';
 
 /// Which question Progress is answering.
 enum ProgressView {
@@ -133,7 +134,12 @@ class _AllTime extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.only(top: 4, bottom: 24) + barInsets(context),
-      children: const [TotalsSection(), ActivityHeatmap(), RankSection()],
+      children: const [
+        TotalsSection(),
+        ActivityHeatmap(),
+        RankSection(),
+        StreakCard(),
+      ],
     );
   }
 }

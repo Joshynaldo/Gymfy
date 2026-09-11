@@ -59,23 +59,26 @@ class WeekCard extends ConsumerWidget {
                 style: theme.textTheme.bodySmall,
               ),
               const SizedBox(height: 20),
-              SizedBox(
-                height: 76,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    for (final bucket in recap.buckets)
-                      Expanded(
-                        child: _Bar(
-                          label: bucket.label,
-                          // Against the tallest day rather than a fixed scale:
-                          // the question is which day was the big one, not how
-                          // this week compares to an arbitrary ceiling.
-                          fraction: peak == 0 ? 0 : bucket.volumeKg / peak,
-                        ),
+              // No fixed height on the row. The bars themselves are 56; the
+              // label under them is whatever the reader's text size makes it,
+              // and the design's 76 was the sum of the two at one particular
+              // setting. Hard-coding a total means the label overflows the
+              // moment anything about it changes — which it did, by two pixels
+              // at the default size and six at 130%.
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  for (final bucket in recap.buckets)
+                    Expanded(
+                      child: _Bar(
+                        label: bucket.label,
+                        // Against the tallest day rather than a fixed scale:
+                        // the question is which day was the big one, not how
+                        // this week compares to an arbitrary ceiling.
+                        fraction: peak == 0 ? 0 : bucket.volumeKg / peak,
                       ),
-                  ],
-                ),
+                    ),
+                ],
               ),
             ],
           ),
@@ -98,6 +101,7 @@ class _Bar extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           SizedBox(
