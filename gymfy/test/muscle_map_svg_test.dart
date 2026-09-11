@@ -94,6 +94,31 @@ void main() {
       expect(tinted, isNot(contains('fill="#2E3440"')));
     });
 
+    test('an untrained muscle is transparent, a worked one solid', () {
+      // The point of the whole exercise, and the part that took four goes to
+      // find: an untrained muscle has nothing to report, so it lets the pane
+      // through instead of reporting a colour. Volume is what makes it solid,
+      // and the accent belongs only to muscles that earned it.
+      final tinted = tintMuscles(
+        svg: front,
+        intensities: const {'chest': 1, 'abs': 0},
+        heatColor: const Color(0xFF7C6BFF),
+        restOpacity: 0.17,
+      );
+
+      String tagFor(String muscle) => RegExp(
+        'data-muscle="[^"]*$muscle[^"]*"[^>]*',
+      ).firstMatch(tinted)!.group(0)!;
+
+      // Fully worked: the accent, and no fill-opacity at all. Solid is the
+      // *absence* of the attribute, which is what keeps the flat themes'
+      // output byte-for-byte what it was.
+      expect(tagFor('chest'), contains('fill="#7C6BFF"'));
+      expect(tagFor('chest'), isNot(contains('fill-opacity')));
+
+      expect(tagFor('abs'), contains('fill-opacity="0.170"'));
+    });
+
     test('and by default the sheets are left exactly as authored', () {
       // The six flat themes are meant to come out of the redesign unchanged.
       final tinted = tintMuscles(
