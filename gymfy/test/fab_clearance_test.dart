@@ -17,7 +17,12 @@ import 'package:gymfy/shared/widgets/glass_app_bar.dart';
 import 'package:gymfy/shared/widgets/glass_nav_bar.dart';
 import 'package:gymfy/shared/widgets/glass_scaffold.dart';
 
+import 'package:gymfy/shared/widgets/app_button.dart';
+
 import 'support/default_accent.dart';
+
+/// The floating button, whatever shape it is wearing.
+final _button = find.widgetWithText(AppButton, 'Add exercises');
 
 /// The app's actual arrangement: the shell owns the pill, the screen inside it
 /// owns the FAB.
@@ -43,10 +48,15 @@ Future<void> _pumpShell(WidgetTester tester, {required AppTheme theme}) async {
                     SizedBox(height: 60, child: Text('row $i')),
                 ],
               ),
-              floatingActionButton: FloatingActionButton.extended(
+              // The arrangement the screens actually use: the design's button,
+              // centred, in the slot Scaffold reserves for a floating one.
+              floatingActionButtonLocation:
+                  FloatingActionButtonLocation.centerFloat,
+              floatingActionButton: AppButton(
+                label: 'Add exercises',
+                icon: Icons.add,
+                expand: false,
                 onPressed: () {},
-                icon: const Icon(Icons.add),
-                label: const Text('Add exercises'),
               ),
             ),
             bottomNavigationBar: GlassNavBar(
@@ -66,9 +76,7 @@ void main() {
   testWidgets('the day builder FAB sits above the pill', (tester) async {
     await _pumpShell(tester, theme: AppTheme.hyper);
 
-    final fabBottom = tester
-        .getBottomLeft(find.byType(FloatingActionButton))
-        .dy;
+    final fabBottom = tester.getBottomLeft(_button).dy;
     final pillTop = tester.getTopLeft(find.byType(NavigationBar)).dy;
 
     expect(
@@ -80,13 +88,24 @@ void main() {
     );
   });
 
+  testWidgets('and sits in the middle, not the corner', (tester) async {
+    // The navigation pill is centred; a button tucked into the right-hand
+    // corner between it and the content read as something left behind.
+    await _pumpShell(tester, theme: AppTheme.hyper);
+
+    final fab = tester.getCenter(_button);
+    final screen = tester.getCenter(find.byType(MaterialApp));
+
+    expect(fab.dx, closeTo(screen.dx, 1));
+  });
+
   testWidgets('and the flat themes are untouched', (tester) async {
     // There is no floating pill there: the bar is opaque and welded to the
     // bottom edge, and Scaffold has always placed the FAB above it.
     await _pumpShell(tester, theme: AppTheme.darkDefault);
 
     expect(
-      tester.getBottomLeft(find.byType(FloatingActionButton)).dy,
+      tester.getBottomLeft(_button).dy,
       lessThanOrEqualTo(tester.getTopLeft(find.byType(NavigationBar)).dy),
     );
   });
