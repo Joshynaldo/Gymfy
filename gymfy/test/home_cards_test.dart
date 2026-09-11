@@ -237,7 +237,9 @@ void main() {
       expect(find.text('Push'), findsOneWidget);
       // 3 × 100 kg × 10 reps.
       expect(find.textContaining('3 sets'), findsOneWidget);
-      expect(find.textContaining('3000 kg'), findsOneWidget);
+      // Grouped: a session total runs to five digits, and "3000" is a number
+      // you count the digits of before you know what it says.
+      expect(find.textContaining('3,000 kg'), findsOneWidget);
     });
 
     testWidgets('one set is not "1 sets"', (tester) async {

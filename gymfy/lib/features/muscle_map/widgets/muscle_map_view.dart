@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/utils/exercise_display.dart';
+import '../../../shared/widgets/app_segmented.dart';
 import '../data/muscle_colors.dart';
 import 'muscle_map.dart';
 
@@ -21,6 +22,7 @@ class MuscleMapView extends StatefulWidget {
     this.contrastCaption =
         'Each muscle has its own colour. Brighter still means more volume.',
     this.heatColor,
+    this.leadingControl,
   });
 
   /// The intensities to display (loading / error / data).
@@ -43,6 +45,14 @@ class MuscleMapView extends StatefulWidget {
   /// diagram are told apart by colour rather than only by their captions.
   final Color? heatColor;
 
+  /// A control the caller owns, laid out beside the front/back switch.
+  ///
+  /// The screen above knows what the colours *mean* — volume or fatigue — and
+  /// this widget knows which way the body is facing. Passing one in rather than
+  /// stacking two rows of switches is what keeps them on one line, as the
+  /// design draws them.
+  final Widget? leadingControl;
+
   @override
   State<MuscleMapView> createState() => _MuscleMapViewState();
 }
@@ -64,38 +74,45 @@ class _MuscleMapViewState extends State<MuscleMapView> {
 
     return Column(
       children: [
+        // One row of switches across the top of the card: what the colour
+        // means on the left, which way the body faces on the right. They were
+        // two different controls in two different places — a segmented button
+        // with a tick in it here, a pill there — which is two languages for
+        // "pick one of these", on the same card.
         Padding(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+          padding: const EdgeInsets.fromLTRB(4, 4, 4, 14),
           child: Row(
             children: [
-              const Spacer(),
-              SegmentedButton<BodySide>(
-                segments: const [
-                  ButtonSegment(value: BodySide.front, label: Text('Front')),
-                  ButtonSegment(value: BodySide.back, label: Text('Back')),
-                ],
-                selected: {_side},
-                onSelectionChanged: (selection) =>
-                    setState(() => _side = selection.first),
-              ),
-              Expanded(
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: IconButton(
-                    icon: Icon(
-                      _isContrast ? Icons.palette : Icons.palette_outlined,
-                    ),
-                    color: _isContrast ? theme.colorScheme.primary : null,
-                    tooltip: _isContrast
-                        ? 'Switch to heatmap'
-                        : 'Switch to per-muscle colours',
-                    onPressed: () => setState(() {
-                      _mode = _isContrast
-                          ? MuscleMapMode.heatmap
-                          : MuscleMapMode.contrast;
-                    }),
-                  ),
+              if (widget.leadingControl != null) ...[
+                Expanded(child: widget.leadingControl!),
+                const SizedBox(width: 8),
+              ],
+              SizedBox(
+                width: 128,
+                child: AppSegmented<BodySide>(
+                  selected: _side,
+                  onChanged: (value) => setState(() => _side = value),
+                  segments: const [
+                    (value: BodySide.front, label: 'Front', leading: null),
+                    (value: BodySide.back, label: 'Back', leading: null),
+                  ],
                 ),
+              ),
+              IconButton(
+                icon: Icon(
+                  _isContrast ? Icons.palette : Icons.palette_outlined,
+                  size: 20,
+                ),
+                visualDensity: VisualDensity.compact,
+                color: _isContrast ? theme.colorScheme.primary : null,
+                tooltip: _isContrast
+                    ? 'Switch to heatmap'
+                    : 'Switch to per-muscle colours',
+                onPressed: () => setState(() {
+                  _mode = _isContrast
+                      ? MuscleMapMode.heatmap
+                      : MuscleMapMode.contrast;
+                }),
               ),
             ],
           ),
@@ -131,13 +148,30 @@ class _MuscleMapViewState extends State<MuscleMapView> {
             child: _Legend(muscleIds: trained),
           ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 4),
-          child: Text(
-            _captionText,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+          padding: const EdgeInsets.fromLTRB(6, 8, 6, 0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Text(
+                  _captionText,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              // The ramp, beside the sentence that explains it. Without it
+              // "brighter = more" is a claim the reader has to take on trust;
+              // with it, the scale is on the card next to the body it applies
+              // to. Only in heatmap mode — in per-muscle colours, brightness
+              // is not the variable and the legend above names the colours.
+              if (!_isContrast) ...[
+                const SizedBox(width: 12),
+                _HeatRamp(
+                  colour: widget.heatColor ?? theme.colorScheme.primary,
+                ),
+              ],
+            ],
           ),
         ),
       ],
@@ -190,6 +224,49 @@ class _Legend extends StatelessWidget {
               Text(muscleLabel(muscleId), style: theme.textTheme.labelSmall),
             ],
           ),
+      ],
+    );
+  }
+}
+
+/// Five squares from unworked to worked hardest, with a word at each end.
+///
+/// The steps are the same ones the diagram uses, so a muscle on the body can be
+/// matched to a square by eye rather than by reading a number off it.
+class _HeatRamp extends StatelessWidget {
+  const _HeatRamp({required this.colour});
+
+  final Color colour;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final label = theme.textTheme.labelSmall?.copyWith(letterSpacing: 0);
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('Less', style: label),
+        const SizedBox(width: 6),
+        for (final alpha in [0.08, 0.28, 0.5, 0.74, 1.0])
+          Padding(
+            padding: const EdgeInsets.only(right: 3),
+            child: Container(
+              width: 11,
+              height: 11,
+              decoration: BoxDecoration(
+                // The lowest step is the *surface*, not the colour at 8%: an
+                // untrained muscle is drawn unlit, and the ramp has to start
+                // where the body starts or it promises a shade nothing wears.
+                color: alpha == 0.08
+                    ? theme.colorScheme.onSurface.withValues(alpha: 0.08)
+                    : colour.withValues(alpha: alpha),
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+          ),
+        const SizedBox(width: 3),
+        Text('More', style: label),
       ],
     );
   }

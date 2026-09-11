@@ -5,7 +5,6 @@ import '../../onboarding/data/onboarding_repository.dart';
 
 import '../../progress/widgets/activity_heatmap.dart';
 import '../widgets/last_workout_card.dart';
-import '../widgets/next_up_card.dart';
 
 import '../widgets/streak_badge.dart';
 import '../widgets/week_card.dart';
@@ -40,7 +39,10 @@ class HomeScreen extends ConsumerWidget {
         padding: const EdgeInsets.only(top: 6, bottom: 24) + barInsets(context),
         children: [
           TodayCard(today: today),
-          NextUpCard(today: today),
+          // No "up next" card: the template's Home is today, the last
+          // session, and the week — and the Workout tab shows the whole split
+          // anyway. The widget is kept; it was the second accent on a tab whose
+          // accent belongs to Start workout.
           const LastWorkoutCard(),
           const WeekCard(),
           // The year grid. It also lives in Progress → All-time, where it is

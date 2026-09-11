@@ -140,20 +140,58 @@ class RestTimerBar extends ConsumerWidget {
                   ],
                 ),
               ),
-              // A 3px line along the foot rather than a ring beside the number.
-              // The number already says how long is left; this says it without
-              // being read at all, which is what you want from across a gym.
-              SizedBox(
-                height: 3,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: FractionallySizedBox(
-                    widthFactor: done ? 1 : progress,
-                    child: ColoredBox(color: accent),
-                  ),
-                ),
-              ),
+              _RestBar(progress: done ? 0 : progress, accent: accent),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// How much rest is left, as a bar that empties.
+///
+/// Along the foot rather than a ring beside the number. The number already says
+/// how long is left; this says it without being read at all — from across a gym
+/// you see a short bar, not "0:23".
+///
+/// Two details do the work. It runs on a *track*, so what is gone is as visible
+/// as what remains: an unlit bar on a dark pane just looks like a shorter bar,
+/// and you cannot tell a third left from a third used. And it slides rather
+/// than stepping — the timer ticks once a second, so without this the bar jumps
+/// in twelve visible steps and reads as something recalculating rather than
+/// time passing.
+class _RestBar extends StatelessWidget {
+  const _RestBar({required this.progress, required this.accent});
+
+  /// 1.0 at the start of the rest, 0.0 when it runs out.
+  final double progress;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return SizedBox(
+      height: 4,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.10),
+        ),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(end: progress),
+            // A shade under the tick it is following, so each second's travel
+            // finishes just before the next begins and the bar never stalls.
+            duration: motionOf(context, const Duration(milliseconds: 900)),
+            // Linear: this *is* elapsing time, and easing it would mean the bar
+            // moving at a speed the clock is not.
+            curve: Curves.linear,
+            builder: (context, value, _) => FractionallySizedBox(
+              widthFactor: value.clamp(0.0, 1.0),
+              child: ColoredBox(color: accent),
+            ),
           ),
         ),
       ),
