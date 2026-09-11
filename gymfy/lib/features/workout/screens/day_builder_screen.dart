@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../shared/utils/format.dart';
 import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_chip.dart';
 import '../../../shared/widgets/exercise_thumbnail.dart';
 import '../../../shared/widgets/number_wheel.dart';
 import '../data/session_repository.dart';
@@ -378,10 +379,10 @@ class _SetsRepsDialogState extends State<_SetsRepsDialog> {
               spacing: 6,
               children: [
                 for (var n = 0; n <= _maxWarmups; n++)
-                  ChoiceChip(
-                    label: Text('$n'),
+                  AppChip(
+                    label: '$n',
                     selected: _warmups == n,
-                    onSelected: (_) => setState(() => _warmups = n),
+                    onTap: () => setState(() => _warmups = n),
                   ),
               ],
             ),

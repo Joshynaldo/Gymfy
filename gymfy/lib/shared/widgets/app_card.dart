@@ -27,6 +27,7 @@ class AppCard extends ConsumerWidget {
     this.onLongPress,
     this.selected = false,
     this.tier = GlassTier.raised,
+    this.outlined = false,
     this.padding = const EdgeInsets.fromLTRB(12, 12, 8, 12),
     this.margin,
   });
@@ -43,6 +44,10 @@ class AppCard extends ConsumerWidget {
 
   /// Escalates the border to solid accent and tints the surface.
   final bool selected;
+
+  /// Draws a visible hairline right round — for a card that is one of several
+  /// you choose between, where the edge is what says it can be picked.
+  final bool outlined;
 
   final EdgeInsetsGeometry padding;
 
@@ -112,6 +117,7 @@ class AppCard extends ConsumerWidget {
             borderRadius: paneShape,
             tier: tier,
             selected: selected,
+            outlined: outlined,
             // Nothing sits behind a card but the backdrop's colour field, and
             // blurring a smooth field gives back the same smooth field. See
             // GlassSurface.blurs — this is forty offscreen passes saved on a

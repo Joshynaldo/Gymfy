@@ -144,7 +144,15 @@ class MuscleMap extends ConsumerWidget {
             heatColor: heatColor ?? accent,
             mode: mode,
           );
-          return SvgPicture.string(svg, fit: BoxFit.contain);
+          // Slightly translucent, so the field drifts behind the figure rather
+          // than stopping at it. The body is the largest solid shape in the
+          // app, and at full opacity it reads as a cut-out pasted onto the
+          // card — the one thing on a screen of glass that light does not get
+          // through. Kept high enough that a lit muscle is still plainly lit.
+          return Opacity(
+            opacity: 0.86,
+            child: SvgPicture.string(svg, fit: BoxFit.contain),
+          );
         },
       ),
     );
