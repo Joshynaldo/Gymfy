@@ -7,6 +7,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../app/theme/accent_color.dart';
 import '../../../shared/data/lifter_sex.dart';
 import '../data/muscle_colors.dart';
+import '../../../app/theme/glass.dart';
 
 export '../data/muscle_colors.dart' show MuscleMapMode;
 
@@ -75,6 +76,25 @@ final bodyFigureProvider = Provider<BodyFigure>((ref) {
 /// placeholder `fill` authored into the SVG files.
 const _restColor = Color(0xFF4C5361);
 
+/// The silhouette the muscles are laid on, as authored. Never tinted: it is
+/// the body, not a muscle group, and it has no volume to report.
+const _bodyColor = Color(0xFF2E3440);
+
+/// The same two, lifted for the glass theme.
+///
+/// Not a preference — the figure is drawn over a different thing there. On the
+/// flat themes it sits on a near-black card, where slate reads as "muscle I
+/// haven't trained". On glass it sits on a bright moving field, and the same
+/// slate reads as a hole cut in the screen: the one shape on a page of glass
+/// that light does not get through. Making it translucent was not enough on
+/// its own, because 86% of a very dark colour is still a very dark colour.
+///
+/// Lifted by roughly the same amount rather than recoloured, so the silhouette
+/// stays darker than the muscles standing on it — that difference is the only
+/// thing giving the figure any depth.
+const _restColorGlass = Color(0xFF9BA3B6);
+const _bodyColorGlass = Color(0xFF666F82);
+
 /// Matches a muscle path's tag so we can rewrite just its fill, e.g.
 /// `data-muscle="chest" fill="#4C5361"`. A single path may carry more than one
 /// space-separated id (e.g. `front_deltoid side_deltoid`) when one anatomical
@@ -138,11 +158,14 @@ class MuscleMap extends ConsumerWidget {
           ),
         ),
         data: (template) {
+          final glass = glassOf(context).enabled;
           final svg = tintMuscles(
             svg: template,
             intensities: intensities,
             heatColor: heatColor ?? accent,
             mode: mode,
+            restColor: glass ? _restColorGlass : _restColor,
+            bodyColor: glass ? _bodyColorGlass : _bodyColor,
           );
           // Slightly translucent, so the field drifts behind the figure rather
           // than stopping at it. The body is the largest solid shape in the
@@ -174,8 +197,23 @@ String tintMuscles({
   /// passing a fixed red.
   required Color heatColor,
   MuscleMapMode mode = MuscleMapMode.heatmap,
+
+  /// What a muscle at intensity 0 is painted, and the colour every tint starts
+  /// from. Defaults to the value authored into the files.
+  Color restColor = _restColor,
+
+  /// What the silhouette under the muscles is painted.
+  Color bodyColor = _bodyColor,
 }) {
-  return svg.replaceAllMapped(_muscleFill, (match) {
+  // The silhouette first, by its literal authored fill: the muscle pass below
+  // can produce any colour at all, and rewriting the body afterwards could
+  // catch a muscle that happened to land on the same hex.
+  final ground = svg.replaceAll(
+    'fill="${_toHex(_bodyColor)}"',
+    'fill="${_toHex(bodyColor)}"',
+  );
+
+  return ground.replaceAllMapped(_muscleFill, (match) {
     final ids = match.group(1)!.split(' ');
     // A region tagged with several ids glows as hard as its most-worked muscle,
     // and — in contrast mode — takes that muscle's colour. Picking the loudest
@@ -193,7 +231,7 @@ String tintMuscles({
       MuscleMapMode.heatmap => heatColor,
       MuscleMapMode.contrast => muscleColor(strongest),
     };
-    final color = Color.lerp(_restColor, target, t)!;
+    final color = Color.lerp(restColor, target, t)!;
     return 'data-muscle="${match.group(1)}" fill="${_toHex(color)}"';
   });
 }
