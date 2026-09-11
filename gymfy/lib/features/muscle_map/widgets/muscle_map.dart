@@ -87,13 +87,28 @@ const _bodyColor = Color(0xFF2E3440);
 /// haven't trained". On glass it sits on a bright moving field, and the same
 /// slate reads as a hole cut in the screen: the one shape on a page of glass
 /// that light does not get through. Making it translucent was not enough on
-/// its own, because 86% of a very dark colour is still a very dark colour.
+/// its own — a fraction of a very dark colour is still a very dark colour, and
+/// the figure only got dimmer.
 ///
 /// Lifted by roughly the same amount rather than recoloured, so the silhouette
 /// stays darker than the muscles standing on it — that difference is the only
 /// thing giving the figure any depth.
-const _restColorGlass = Color(0xFF9BA3B6);
-const _bodyColorGlass = Color(0xFF666F82);
+///
+/// Lifted *past* what looks right on its own, too: these are the colours before
+/// [_glassOpacity] takes a quarter of them back out. Read them as the figure at
+/// full strength, not as what lands on the screen.
+const _restColorGlass = Color(0xFFAEB7CA);
+const _bodyColorGlass = Color(0xFF7B8499);
+
+/// How solid the figure is on the glass theme.
+///
+/// Low enough that the card's own gradient is visible through the body — on a
+/// screen where every other surface admits light, a fully opaque figure is the
+/// one thing that doesn't, and it reads as a sticker rather than as part of the
+/// pane. High enough that a lit muscle is still plainly lit: past about a third
+/// off, the difference between a worked muscle and an unworked one starts going
+/// with it, and that difference is the whole point of the diagram.
+const _glassOpacity = 0.72;
 
 /// Matches a muscle path's tag so we can rewrite just its fill, e.g.
 /// `data-muscle="chest" fill="#4C5361"`. A single path may carry more than one
@@ -167,15 +182,12 @@ class MuscleMap extends ConsumerWidget {
             restColor: glass ? _restColorGlass : _restColor,
             bodyColor: glass ? _bodyColorGlass : _bodyColor,
           );
-          // Slightly translucent, so the field drifts behind the figure rather
-          // than stopping at it. The body is the largest solid shape in the
-          // app, and at full opacity it reads as a cut-out pasted onto the
-          // card — the one thing on a screen of glass that light does not get
-          // through. Kept high enough that a lit muscle is still plainly lit.
-          return Opacity(
-            opacity: 0.86,
-            child: SvgPicture.string(svg, fit: BoxFit.contain),
-          );
+          final picture = SvgPicture.string(svg, fit: BoxFit.contain);
+          // The flat themes get the figure as drawn: it sits on an opaque card
+          // there, so there is nothing behind it for it to be translucent *to*,
+          // and dimming it would only make it harder to read.
+          if (!glass) return picture;
+          return Opacity(opacity: _glassOpacity, child: picture);
         },
       ),
     );
