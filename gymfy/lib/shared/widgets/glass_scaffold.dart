@@ -55,7 +55,28 @@ class GlassScaffold extends StatelessWidget {
     return Scaffold(
       appBar: appBar,
       body: body == null ? null : Builder(builder: body!),
-      floatingActionButton: floatingActionButton,
+      // Lifted clear of the navigation pill.
+      //
+      // The pill belongs to the *shell's* Scaffold and the button to this one.
+      // Neither knows the other exists, so this Scaffold placed its button
+      // sixteen pixels off the bottom of the screen — which is underneath the
+      // pill, entirely. "Add exercises" on the day builder was drawn and
+      // covered, and every other floating button in the app sits in the same
+      // spot.
+      //
+      // The number comes from the padding the shell hands down, which is how
+      // much of the bottom edge its chrome occupies. Read inside the Scaffold,
+      // for the same reason `body` is a builder.
+      floatingActionButton: floatingActionButton == null
+          ? null
+          : Padding(
+              padding: EdgeInsets.only(
+                bottom: glassOf(context).enabled
+                    ? MediaQuery.paddingOf(context).bottom
+                    : 0,
+              ),
+              child: floatingActionButton,
+            ),
       extendBodyBehindAppBar: glassOf(context).enabled,
     );
   }

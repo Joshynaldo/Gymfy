@@ -42,6 +42,17 @@ class GlassNavBar extends StatelessWidget {
       // Material's 80 is sized for a bar that runs to the screen edge. Inside a
       // pill with air around it, the same height reads as a slab.
       height: glass.enabled ? 62 : null,
+      // Icons only inside the pill. Four labels across a bar inset from both
+      // edges is four lines of 10px type competing with the screen above them,
+      // and these four destinations are the ones you learn in a day.
+      //
+      // The labels are not deleted, only unshown: each destination still
+      // carries its name, so a screen reader announces "Progress" and a long
+      // press still says it. Hiding a label is a visual decision; removing it
+      // would be an accessibility one.
+      labelBehavior: glass.enabled
+          ? NavigationDestinationLabelBehavior.alwaysHide
+          : null,
       destinations: destinations,
     );
 
