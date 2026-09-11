@@ -14,6 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/features/overload/data/overload_repository.dart';
 import 'package:gymfy/features/workout/data/session_repository.dart';
 import 'package:gymfy/features/workout/data/workout_repository.dart';
+import 'package:gymfy/shared/widgets/app_chip.dart';
 import 'package:gymfy/features/workout/screens/active_workout_screen.dart';
 import 'package:gymfy/features/workout/screens/day_builder_screen.dart';
 import 'package:gymfy/shared/database/app_database.dart';
@@ -140,10 +141,13 @@ void main() {
     }
 
     testWidgets('both phases can be logged from the card', (tester) async {
+      // The working-set button counts rather than saying "Add set": the number
+      // it shows is the one about to be logged, so the card answers "which set
+      // am I on" without the rows above being counted.
       await pumpWorkout(tester);
 
       expect(find.text('Warm-up'), findsOneWidget);
-      expect(find.text('Add set'), findsOneWidget);
+      expect(find.text('Log set 1'), findsOneWidget);
     });
 
     testWidgets('a planned count counts the warm-ups down', (tester) async {
@@ -290,7 +294,7 @@ void main() {
 
       await tester.tap(find.text('Barbell Bench Press'));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(ChoiceChip, '3'));
+      await tester.tap(find.widgetWithText(AppChip, '3'));
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(FilledButton, 'Save'));
       await tester.pumpAndSettle();
@@ -305,7 +309,7 @@ void main() {
 
       await tester.tap(find.text('Barbell Bench Press'));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(ChoiceChip, '0'));
+      await tester.tap(find.widgetWithText(AppChip, '0'));
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(FilledButton, 'Save'));
       await tester.pumpAndSettle();

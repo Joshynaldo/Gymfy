@@ -46,7 +46,9 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('shows the weight timeline with its total change', (tester) async {
+  testWidgets('shows the weight timeline with its total change', (
+    tester,
+  ) async {
     await pumpScreen(tester);
 
     expect(tester.takeException(), isNull);
@@ -68,7 +70,9 @@ void main() {
     expect(find.text('Only one waist measurement so far'), findsOneWidget);
   });
 
-  testWidgets('a body part never measured shows an empty state', (tester) async {
+  testWidgets('a body part never measured shows an empty state', (
+    tester,
+  ) async {
     await pumpScreen(tester);
 
     await tester.tap(find.text('Hips'));

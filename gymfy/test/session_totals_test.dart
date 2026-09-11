@@ -18,13 +18,15 @@ void main() {
   setUp(() async {
     db = AppDatabase.forTesting(NativeDatabase.memory());
     sessions = SessionRepository(db);
-    await db.into(db.exercises).insert(
-      ExercisesCompanion.insert(
-        id: 'barbell_bench_press',
-        name: 'Barbell Bench Press',
-        muscleIds: const ['chest'],
-      ),
-    );
+    await db
+        .into(db.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: 'barbell_bench_press',
+            name: 'Barbell Bench Press',
+            muscleIds: const ['chest'],
+          ),
+        );
   });
 
   tearDown(() async {
@@ -37,9 +39,9 @@ void main() {
     int sets = 2,
     bool complete = true,
   }) async {
-    final id = await db.into(db.workoutSessions).insert(
-      WorkoutSessionsCompanion.insert(name: 'Push'),
-    );
+    final id = await db
+        .into(db.workoutSessions)
+        .insert(WorkoutSessionsCompanion.insert(name: 'Push'));
     for (var i = 1; i <= sets; i++) {
       await sessions.logSet(
         sessionId: id,

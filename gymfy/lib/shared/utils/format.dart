@@ -18,10 +18,37 @@ const _monthAbbr = [
 /// Formats a weight for display: whole numbers show without a decimal (60),
 /// fractional plates show one decimal place (62.5). Keeps the UI tidy while
 /// still supporting half-kilo / half-pound increments.
+///
+/// Thousands are grouped, because a weight on the bar and a season's volume are
+/// the same function's output: "62.5" needs nothing, and "41040" is a number you
+/// have to count the digits of. Grouping is what makes the second readable at a
+/// glance, and it costs the first nothing.
 String formatWeight(double weight) {
-  return weight == weight.roundToDouble()
+  final text = weight == weight.roundToDouble()
       ? weight.toStringAsFixed(0)
       : weight.toStringAsFixed(1);
+  return _groupThousands(text);
+}
+
+/// Puts a comma every three digits, left of the decimal point.
+///
+/// Written out rather than pulled from `intl`: the package brings a locale
+/// database and a dependency for one loop, and every other number this app
+/// prints is already formatted by hand here.
+String _groupThousands(String number) {
+  final dot = number.indexOf('.');
+  final whole = dot == -1 ? number : number.substring(0, dot);
+  final rest = dot == -1 ? '' : number.substring(dot);
+  if (whole.length <= 3) return number;
+
+  final buffer = StringBuffer();
+  for (var i = 0; i < whole.length; i++) {
+    // Counted from the right: the first group is whatever is left over.
+    final fromRight = whole.length - i;
+    if (i > 0 && fromRight % 3 == 0) buffer.write(',');
+    buffer.write(whole[i]);
+  }
+  return '$buffer$rest';
 }
 
 /// Parses a user-typed weight, accepting a comma as the decimal separator

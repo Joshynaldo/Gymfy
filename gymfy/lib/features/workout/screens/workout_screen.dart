@@ -10,6 +10,7 @@ import '../data/workout_repository.dart';
 import '../widgets/split_day_list.dart';
 import 'split_days_screen.dart' show addDayTo;
 import 'split_list_screen.dart' show createSplit;
+import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 
@@ -38,7 +39,7 @@ class WorkoutScreen extends ConsumerWidget {
     if (error != null) {
       return GlassScaffold(
         appBar: GlassAppBar(title: const Text('Workout')),
-        body: Center(
+        body: (context) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
@@ -56,7 +57,8 @@ class WorkoutScreen extends ConsumerWidget {
     if (splits.isEmpty) {
       return GlassScaffold(
         appBar: GlassAppBar(title: const Text('Workout')),
-        body: _NoSplitsYet(onCreate: () => createSplit(context, ref)),
+        body: (context) =>
+            _NoSplitsYet(onCreate: () => createSplit(context, ref)),
       );
     }
 
@@ -69,7 +71,7 @@ class WorkoutScreen extends ConsumerWidget {
           title: const Text('Workout'),
           actions: [_SwitcherAction(splits: splits, activeId: null)],
         ),
-        body: _NoActiveSplit(
+        body: (context) => _NoActiveSplit(
           onChoose: () => _openSwitcher(context, ref, splits, null),
         ),
       );
@@ -80,11 +82,13 @@ class WorkoutScreen extends ConsumerWidget {
         title: Text(active.name),
         actions: [_SwitcherAction(splits: splits, activeId: active.id)],
       ),
-      body: SplitDayList(splitId: active.id),
-      floatingActionButton: FloatingActionButton.extended(
+      body: (context) => SplitDayList(splitId: active.id),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: AppButton(
+        label: 'Add day',
+        icon: Icons.add,
+        expand: false,
         onPressed: () => addDayTo(context, ref, active.id),
-        icon: const Icon(Icons.add),
-        label: const Text('Add day'),
       ),
     );
   }

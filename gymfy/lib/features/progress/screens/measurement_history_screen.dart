@@ -6,6 +6,7 @@ import '../../../shared/database/app_database.dart';
 import '../../../shared/models/body_measurement.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
+import '../../../shared/widgets/app_chip.dart';
 import '../data/measurement_units.dart';
 import '../data/measurements_repository.dart';
 import '../widgets/measurement_timeline_chart.dart';
@@ -32,7 +33,7 @@ class _MeasurementHistoryScreenState
 
     return GlassScaffold(
       appBar: GlassAppBar(title: const Text('Measurement history')),
-      body: historyAsync.when(
+      body: (context) => historyAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: Padding(
@@ -108,18 +109,15 @@ class _FieldPicker extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final accent = ref.watch(accentColorProvider);
-
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: [
         for (final field in MeasurementField.values)
-          ChoiceChip(
-            label: Text(field.label),
+          AppChip(
+            label: field.label,
             selected: field == selected,
-            selectedColor: accent.withValues(alpha: 0.2),
-            onSelected: (_) => onChanged(field),
+            onTap: () => onChanged(field),
           ),
       ],
     );

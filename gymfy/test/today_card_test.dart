@@ -28,7 +28,10 @@ void main() {
     db = AppDatabase.forTesting(NativeDatabase.memory());
     repo = WorkoutRepository(db);
     container = ProviderContainer(
-      overrides: [appDatabaseProvider.overrideWithValue(db), defaultAccentOverride],
+      overrides: [
+        appDatabaseProvider.overrideWithValue(db),
+        defaultAccentOverride,
+      ],
     );
   });
 
@@ -41,7 +44,9 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: MaterialApp(home: Scaffold(body: TodayCard(today: today))),
+        child: MaterialApp(
+          home: Scaffold(body: TodayCard(today: today)),
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -71,13 +76,15 @@ void main() {
     final splitId = await repo.createSplit('PPL');
     final push = await repo.createDay(splitId, 'Push');
     await repo.assignWeekday(dayId: push, weekday: 1);
-    await db.into(db.exercises).insert(
-      ExercisesCompanion.insert(
-        id: 'barbell_bench_press',
-        name: 'Barbell Bench Press',
-        muscleIds: const ['chest'],
-      ),
-    );
+    await db
+        .into(db.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: 'barbell_bench_press',
+            name: 'Barbell Bench Press',
+            muscleIds: const ['chest'],
+          ),
+        );
     await repo.addExercisesToDay(push, ['barbell_bench_press']);
 
     await pump(tester, today: monday);
@@ -95,13 +102,15 @@ void main() {
     final splitId = await repo.createSplit('PPL');
     final push = await repo.createDay(splitId, 'Push');
     await repo.assignWeekday(dayId: push, weekday: 1);
-    await db.into(db.exercises).insert(
-      ExercisesCompanion.insert(
-        id: 'barbell_bench_press',
-        name: 'Barbell Bench Press',
-        muscleIds: const ['chest'],
-      ),
-    );
+    await db
+        .into(db.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: 'barbell_bench_press',
+            name: 'Barbell Bench Press',
+            muscleIds: const ['chest'],
+          ),
+        );
     await repo.addExercisesToDay(push, ['barbell_bench_press']);
     // A plain query, not `watchDayExercises(...).first`: awaiting a Drift
     // *stream* inside `testWidgets` deadlocks, because the faked clock never
@@ -120,13 +129,15 @@ void main() {
     final splitId = await repo.createSplit('PPL');
     final push = await repo.createDay(splitId, 'Push');
     await repo.assignWeekday(dayId: push, weekday: 1);
-    await db.into(db.exercises).insert(
-      ExercisesCompanion.insert(
-        id: 'barbell_bench_press',
-        name: 'Barbell Bench Press',
-        muscleIds: const ['chest'],
-      ),
-    );
+    await db
+        .into(db.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: 'barbell_bench_press',
+            name: 'Barbell Bench Press',
+            muscleIds: const ['chest'],
+          ),
+        );
     await repo.addExercisesToDay(push, ['barbell_bench_press']);
     await SessionRepository(db).startSession(dayId: push, name: 'Push');
 
@@ -143,13 +154,15 @@ void main() {
     final splitId = await repo.createSplit('PPL');
     final push = await repo.createDay(splitId, 'Push');
     await repo.assignWeekday(dayId: push, weekday: 1);
-    await db.into(db.exercises).insert(
-      ExercisesCompanion.insert(
-        id: 'barbell_bench_press',
-        name: 'Barbell Bench Press',
-        muscleIds: const ['chest'],
-      ),
-    );
+    await db
+        .into(db.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: 'barbell_bench_press',
+            name: 'Barbell Bench Press',
+            muscleIds: const ['chest'],
+          ),
+        );
     await repo.addExercisesToDay(push, ['barbell_bench_press']);
     final sessions = SessionRepository(db);
     final id = await sessions.startSession(dayId: push, name: 'Push');

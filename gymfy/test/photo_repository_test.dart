@@ -54,18 +54,20 @@ void main() {
     expect(picked.existsSync(), isTrue);
   });
 
-  test('only the file name is stored, so the path is resolved on read',
-      () async {
-    await repo.addPhoto(
-      day: DateTime(2026, 7, 25),
-      source: await fakePickedImage('IMG_1.jpg'),
-    );
+  test(
+    'only the file name is stored, so the path is resolved on read',
+    () async {
+      await repo.addPhoto(
+        day: DateTime(2026, 7, 25),
+        source: await fakePickedImage('IMG_1.jpg'),
+      );
 
-    final item = (await repo.watchAll().first).single;
-    // A directory separator in the column would mean a baked-in absolute path.
-    expect(item.photo.fileName, isNot(contains('/')));
-    expect(item.path, '${photosDir.path}/${item.photo.fileName}');
-  });
+      final item = (await repo.watchAll().first).single;
+      // A directory separator in the column would mean a baked-in absolute path.
+      expect(item.photo.fileName, isNot(contains('/')));
+      expect(item.path, '${photosDir.path}/${item.photo.fileName}');
+    },
+  );
 
   test('deleting a photo removes both the row and the file', () async {
     await repo.addPhoto(
@@ -93,25 +95,27 @@ void main() {
     expect(await repo.watchAll().first, isEmpty);
   });
 
-  test('several photos can share a day without overwriting each other',
-      () async {
-    final day = DateTime(2026, 7, 25);
-    await repo.addPhoto(
-      day: day,
-      source: await fakePickedImage('front.jpg'),
-      note: 'front',
-    );
-    await repo.addPhoto(
-      day: day,
-      source: await fakePickedImage('back.jpg'),
-      note: 'back',
-    );
+  test(
+    'several photos can share a day without overwriting each other',
+    () async {
+      final day = DateTime(2026, 7, 25);
+      await repo.addPhoto(
+        day: day,
+        source: await fakePickedImage('front.jpg'),
+        note: 'front',
+      );
+      await repo.addPhoto(
+        day: day,
+        source: await fakePickedImage('back.jpg'),
+        note: 'back',
+      );
 
-    final items = await repo.watchAll().first;
-    expect(items, hasLength(2));
-    expect(items.map((i) => i.photo.fileName).toSet(), hasLength(2));
-    expect(photosDir.listSync(), hasLength(2));
-  });
+      final items = await repo.watchAll().first;
+      expect(items, hasLength(2));
+      expect(items.map((i) => i.photo.fileName).toSet(), hasLength(2));
+      expect(photosDir.listSync(), hasLength(2));
+    },
+  );
 
   test('photos come back newest day first', () async {
     await repo.addPhoto(

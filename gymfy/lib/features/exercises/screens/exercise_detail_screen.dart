@@ -15,6 +15,7 @@ import '../../calculator/widgets/exercise_rank_badge.dart';
 import '../../workout/widgets/exercise_rest_tile.dart';
 import '../../../shared/utils/exercise_preview.dart';
 import '../data/exercise_repository.dart';
+import '../../../shared/widgets/app_chip.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../app/theme/glass.dart';
@@ -66,7 +67,7 @@ class ExerciseDetailScreen extends ConsumerWidget {
             _CustomExerciseMenu(exercise: exercise),
         ],
       ),
-      body: exerciseAsync.when(
+      body: (context) => exerciseAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: Padding(
@@ -172,22 +173,39 @@ class _ExerciseDetailBody extends ConsumerWidget {
           // reads as one stack of surfaces rather than a picture with loose
           // text underneath it.
           AppPanel(
-            padding: const EdgeInsets.all(12),
-            child: _GifPreview(
-              gifPath: exercise.gifPath,
-              accent: accent,
-              exerciseId: exercise.id,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Text(
-              exercise.name,
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w700,
+            // Fourteen of glass all the way round a square still. The frame is
+            // what makes the animation part of the surface rather than a
+            // picture that happens to be on the screen — and square, because
+            // the stills are square and letterboxing one inside a wide panel
+            // leaves two dead strips doing nothing.
+            padding: const EdgeInsets.all(14),
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: _GifPreview(
+                gifPath: exercise.gifPath,
+                accent: accent,
+                exerciseId: exercise.id,
               ),
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(22, 8, 22, 0),
+            child: Text(
+              exercise.name,
+              // The subject of the screen, at the size the scale reserves for
+              // exactly that. Not the 28px of a headline number: this is a
+              // name, and names read badly when they are set as figures.
+              style: theme.textTheme.titleLarge,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(22, 6, 22, 0),
+            child: Text(
+              exercise.muscleIds.map(muscleLabel).join(' · '),
+              style: theme.textTheme.bodySmall,
+            ),
+          ),
+          const SizedBox(height: 10),
           // Renders nothing at all for the many exercises with no published
           // standards, and carries its own bottom spacing so it leaves no gap
           // behind when it does.
@@ -207,9 +225,10 @@ class _ExerciseDetailBody extends ConsumerWidget {
               runSpacing: 8,
               children: [
                 for (final muscleId in exercise.muscleIds)
-                  Chip(
-                    label: Text(muscleLabel(muscleId)),
-                    visualDensity: VisualDensity.compact,
+                  AppChip(
+                    label: muscleLabel(muscleId),
+                    selected: false,
+                    onTap: null,
                   ),
               ],
             ),

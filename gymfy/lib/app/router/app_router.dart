@@ -20,7 +20,7 @@ import '../../features/help/screens/help_screen.dart';
 import '../../features/plan_share/screens/share_plan_screen.dart';
 import '../../features/progress/screens/progress_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
-import '../../features/stats/screens/stats_screen.dart';
+
 import '../../features/workout/screens/active_workout_screen.dart';
 import '../../features/workout/screens/day_builder_screen.dart';
 import '../../features/workout/screens/split_days_screen.dart';
@@ -50,6 +50,7 @@ GoRouter goRouter(Ref ref) {
         branches: [
           // Tab 0 — Home
           StatefulShellBranch(
+            initialLocation: '/home',
             routes: [
               GoRoute(
                 path: '/home',
@@ -59,6 +60,7 @@ GoRouter goRouter(Ref ref) {
           ),
           // Tab 1 — Workout
           StatefulShellBranch(
+            initialLocation: '/workout',
             routes: [
               GoRoute(
                 path: '/workout',
@@ -100,9 +102,66 @@ GoRouter goRouter(Ref ref) {
               ),
             ],
           ),
-          // Tab 2 — Exercises
+          // Tab 2 — Progress (charts, photos, measurements, all-time totals)
+          //
+          // Promoted out of More, where it had been put back when the bar
+          // carried six tabs and something had to give. Four tabs leaves room
+          // for it, and it earns the place: it is the half of the app that is
+          // not logging, and burying the reason people log at all under a hub
+          // screen was always the weakest part of that arrangement.
           StatefulShellBranch(
+            initialLocation: '/progress',
             routes: [
+              GoRoute(
+                path: '/progress',
+                builder: (context, state) => const ProgressScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'exercise/:exerciseId',
+                    builder: (context, state) => ExerciseProgressScreen(
+                      exerciseId: state.pathParameters['exerciseId']!,
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'photos',
+                    builder: (context, state) => const ProgressPhotosScreen(),
+                    routes: [
+                      GoRoute(
+                        path: 'compare',
+                        builder: (context, state) =>
+                            const PhotoComparisonScreen(),
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'measurements',
+                    builder: (context, state) => const MeasurementsScreen(),
+                    routes: [
+                      GoRoute(
+                        path: 'history',
+                        builder: (context, state) =>
+                            const MeasurementHistoryScreen(),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // Tab 3 — More (hub for everything that is not one of the three)
+          StatefulShellBranch(
+            // Stated, not inferred. A branch with no initial location starts at
+            // its *first* route, and this one now holds three — so with the
+            // library declared first, tapping More opened the exercise library
+            // and the hub was unreachable. The tab's own screen is not
+            // something to leave to declaration order.
+            initialLocation: '/more',
+            routes: [
+              // The exercise library moved under More rather than keeping a tab
+              // of its own. It is a reference you consult — when building a
+              // day, when checking a movement — and consulting it almost always
+              // starts from somewhere else in the app. The path is unchanged,
+              // so every link into it still lands.
               GoRoute(
                 path: '/exercises',
                 builder: (context, state) => const ExerciseLibraryScreen(),
@@ -129,65 +188,10 @@ GoRouter goRouter(Ref ref) {
                   ),
                 ],
               ),
-            ],
-          ),
-          // Tab 3 — Stats (rank, muscle map, lifetime totals)
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/stats',
-                builder: (context, state) => const StatsScreen(),
-              ),
-            ],
-          ),
-          // Tab 4 — More (hub for extra tools)
-          StatefulShellBranch(
-            routes: [
               GoRoute(
                 path: '/more',
                 builder: (context, state) => const MoreScreen(),
                 routes: [
-                  // Progress used to be a bottom-nav tab of its own. Six tabs
-                  // was one too many — the bar was crowded and every label had
-                  // to shrink — and of the six, this is the one you consult
-                  // rather than use: you check a chart after training, not
-                  // during. Its whole subtree moved with it, so the photos and
-                  // measurements screens keep their place underneath it.
-                  GoRoute(
-                    path: 'progress',
-                    builder: (context, state) => const ProgressScreen(),
-                    routes: [
-                      GoRoute(
-                        path: 'exercise/:exerciseId',
-                        builder: (context, state) => ExerciseProgressScreen(
-                          exerciseId: state.pathParameters['exerciseId']!,
-                        ),
-                      ),
-                      GoRoute(
-                        path: 'photos',
-                        builder: (context, state) =>
-                            const ProgressPhotosScreen(),
-                        routes: [
-                          GoRoute(
-                            path: 'compare',
-                            builder: (context, state) =>
-                                const PhotoComparisonScreen(),
-                          ),
-                        ],
-                      ),
-                      GoRoute(
-                        path: 'measurements',
-                        builder: (context, state) => const MeasurementsScreen(),
-                        routes: [
-                          GoRoute(
-                            path: 'history',
-                            builder: (context, state) =>
-                                const MeasurementHistoryScreen(),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
                   GoRoute(
                     path: 'calories',
                     builder: (context, state) => const CalorieLogScreen(),

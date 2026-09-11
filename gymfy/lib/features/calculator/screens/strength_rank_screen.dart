@@ -27,7 +27,7 @@ class StrengthRankScreen extends ConsumerWidget {
 
     return GlassScaffold(
       appBar: GlassAppBar(title: const Text('Strength rank')),
-      body: FadeSlideIn(
+      body: (context) => FadeSlideIn(
         child: ListView(
           padding:
               const EdgeInsets.fromLTRB(16, 12, 16, 32) + barInsets(context),

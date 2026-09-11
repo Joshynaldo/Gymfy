@@ -18,7 +18,7 @@ import 'package:gymfy/features/muscle_map/data/muscle_fatigue_repository.dart';
 import 'package:gymfy/features/muscle_map/data/muscle_volume_repository.dart';
 import 'package:gymfy/features/muscle_map/widgets/muscle_map_view.dart';
 import 'package:gymfy/features/progress/data/measurements_repository.dart';
-import 'package:gymfy/features/stats/screens/stats_screen.dart';
+import 'package:gymfy/features/stats/widgets/stats_sections.dart';
 import 'package:gymfy/features/workout/data/session_repository.dart';
 import 'package:gymfy/shared/database/app_database.dart';
 
@@ -61,7 +61,7 @@ Future<void> _pump(
         ),
         muscleFatigueProvider.overrideWith((ref) => Stream.value(fatigue)),
       ],
-      child: const MaterialApp(home: StatsScreen()),
+      child: const MaterialApp(home: Scaffold(body: BodyMapSection())),
     ),
   );
   // Plain pumps, not pumpAndSettle: the body SVG is a real asset load that the
@@ -83,9 +83,15 @@ void main() {
   testWidgets('opens on volume', (tester) async {
     await _pump(tester);
 
-    expect(find.text('Muscle map'), findsOneWidget);
-    expect(find.textContaining('Training volume over the last 7 days'),
-        findsOneWidget);
+    // No "Muscle map" heading any more: the section is what the Body segment
+    // of Progress shows, and the segment control above it is the heading. A
+    // title repeating the tab you are already on is a line of nothing.
+    expect(find.text('Volume'), findsOneWidget);
+    expect(find.text('Fatigue'), findsOneWidget);
+    expect(
+      find.textContaining('more volume this week'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('switching to fatigue retitles and recaptions', (tester) async {
@@ -95,8 +101,8 @@ void main() {
     expect(find.text('Fatigue'), findsWidgets);
     // Brightness means something different here, so saying "volume" would be
     // actively wrong.
-    expect(find.textContaining('Brighter = less recovered'), findsOneWidget);
-    expect(find.textContaining('Training volume'), findsNothing);
+    expect(find.textContaining('Brighter means less recovered'), findsOneWidget);
+    expect(find.textContaining('more volume this week'), findsNothing);
   });
 
   testWidgets('an empty fatigue map says you are recovered, not untrained', (
@@ -125,9 +131,10 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    expect(find.textContaining('Training volume over the last 7 days'),
-        findsOneWidget);
-    expect(find.text('Muscle map'), findsOneWidget);
+    expect(
+      find.textContaining('more volume this week'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('fatigue is red and volume follows the accent', (tester) async {
@@ -158,6 +165,6 @@ void main() {
     await tester.pump();
 
     // Still on fatigue — flipping the body must not silently reset the reading.
-    expect(find.textContaining('Brighter = less recovered'), findsOneWidget);
+    expect(find.textContaining('Brighter means less recovered'), findsOneWidget);
   });
 }

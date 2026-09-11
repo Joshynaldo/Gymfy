@@ -152,9 +152,18 @@ void main() {
       // Hardcoded on purpose: a 20 kg plate is blue in every gym on earth, and
       // recolouring it to the accent would throw away the fastest way to read a
       // loaded bar.
-      expect(plateColor(25, WeightUnit.kg), isNot(plateColor(20, WeightUnit.kg)));
-      expect(plateColor(20, WeightUnit.kg), isNot(plateColor(15, WeightUnit.kg)));
-      expect(plateColor(15, WeightUnit.kg), isNot(plateColor(10, WeightUnit.kg)));
+      expect(
+        plateColor(25, WeightUnit.kg),
+        isNot(plateColor(20, WeightUnit.kg)),
+      );
+      expect(
+        plateColor(20, WeightUnit.kg),
+        isNot(plateColor(15, WeightUnit.kg)),
+      );
+      expect(
+        plateColor(15, WeightUnit.kg),
+        isNot(plateColor(10, WeightUnit.kg)),
+      );
     });
 
     test('the small plates repeat the big ones colours', () {
@@ -179,7 +188,6 @@ void main() {
       expect(plateNeedsDarkLabel(plateColor(25, WeightUnit.kg)), isFalse);
     });
   });
-
 
   group('groupPlates', () {
     test('collapses runs into counts', () {
@@ -286,9 +294,10 @@ void main() {
       expect(container.read(availablePlatesProvider), [20, 10, 5]);
     });
 
-    test('a bar weight we do not offer falls back to the standard one',
-        () async {
-      await container.read(settingsRepositoryProvider).write(barKgSetting, '17');
+    test('a bar weight we do not offer falls back to the standard one', () async {
+      await container
+          .read(settingsRepositoryProvider)
+          .write(barKgSetting, '17');
       await settle();
       await container.read(rawSettingProvider(barKgSetting).future);
 
@@ -297,7 +306,9 @@ void main() {
     });
 
     test('a bar weight we do offer is used', () async {
-      await container.read(settingsRepositoryProvider).write(barKgSetting, '15');
+      await container
+          .read(settingsRepositoryProvider)
+          .write(barKgSetting, '15');
       await settle();
       await container.read(rawSettingProvider(barKgSetting).future);
 

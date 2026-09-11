@@ -32,10 +32,12 @@ Future<void> _pump(WidgetTester tester, Widget child) async {
 /// The border the card is currently drawing.
 BorderSide _borderOf(WidgetTester tester) {
   final container = tester.widget<AnimatedContainer>(
-    find.descendant(
-      of: find.byType(AppCard),
-      matching: find.byType(AnimatedContainer),
-    ).first,
+    find
+        .descendant(
+          of: find.byType(AppCard),
+          matching: find.byType(AnimatedContainer),
+        )
+        .first,
   );
   final decoration = container.decoration! as BoxDecoration;
   return (decoration.border! as Border).top;

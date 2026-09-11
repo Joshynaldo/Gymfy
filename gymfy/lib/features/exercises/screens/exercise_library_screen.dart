@@ -7,6 +7,7 @@ import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/exercise_display.dart';
 import '../../../shared/utils/exercise_search.dart';
 import '../../../shared/utils/format.dart';
+import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/muscle_filter_bar.dart';
 import '../../workout/data/workout_repository.dart';
 import '../../../shared/widgets/app_card.dart';
@@ -53,6 +54,11 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
   Widget build(BuildContext context) {
     final exercisesAsync = ref.watch(exerciseListProvider);
 
+    // Computed here rather than inside the list's data callback: the app bar
+    // is built first, so a field filled in further down would leave the chips
+    // empty for that frame — and nothing would rebuild to correct it.
+    final muscles = musclesIn(exercisesAsync.value ?? const <Exercise>[]);
+
     return GlassScaffold(
       appBar: _selecting
           ? GlassAppBar(
@@ -70,8 +76,24 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
                 ),
               ],
             )
-          : const GlassAppBar(title: Text('Exercises')),
-      body: exercisesAsync.when(
+          : GlassAppBar(
+              title: const Text('Exercises'),
+              // In the bar, not at the top of the body. Two things follow from
+              // that: the scrim that fades in on scroll covers the search field
+              // too, so the list passes *under* one surface rather than under
+              // a title and then behind a floating box; and the field cannot
+              // scroll away, which on a screen whose whole purpose is finding
+              // something would be the one control you always have to go back
+              // for.
+              bottom: _SearchHeader(
+                onQuery: (value) => setState(() => _query = value),
+                muscles: muscles,
+                selected: _muscleFilters,
+                onToggle: _toggleMuscle,
+                onClear: () => setState(_muscleFilters.clear),
+              ),
+            ),
+      body: (context) => exercisesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: Padding(
@@ -83,52 +105,27 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
           ),
         ),
         data: (all) {
-          // Muscles that actually appear in the data, for the filter chips.
-          final muscles = musclesIn(all);
-
           final filtered = all.where(_matches).toList();
 
-          // The search field and the filter chips stay put while the list
-          // scrolls under the bars, so they are held clear of the app bar
-          // rather than sliding behind it. A half-legible search box behind a
-          // translucent title is worse than no glass at all.
-          return Padding(
-            padding: topBarInset(context),
-            child: Column(
-              children: [
-                _SearchField(
-                  onChanged: (value) => setState(() => _query = value),
-                ),
-                MuscleFilterBar(
-                  muscles: muscles,
-                  selected: _muscleFilters,
-                  onToggle: _toggleMuscle,
-                  onClear: () => setState(_muscleFilters.clear),
-                ),
-                const SizedBox(height: 4),
-                Expanded(
-                  child: filtered.isEmpty
-                      ? const _NoMatches()
-                      : _CategorisedList(
-                          rows: _rowsFor(filtered),
-                          selected: _selected,
-                          selecting: _selecting,
-                          onToggle: _toggle,
-                        ),
-                ),
-              ],
-            ),
+          if (filtered.isEmpty) return const _NoMatches();
+          return _CategorisedList(
+            rows: _rowsFor(filtered),
+            selected: _selected,
+            selecting: _selecting,
+            onToggle: _toggle,
           );
         },
       ),
       // Hidden while selecting: the app bar owns the actions then, and a FAB
       // for an unrelated action would just be in the way.
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: _selecting
           ? null
-          : FloatingActionButton.extended(
+          : AppButton(
+              label: 'Add exercise',
+              icon: Icons.add,
+              expand: false,
               onPressed: () => context.go('/exercises/new'),
-              icon: const Icon(Icons.add),
-              label: const Text('Add exercise'),
             ),
     );
   }
@@ -189,6 +186,47 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
   }
 }
 
+/// The search box and the muscle chips, as the app bar's lower half.
+///
+/// A [PreferredSizeWidget] so the bar reserves room for it, which is also what
+/// makes `barInsets` come out right for the list underneath: Scaffold measures
+/// the whole bar, header included, and hands the body the number.
+class _SearchHeader extends StatelessWidget implements PreferredSizeWidget {
+  const _SearchHeader({
+    required this.onQuery,
+    required this.muscles,
+    required this.selected,
+    required this.onToggle,
+    required this.onClear,
+  });
+
+  final ValueChanged<String> onQuery;
+  final List<String> muscles;
+  final Set<String> selected;
+  final ValueChanged<String> onToggle;
+  final VoidCallback onClear;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(112);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _SearchField(onChanged: onQuery),
+        MuscleFilterBar(
+          muscles: muscles,
+          selected: selected,
+          onToggle: onToggle,
+          onClear: onClear,
+        ),
+        const SizedBox(height: 4),
+      ],
+    );
+  }
+}
+
 /// The search box: rounded, filled, and clearable.
 class _SearchField extends StatefulWidget {
   const _SearchField({required this.onChanged});
@@ -218,40 +256,66 @@ class _SearchFieldState extends State<_SearchField> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    final muted = theme.colorScheme.onSurfaceVariant;
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-      child: TextField(
-        controller: _controller,
-        textInputAction: TextInputAction.search,
-        onChanged: (value) {
-          widget.onChanged(value);
-          // Only to swap the clear button in and out — the query itself lives
-          // on the screen above.
-          setState(() {});
-        },
-        decoration: InputDecoration(
-          // Names the second thing it searches, which is otherwise invisible:
-          // "chest" finding the bench press looks like magic or a bug.
-          hintText: 'Search by name or muscle',
-          prefixIcon: const Icon(Icons.search, size: 20),
-          // Absent until there's something to clear, so the field stays quiet
-          // while you're only reading.
-          suffixIcon: _controller.text.isEmpty
-              ? null
-              : IconButton(
-                  icon: const Icon(Icons.close, size: 18),
+      padding: const EdgeInsets.fromLTRB(16, 2, 16, 12),
+      child: GlassSurface(
+        // A pill rather than a rounded rectangle — it reads as a search field
+        // on sight, before the magnifier is even noticed.
+        borderRadius: BorderRadius.circular(22),
+        // The material's own pane, not a filled Material input. An
+        // InputDecoration fill is a flat colour, which on this theme is the one
+        // opaque rectangle in a screen made of glass.
+        tier: GlassTier.quiet,
+        fallbackColor: theme.colorScheme.surfaceContainerHigh,
+        child: SizedBox(
+          height: 44,
+          child: Row(
+            children: [
+              const SizedBox(width: 16),
+              Icon(Icons.search, size: 18, color: muted),
+              const SizedBox(width: 10),
+              Expanded(
+                child: TextField(
+                  controller: _controller,
+                  textInputAction: TextInputAction.search,
+                  style: theme.textTheme.bodyMedium,
+                  onChanged: (value) {
+                    widget.onChanged(value);
+                    // Only to swap the clear button in and out — the query
+                    // itself lives on the screen above.
+                    setState(() {});
+                  },
+                  decoration: InputDecoration(
+                    // Names the second thing it searches, which is otherwise
+                    // invisible: "chest" finding the bench press looks like
+                    // magic or a bug.
+                    hintText: 'Search by name or muscle',
+                    hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                      color: muted,
+                    ),
+                    isDense: true,
+                    // The pane is the field's edge and fill; the input inside
+                    // it draws nothing of its own.
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ),
+              // Absent until there's something to clear, so the field stays
+              // quiet while you're only reading.
+              if (_controller.text.isNotEmpty)
+                IconButton(
+                  icon: Icon(Icons.close, size: 17, color: muted),
+                  visualDensity: VisualDensity.compact,
                   tooltip: 'Clear search',
                   onPressed: _clear,
                 ),
-          filled: true,
-          fillColor: theme.colorScheme.surfaceContainerHigh,
-          isDense: true,
-          contentPadding: const EdgeInsets.symmetric(vertical: 14),
-          border: OutlineInputBorder(
-            // A pill rather than a rounded rectangle — it reads as a search
-            // field on sight, before the magnifier is even noticed.
-            borderRadius: BorderRadius.circular(26),
-            borderSide: BorderSide.none,
+              const SizedBox(width: 6),
+            ],
           ),
         ),
       ),
@@ -297,7 +361,10 @@ class _CategorisedList extends StatelessWidget {
       // Room to scroll the last card clear of the FAB, plus whatever the
       // floating navigation pill covers. Only the bottom: the screen has
       // already held its search header clear of the app bar.
-      padding: const EdgeInsets.only(bottom: 96) + bottomBarInset(context),
+      // Both insets: the list runs the full height of the screen and passes
+      // under the bar at the top and the pill at the bottom, which is the
+      // arrangement that gives either of them anything to blur.
+      padding: const EdgeInsets.only(bottom: 96) + barInsets(context),
       itemCount: rows.length,
       itemBuilder: (context, index) {
         final row = rows[index];

@@ -76,6 +76,7 @@ class DayCard extends ConsumerWidget {
     return AppCard(
       margin: const EdgeInsets.symmetric(vertical: 6),
       padding: EdgeInsets.zero,
+      outlined: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

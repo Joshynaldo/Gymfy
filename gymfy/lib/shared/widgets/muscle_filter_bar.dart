@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../utils/exercise_display.dart';
+import 'app_chip.dart';
 
 /// A horizontal row of muscle filter chips, led by an "All" chip.
 ///
@@ -43,22 +44,22 @@ class MuscleFilterBar extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: FilterChip(
-              label: const Text('All'),
+            child: AppChip(
+              label: 'All',
               selected: selected.isEmpty,
               // Already showing everything, so this would be a no-op tap. A
               // disabled chip says "you're here" better than one that does
               // nothing when pressed.
-              onSelected: selected.isEmpty ? null : (_) => onClear(),
+              onTap: selected.isEmpty ? null : onClear,
             ),
           ),
           for (final muscle in ordered)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: FilterChip(
-                label: Text(muscleLabel(muscle)),
+              child: AppChip(
+                label: muscleLabel(muscle),
                 selected: selected.contains(muscle),
-                onSelected: (_) => onToggle(muscle),
+                onTap: () => onToggle(muscle),
               ),
             ),
         ],

@@ -149,6 +149,25 @@ flutter:
     # Muscle-map body diagrams (front + back). Paths are tagged per muscle.
     - assets/svg/
 
+  # The Hyper theme's typeface. Four static weights (~380 KB in total) bundled
+  # into the APK rather than pulled through the google_fonts package: that
+  # package fetches over the network on first use, and this app has to look the
+  # same in a basement gym with no signal as it does anywhere else.
+  #
+  # SIL Open Font License 1.1 — the licence text ships alongside the files in
+  # assets/fonts/OFL.txt.
+  fonts:
+    - family: Schibsted Grotesk
+      fonts:
+        - asset: assets/fonts/SchibstedGrotesk-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/SchibstedGrotesk-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/SchibstedGrotesk-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/SchibstedGrotesk-Bold.ttf
+          weight: 700
+
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

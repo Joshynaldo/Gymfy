@@ -29,20 +29,27 @@ void main() {
     workouts = WorkoutRepository(db);
     sessions = SessionRepository(db);
 
-    await db.into(db.exercises).insert(
-      ExercisesCompanion.insert(
-        id: bench,
-        name: 'Barbell Bench Press',
-        muscleIds: const ['chest'],
-        isPlateLoaded: const Value(true),
-      ),
-    );
+    await db
+        .into(db.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: bench,
+            name: 'Barbell Bench Press',
+            muscleIds: const ['chest'],
+            isPlateLoaded: const Value(true),
+          ),
+        );
     final splitId = await workouts.createSplit('PPL');
     final dayId = await workouts.createDay(splitId, 'Push');
     await workouts.addExercisesToDay(dayId, [bench]);
     entryId = (await db.select(db.workoutExercises).get()).single.id;
     // 3 × 8–12, so 12 is the rep target that earns an increase.
-    await workouts.updatePlannedExercise(entryId, sets: 3, reps: 8, repsMax: 12);
+    await workouts.updatePlannedExercise(
+      entryId,
+      sets: 3,
+      reps: 8,
+      repsMax: 12,
+    );
   });
 
   tearDown(() async {
@@ -56,8 +63,9 @@ void main() {
   Future<Exercise> exercise() async {
     // By id, not `.single` — some tests add a second exercise to prove it
     // doesn't interfere.
-    return (db.select(db.exercises)..where((t) => t.id.equals(bench)))
-        .getSingle();
+    return (db.select(
+      db.exercises,
+    )..where((t) => t.id.equals(bench))).getSingle();
   }
 
   /// Logs and finishes a session of [sets] sets at [weight] for [reps] reps.
@@ -67,9 +75,9 @@ void main() {
     int sets = 3,
     bool complete = true,
   }) async {
-    final id = await db.into(db.workoutSessions).insert(
-      WorkoutSessionsCompanion.insert(name: 'Push'),
-    );
+    final id = await db
+        .into(db.workoutSessions)
+        .insert(WorkoutSessionsCompanion.insert(name: 'Push'));
     for (var i = 1; i <= sets; i++) {
       await sessions.logSet(
         sessionId: id,
@@ -145,13 +153,15 @@ void main() {
     });
 
     test('sets from other exercises do not interfere', () async {
-      await db.into(db.exercises).insert(
-        ExercisesCompanion.insert(
-          id: 'squat',
-          name: 'Squat',
-          muscleIds: const ['quads'],
-        ),
-      );
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'squat',
+              name: 'Squat',
+              muscleIds: const ['quads'],
+            ),
+          );
       final id = await loggedSession(weight: 60, reps: 12);
       await sessions.logSet(
         sessionId: id,

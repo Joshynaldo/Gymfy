@@ -138,11 +138,7 @@ void main() {
       // The compatibility story: six existing themes must look exactly as they
       // did, and nothing about them should now cost a blur pass.
       for (final theme in AppTheme.values.where((t) => t != AppTheme.hyper)) {
-        await _pump(
-          tester,
-          theme,
-          child: const AppCard(child: Text('hello')),
-        );
+        await _pump(tester, theme, child: const AppCard(child: Text('hello')));
 
         expect(find.byType(GlassSurface), findsNothing, reason: theme.name);
         expect(find.byType(BackdropFilter), findsNothing, reason: theme.name);

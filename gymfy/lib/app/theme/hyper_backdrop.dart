@@ -106,53 +106,134 @@ class _BackdropPainter extends CustomPainter {
     final rect = Offset.zero & size;
     canvas.drawRect(rect, Paint()..color = ground);
 
-    // Two of the three take the accent, so the backdrop follows the colour the
-    // user picked instead of being a fixed purple wash under every palette.
-    _orb(canvas, size, phase: 0, colour: accent, scale: 0.85);
-    _orb(canvas, size, phase: 0.37, colour: accent, scale: 0.6);
-    // The third is a fixed cool tone, so there is a second hue in the field
-    // even when the accent is a single flat colour. Without it the orbs blend
-    // into one soft blob and the depth goes.
+    // A wash of the accent over the whole ground before the orbs go on.
+    //
+    // The orbs alone left most of the screen at the ground colour, which is
+    // near-black — and that is what made the glass read as smoked rather than
+    // milky. A pane is only as pale as what is behind it, so the cards were
+    // dark for a reason that had nothing to do with the cards. This lifts the
+    // whole field into the accent's family first; the orbs are then bright
+    // spots *in* a coloured ground rather than three lamps in a dark room.
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            // Enough that the *middle* of the screen is coloured rather than
+            // only the corners an orb sits in — a card in the gap between two
+            // orbs should still be a pane over something, not over black.
+            //
+            // It was brighter than this for one round, because the cards were
+            // coming out charcoal and I turned the field up to compensate. The
+            // charcoal was the card's own shadow painting through it, and once
+            // that was fixed the field was left shouting at a problem that no
+            // longer existed. This is the level that reads as a lit room
+            // rather than a lamp in your face.
+            _shift(accent, 6, 0.5).withValues(alpha: 0.46),
+            _shift(accent, -10, 0.3).withValues(alpha: 0.36),
+          ],
+        ).createShader(rect),
+    );
+
+    // Three anchors, not three orbits. Each orb belongs to a corner of the
+    // screen and only breathes around it: the composition is the same every
+    // time you open the app, and what changes is too slow to catch.
+    //
+    // The hues are the accent and two neighbours of it. Keeping the whole field
+    // inside one family is what stops the ground picking up a colour the
+    // interface has no use for — a green wash under a purple accent reads as a
+    // second, competing accent.
     _orb(
       canvas,
       size,
-      phase: 0.68,
-      colour: const Color(0xFF2B6CFF),
-      scale: 0.7,
+      anchor: const Offset(0.24, 0.06),
+      radius: 0.78,
+      colour: _shift(accent, 4, 1.06),
+      phase: 0,
+      travel: const Offset(0.15, 0.10),
     );
+    _orb(
+      canvas,
+      size,
+      anchor: const Offset(0.95, 0.52),
+      radius: 0.70,
+      colour: _shift(accent, -6, 0.94),
+      phase: 0.41,
+      travel: const Offset(-0.18, -0.07),
+    );
+    _orb(
+      canvas,
+      size,
+      anchor: const Offset(0.5, 0.97),
+      radius: 0.72,
+      colour: _shift(accent, 12, 0.98),
+      phase: 0.72,
+      travel: const Offset(0.10, -0.09),
+    );
+  }
+
+  /// The accent, moved a little round the wheel and pushed towards its purest
+  /// version of itself.
+  ///
+  /// Two orbs of exactly the accent and one of something else blend into a
+  /// single soft blob and the depth goes with it; three near-neighbours keep
+  /// the field reading as one light with several sources.
+  ///
+  /// The saturation lift is what stops the field going muddy. These are painted
+  /// at low alpha over a near-black ground, and low alpha *is* a blend towards
+  /// the ground — so an orb painted in the accent's own saturation arrives
+  /// greyer than the accent, every time. Pushing it up first is how the colour
+  /// survives the dilution.
+  Color _shift(Color colour, double degrees, double lightness) {
+    final hsl = HSLColor.fromColor(colour);
+    return hsl
+        .withHue((hsl.hue + degrees) % 360)
+        .withSaturation((hsl.saturation * 1.45).clamp(0.0, 1.0))
+        .withLightness((hsl.lightness * lightness).clamp(0.0, 1.0))
+        .toColor();
   }
 
   void _orb(
     Canvas canvas,
     Size size, {
-    required double phase,
+    required Offset anchor,
+    required double radius,
     required Color colour,
-    required double scale,
+    required double phase,
+    required Offset travel,
   }) {
-    // Each orb travels its own slow ellipse. Different periods per axis so the
-    // paths never repeat exactly and the field never looks like it is looping.
+    // A slow figure of eight around the anchor — different periods per axis, so
+    // the path never repeats exactly and the field never looks like it loops.
     final angle = (t + phase) * 2 * math.pi;
     final centre = Offset(
-      size.width * (0.5 + 0.42 * math.cos(angle)),
-      size.height * (0.35 + 0.30 * math.sin(angle * 0.8 + phase)),
+      size.width * (anchor.dx + travel.dx * math.cos(angle)),
+      size.height * (anchor.dy + travel.dy * math.sin(angle * 0.8 + phase)),
     );
-    final radius = size.shortestSide * scale;
+    final r = size.shortestSide * radius;
 
     canvas.drawCircle(
       centre,
-      radius,
+      r,
       Paint()
         ..shader = RadialGradient(
           colors: [
-            // Low alpha on purpose. This is a field to sense, not a picture to
-            // look at, and anything stronger turns text on top of it into hard
-            // work.
-            colour.withValues(alpha: 0.20),
-            colour.withValues(alpha: 0.06),
+            // Bright enough to read as colour rather than as a stain.
+            //
+            // The ceiling is legibility rather than taste: text sits on these
+            // panes, the panes are translucent, and the field shows through
+            // them. At 0.62 an orb passing behind a card is visible *in* the
+            // card — which is the effect — without the numbers on it losing
+            // their edge. Past about three quarters it starts to.
+            colour.withValues(alpha: 0.5),
+            colour.withValues(alpha: 0.36),
             colour.withValues(alpha: 0),
           ],
-          stops: const [0, 0.45, 1],
-        ).createShader(Rect.fromCircle(center: centre, radius: radius)),
+          // Held flat to a quarter of the radius before it falls away, which is
+          // what gives an orb a body instead of a hotspot in the middle.
+          stops: const [0, 0.26, 0.72],
+        ).createShader(Rect.fromCircle(center: centre, radius: r)),
     );
   }
 

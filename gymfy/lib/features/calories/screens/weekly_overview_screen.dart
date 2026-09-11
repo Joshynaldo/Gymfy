@@ -21,7 +21,7 @@ class WeeklyOverviewScreen extends ConsumerWidget {
 
     return GlassScaffold(
       appBar: GlassAppBar(title: const Text('This week')),
-      body: weekAsync.when(
+      body: (context) => weekAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: Padding(

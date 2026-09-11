@@ -52,13 +52,13 @@ class _MeasurementsScreenState extends ConsumerState<MeasurementsScreen> {
           IconButton(
             icon: const Icon(Icons.show_chart),
             tooltip: 'History',
-            onPressed: () => context.go('/more/progress/measurements/history'),
+            onPressed: () => context.go('/progress/measurements/history'),
           ),
         ],
       ),
       // The day stepper is fixed, so it is held clear of the app bar; only the
       // list below it slides under the bars.
-      body: Padding(
+      body: (context) => Padding(
         padding: topBarInset(context),
         child: Column(
           children: [

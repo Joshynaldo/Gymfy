@@ -1,13 +1,17 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/theme/accent_color.dart';
 import '../../../shared/utils/exercise_display.dart';
 import '../../../shared/utils/units.dart';
 import '../../../shared/widgets/bar_chart.dart';
+import '../../../shared/widgets/chart_style.dart';
 import '../../muscle_map/data/muscle_colors.dart';
-import '../data/recap.dart';
-import '../data/recap_repository.dart';
+import '../../home/data/recap.dart';
+import '../../home/data/recap_repository.dart';
 import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/app_segmented.dart';
 
 /// The Home tab's recap: how much, how often, what, and how many records.
 ///
@@ -26,7 +30,6 @@ class _RecapSectionState extends ConsumerState<RecapSection> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final recap = ref.watch(recapProvider(_period));
     final unit = ref.watch(weightUnitProvider);
 
@@ -41,23 +44,18 @@ class _RecapSectionState extends ConsumerState<RecapSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // The range, full width and on its own line. It used to be a
+        // SegmentedButton squeezed beside a "Recap" heading, which left it
+        // about a third of the width for three labels — and the heading was
+        // naming the screen you were already looking at.
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-          child: Row(
-            children: [
-              Text('Recap', style: theme.textTheme.titleMedium),
-              const Spacer(),
-              SegmentedButton<RecapPeriod>(
-                showSelectedIcon: false,
-                style: const ButtonStyle(visualDensity: VisualDensity.compact),
-                segments: [
-                  for (final period in RecapPeriod.values)
-                    ButtonSegment(value: period, label: Text(period.label)),
-                ],
-                selected: {_period},
-                onSelectionChanged: (selection) =>
-                    setState(() => _period = selection.first),
-              ),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 18),
+          child: AppSegmented<RecapPeriod>(
+            selected: _period,
+            onChanged: (value) => setState(() => _period = value),
+            segments: [
+              for (final period in RecapPeriod.values)
+                (value: period, label: period.label, leading: null),
             ],
           ),
         ),
@@ -153,34 +151,113 @@ class _VolumeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final values = [
-      for (final b in recap.buckets)
-        // Zero draws no bar rather than a flat line on the axis: a rest day and
-        // a day you trained nothing into are the same thing, and neither is a
-        // data point worth drawing.
-        b.volumeKg == 0 ? null : weightIn(b.volumeKg, unit),
-    ];
-    final peak = values.whereType<double>().fold<double>(
-      0,
-      (m, v) => v > m ? v : m,
-    );
+    // Rest days are zeros, not gaps.
+    //
+    // They were nulls, and the line simply skipped them — so a week with
+    // Sunday and Friday in it was drawn as one straight diagonal between the
+    // two, which reads as five days of steady decline rather than five days of
+    // nothing. A volume chart's zero is not missing data; it is the honest
+    // answer to "how much did you lift on Tuesday".
+    final values = [for (final b in recap.buckets) weightIn(b.volumeKg, unit)];
+    final peak = values.fold<double>(0, (m, v) => v > m ? v : m);
 
     return _RecapCard(
       title: 'Volume',
       headline: formatWeightUnit(recap.totalVolumeKg, unit),
       detail: 'lifted in the last ${recap.period.label.toLowerCase()}',
+      // A line, not bars. Volume over time is a *trend* — the question is
+      // whether it is going up — and a row of bars asks you to compare their
+      // heights to answer that. The sessions card below stays bars, because
+      // "how many workouts in week three" is a quantity, not a direction.
       child: SizedBox(
-        height: 160,
-        child: SimpleBarChart(
-          labels: [for (final b in recap.buckets) b.label],
+        height: 150,
+        child: _VolumeLine(
           values: values,
-          maxY: peak == 0 ? 1 : peak * 1.15,
-          yLabel: _compactAxis,
-          tooltip: (i) =>
-              '${formatWeightUnit(recap.buckets[i].volumeKg, unit)}\n'
-              '${recap.buckets[i].sessions} '
-              '${recap.buckets[i].sessions == 1 ? 'workout' : 'workouts'}',
+          labels: [for (final b in recap.buckets) b.label],
+          peak: peak,
         ),
+      ),
+    );
+  }
+}
+
+/// Volume across the period, as a line with the area under it filled.
+class _VolumeLine extends ConsumerWidget {
+  const _VolumeLine({
+    required this.values,
+    required this.labels,
+    required this.peak,
+  });
+
+  /// One per bucket, zeros included — see the note where they are built.
+  final List<double> values;
+  final List<String> labels;
+  final double peak;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accent = ref.watch(accentColorProvider);
+    final spots = <FlSpot>[
+      for (var i = 0; i < values.length; i++) FlSpot(i.toDouble(), values[i]),
+    ];
+
+    if (spots.length < 2) {
+      return Center(
+        child: Text(
+          'One day is not a trend yet.',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      );
+    }
+
+    return LineChart(
+      LineChartData(
+        minX: 0,
+        maxX: (values.length - 1).toDouble(),
+        minY: 0,
+        // Headroom so the peak is not drawn along the top edge of the card.
+        maxY: peak == 0 ? 1 : peak * 1.12,
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          getDrawingHorizontalLine: (_) => chartGridLine(context),
+        ),
+        borderData: FlBorderData(show: false),
+        titlesData: FlTitlesData(
+          topTitles: const AxisTitles(),
+          rightTitles: const AxisTitles(),
+          leftTitles: const AxisTitles(),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 24,
+              interval: 1,
+              getTitlesWidget: (value, meta) {
+                final index = value.round();
+                if (index < 0 || index >= labels.length) {
+                  return const SizedBox.shrink();
+                }
+                return Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(labels[index], style: chartLabelStyle(context)),
+                );
+              },
+            ),
+          ),
+        ),
+        lineTouchData: const LineTouchData(enabled: false),
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            color: accent,
+            barWidth: 2.5,
+            isStrokeCapRound: true,
+            // Dots only while there are few enough to read; past a dozen they
+            // become a dotted line rather than marks you can pick out.
+            dotData: FlDotData(show: chartShowsDots(spots.length)),
+            belowBarData: chartAreaFill(accent),
+          ),
+        ],
       ),
     );
   }
@@ -208,6 +285,10 @@ class _SessionsCard extends StatelessWidget {
       child: SizedBox(
         height: 140,
         child: SimpleBarChart(
+          // White, not the accent: the volume line above it already has the
+          // screen's one accent, and two accent charts on one screen is two
+          // things claiming to be the headline.
+          muted: true,
           labels: [for (final b in recap.buckets) b.label],
           values: [
             for (final b in recap.buckets)
@@ -315,13 +396,3 @@ class _MusclesCard extends ConsumerWidget {
 }
 
 /// Volume axis labels get long fast — 12,000 kg in a week is ordinary. `12k`
-/// keeps the axis narrow enough that the bars get the space.
-String _compactAxis(double value) {
-  if (value >= 1000) {
-    final thousands = value / 1000;
-    return thousands == thousands.roundToDouble()
-        ? '${thousands.round()}k'
-        : '${thousands.toStringAsFixed(1)}k';
-  }
-  return value.round().toString();
-}

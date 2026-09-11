@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/utils/format.dart';
+import '../../../shared/widgets/app_chip.dart';
 import '../../../shared/utils/units.dart';
 import '../data/overload_math.dart';
 import '../data/overload_preference.dart';
@@ -73,17 +74,16 @@ class OverloadSettingsPanel extends ConsumerWidget {
             Wrap(
               spacing: 8,
               children: [
-                ChoiceChip(
-                  label: const Text('Never'),
+                AppChip(
+                  label: 'Never',
                   selected: config.deloadWeeks == null,
-                  onSelected: (_) => update(config.copyWith(clearDeload: true)),
+                  onTap: () => update(config.copyWith(clearDeload: true)),
                 ),
                 for (final weeks in overloadDeloadOptions)
-                  ChoiceChip(
-                    label: Text('$weeks in a row'),
+                  AppChip(
+                    label: '$weeks in a row',
                     selected: config.deloadWeeks == weeks,
-                    onSelected: (_) =>
-                        update(config.copyWith(deloadWeeks: weeks)),
+                    onTap: () => update(config.copyWith(deloadWeeks: weeks)),
                   ),
               ],
             ),
@@ -131,10 +131,10 @@ class _ModeDetail extends StatelessWidget {
             spacing: 8,
             children: [
               for (final step in overloadFixedSteps)
-                ChoiceChip(
-                  label: Text(formatWeightUnit(step, unit)),
+                AppChip(
+                  label: formatWeightUnit(step, unit),
                   selected: config.fixedKg == step,
-                  onSelected: (_) => onChanged(config.copyWith(fixedKg: step)),
+                  onTap: () => onChanged(config.copyWith(fixedKg: step)),
                 ),
             ],
           ),
@@ -149,10 +149,10 @@ class _ModeDetail extends StatelessWidget {
             spacing: 8,
             children: [
               for (final step in overloadPercentSteps)
-                ChoiceChip(
-                  label: Text('${formatWeight(step)}%'),
+                AppChip(
+                  label: '${formatWeight(step)}%',
                   selected: config.percent == step,
-                  onSelected: (_) => onChanged(config.copyWith(percent: step)),
+                  onTap: () => onChanged(config.copyWith(percent: step)),
                 ),
             ],
           ),

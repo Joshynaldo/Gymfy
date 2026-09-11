@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../shared/utils/format.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_chip.dart';
 import '../../../shared/widgets/exercise_thumbnail.dart';
 import '../../../shared/widgets/number_wheel.dart';
 import '../data/session_repository.dart';
@@ -27,22 +29,10 @@ class DayBuilderScreen extends ConsumerWidget {
     final exercisesAsync = ref.watch(dayExercisesProvider(dayId));
 
     final title = dayAsync.value?.name ?? 'Day';
-    final hasExercises = (exercisesAsync.value?.isNotEmpty) ?? false;
 
     return GlassScaffold(
-      appBar: GlassAppBar(
-        title: Text(title),
-        actions: [
-          // Starting a workout only makes sense once the day has exercises.
-          if (hasExercises)
-            TextButton.icon(
-              onPressed: () => _startWorkout(context, ref, title),
-              icon: const Icon(Icons.play_arrow),
-              label: const Text('Start'),
-            ),
-        ],
-      ),
-      body: exercisesAsync.when(
+      appBar: GlassAppBar(title: Text(title)),
+      body: (context) => exercisesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: Padding(
@@ -60,20 +50,46 @@ class DayBuilderScreen extends ConsumerWidget {
           return ListView.separated(
             // It had no padding at all: on a glass theme the list now runs the
             // full height of the screen, so it has to clear the bars itself.
-            padding: barInsets(context),
-            itemCount: planned.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
-            itemBuilder: (context, index) => _PlannedExerciseTile(
-              planned: planned[index],
-              dayExercises: planned.length,
-            ),
+            // The extra at the foot is room for the floating Add button.
+            padding: const EdgeInsets.only(bottom: 80) + barInsets(context),
+            // One extra row at the top for the Start button.
+            itemCount: planned.length + 1,
+            // No rule under the Start button: it is not one of the rows.
+            separatorBuilder: (_, index) =>
+                index == 0 ? const SizedBox.shrink() : const Divider(height: 1),
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                // At the top, full width, in the accent — the shape the design
+                // gives the one thing a screen is for. It was a text button in
+                // the app bar, which is where you put an action you are not
+                // sure anyone wants; this is the whole point of the screen.
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  child: AppButton(
+                    label: 'Start workout',
+                    icon: Icons.play_arrow,
+                    onPressed: () => _startWorkout(context, ref, title),
+                  ),
+                );
+              }
+              return _PlannedExerciseTile(
+                planned: planned[index - 1],
+                dayExercises: planned.length,
+              );
+            },
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      // Centred rather than tucked into the right-hand corner: it is the only
+      // floating control on the screen, and a corner is where you put one of
+      // several. The pill below it is centred too, so an off-centre button
+      // between them read as a mistake.
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: AppButton(
+        label: 'Add exercises',
+        icon: Icons.add,
+        expand: false,
         onPressed: () => _addExercises(context, ref),
-        icon: const Icon(Icons.add),
-        label: const Text('Add exercises'),
       ),
     );
   }
@@ -363,10 +379,10 @@ class _SetsRepsDialogState extends State<_SetsRepsDialog> {
               spacing: 6,
               children: [
                 for (var n = 0; n <= _maxWarmups; n++)
-                  ChoiceChip(
-                    label: Text('$n'),
+                  AppChip(
+                    label: '$n',
                     selected: _warmups == n,
-                    onSelected: (_) => setState(() => _warmups = n),
+                    onTap: () => setState(() => _warmups = n),
                   ),
               ],
             ),

@@ -149,7 +149,39 @@ void main() {
       final bar = tester.widget<NavigationBar>(find.byType(NavigationBar));
       expect(bar.destinations.length, mainDestinations.length);
       expect(find.text('Workout'), findsOneWidget);
-      expect(find.text('Stats'), findsOneWidget);
+      expect(find.text('Progress'), findsOneWidget);
+    });
+
+    testWidgets('shows icons only, but still knows its labels', (tester) async {
+      // Four labels across a pill inset from both edges is four lines of tiny
+      // type competing with the screen above them, and these four are the
+      // destinations you learn on the first day.
+      //
+      // Hidden, not removed: each destination keeps its name, so a screen
+      // reader still announces it. That is the difference between a visual
+      // decision and an accessibility one, and the assertion below is what
+      // stops the first quietly becoming the second.
+      await _pump(tester, AppTheme.hyper, bottom: navBar());
+
+      final bar = tester.widget<NavigationBar>(find.byType(NavigationBar));
+      expect(bar.labelBehavior, NavigationDestinationLabelBehavior.alwaysHide);
+      expect(
+        bar.destinations
+            .cast<NavigationDestination>()
+            .map((d) => d.label)
+            .toList(),
+        ['Home', 'Workout', 'Progress', 'More'],
+      );
+    });
+
+    testWidgets('keeps its labels on a flat theme', (tester) async {
+      await _pump(tester, AppTheme.darkDefault, bottom: navBar());
+
+      expect(
+        tester.widget<NavigationBar>(find.byType(NavigationBar)).labelBehavior,
+        isNull,
+        reason: 'the flat themes keep the bar they have always had',
+      );
     });
 
     testWidgets('does not pad itself away from its own bottom edge', (

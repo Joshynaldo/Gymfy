@@ -96,14 +96,17 @@ void main() {
       expect(await effectiveRest('barbell_bench_press'), defaultRestSeconds);
     });
 
-    test('a changed default moves every exercise without an override', () async {
-      await container
-          .read(settingsRepositoryProvider)
-          .write(defaultRestSecondsSetting, '120');
+    test(
+      'a changed default moves every exercise without an override',
+      () async {
+        await container
+            .read(settingsRepositoryProvider)
+            .write(defaultRestSecondsSetting, '120');
 
-      expect(await effectiveRest('barbell_bench_press'), 120);
-      expect(await effectiveRest('barbell_back_squat'), 120);
-    });
+        expect(await effectiveRest('barbell_bench_press'), 120);
+        expect(await effectiveRest('barbell_back_squat'), 120);
+      },
+    );
 
     test('an override beats the default', () async {
       await container
@@ -138,13 +141,16 @@ void main() {
       expect(await effectiveRest('barbell_bench_press'), defaultRestSeconds);
     });
 
-    test('setting an override twice overwrites rather than duplicating', () async {
-      final repository = container.read(restTimerRepositoryProvider);
-      await repository.setForExercise('barbell_bench_press', 120);
-      await repository.setForExercise('barbell_bench_press', 180);
+    test(
+      'setting an override twice overwrites rather than duplicating',
+      () async {
+        final repository = container.read(restTimerRepositoryProvider);
+        await repository.setForExercise('barbell_bench_press', 120);
+        await repository.setForExercise('barbell_bench_press', 180);
 
-      expect(await effectiveRest('barbell_bench_press'), 180);
-    });
+        expect(await effectiveRest('barbell_bench_press'), 180);
+      },
+    );
 
     test('an absurd override is clamped on the way in', () async {
       await container
@@ -176,11 +182,13 @@ void main() {
     });
 
     test('starting one reports the full length', () async {
-      await container.read(restTimerProvider.notifier).start(
-        exerciseId: 'barbell_bench_press',
-        exerciseName: 'Barbell Bench Press',
-        seconds: 90,
-      );
+      await container
+          .read(restTimerProvider.notifier)
+          .start(
+            exerciseId: 'barbell_bench_press',
+            exerciseName: 'Barbell Bench Press',
+            seconds: 90,
+          );
 
       final state = container.read(restTimerProvider);
       expect(state?.exerciseName, 'Barbell Bench Press');
@@ -208,11 +216,13 @@ void main() {
     });
 
     test('an absurd length is clamped rather than started', () async {
-      await container.read(restTimerProvider.notifier).start(
-        exerciseId: 'barbell_bench_press',
-        exerciseName: 'Barbell Bench Press',
-        seconds: 99999,
-      );
+      await container
+          .read(restTimerProvider.notifier)
+          .start(
+            exerciseId: 'barbell_bench_press',
+            exerciseName: 'Barbell Bench Press',
+            seconds: 99999,
+          );
 
       expect(container.read(restTimerProvider)?.totalSeconds, maxRestSeconds);
     });
@@ -297,11 +307,13 @@ void main() {
     test('starting shows a live countdown and arms the backstop', () async {
       final container = await containerWith(alertsOn: true);
 
-      await container.read(restTimerProvider.notifier).start(
-        exerciseId: 'barbell_bench_press',
-        exerciseName: 'Barbell Bench Press',
-        seconds: 90,
-      );
+      await container
+          .read(restTimerProvider.notifier)
+          .start(
+            exerciseId: 'barbell_bench_press',
+            exerciseName: 'Barbell Bench Press',
+            seconds: 90,
+          );
 
       // The shade countdown is what makes the timer visible from another app;
       // the schedule only covers this app being frozen before rest ends.
@@ -311,11 +323,13 @@ void main() {
     test('with notifications off nothing is posted', () async {
       final container = await containerWith(alertsOn: false);
 
-      await container.read(restTimerProvider.notifier).start(
-        exerciseId: 'barbell_bench_press',
-        exerciseName: 'Barbell Bench Press',
-        seconds: 90,
-      );
+      await container
+          .read(restTimerProvider.notifier)
+          .start(
+            exerciseId: 'barbell_bench_press',
+            exerciseName: 'Barbell Bench Press',
+            seconds: 90,
+          );
 
       // The clear still happens, so turning the setting off mid-rest can't
       // leave an orphaned notification stuck in the shade.

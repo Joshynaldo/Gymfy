@@ -20,7 +20,9 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [defaultAccentOverride],
-        child: MaterialApp(home: Scaffold(body: Center(child: child))),
+        child: MaterialApp(
+          home: Scaffold(body: Center(child: child)),
+        ),
       ),
     );
     await tester.pumpAndSettle();

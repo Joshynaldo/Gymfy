@@ -33,7 +33,7 @@ class SettingsScreen extends ConsumerWidget {
       // One animation for the whole screen rather than one per section: a
       // settings list is read top to bottom in a glance, and eight staggered
       // sections would draw the eye down the page instead of letting it land.
-      body: FadeSlideIn(
+      body: (context) => FadeSlideIn(
         child: ListView(
           padding: const EdgeInsets.only(bottom: 32) + barInsets(context),
           children: const [

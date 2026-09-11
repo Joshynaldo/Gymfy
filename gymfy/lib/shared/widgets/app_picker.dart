@@ -1,10 +1,8 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/theme/accent_color.dart';
-import '../../app/theme/glass.dart';
+import 'glass_sheet.dart';
 import 'number_wheel.dart';
 
 /// The shared look for "pick a value" controls.
@@ -180,14 +178,13 @@ Future<int?> showNumberPicker({
   );
 }
 
-/// The shell every picker sheet shares: a title, the content, and safe-area
-/// padding so the last row isn't under the gesture bar.
+/// The shell every picker sheet shares.
 ///
-/// This is the one place in the app where glass actually earns itself. A
-/// blurred, translucent surface only reads as glass when there is something
-/// behind it to distort — on a flat dark list it is just a slightly different
-/// grey. A sheet sits over the screen you came from, so here the blur has
-/// something to do, and the light along its top edge has a reason to be there.
+/// Now just [GlassSheet] with a title. This used to carry its own blur radius,
+/// its own surface alpha and its own edge colour, all picked by hand before
+/// there was a material to ask — which is exactly how two sheets in one app end
+/// up looking like two apps. The `showDragHandle: true` above still draws the
+/// grab bar, so this one does not.
 class _PickerSheet extends StatelessWidget {
   const _PickerSheet({required this.title, required this.child});
 
@@ -196,48 +193,10 @@ class _PickerSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
-        // A Material rather than a DecoratedBox: the option rows are
-        // ListTiles, and they paint their selection tint and ink splashes on
-        // the nearest Material ancestor. With a plain coloured box in between,
-        // Flutter asserts and the highlight on the chosen row never appears.
-        child: Material(
-          // Translucent rather than opaque, or the blur behind it would be
-          // painted over and the whole effect wasted.
-          color: theme.colorScheme.surface.withValues(alpha: 0.82),
-          // The edge comes from the material now rather than a hand-picked
-          // white. This sheet predates GlassStyle and was carrying its own
-          // idea of what a glass edge looks like — which is exactly how two
-          // surfaces in one app drift apart.
-          shape: Border(top: BorderSide(color: glassOf(context).edge)),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
-                    child: Text(
-                      title,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  Flexible(child: SingleChildScrollView(child: child)),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+    return GlassSheet(
+      title: title,
+      handle: false,
+      child: SingleChildScrollView(child: child),
     );
   }
 }

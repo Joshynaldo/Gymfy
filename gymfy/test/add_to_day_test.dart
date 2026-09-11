@@ -13,27 +13,33 @@ void main() {
   setUp(() async {
     db = AppDatabase.forTesting(NativeDatabase.memory());
     repo = WorkoutRepository(db);
-    await db.into(db.exercises).insert(
-      ExercisesCompanion.insert(
-        id: 'barbell_bench_press',
-        name: 'Barbell Bench Press',
-        muscleIds: const ['chest'],
-      ),
-    );
-    await db.into(db.exercises).insert(
-      ExercisesCompanion.insert(
-        id: 'push_up',
-        name: 'Push-Up',
-        muscleIds: const ['chest'],
-      ),
-    );
-    await db.into(db.exercises).insert(
-      ExercisesCompanion.insert(
-        id: 'pull_up',
-        name: 'Pull-Up',
-        muscleIds: const ['lats'],
-      ),
-    );
+    await db
+        .into(db.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: 'barbell_bench_press',
+            name: 'Barbell Bench Press',
+            muscleIds: const ['chest'],
+          ),
+        );
+    await db
+        .into(db.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: 'push_up',
+            name: 'Push-Up',
+            muscleIds: const ['chest'],
+          ),
+        );
+    await db
+        .into(db.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: 'pull_up',
+            name: 'Pull-Up',
+            muscleIds: const ['lats'],
+          ),
+        );
   });
 
   tearDown(() async {

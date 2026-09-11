@@ -26,23 +26,51 @@ class AppCard extends ConsumerWidget {
     this.onTap,
     this.onLongPress,
     this.selected = false,
+    this.tier = GlassTier.raised,
+    this.outlined = false,
     this.padding = const EdgeInsets.fromLTRB(12, 12, 8, 12),
-    this.margin = const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+    this.margin,
   });
 
   final Widget child;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
 
+  /// Which surface of the material this card is — see [GlassTier].
+  ///
+  /// [GlassTier.raised] for something you read, [GlassTier.quiet] for a row in
+  /// a list. Ignored on the flat themes, which have one card and always have.
+  final GlassTier tier;
+
   /// Escalates the border to solid accent and tints the surface.
   final bool selected;
+
+  /// Draws a visible hairline right round — for a card that is one of several
+  /// you choose between, where the edge is what says it can be picked.
+  final bool outlined;
 
   final EdgeInsetsGeometry padding;
 
   /// Space *outside* the card. Overridable for screens whose list already
   /// carries its own horizontal padding — the default would double up there
   /// and leave the card visibly narrower than the ones on the browsing tabs.
-  final EdgeInsetsGeometry margin;
+  ///
+  /// Defaults per tier, because the two are different objects: cards breathe,
+  /// rows queue. Twenty-two pixels between cards is what the design uses to
+  /// separate one thought from the next without a divider; ten between rows is
+  /// what keeps a list reading as one list.
+  final EdgeInsetsGeometry? margin;
+
+  /// The default is Hyper's spacing only. The flat themes keep the margin they
+  /// have always had — the promise on those six is that they come out of this
+  /// redesign unchanged, and spacing is as visible a change as colour.
+  EdgeInsetsGeometry _marginFor(bool glass) {
+    if (margin != null) return margin!;
+    if (!glass) return const EdgeInsets.symmetric(horizontal: 12, vertical: 6);
+    return tier == GlassTier.quiet
+        ? const EdgeInsets.symmetric(horizontal: 16, vertical: 5)
+        : const EdgeInsets.symmetric(horizontal: 16, vertical: 11);
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -65,10 +93,17 @@ class AppCard extends ConsumerWidget {
     // decision in one place — a card does not need to know which theme is on,
     // only how a surface looks here.
     if (glass.enabled) {
+      // A row is a smaller object than a card and takes a smaller corner. Same
+      // radius on both makes a list of rows look like a stack of cards that
+      // happen to be short.
+      final paneShape = tier == GlassTier.quiet
+          ? BorderRadius.circular(20)
+          : shape;
+
       return Padding(
-        padding: margin,
+        padding: _marginFor(true),
         child: Pressable(
-          borderRadius: shape,
+          borderRadius: paneShape,
           onTap: onTap,
           onLongPress: onLongPress,
           // No ripple anywhere on a card: the press scale has replaced it. A
@@ -79,8 +114,10 @@ class AppCard extends ConsumerWidget {
           // covers it entirely. Painting ink nobody can see is pure cost.
           splash: false,
           child: GlassSurface(
-            borderRadius: shape,
+            borderRadius: paneShape,
+            tier: tier,
             selected: selected,
+            outlined: outlined,
             // Nothing sits behind a card but the backdrop's colour field, and
             // blurring a smooth field gives back the same smooth field. See
             // GlassSurface.blurs — this is forty offscreen passes saved on a
@@ -94,7 +131,7 @@ class AppCard extends ConsumerWidget {
                 color: selected
                     ? accent.withValues(alpha: 0.16)
                     : Colors.transparent,
-                borderRadius: shape,
+                borderRadius: paneShape,
               ),
               child: _InkHost(padding: padding, child: child),
             ),
@@ -104,7 +141,7 @@ class AppCard extends ConsumerWidget {
     }
 
     return Padding(
-      padding: margin,
+      padding: _marginFor(false),
       child: Pressable(
         borderRadius: shape,
         onTap: onTap,
@@ -231,10 +268,21 @@ class AppTile extends ConsumerWidget {
       onTap: onTap,
       onLongPress: onLongPress,
       selected: selected,
+      // A tile is a row in a list, not a card: dimmer fill, no shadow, tighter
+      // corner. It is the difference between a library of seventy-eight entries
+      // reading as a list and reading as seventy-eight competing surfaces.
+      tier: GlassTier.quiet,
+      // Even padding on a row, unlike a card's: the chevron on the right is
+      // optical weight of its own, and the card default trims the right side to
+      // compensate for a trailing control that is usually a button. Here it
+      // just leaves the row looking as though it had slipped.
+      padding: glassOf(context).enabled
+          ? const EdgeInsets.fromLTRB(18, 16, 18, 16)
+          : const EdgeInsets.fromLTRB(12, 12, 8, 12),
       child: Row(
         children: [
           leading ?? AppGlyph(icon: icon, selected: selected),
-          const SizedBox(width: 14),
+          const SizedBox(width: 15),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -245,11 +293,17 @@ class AppTile extends ConsumerWidget {
                       child: Text(
                         title,
                         overflow: TextOverflow.ellipsis,
-                        // The title is what you're scanning for, so it gets the
-                        // weight.
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                        // A row's name, not a heading. On Hyper that is 15 at
+                        // medium weight: a list of seventy-eight of these at
+                        // heading size is a list with no hierarchy in it, and
+                        // the section headers above them stop meaning anything.
+                        style: glassOf(context).enabled
+                            ? theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                              )
+                            : theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                       ),
                     ),
                     if (titleTrailing != null) ...[
@@ -264,9 +318,13 @@ class AppTile extends ConsumerWidget {
                     subtitle!,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
+                    style:
+                        (glassOf(context).enabled
+                                ? theme.textTheme.labelMedium
+                                : theme.textTheme.bodySmall)
+                            ?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                   ),
                 ],
               ],
@@ -296,23 +354,42 @@ class AppGlyph extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     final accent = ref.watch(accentColorProvider);
+    final glass = glassOf(context);
+
+    // On glass the resting glyph is neutral, not accent.
+    //
+    // The rule is one accent per screen, on the thing that matters — and a
+    // column of nine accent squares down the side of the More tab breaks it
+    // nine times over. Worse, it spends the accent on the least important part
+    // of each row: you pick these by their label. Picked is still accent,
+    // because that genuinely is the thing that matters at that moment.
+    final restingFill = glass.enabled
+        ? Colors.white.withValues(alpha: 0.08)
+        : accent.withValues(alpha: 0.13);
+    final restingInk = glass.enabled
+        ? theme.colorScheme.onSurfaceVariant
+        : accent;
 
     return AnimatedContainer(
       duration: AppDurations.quick,
       curve: AppCurves.settle,
-      width: 42,
-      height: 42,
+      width: glass.enabled ? 40 : 42,
+      height: glass.enabled ? 40 : 42,
       decoration: BoxDecoration(
-        color: selected ? accent : accent.withValues(alpha: 0.13),
+        color: selected ? accent : restingFill,
         // A rounded square rather than a circle: it echoes the card corners and
         // stacks into a tidier column down the left edge.
         borderRadius: BorderRadius.circular(13),
+        border: glass.enabled && !selected
+            ? Border.all(color: Colors.white.withValues(alpha: 0.10))
+            : null,
       ),
       child: Icon(
         selected ? Icons.check : icon,
         size: 21,
-        color: selected ? Colors.white : accent,
+        color: selected ? Colors.white : restingInk,
       ),
     );
   }
@@ -324,7 +401,12 @@ class AppGlyph extends ConsumerWidget {
 /// you down the screen reads as a collapsible summary bar and invites taps that
 /// do nothing.
 class AppSectionHeader extends StatelessWidget {
-  const AppSectionHeader({super.key, required this.title, this.count});
+  const AppSectionHeader({
+    super.key,
+    required this.title,
+    this.count,
+    this.countLabel,
+  });
 
   final String title;
 
@@ -332,28 +414,52 @@ class AppSectionHeader extends StatelessWidget {
   /// scrolling into this?" before you do.
   final int? count;
 
+  /// The same slot, in words: "4 workouts" rather than a bare "4". For headings
+  /// where the number needs a noun to mean anything.
+  final String? countLabel;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final glass = glassOf(context);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
+      // Thirty-four above, fourteen below — the numbers the design separates
+      // sections by, less the card margin that follows it. Air above a heading
+      // is what makes it read as the start of something rather than a label
+      // stuck on the card beneath it.
+      padding: glass.enabled
+          ? const EdgeInsets.fromLTRB(20, 23, 20, 3)
+          : const EdgeInsets.fromLTRB(20, 18, 20, 6),
       child: Row(
         children: [
-          Text(
-            title,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              // Slightly tracked out: at this size it's the difference between
-              // a heading and just another bold line.
-              letterSpacing: 0.6,
+          // Expanded rather than a bare Text plus a Spacer. Two unconstrained
+          // labels in one Row is a horizontal overflow waiting for a long
+          // heading, a wide count, a narrow phone or larger text — and with
+          // all four it does not need to be close. The title is the half that
+          // gives, because the count beside it is short and fixed.
+          Expanded(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                // Slightly tracked out on the flat themes: at that size it is
+                // the difference between a heading and just another bold line.
+                // Hyper gets its separation from the scale instead — 17 against
+                // 15 — and tracking on top of that reads as shouting.
+                letterSpacing: glass.enabled ? null : 0.6,
+              ),
             ),
           ),
-          if (count != null) ...[
-            const SizedBox(width: 8),
+          if (count != null || countLabel != null) ...[
+            const SizedBox(width: 12),
             Text(
-              '$count',
-              style: theme.textTheme.labelMedium?.copyWith(
+              countLabel ?? '$count',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),

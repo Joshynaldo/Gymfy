@@ -256,6 +256,180 @@ Future<void> setAppTheme(WidgetRef ref, AppTheme theme) {
       .write(appThemeSetting, theme.name);
 }
 
+/// Hyper's material, in the four surfaces the design draws.
+///
+/// Every number here is a measured value from the design rather than a guess
+/// that looked about right, which is why they are odd: 11.5% white at the top
+/// of a card, 5.2% through the middle, 7.5% at the foot. A flat tint anywhere
+/// in the middle of that range reads as plastic — the dip and the recovery are
+/// what the eye takes as thickness.
+///
+/// Cool white throughout rather than the accent: tinting the glass itself with
+/// the accent made every pane the same hue as the thing it contained, and the
+/// accent stopped meaning "this matters".
+const _hyperGlass = GlassStyle(
+  enabled: true,
+
+  // Cards and panels. No blur: nothing sits behind a card but the backdrop's
+  // own colour field, and blurring a smooth field returns the same field.
+  raised: GlassPane(
+    fill: [Color(0x2BFFFFFF), Color(0x17FFFFFF), Color(0x1FFFFFFF)],
+    stops: [0, 0.46, 1],
+    edge: Color(0x1FFFFFFF),
+    topEdge: Color(0x59FFFFFF),
+    // Tight and almost black. Not a drop shadow in the Material sense — a card
+    // this translucent has no business casting one — but a darkening directly
+    // under the pane, which is what stops it looking painted onto the field.
+    shadow: [
+      BoxShadow(
+        color: Color(0xE6000000),
+        blurRadius: 30,
+        spreadRadius: -16,
+        offset: Offset(0, 2),
+      ),
+    ],
+  ),
+
+  // Rows. Two thirds of a card's fill and no shadow, so a list of them recedes
+  // and the one card on the screen is still the thing you look at first.
+  quiet: GlassPane(
+    fill: [Color(0x1FFFFFFF), Color(0x10FFFFFF), Color(0x17FFFFFF)],
+    stops: [0, 0.52, 1],
+    edge: Color(0x1AFFFFFF),
+    topEdge: Color(0x42FFFFFF),
+  ),
+
+  // The navigation pill and the app bar's scrim. The opaque floor is what makes
+  // this readable with a list running underneath: blur alone averages the text
+  // below into a grey haze that is still, faintly, text.
+  bar: GlassPane(
+    fill: [Color(0x1DFFFFFF), Color(0x0AFFFFFF), Color(0x13FFFFFF)],
+    stops: [0, 0.48, 1],
+    base: Color(0xAD0B0B15),
+    edge: Color(0x1AFFFFFF),
+    topEdge: Color(0x52FFFFFF),
+    blur: 30,
+    shadow: [
+      BoxShadow(
+        color: Color(0xF2000000),
+        blurRadius: 40,
+        spreadRadius: -20,
+        offset: Offset(0, 20),
+      ),
+    ],
+  ),
+
+  // Sheets and dialogs. The one surface with a colour of its own — a cool
+  // violet-grey rather than white over the field — because it covers the whole
+  // screen and would otherwise read as the screen having simply got brighter.
+  sheet: GlassPane(
+    fill: [Color(0xCC26243E), Color(0xCC121220), Color(0xD60F0F1B)],
+    stops: [0, 0.38, 1],
+    edge: Color(0x1FFFFFFF),
+    topEdge: Color(0x52FFFFFF),
+    blur: 36,
+    shadow: [
+      BoxShadow(
+        color: Color(0xF2000000),
+        blurRadius: 70,
+        spreadRadius: -26,
+        offset: Offset(0, -28),
+      ),
+    ],
+  ),
+
+  scrim: Color(0xFF07070F),
+
+  // See GlassStyle.saturation. Blur pulls colour towards grey; this puts back
+  // what the average took out, and is the difference between the orbs reading
+  // through a pane and the pane looking like frosted plastic.
+  saturation: 1.85,
+  brightness: 1.08,
+);
+
+/// Hyper's type scale.
+///
+/// Eleven sizes, and the gaps between them are the point: 11, 12.5, 13, 15, 17,
+/// 19, 26, 34. Material's own scale is built for a page of prose and steps
+/// gently; this one steps hard, because every screen here is a number you read
+/// at a glance with something in your other hand, and a hierarchy you have to
+/// squint at is not a hierarchy.
+///
+/// Two rules run through it:
+///
+/// Large text is tracked **in**. At 26px and up, default spacing reads as gappy
+/// and the number stops being one object — so it tightens as it grows, up to
+/// -0.6 at 34.
+///
+/// Small caps are tracked **out**, hard: 11px at +1.1 is the label style the
+/// whole design leans on for "WEDNESDAY", "UP NEXT", "STEP 1 — WEIGHT". At that
+/// size, letterspacing is what separates a label from just another small line.
+///
+/// Only Hyper gets this. The six flat themes keep Material's defaults, which is
+/// what they have always drawn.
+TextTheme _hyperText(AppPalette palette) {
+  TextStyle style(
+    double size,
+    FontWeight weight, {
+    double? tracking,
+    double height = 1.25,
+    Color? colour,
+  }) => TextStyle(
+    fontSize: size,
+    fontWeight: weight,
+    letterSpacing: tracking,
+    height: height,
+    color: colour ?? palette.textPrimary,
+  );
+
+  return TextTheme(
+    // The numbers a screen is built around: a volume total, a countdown.
+    displayLarge: style(66, FontWeight.w600, tracking: -2.5, height: 1),
+    displayMedium: style(38, FontWeight.w600, tracking: -1, height: 1.05),
+    displaySmall: style(34, FontWeight.w600, tracking: -0.8, height: 1.05),
+
+    headlineLarge: style(34, FontWeight.w600, tracking: -0.6, height: 1.1),
+    // The day name on Home — the largest thing that is a word rather than a
+    // figure.
+    headlineMedium: style(32, FontWeight.w600, tracking: -0.5, height: 1.1),
+    headlineSmall: style(28, FontWeight.w600, tracking: -0.4, height: 1.15),
+
+    // A screen's own name: the exercise on its detail page.
+    titleLarge: style(26, FontWeight.w600, tracking: -0.4, height: 1.15),
+    // A card's heading, and the app bar's title.
+    titleMedium: style(19, FontWeight.w600, tracking: -0.2),
+    // A section heading over a run of cards.
+    titleSmall: style(17, FontWeight.w600),
+
+    // Rows: the name of a thing in a list.
+    bodyLarge: style(16, FontWeight.w400, height: 1.35),
+    bodyMedium: style(15, FontWeight.w400, height: 1.35),
+    // Everything secondary — the line under a title, a date, a target.
+    bodySmall: style(
+      13,
+      FontWeight.w400,
+      height: 1.4,
+      colour: palette.textMuted,
+    ),
+
+    // Buttons.
+    labelLarge: style(14.5, FontWeight.w600),
+    labelMedium: style(
+      12.5,
+      FontWeight.w400,
+      height: 1.35,
+      colour: palette.textMuted,
+    ),
+    // The tracked caps label. See above — this one carries a lot of the design.
+    labelSmall: style(
+      11,
+      FontWeight.w600,
+      tracking: 1.1,
+      colour: palette.textMuted,
+    ),
+  );
+}
+
 /// Builds the [ThemeData] for [theme], tinted by [accent].
 ///
 /// Called from `main.dart` whenever either changes.
@@ -297,27 +471,23 @@ ThemeData buildAppTheme(AppTheme theme, Color accent) {
   // Hyper is the only theme whose surfaces are a material rather than a fill.
   // Carried on the ThemeData so widgets ask "how does a surface look here"
   // instead of testing which theme is on.
-  final glass = theme == AppTheme.hyper
-      ? GlassStyle(
-          enabled: true,
-          // Enough that what shows through is colour and movement, never
-          // legible content. A surface you can read the screen through is a
-          // window, not a material.
-          blur: 24,
-          // Cool white at low alpha rather than the accent: tinting the glass
-          // itself with the accent made every pane the same hue as the thing
-          // it contained, and the accent stopped meaning "this matters".
-          tint: const Color(0x14FFFFFF),
-          highlight: const Color(0x2EFFFFFF),
-          edge: const Color(0x24FFFFFF),
-        )
-      : const GlassStyle.off();
+  final glass = theme == AppTheme.hyper ? _hyperGlass : const GlassStyle.off();
 
   return ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
     colorScheme: scheme,
     extensions: [glass],
+
+    // Hyper's typeface, and Hyper's alone. A grotesque with tight apertures and
+    // a near-square figure set — it holds up at 11px tracked caps and at a
+    // 38px timer, which is the range this app actually asks of a face.
+    //
+    // Null everywhere else, which means Roboto: the six flat themes are meant
+    // to come out of the redesign unchanged, and a typeface is not a detail
+    // that can be changed quietly.
+    fontFamily: glass.enabled ? 'Schibsted Grotesk' : null,
+    textTheme: glass.enabled ? _hyperText(palette) : null,
     // Transparent on a glass theme so the backdrop painted underneath shows
     // through every scaffold; opaque everywhere else, as before.
     scaffoldBackgroundColor: glass.enabled
@@ -348,8 +518,15 @@ ThemeData buildAppTheme(AppTheme theme, Color accent) {
       foregroundColor: palette.textPrimary,
       elevation: 0,
       centerTitle: false,
+      // Material 3 gives the bar `titleLarge`, which in this scale is the 26px
+      // a screen's own subject gets. A title is a label for where you are, not
+      // the thing you came to read — the design sets it at 19.
+      titleTextStyle: glass.enabled
+          ? _hyperText(
+              palette,
+            ).titleMedium?.copyWith(fontFamily: 'Schibsted Grotesk')
+          : null,
     ),
-
     dividerTheme: DividerThemeData(
       color: palette.outline,
       thickness: theme == AppTheme.highContrast ? 1.5 : 1,
@@ -359,7 +536,10 @@ ThemeData buildAppTheme(AppTheme theme, Color accent) {
       color: palette.surface,
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        // Hyper's panes are rounder than a flat card. A translucent surface is
+        // read by its edge rather than by its fill, and at 16 that edge reads
+        // as a box with softened corners rather than as something moulded.
+        borderRadius: BorderRadius.circular(glass.enabled ? 24 : 16),
         side: cardBorder,
       ),
       margin: EdgeInsets.zero,
