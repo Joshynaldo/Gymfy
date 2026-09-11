@@ -80,35 +80,46 @@ const _restColor = Color(0xFF4C5361);
 /// the body, not a muscle group, and it has no volume to report.
 const _bodyColor = Color(0xFF2E3440);
 
-/// The same two, lifted for the glass theme.
+/// The silhouette on the glass theme: dark, and violet rather than slate.
 ///
-/// Not a preference — the figure is drawn over a different thing there. On the
-/// flat themes it sits on a near-black card, where slate reads as "muscle I
-/// haven't trained". On glass it sits on a bright moving field, and the same
-/// slate reads as a hole cut in the screen: the one shape on a page of glass
-/// that light does not get through. Making it translucent was not enough on
-/// its own — a fraction of a very dark colour is still a very dark colour, and
-/// the figure only got dimmer.
+/// Darker than the flat themes' version, not lighter — which is the opposite of
+/// where this started. The figure does not read as glass because it is dimmed;
+/// it reads as glass because it is made of the same colour as everything else
+/// on the screen. Against a body carrying the field's own hue, a dark head and
+/// dark hands are the shadow that gives the muscles somewhere to stand.
+const _bodyColorGlass = Color(0xFF2C2646);
+
+/// What an untrained muscle is painted in [MuscleMapMode.contrast] on glass.
 ///
-/// Lifted by roughly the same amount rather than recoloured, so the silhouette
-/// stays darker than the muscles standing on it — that difference is the only
-/// thing giving the figure any depth.
+/// Contrast mode gives every worked muscle its own hue, so the unworked ones
+/// have to stay out of the argument — a violet rest would be one more colour
+/// competing with the ones carrying meaning. Dark and barely tinted.
+const _restColorGlass = Color(0xFF4A4468);
+
+/// What an untrained muscle is painted in [MuscleMapMode.heatmap] on glass.
 ///
-/// Lifted *past* what looks right on its own, too: these are the colours before
-/// [_glassOpacity] takes a quarter of them back out. Read them as the figure at
-/// full strength, not as what lands on the screen.
-const _restColorGlass = Color(0xFFAEB7CA);
-const _bodyColorGlass = Color(0xFF7B8499);
+/// Partway to the colour the map is tinting toward, rather than a neutral grey.
+/// This is the change that finally made the figure look like part of the pane:
+/// a grey body on a violet screen is a grey body no matter what its alpha is,
+/// because neutral is the one hue the field never supplies. Tinted, it reads as
+/// light coming through the glass rather than as a shape laid on top of it.
+///
+/// Derived from the colour being tinted toward, so it follows the accent — and
+/// follows the fatigue reading's red, which would look muddy lerping out of a
+/// violet. It costs some of the heatmap's range: an unworked muscle now starts
+/// half-lit rather than dark. Worth it, and still legible, because the thing
+/// the diagram is actually asked is "which of these is brightest", not "what
+/// absolute value is this one".
+Color _restColorGlassFor(Color heat) => Color.lerp(_bodyColorGlass, heat, 0.5)!;
 
 /// How solid the figure is on the glass theme.
 ///
-/// Low enough that the card's own gradient is visible through the body — on a
+/// Enough off that the card's own gradient is legible through the body — on a
 /// screen where every other surface admits light, a fully opaque figure is the
-/// one thing that doesn't, and it reads as a sticker rather than as part of the
-/// pane. High enough that a lit muscle is still plainly lit: past about a third
-/// off, the difference between a worked muscle and an unworked one starts going
-/// with it, and that difference is the whole point of the diagram.
-const _glassOpacity = 0.72;
+/// one thing that doesn't. Not much more than that, though: the tint is what
+/// does the work here, and past about a quarter off the difference between a
+/// worked muscle and an unworked one starts going with it.
+const _glassOpacity = 0.78;
 
 /// Matches a muscle path's tag so we can rewrite just its fill, e.g.
 /// `data-muscle="chest" fill="#4C5361"`. A single path may carry more than one
@@ -174,12 +185,17 @@ class MuscleMap extends ConsumerWidget {
         ),
         data: (template) {
           final glass = glassOf(context).enabled;
+          final heat = heatColor ?? accent;
           final svg = tintMuscles(
             svg: template,
             intensities: intensities,
-            heatColor: heatColor ?? accent,
+            heatColor: heat,
             mode: mode,
-            restColor: glass ? _restColorGlass : _restColor,
+            restColor: switch ((glass, mode)) {
+              (false, _) => _restColor,
+              (true, MuscleMapMode.heatmap) => _restColorGlassFor(heat),
+              (true, MuscleMapMode.contrast) => _restColorGlass,
+            },
             bodyColor: glass ? _bodyColorGlass : _bodyColor,
           );
           final picture = SvgPicture.string(svg, fit: BoxFit.contain);
