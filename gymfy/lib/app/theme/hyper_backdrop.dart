@@ -143,15 +143,23 @@ class _BackdropPainter extends CustomPainter {
     );
   }
 
-  /// The accent, moved a little round the wheel.
+  /// The accent, moved a little round the wheel and pushed towards its purest
+  /// version of itself.
   ///
   /// Two orbs of exactly the accent and one of something else blend into a
   /// single soft blob and the depth goes with it; three near-neighbours keep
   /// the field reading as one light with several sources.
+  ///
+  /// The saturation lift is what stops the field going muddy. These are painted
+  /// at low alpha over a near-black ground, and low alpha *is* a blend towards
+  /// the ground — so an orb painted in the accent's own saturation arrives
+  /// greyer than the accent, every time. Pushing it up first is how the colour
+  /// survives the dilution.
   Color _shift(Color colour, double degrees, double lightness) {
     final hsl = HSLColor.fromColor(colour);
     return hsl
         .withHue((hsl.hue + degrees) % 360)
+        .withSaturation((hsl.saturation * 1.25).clamp(0.0, 1.0))
         .withLightness((hsl.lightness * lightness).clamp(0.0, 1.0))
         .toColor();
   }
@@ -180,12 +188,13 @@ class _BackdropPainter extends CustomPainter {
       Paint()
         ..shader = RadialGradient(
           colors: [
-            // Low alpha on purpose. This is a field to sense, not a picture to
-            // look at, and anything stronger turns text on top of it into hard
-            // work. The panes above it lift the colour back up where it counts
-            // — see GlassStyle.saturation.
-            colour.withValues(alpha: 0.30),
-            colour.withValues(alpha: 0.22),
+            // Bright enough to read as colour rather than as a stain, and no
+            // brighter. The ceiling is not taste, it is legibility: text sits
+            // on these panes, the panes are translucent, and past about half
+            // alpha the field starts showing through the cards and competing
+            // with the numbers on them.
+            colour.withValues(alpha: 0.46),
+            colour.withValues(alpha: 0.34),
             colour.withValues(alpha: 0),
           ],
           // Held flat to a quarter of the radius before it falls away, which is
