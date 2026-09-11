@@ -80,14 +80,20 @@ void main() {
       expect(restarted.read(accentColorProvider), AccentPalette.pink);
     });
 
-    test('a stored value outside the palette falls back to the default', () async {
-      await container
-          .read(settingsRepositoryProvider)
-          .write(accentColorSetting, '999');
-      container.listen(accentColorProvider, (_, _) {});
-      await container.read(storedAccentProvider.future);
+    test(
+      'a stored value outside the palette falls back to the default',
+      () async {
+        await container
+            .read(settingsRepositoryProvider)
+            .write(accentColorSetting, '999');
+        container.listen(accentColorProvider, (_, _) {});
+        await container.read(storedAccentProvider.future);
 
-      expect(container.read(accentColorProvider), AccentPalette.defaultAccent);
-    });
+        expect(
+          container.read(accentColorProvider),
+          AccentPalette.defaultAccent,
+        );
+      },
+    );
   });
 }

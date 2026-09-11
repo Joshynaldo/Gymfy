@@ -40,11 +40,11 @@ class _ProgressPhotosScreenState extends ConsumerState<ProgressPhotosScreen> {
           IconButton(
             icon: const Icon(Icons.compare),
             tooltip: 'Compare',
-            onPressed: () => context.go('/more/progress/photos/compare'),
+            onPressed: () => context.go('/progress/photos/compare'),
           ),
         ],
       ),
-      body: photosAsync.when(
+      body: (context) => photosAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: Padding(

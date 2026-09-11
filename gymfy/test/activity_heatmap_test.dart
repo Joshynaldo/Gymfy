@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/features/home/data/activity_repository.dart';
-import 'package:gymfy/features/home/widgets/activity_heatmap.dart';
+import 'package:gymfy/features/progress/widgets/activity_heatmap.dart';
 import 'package:gymfy/shared/database/app_database.dart';
 
 import 'support/default_accent.dart';
@@ -23,7 +23,10 @@ void main() {
 
     test('a session lands on the day it finished', () {
       final result = minutesByDay([
-        (endedAt: DateTime(2026, 8, 24, 19, 30), length: const Duration(minutes: 75)),
+        (
+          endedAt: DateTime(2026, 8, 24, 19, 30),
+          length: const Duration(minutes: 75),
+        ),
       ]);
 
       expect(result, {DateTime(2026, 8, 24): 75});
@@ -31,8 +34,14 @@ void main() {
 
     test('two sessions on one day add up', () {
       final result = minutesByDay([
-        (endedAt: DateTime(2026, 8, 24, 9), length: const Duration(minutes: 30)),
-        (endedAt: DateTime(2026, 8, 24, 18), length: const Duration(minutes: 45)),
+        (
+          endedAt: DateTime(2026, 8, 24, 9),
+          length: const Duration(minutes: 30),
+        ),
+        (
+          endedAt: DateTime(2026, 8, 24, 18),
+          length: const Duration(minutes: 45),
+        ),
       ]);
 
       // Training twice is one busier day — the grid has one cell to say so.
@@ -41,7 +50,10 @@ void main() {
 
     test('a session that ran past midnight counts on the day it ended', () {
       final result = minutesByDay([
-        (endedAt: DateTime(2026, 8, 25, 0, 20), length: const Duration(minutes: 50)),
+        (
+          endedAt: DateTime(2026, 8, 25, 0, 20),
+          length: const Duration(minutes: 50),
+        ),
       ]);
 
       // Matches how the streak and the recap date a workout.
@@ -49,9 +61,7 @@ void main() {
     });
 
     test('even an instant session counts as a minute', () {
-      final result = minutesByDay([
-        (endedAt: _today, length: Duration.zero),
-      ]);
+      final result = minutesByDay([(endedAt: _today, length: Duration.zero)]);
 
       // "Completed means trained" is the rule the streak already uses. Having
       // the grid disagree — a day the streak counts but the heatmap leaves
@@ -177,13 +187,15 @@ void main() {
       required DateTime startedAt,
       DateTime? completedAt,
     }) async {
-      await db.into(db.workoutSessions).insert(
-        WorkoutSessionsCompanion.insert(
-          name: 'Push',
-          startedAt: Value(startedAt),
-          completedAt: Value(completedAt),
-        ),
-      );
+      await db
+          .into(db.workoutSessions)
+          .insert(
+            WorkoutSessionsCompanion.insert(
+              name: 'Push',
+              startedAt: Value(startedAt),
+              completedAt: Value(completedAt),
+            ),
+          );
     }
 
     test('a finished session shows its length', () async {
@@ -233,7 +245,9 @@ void main() {
         ProviderScope(
           overrides: [
             defaultAccentOverride,
-            activityMinutesProvider.overrideWith((ref) => Stream.value(minutes)),
+            activityMinutesProvider.overrideWith(
+              (ref) => Stream.value(minutes),
+            ),
           ],
           child: MaterialApp(
             home: Scaffold(
@@ -258,10 +272,10 @@ void main() {
     });
 
     testWidgets('summarises the year under the grid', (tester) async {
-      await pump(tester, minutes: {
-        DateTime(2026, 8, 24): 60,
-        DateTime(2026, 8, 22): 45,
-      });
+      await pump(
+        tester,
+        minutes: {DateTime(2026, 8, 24): 60, DateTime(2026, 8, 22): 45},
+      );
 
       expect(find.text('Activity'), findsOneWidget);
       expect(find.textContaining('2 days'), findsOneWidget);
@@ -317,7 +331,8 @@ void main() {
     ) async {
       await pump(tester, minutes: {DateTime(2026, 8, 24): 75});
 
-      final cell = tester.getTopLeft(find.byKey(activityGridKey)) +
+      final cell =
+          tester.getTopLeft(find.byKey(activityGridKey)) +
           activityCellCentre(week: activityWeeks - 1, weekdayRow: 0);
       await tester.tapAt(cell);
       await tester.pump();

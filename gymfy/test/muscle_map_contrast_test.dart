@@ -13,17 +13,14 @@ import 'package:gymfy/shared/models/muscle_ids.dart';
 void main() {
   /// A stand-in for the real SVG: the tinting only cares about these tags.
   String svgWith(List<String> regions) {
-    return regions
-        .map((r) => '<path data-muscle="$r" fill="#4C5361"/>')
-        .join();
+    return regions.map((r) => '<path data-muscle="$r" fill="#4C5361"/>').join();
   }
 
   /// The fills the tinter wrote, in document order.
   List<String> fillsOf(String svg) {
-    return RegExp(r'fill="(#[0-9A-F]{6})"')
-        .allMatches(svg)
-        .map((m) => m.group(1)!)
-        .toList();
+    return RegExp(
+      r'fill="(#[0-9A-F]{6})"',
+    ).allMatches(svg).map((m) => m.group(1)!).toList();
   }
 
   String tint(
@@ -130,7 +127,9 @@ void main() {
 
     test('intensity still dims the colour', () {
       final full = fillsOf(tint([MuscleId.chest], {MuscleId.chest: 1})).single;
-      final half = fillsOf(tint([MuscleId.chest], {MuscleId.chest: 0.5})).single;
+      final half = fillsOf(
+        tint([MuscleId.chest], {MuscleId.chest: 0.5}),
+      ).single;
 
       // Same data as the heatmap, just readable — half volume must not look
       // like full volume.

@@ -208,10 +208,7 @@ void main() {
       expect(recap.muscleSets['biceps'], 2);
       expect(recap.muscleSets['quads'], 1);
       // Biceps got more work despite a twentieth of the tonnage.
-      expect(
-        recap.muscleSets['biceps']! > recap.muscleSets['quads']!,
-        isTrue,
-      );
+      expect(recap.muscleSets['biceps']! > recap.muscleSets['quads']!, isTrue);
     });
 
     test('a bodyweight set counts the same as a loaded one', () {

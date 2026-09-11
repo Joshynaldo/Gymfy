@@ -34,7 +34,7 @@ class ExerciseProgressScreen extends ConsumerWidget {
 
     return GlassScaffold(
       appBar: GlassAppBar(title: Text(title)),
-      body: historyAsync.when(
+      body: (context) => historyAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: Padding(

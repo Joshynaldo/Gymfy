@@ -1,5 +1,3 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/material.dart';
 
 import '../../app/theme/glass.dart';
@@ -41,55 +39,50 @@ class GlassDialog extends StatelessWidget {
       // paint an opaque rectangle over the blur it is meant to sit on.
       backgroundColor: Colors.transparent,
       elevation: 0,
-      child: ClipRRect(
+      child: GlassSurface(
         borderRadius: BorderRadius.circular(28),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: glass.blur, sigmaY: glass.blur),
-          child: Container(
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface.withValues(alpha: 0.82),
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: glass.edge),
-            ),
-            padding: const EdgeInsets.fromLTRB(24, 22, 24, 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (title != null) ...[
-                  DefaultTextStyle(
-                    style: theme.textTheme.titleLarge!,
-                    child: title!,
-                  ),
-                  const SizedBox(height: 16),
-                ],
-                if (content != null)
-                  // Flexible, not Expanded: the dialog is only as tall as it
-                  // needs to be, but a long form still scrolls inside itself
-                  // rather than overflowing off the screen.
-                  Flexible(
-                    child: SingleChildScrollView(
-                      child: DefaultTextStyle(
-                        style: theme.textTheme.bodyMedium!.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        child: content!,
+        // The sheet tier: the app's heaviest fill, its deepest blur, and a
+        // colour of its own rather than white over the field.
+        tier: GlassTier.sheet,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 22, 24, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (title != null) ...[
+                DefaultTextStyle(
+                  style: theme.textTheme.titleLarge!,
+                  child: title!,
+                ),
+                const SizedBox(height: 16),
+              ],
+              if (content != null)
+                // Flexible, not Expanded: the dialog is only as tall as it
+                // needs to be, but a long form still scrolls inside itself
+                // rather than overflowing off the screen.
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: DefaultTextStyle(
+                      style: theme.textTheme.bodyMedium!.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
+                      child: content!,
                     ),
                   ),
-                if (actions != null) ...[
-                  const SizedBox(height: 8),
-                  // The same widget AlertDialog uses, so buttons that do not
-                  // fit side by side stack instead of being clipped.
-                  OverflowBar(
-                    alignment: MainAxisAlignment.end,
-                    spacing: 8,
-                    overflowAlignment: OverflowBarAlignment.end,
-                    children: actions!,
-                  ),
-                ],
+                ),
+              if (actions != null) ...[
+                const SizedBox(height: 8),
+                // The same widget AlertDialog uses, so buttons that do not
+                // fit side by side stack instead of being clipped.
+                OverflowBar(
+                  alignment: MainAxisAlignment.end,
+                  spacing: 8,
+                  overflowAlignment: OverflowBarAlignment.end,
+                  children: actions!,
+                ),
               ],
-            ),
+            ],
           ),
         ),
       ),

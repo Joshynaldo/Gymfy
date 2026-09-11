@@ -84,7 +84,7 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
         if (exercise == null) {
           return GlassScaffold(
             appBar: GlassAppBar(title: const Text('Edit exercise')),
-            body: const Center(child: Text('Exercise not found.')),
+            body: (context) => const Center(child: Text('Exercise not found.')),
           );
         }
         _prefill(exercise);
@@ -111,7 +111,7 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
       appBar: GlassAppBar(
         title: Text(widget.isEditing ? 'Edit exercise' : 'New exercise'),
       ),
-      body: ListView(
+      body: (context) => ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 96) + barInsets(context),
         children: [
           TextField(

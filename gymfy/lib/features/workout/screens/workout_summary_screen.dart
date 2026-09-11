@@ -35,7 +35,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
         title: const Text('Workout complete'),
         automaticallyImplyLeading: false,
       ),
-      body: sessionAsync.when(
+      body: (context) => sessionAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: Padding(

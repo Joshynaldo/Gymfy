@@ -149,7 +149,7 @@ void main() {
       final bar = tester.widget<NavigationBar>(find.byType(NavigationBar));
       expect(bar.destinations.length, mainDestinations.length);
       expect(find.text('Workout'), findsOneWidget);
-      expect(find.text('Stats'), findsOneWidget);
+      expect(find.text('Progress'), findsOneWidget);
     });
 
     testWidgets('does not pad itself away from its own bottom edge', (

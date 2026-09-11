@@ -49,9 +49,9 @@ void main() {
                 ? null
                 : (day: DateTime(2026, 7, 20), value: bodyweight),
           ),
-          exerciseHistoryProvider(exerciseId).overrideWith(
-            (ref) => Stream.value(history),
-          ),
+          exerciseHistoryProvider(
+            exerciseId,
+          ).overrideWith((ref) => Stream.value(history)),
           testedOneRmProvider(exerciseId).overrideWith(
             (ref) => Stream.value(
               tested == null
@@ -76,9 +76,11 @@ void main() {
   testWidgets('stays out of the way for an exercise with no standards', (
     tester,
   ) async {
-    await pump(tester, exerciseId: 'dumbbell_lateral_raise', history: [
-      set(12, 10),
-    ]);
+    await pump(
+      tester,
+      exerciseId: 'dumbbell_lateral_raise',
+      history: [set(12, 10)],
+    );
 
     expect(find.text('Your rank'), findsNothing);
     expect(find.text('This lift can be ranked'), findsNothing);

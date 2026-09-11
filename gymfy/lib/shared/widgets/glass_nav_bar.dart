@@ -58,6 +58,10 @@ class GlassNavBar extends StatelessWidget {
         // Near-capsule. A pill this tall with a 16-radius card corner looks
         // like a card that ended up in the wrong place.
         borderRadius: BorderRadius.circular(26),
+        // The bar tier: an opaque floor under the tint, a brighter lip, and the
+        // long soft shadow that separates the pill from whatever is sliding
+        // past beneath it.
+        tier: GlassTier.bar,
         // Here the blur is the whole effect, and one of only two places in the
         // app that earns it: the shell lays its body out behind the pill, so
         // what is being filtered is the list actually scrolling underneath.

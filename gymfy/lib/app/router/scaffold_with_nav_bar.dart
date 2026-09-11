@@ -18,16 +18,21 @@ const mainDestinations = [
     label: 'Home',
   ),
   NavigationDestination(icon: Icon(Icons.fitness_center), label: 'Workout'),
-  NavigationDestination(icon: Icon(Icons.menu_book), label: 'Exercises'),
-  NavigationDestination(icon: Icon(Icons.insights), label: 'Stats'),
+  NavigationDestination(icon: Icon(Icons.insights), label: 'Progress'),
   NavigationDestination(icon: Icon(Icons.apps), label: 'More'),
 ];
 
-/// The persistent shell that wraps the five main tabs.
+/// The persistent shell that wraps the four main tabs.
 ///
-/// Progress is deliberately not among them — it lives under More. Six tabs
-/// crowded the bar into unreadable labels, and Progress is the one you consult
-/// after training rather than reach for during it.
+/// Four, not five, and not the six this started with. The bar is the one
+/// control you hit without looking, and each tab you add takes width from every
+/// other one: at six the labels had to shrink to fit, at five the targets were
+/// still narrower than a thumb.
+///
+/// What went: the exercise library, which is a reference you consult from
+/// somewhere else rather than a place you go; and the stats screen, which
+/// answers the same question as the charts and belongs inside Progress. What
+/// came back: Progress itself, which is the reason anybody logs anything.
 ///
 /// [navigationShell] is supplied by [StatefulShellRoute.indexedStack] in
 /// `app_router.dart`. Switching tabs is done through

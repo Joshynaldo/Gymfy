@@ -231,7 +231,10 @@ void main() {
   testWidgets('offers a way to add an exercise', (tester) async {
     await _pumpScreen(tester);
 
-    expect(find.widgetWithText(FloatingActionButton, 'Add exercise'), findsOneWidget);
+    expect(
+      find.widgetWithText(FloatingActionButton, 'Add exercise'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('long-pressing starts a selection', (tester) async {

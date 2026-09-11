@@ -50,14 +50,17 @@ void main() {
       );
     });
 
-    test('writing the same key twice replaces rather than duplicates', () async {
-      await settings.write(lifterSexSetting, LifterSex.male.name);
-      await settings.write(lifterSexSetting, LifterSex.female.name);
+    test(
+      'writing the same key twice replaces rather than duplicates',
+      () async {
+        await settings.write(lifterSexSetting, LifterSex.male.name);
+        await settings.write(lifterSexSetting, LifterSex.female.name);
 
-      final rows = await db.select(db.appSettings).get();
-      expect(rows.length, 1);
-      expect(rows.single.value, LifterSex.female.name);
-    });
+        final rows = await db.select(db.appSettings).get();
+        expect(rows.length, 1);
+        expect(rows.single.value, LifterSex.female.name);
+      },
+    );
 
     test('settings do not collide with each other', () async {
       await settings.write(lifterSexSetting, LifterSex.male.name);

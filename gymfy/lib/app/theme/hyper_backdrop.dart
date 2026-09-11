@@ -106,53 +106,92 @@ class _BackdropPainter extends CustomPainter {
     final rect = Offset.zero & size;
     canvas.drawRect(rect, Paint()..color = ground);
 
-    // Two of the three take the accent, so the backdrop follows the colour the
-    // user picked instead of being a fixed purple wash under every palette.
-    _orb(canvas, size, phase: 0, colour: accent, scale: 0.85);
-    _orb(canvas, size, phase: 0.37, colour: accent, scale: 0.6);
-    // The third is a fixed cool tone, so there is a second hue in the field
-    // even when the accent is a single flat colour. Without it the orbs blend
-    // into one soft blob and the depth goes.
+    // Three anchors, not three orbits. Each orb belongs to a corner of the
+    // screen and only breathes around it: the composition is the same every
+    // time you open the app, and what changes is too slow to catch.
+    //
+    // The hues are the accent and two neighbours of it. Keeping the whole field
+    // inside one family is what stops the ground picking up a colour the
+    // interface has no use for — a green wash under a purple accent reads as a
+    // second, competing accent.
     _orb(
       canvas,
       size,
-      phase: 0.68,
-      colour: const Color(0xFF2B6CFF),
-      scale: 0.7,
+      anchor: const Offset(0.27, 0.11),
+      radius: 0.52,
+      colour: _shift(accent, 4, 1.06),
+      phase: 0,
+      travel: const Offset(0.15, 0.10),
     );
+    _orb(
+      canvas,
+      size,
+      anchor: const Offset(0.92, 0.58),
+      radius: 0.47,
+      colour: _shift(accent, -6, 0.94),
+      phase: 0.41,
+      travel: const Offset(-0.18, -0.07),
+    );
+    _orb(
+      canvas,
+      size,
+      anchor: const Offset(0.53, 0.93),
+      radius: 0.49,
+      colour: _shift(accent, 12, 0.98),
+      phase: 0.72,
+      travel: const Offset(0.10, -0.09),
+    );
+  }
+
+  /// The accent, moved a little round the wheel.
+  ///
+  /// Two orbs of exactly the accent and one of something else blend into a
+  /// single soft blob and the depth goes with it; three near-neighbours keep
+  /// the field reading as one light with several sources.
+  Color _shift(Color colour, double degrees, double lightness) {
+    final hsl = HSLColor.fromColor(colour);
+    return hsl
+        .withHue((hsl.hue + degrees) % 360)
+        .withLightness((hsl.lightness * lightness).clamp(0.0, 1.0))
+        .toColor();
   }
 
   void _orb(
     Canvas canvas,
     Size size, {
-    required double phase,
+    required Offset anchor,
+    required double radius,
     required Color colour,
-    required double scale,
+    required double phase,
+    required Offset travel,
   }) {
-    // Each orb travels its own slow ellipse. Different periods per axis so the
-    // paths never repeat exactly and the field never looks like it is looping.
+    // A slow figure of eight around the anchor — different periods per axis, so
+    // the path never repeats exactly and the field never looks like it loops.
     final angle = (t + phase) * 2 * math.pi;
     final centre = Offset(
-      size.width * (0.5 + 0.42 * math.cos(angle)),
-      size.height * (0.35 + 0.30 * math.sin(angle * 0.8 + phase)),
+      size.width * (anchor.dx + travel.dx * math.cos(angle)),
+      size.height * (anchor.dy + travel.dy * math.sin(angle * 0.8 + phase)),
     );
-    final radius = size.shortestSide * scale;
+    final r = size.shortestSide * radius;
 
     canvas.drawCircle(
       centre,
-      radius,
+      r,
       Paint()
         ..shader = RadialGradient(
           colors: [
             // Low alpha on purpose. This is a field to sense, not a picture to
             // look at, and anything stronger turns text on top of it into hard
-            // work.
-            colour.withValues(alpha: 0.20),
-            colour.withValues(alpha: 0.06),
+            // work. The panes above it lift the colour back up where it counts
+            // — see GlassStyle.saturation.
+            colour.withValues(alpha: 0.30),
+            colour.withValues(alpha: 0.22),
             colour.withValues(alpha: 0),
           ],
-          stops: const [0, 0.45, 1],
-        ).createShader(Rect.fromCircle(center: centre, radius: radius)),
+          // Held flat to a quarter of the radius before it falls away, which is
+          // what gives an orb a body instead of a hotspot in the middle.
+          stops: const [0, 0.26, 0.72],
+        ).createShader(Rect.fromCircle(center: centre, radius: r)),
     );
   }
 

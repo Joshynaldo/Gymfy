@@ -1,5 +1,3 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/material.dart';
 
 import '../../app/theme/glass.dart';
@@ -95,9 +93,12 @@ class _BarPaneState extends State<_BarPane>
     duration: AppDurations.quick,
   );
 
+  // Linear, unlike everything else in the app. A spring is for something that
+  // has a place to arrive at; this is a cross-fade, and easing the opacity of a
+  // scrim only makes the moment it commits harder to predict while scrolling.
   late final CurvedAnimation _curve = CurvedAnimation(
     parent: _controller,
-    curve: AppCurves.settle,
+    curve: Curves.linear,
   );
 
   ScrollNotificationObserverState? _observer;
@@ -172,30 +173,28 @@ class _BarPaneState extends State<_BarPane>
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                // Heavier at the top than a card's tint: a card is read against
-                // the cards beside it, the bar against a near-black field where
-                // the same few percent is invisible.
-                glass.tint.withValues(
-                  alpha: (glass.tint.a * 1.8 * t).clamp(0.0, 1.0),
-                ),
-                glass.tint.withValues(alpha: glass.tint.a * t),
+                // The ground colour, not a white tint. A bar over a list has to
+                // subtract the content behind it rather than add light to it:
+                // white over moving text leaves the text legible through the
+                // scrim, which is worse than either a solid bar or none.
+                glass.scrim.withValues(alpha: 0.78 * t),
+                glass.scrim.withValues(alpha: 0.62 * t),
               ],
             ),
             // The line the content stops at. Without it the list appears to be
             // cut off in mid-air.
             border: Border(
               bottom: BorderSide(
-                color: glass.edge.withValues(alpha: glass.edge.a * 1.6 * t),
+                color: Colors.white.withValues(alpha: 0.12 * t),
               ),
             ),
           );
 
           return ClipRect(
             child: BackdropFilter(
-              filter: ImageFilter.blur(
-                sigmaX: glass.blur * t,
-                sigmaY: glass.blur * t,
-              ),
+              // Slightly softer than the pill's: the bar is the taller pane and
+              // the same sigma over that area reads as a smear.
+              filter: glass.backdropFilter(28 * t),
               child: DecoratedBox(decoration: decoration),
             ),
           );

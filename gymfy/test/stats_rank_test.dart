@@ -18,7 +18,7 @@ import 'package:gymfy/features/muscle_map/data/muscle_fatigue_repository.dart';
 import 'package:gymfy/features/muscle_map/data/muscle_volume_repository.dart';
 import 'package:gymfy/features/progress/data/measurements_repository.dart';
 import 'package:gymfy/features/stats/data/training_totals.dart';
-import 'package:gymfy/features/stats/screens/stats_screen.dart';
+import 'package:gymfy/features/stats/widgets/stats_sections.dart';
 import 'package:gymfy/features/workout/data/session_repository.dart';
 import 'package:gymfy/shared/data/lifter_sex.dart';
 import 'package:gymfy/shared/database/app_database.dart';
@@ -97,7 +97,17 @@ void main() {
             (ref) => Stream.value(const <String, double>{}),
           ),
         ],
-        child: const MaterialApp(home: StatsScreen()),
+        child: const MaterialApp(
+          // The sections directly, now that Progress composes them rather
+          // than a screen of their own owning them. Closer to what is under
+          // test anyway: these assert on the rank and the totals, not on the
+          // scaffolding around them.
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: Column(children: [RankSection(), TotalsSection()]),
+            ),
+          ),
+        ),
       ),
     );
     // Plain pumps: the body SVG is a real asset load the fake clock never
@@ -163,8 +173,10 @@ void main() {
         ],
       );
 
-      expect(find.textContaining('Every ranked lift is intermediate'),
-          findsOneWidget);
+      expect(
+        find.textContaining('Every ranked lift is intermediate'),
+        findsOneWidget,
+      );
       expect(find.textContaining('Your best is'), findsNothing);
     });
 
@@ -207,11 +219,7 @@ void main() {
     testWidgets('counts workouts, sets, volume and days', (tester) async {
       await pump(
         tester,
-        sets: [
-          _set(1, 100, 10),
-          _set(1, 100, 8),
-          _set(2, 60, 12),
-        ],
+        sets: [_set(1, 100, 10), _set(1, 100, 8), _set(2, 60, 12)],
         minutes: {DateTime(2026, 8, 20): 65},
       );
 

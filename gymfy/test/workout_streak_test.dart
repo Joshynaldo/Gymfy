@@ -24,10 +24,7 @@ void main() {
     });
 
     test('counts back through consecutive days', () {
-      expect(
-        streakEndingAt({today, daysAgo(1), daysAgo(2)}, today),
-        3,
-      );
+      expect(streakEndingAt({today, daysAgo(1), daysAgo(2)}, today), 3);
     });
 
     test('a gap ends the count', () {
@@ -70,9 +67,9 @@ void main() {
 
     /// A session finished on [day].
     Future<void> finished(DateTime day) async {
-      final id = await db.into(db.workoutSessions).insert(
-        WorkoutSessionsCompanion.insert(name: 'Push'),
-      );
+      final id = await db
+          .into(db.workoutSessions)
+          .insert(WorkoutSessionsCompanion.insert(name: 'Push'));
       await (db.update(db.workoutSessions)..where((t) => t.id.equals(id)))
           .write(WorkoutSessionsCompanion(completedAt: Value(day)));
     }
@@ -100,9 +97,9 @@ void main() {
     });
 
     test('an unfinished workout does not count', () async {
-      await db.into(db.workoutSessions).insert(
-        WorkoutSessionsCompanion.insert(name: 'Push'),
-      );
+      await db
+          .into(db.workoutSessions)
+          .insert(WorkoutSessionsCompanion.insert(name: 'Push'));
 
       // Starting a workout and walking out isn't training, and a number that
       // can be gamed is worth nothing.

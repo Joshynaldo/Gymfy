@@ -29,7 +29,7 @@ class SplitListScreen extends ConsumerWidget {
 
     return GlassScaffold(
       appBar: GlassAppBar(title: const Text('Splits')),
-      body: splitsAsync.when(
+      body: (context) => splitsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: Padding(

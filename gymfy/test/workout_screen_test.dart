@@ -99,7 +99,9 @@ void main() {
       tester,
       splits: [_ppl],
       active: _ppl,
-      days: [ScheduledDay(day: _pushDay, weekdays: const [1])],
+      days: [
+        ScheduledDay(day: _pushDay, weekdays: const [1]),
+      ],
       exercises: {
         10: [
           PlannedExercise(
@@ -147,7 +149,9 @@ void main() {
       tester,
       splits: [_ppl, _upperLower],
       active: _ppl,
-      days: [ScheduledDay(day: _pushDay, weekdays: const [1])],
+      days: [
+        ScheduledDay(day: _pushDay, weekdays: const [1]),
+      ],
     );
 
     await tester.tap(find.byIcon(Icons.swap_horiz));
@@ -178,10 +182,7 @@ void main() {
     await _pumpTab(tester, splits: [_upperLower], active: null);
 
     expect(find.text('No active split'), findsOneWidget);
-    expect(
-      find.widgetWithText(FilledButton, 'Choose a split'),
-      findsOneWidget,
-    );
+    expect(find.widgetWithText(FilledButton, 'Choose a split'), findsOneWidget);
   });
 
   testWidgets('a day can be added to the active split', (tester) async {
@@ -189,9 +190,14 @@ void main() {
       tester,
       splits: [_ppl],
       active: _ppl,
-      days: [ScheduledDay(day: _pushDay, weekdays: const [1])],
+      days: [
+        ScheduledDay(day: _pushDay, weekdays: const [1]),
+      ],
     );
 
-    expect(find.widgetWithText(FloatingActionButton, 'Add day'), findsOneWidget);
+    expect(
+      find.widgetWithText(FloatingActionButton, 'Add day'),
+      findsOneWidget,
+    );
   });
 }

@@ -89,13 +89,10 @@ void main() {
     });
 
     test('sessions stack instead of replacing each other', () {
-      final fatigue = muscleFatigue(
-        [
-          ...sets(count: 6, muscles: ['chest']),
-          ...sets(count: 6, muscles: ['chest'], ago: fatigueHalfLife),
-        ],
-        now: _now,
-      );
+      final fatigue = muscleFatigue([
+        ...sets(count: 6, muscles: ['chest']),
+        ...sets(count: 6, muscles: ['chest'], ago: fatigueHalfLife),
+      ], now: _now);
 
       // 6 fresh + 6 half-decayed = 9 effective sets of 12.
       expect(fatigue['chest'], closeTo(0.75, 0.001));
@@ -123,10 +120,9 @@ void main() {
     });
 
     test('a set stamped in the future does not decay upward', () {
-      final fatigue = muscleFatigue(
-        [(performedAt: _now.add(const Duration(days: 2)), muscleIds: ['chest'])],
-        now: _now,
-      );
+      final fatigue = muscleFatigue([
+        (performedAt: _now.add(const Duration(days: 2)), muscleIds: ['chest']),
+      ], now: _now);
 
       // A clock change or edited data shouldn't be able to produce more than a
       // fresh set's worth of fatigue.
@@ -148,13 +144,10 @@ void main() {
     });
 
     test('the hardest-worked muscle is not automatically maxed', () {
-      final fatigue = muscleFatigue(
-        [
-          ...sets(count: 2, muscles: ['chest']),
-          ...sets(count: 1, muscles: ['lats']),
-        ],
-        now: _now,
-      );
+      final fatigue = muscleFatigue([
+        ...sets(count: 2, muscles: ['chest']),
+        ...sets(count: 1, muscles: ['lats']),
+      ], now: _now);
 
       expect(fatigue['chest'], closeTo(2 / 12, 0.001));
       expect(fatigue['lats'], closeTo(1 / 12, 0.001));
@@ -174,13 +167,15 @@ void main() {
       sessions = SessionRepository(db);
       workout = WorkoutRepository(db);
 
-      await db.into(db.exercises).insert(
-        ExercisesCompanion.insert(
-          id: 'barbell_bench_press',
-          name: 'Barbell Bench Press',
-          muscleIds: const ['chest', 'triceps'],
-        ),
-      );
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'barbell_bench_press',
+              name: 'Barbell Bench Press',
+              muscleIds: const ['chest', 'triceps'],
+            ),
+          );
       final splitId = await workout.createSplit('PPL');
       dayId = await workout.createDay(splitId, 'Push');
     });
@@ -194,13 +189,15 @@ void main() {
       int warmup = 0,
       Duration ago = Duration.zero,
     }) async {
-      final id = await db.into(db.workoutSessions).insert(
-        WorkoutSessionsCompanion.insert(
-          dayId: Value(dayId),
-          name: 'Push',
-          startedAt: Value(_now.subtract(ago)),
-        ),
-      );
+      final id = await db
+          .into(db.workoutSessions)
+          .insert(
+            WorkoutSessionsCompanion.insert(
+              dayId: Value(dayId),
+              name: 'Push',
+              startedAt: Value(_now.subtract(ago)),
+            ),
+          );
       for (var i = 0; i < warmup; i++) {
         await sessions.logSet(
           sessionId: id,

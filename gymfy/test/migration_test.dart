@@ -128,13 +128,15 @@ void main() {
 
     final old = AppDatabase.forTesting(NativeDatabase(file));
     // Something to lose, so the assertion below means something.
-    await old.into(old.exercises).insert(
-      ExercisesCompanion.insert(
-        id: 'barbell_bench_press',
-        name: 'Barbell Bench Press',
-        muscleIds: const ['chest'],
-      ),
-    );
+    await old
+        .into(old.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: 'barbell_bench_press',
+            name: 'Barbell Bench Press',
+            muscleIds: const ['chest'],
+          ),
+        );
     await rewindTo(old, 9);
     await old.close();
 
@@ -150,13 +152,15 @@ void main() {
     final file = _tempDatabase('v10');
 
     final old = AppDatabase.forTesting(NativeDatabase(file));
-    await old.into(old.exercises).insert(
-      ExercisesCompanion.insert(
-        id: 'barbell_bench_press',
-        name: 'Barbell Bench Press',
-        muscleIds: const ['chest'],
-      ),
-    );
+    await old
+        .into(old.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: 'barbell_bench_press',
+            name: 'Barbell Bench Press',
+            muscleIds: const ['chest'],
+          ),
+        );
     await rewindTo(old, 10);
     await old.close();
 
@@ -172,49 +176,54 @@ void main() {
     expect(row.isArchived, isFalse);
   });
 
-  test('upgrading from v11 drops the category column and keeps the rest', () async {
-    final file = _tempDatabase('v11');
+  test(
+    'upgrading from v11 drops the category column and keeps the rest',
+    () async {
+      final file = _tempDatabase('v11');
 
-    final old = AppDatabase.forTesting(NativeDatabase(file));
-    await old.into(old.exercises).insert(
-      ExercisesCompanion.insert(
-        id: 'custom_cable_fly',
-        name: 'Cable Fly',
-        muscleIds: const ['chest'],
-        isCustom: const Value(true),
-      ),
-    );
-    await rewindTo(old, 11);
-    await old.close();
+      final old = AppDatabase.forTesting(NativeDatabase(file));
+      await old
+          .into(old.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'custom_cable_fly',
+              name: 'Cable Fly',
+              muscleIds: const ['chest'],
+              isCustom: const Value(true),
+            ),
+          );
+      await rewindTo(old, 11);
+      await old.close();
 
-    final upgraded = AppDatabase.forTesting(NativeDatabase(file));
-    addTearDown(upgraded.close);
+      final upgraded = AppDatabase.forTesting(NativeDatabase(file));
+      addTearDown(upgraded.close);
 
-    // Dropping a column in SQLite means rebuilding the table, so this is really
-    // asking: did every other value survive the rebuild?
-    final row = (await upgraded.select(upgraded.exercises).get()).single;
-    expect(row.id, 'custom_cable_fly');
-    expect(row.name, 'Cable Fly');
-    expect(row.muscleIds, const ['chest']);
-    expect(row.isCustom, isTrue);
+      // Dropping a column in SQLite means rebuilding the table, so this is really
+      // asking: did every other value survive the rebuild?
+      final row = (await upgraded.select(upgraded.exercises).get()).single;
+      expect(row.id, 'custom_cable_fly');
+      expect(row.name, 'Cable Fly');
+      expect(row.muscleIds, const ['chest']);
+      expect(row.isCustom, isTrue);
 
-    // And the column itself is really gone, not just hidden from Dart.
-    final columns = await upgraded
-        .customSelect('PRAGMA table_info(exercises)')
-        .get();
-    expect(columns.map((c) => c.data['name']), isNot(contains('category')));
-  });
+      // And the column itself is really gone, not just hidden from Dart.
+      final columns = await upgraded
+          .customSelect('PRAGMA table_info(exercises)')
+          .get();
+      expect(columns.map((c) => c.data['name']), isNot(contains('category')));
+    },
+  );
 
   test('upgrading from v12 keeps splits, unscheduled', () async {
     final file = _tempDatabase('v12');
 
     final old = AppDatabase.forTesting(NativeDatabase(file));
-    final splitId = await old.into(old.splits).insert(
-      SplitsCompanion.insert(name: 'PPL'),
-    );
-    await old.into(old.workoutDays).insert(
-      WorkoutDaysCompanion.insert(splitId: splitId, name: 'Push'),
-    );
+    final splitId = await old
+        .into(old.splits)
+        .insert(SplitsCompanion.insert(name: 'PPL'));
+    await old
+        .into(old.workoutDays)
+        .insert(WorkoutDaysCompanion.insert(splitId: splitId, name: 'Push'));
     await rewindTo(old, 12);
     await old.close();
 
@@ -235,26 +244,30 @@ void main() {
     final file = _tempDatabase('v13');
 
     final old = AppDatabase.forTesting(NativeDatabase(file));
-    final splitId = await old.into(old.splits).insert(
-      SplitsCompanion.insert(name: 'PPL'),
-    );
-    final dayId = await old.into(old.workoutDays).insert(
-      WorkoutDaysCompanion.insert(splitId: splitId, name: 'Push'),
-    );
-    await old.into(old.exercises).insert(
-      ExercisesCompanion.insert(
-        id: 'barbell_bench_press',
-        name: 'Barbell Bench Press',
-        muscleIds: const ['chest'],
-      ),
-    );
-    await old.into(old.workoutExercises).insert(
-      WorkoutExercisesCompanion.insert(
-        dayId: dayId,
-        exerciseId: 'barbell_bench_press',
-        defaultReps: const Value(8),
-      ),
-    );
+    final splitId = await old
+        .into(old.splits)
+        .insert(SplitsCompanion.insert(name: 'PPL'));
+    final dayId = await old
+        .into(old.workoutDays)
+        .insert(WorkoutDaysCompanion.insert(splitId: splitId, name: 'Push'));
+    await old
+        .into(old.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: 'barbell_bench_press',
+            name: 'Barbell Bench Press',
+            muscleIds: const ['chest'],
+          ),
+        );
+    await old
+        .into(old.workoutExercises)
+        .insert(
+          WorkoutExercisesCompanion.insert(
+            dayId: dayId,
+            exerciseId: 'barbell_bench_press',
+            defaultReps: const Value(8),
+          ),
+        );
     await rewindTo(old, 13);
     await old.close();
 
@@ -263,8 +276,8 @@ void main() {
 
     // Null, not 8: an existing "3 × 8" must keep reading as "8" rather than
     // turning into the degenerate range "8–8".
-    final entry = (await upgraded.select(upgraded.workoutExercises).get())
-        .single;
+    final entry =
+        (await upgraded.select(upgraded.workoutExercises).get()).single;
     expect(entry.defaultReps, 8);
     expect(entry.defaultRepsMax, isNull);
   });
@@ -277,13 +290,15 @@ void main() {
     await old.customStatement(
       "INSERT INTO habits (name) VALUES ('Drink water')",
     );
-    await old.into(old.calorieEntries).insert(
-      CalorieEntriesCompanion.insert(
-        date: DateTime(2026, 7, 24),
-        name: 'Chicken & rice',
-        calories: const Value(650),
-      ),
-    );
+    await old
+        .into(old.calorieEntries)
+        .insert(
+          CalorieEntriesCompanion.insert(
+            date: DateTime(2026, 7, 24),
+            name: 'Chicken & rice',
+            calories: const Value(650),
+          ),
+        );
     await old.close();
 
     final upgraded = AppDatabase.forTesting(NativeDatabase(file));
@@ -306,37 +321,43 @@ void main() {
     final file = _tempDatabase('v20');
 
     final old = AppDatabase.forTesting(NativeDatabase(file));
-    await old.into(old.exercises).insert(
-      ExercisesCompanion.insert(
-        id: 'barbell_bench_press',
-        name: 'Barbell Bench Press',
-        muscleIds: const ['chest'],
-      ),
-    );
+    await old
+        .into(old.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: 'barbell_bench_press',
+            name: 'Barbell Bench Press',
+            muscleIds: const ['chest'],
+          ),
+        );
     final sessionId = await old
         .into(old.workoutSessions)
         .insert(WorkoutSessionsCompanion.insert(name: 'Push'));
-    await old.into(old.loggedSets).insert(
-      LoggedSetsCompanion.insert(
-        sessionId: sessionId,
-        exerciseId: 'barbell_bench_press',
-        setNumber: 1,
-        weight: const Value(100),
-        reps: const Value(5),
-      ),
-    );
+    await old
+        .into(old.loggedSets)
+        .insert(
+          LoggedSetsCompanion.insert(
+            sessionId: sessionId,
+            exerciseId: 'barbell_bench_press',
+            setNumber: 1,
+            weight: const Value(100),
+            reps: const Value(5),
+          ),
+        );
     final splitId = await old
         .into(old.splits)
         .insert(SplitsCompanion.insert(name: 'PPL'));
     final dayId = await old
         .into(old.workoutDays)
         .insert(WorkoutDaysCompanion.insert(splitId: splitId, name: 'Push'));
-    await old.into(old.workoutExercises).insert(
-      WorkoutExercisesCompanion.insert(
-        dayId: dayId,
-        exerciseId: 'barbell_bench_press',
-      ),
-    );
+    await old
+        .into(old.workoutExercises)
+        .insert(
+          WorkoutExercisesCompanion.insert(
+            dayId: dayId,
+            exerciseId: 'barbell_bench_press',
+          ),
+        );
     await rewindTo(old, 20);
     await old.close();
 
@@ -351,8 +372,8 @@ void main() {
     expect(set.isWarmup, isFalse);
 
     // And no planned exercise suddenly grows ramp-up rows it never had.
-    final planned = (await upgraded.select(upgraded.workoutExercises).get())
-        .single;
+    final planned =
+        (await upgraded.select(upgraded.workoutExercises).get()).single;
     expect(planned.warmupSets, 0);
   });
 
@@ -363,16 +384,23 @@ void main() {
     // connection does in beforeOpen.
     await db.customStatement('PRAGMA foreign_keys = ON');
 
-    await db.into(db.exercises).insert(
-      ExercisesCompanion.insert(
-        id: 'barbell_bench_press',
-        name: 'Barbell Bench Press',
-        muscleIds: const ['chest'],
-      ),
-    );
-    await db.into(db.restTimers).insert(
-      RestTimersCompanion.insert(exerciseId: 'barbell_bench_press', seconds: 90),
-    );
+    await db
+        .into(db.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: 'barbell_bench_press',
+            name: 'Barbell Bench Press',
+            muscleIds: const ['chest'],
+          ),
+        );
+    await db
+        .into(db.restTimers)
+        .insert(
+          RestTimersCompanion.insert(
+            exerciseId: 'barbell_bench_press',
+            seconds: 90,
+          ),
+        );
 
     await db.delete(db.exercises).go();
 

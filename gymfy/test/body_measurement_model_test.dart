@@ -20,13 +20,15 @@ void main() {
   });
 
   test('a partial measurement persists, unmeasured parts stay null', () async {
-    await db.into(db.bodyMeasurements).insert(
-      BodyMeasurementsCompanion.insert(
-        date: day,
-        weightKg: const Value(82.4),
-        waistCm: const Value(84),
-      ),
-    );
+    await db
+        .into(db.bodyMeasurements)
+        .insert(
+          BodyMeasurementsCompanion.insert(
+            date: day,
+            weightKg: const Value(82.4),
+            waistCm: const Value(84),
+          ),
+        );
 
     final row = (await db.select(db.bodyMeasurements).get()).single;
     expect(row.weightKg, 82.4);
@@ -39,23 +41,33 @@ void main() {
   });
 
   test('only one row per day is allowed', () async {
-    await db.into(db.bodyMeasurements).insert(
-      BodyMeasurementsCompanion.insert(date: day, weightKg: const Value(82)),
-    );
+    await db
+        .into(db.bodyMeasurements)
+        .insert(
+          BodyMeasurementsCompanion.insert(
+            date: day,
+            weightKg: const Value(82),
+          ),
+        );
 
     expect(
-      () => db.into(db.bodyMeasurements).insert(
-        BodyMeasurementsCompanion.insert(date: day, chestCm: const Value(102)),
-      ),
+      () => db
+          .into(db.bodyMeasurements)
+          .insert(
+            BodyMeasurementsCompanion.insert(
+              date: day,
+              chestCm: const Value(102),
+            ),
+          ),
       throwsA(isA<Exception>()),
     );
   });
 
   test('updatedAt is stamped automatically', () async {
     final before = DateTime.now().subtract(const Duration(seconds: 2));
-    await db.into(db.bodyMeasurements).insert(
-      BodyMeasurementsCompanion.insert(date: day),
-    );
+    await db
+        .into(db.bodyMeasurements)
+        .insert(BodyMeasurementsCompanion.insert(date: day));
 
     final row = (await db.select(db.bodyMeasurements).get()).single;
     expect(row.updatedAt.isAfter(before), isTrue);
