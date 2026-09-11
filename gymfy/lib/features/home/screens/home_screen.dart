@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../onboarding/data/onboarding_repository.dart';
 
+import '../../progress/widgets/activity_heatmap.dart';
 import '../widgets/last_workout_card.dart';
 import '../widgets/next_up_card.dart';
 
@@ -42,6 +43,10 @@ class HomeScreen extends ConsumerWidget {
           NextUpCard(today: today),
           const LastWorkoutCard(),
           const WeekCard(),
+          // The year grid. It also lives in Progress → All-time, where it is
+          // the long look back; here it is the short one — how the last few
+          // weeks have actually gone, under the week you are in.
+          ActivityHeatmap(today: today),
         ],
       ),
     );
