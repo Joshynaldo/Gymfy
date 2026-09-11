@@ -87,14 +87,14 @@ const _bodyColor = Color(0xFF2E3440);
 /// it reads as glass because it is made of the same colour as everything else
 /// on the screen. Against a body carrying the field's own hue, a dark head and
 /// dark hands are the shadow that gives the muscles somewhere to stand.
-const _bodyColorGlass = Color(0xFF2C2646);
+const _bodyColorGlass = Color(0xFF3A3360);
 
 /// What an untrained muscle is painted in [MuscleMapMode.contrast] on glass.
 ///
 /// Contrast mode gives every worked muscle its own hue, so the unworked ones
 /// have to stay out of the argument — a violet rest would be one more colour
 /// competing with the ones carrying meaning. Dark and barely tinted.
-const _restColorGlass = Color(0xFF4A4468);
+const _restColorGlass = Color(0xFF575080);
 
 /// What an untrained muscle is painted in [MuscleMapMode.heatmap] on glass.
 ///
@@ -110,7 +110,17 @@ const _restColorGlass = Color(0xFF4A4468);
 /// half-lit rather than dark. Worth it, and still legible, because the thing
 /// the diagram is actually asked is "which of these is brightest", not "what
 /// absolute value is this one".
-Color _restColorGlassFor(Color heat) => Color.lerp(_bodyColorGlass, heat, 0.5)!;
+Color _restColorGlassFor(Color heat) =>
+    Color.lerp(_bodyColorGlass, _heatColorGlassFor(heat), 0.5)!;
+
+/// The colour a fully-worked muscle is tinted to on the glass theme.
+///
+/// The accent with some white in it. Lifting the *lit* end is what lets the
+/// whole figure get lighter without the diagram losing its point: raising only
+/// the unworked end would close the gap between a trained muscle and an
+/// untrained one, which is the one distinction the picture exists to draw. Both
+/// ends move, so the body brightens and the range stays open.
+Color _heatColorGlassFor(Color heat) => Color.lerp(heat, Colors.white, 0.18)!;
 
 /// How solid the figure is on the glass theme.
 ///
@@ -119,7 +129,7 @@ Color _restColorGlassFor(Color heat) => Color.lerp(_bodyColorGlass, heat, 0.5)!;
 /// one thing that doesn't. Not much more than that, though: the tint is what
 /// does the work here, and past about a quarter off the difference between a
 /// worked muscle and an unworked one starts going with it.
-const _glassOpacity = 0.78;
+const _glassOpacity = 0.70;
 
 /// Matches a muscle path's tag so we can rewrite just its fill, e.g.
 /// `data-muscle="chest" fill="#4C5361"`. A single path may carry more than one
@@ -189,7 +199,7 @@ class MuscleMap extends ConsumerWidget {
           final svg = tintMuscles(
             svg: template,
             intensities: intensities,
-            heatColor: heat,
+            heatColor: glass ? _heatColorGlassFor(heat) : heat,
             mode: mode,
             restColor: switch ((glass, mode)) {
               (false, _) => _restColor,
