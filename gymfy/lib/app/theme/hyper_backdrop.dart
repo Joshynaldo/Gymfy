@@ -159,7 +159,7 @@ class _BackdropPainter extends CustomPainter {
     final hsl = HSLColor.fromColor(colour);
     return hsl
         .withHue((hsl.hue + degrees) % 360)
-        .withSaturation((hsl.saturation * 1.25).clamp(0.0, 1.0))
+        .withSaturation((hsl.saturation * 1.45).clamp(0.0, 1.0))
         .withLightness((hsl.lightness * lightness).clamp(0.0, 1.0))
         .toColor();
   }
@@ -188,13 +188,15 @@ class _BackdropPainter extends CustomPainter {
       Paint()
         ..shader = RadialGradient(
           colors: [
-            // Bright enough to read as colour rather than as a stain, and no
-            // brighter. The ceiling is not taste, it is legibility: text sits
-            // on these panes, the panes are translucent, and past about half
-            // alpha the field starts showing through the cards and competing
-            // with the numbers on them.
+            // Bright enough to read as colour rather than as a stain.
+            //
+            // The ceiling is legibility rather than taste: text sits on these
+            // panes, the panes are translucent, and the field shows through
+            // them. At 0.62 an orb passing behind a card is visible *in* the
+            // card — which is the effect — without the numbers on it losing
+            // their edge. Past about three quarters it starts to.
+            colour.withValues(alpha: 0.62),
             colour.withValues(alpha: 0.46),
-            colour.withValues(alpha: 0.34),
             colour.withValues(alpha: 0),
           ],
           // Held flat to a quarter of the radius before it falls away, which is
