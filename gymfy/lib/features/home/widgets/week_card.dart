@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
+import '../../../shared/utils/weekday.dart';
 import '../../../shared/widgets/animated_count.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../data/recap.dart';
@@ -54,8 +55,11 @@ class WeekCard extends ConsumerWidget {
                 style: theme.textTheme.headlineSmall,
               ),
               const SizedBox(height: 3),
+              // The bucket's own label is a chart axis tick — one or two
+              // letters, sized to fit under a bar. In a sentence it came out as
+              // "lifted since S", which is not a day and not English.
               Text(
-                'lifted since ${recap.buckets.first.label}',
+                'lifted since ${weekdayName(recap.buckets.first.start.weekday)}',
                 style: theme.textTheme.bodySmall,
               ),
               const SizedBox(height: 20),

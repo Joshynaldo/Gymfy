@@ -51,12 +51,21 @@ class _BodyMapSectionState extends ConsumerState<BodyMapSection> {
         ? ref.watch(muscleFatigueProvider)
         : ref.watch(weeklyMuscleIntensitiesProvider);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-          child: AppSegmented<MapReading>(
+    // One card holding the switches, the body and the caption — rather than a
+    // control floating above a diagram floating above a line of text. The three
+    // are one answer, and on a screen made of panes, a thing with no pane under
+    // it reads as something that has not finished loading.
+    return AppPanel(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
+      child: SizedBox(
+        // A fixed height rather than Expanded: this is a scrolling page, not a
+        // screen the map owns, and an unbounded child inside a ListView has no
+        // height to fill.
+        height: 520,
+        child: MuscleMapView(
+          // The reading switch sits beside the front/back one, on the map's own
+          // header row. Two switches, one line, one card.
+          leadingControl: AppSegmented<MapReading>(
             selected: _reading,
             onChanged: (value) => setState(() => _reading = value),
             segments: const [
@@ -64,36 +73,28 @@ class _BodyMapSectionState extends ConsumerState<BodyMapSection> {
               (value: MapReading.fatigue, label: 'Fatigue', leading: null),
             ],
           ),
+          intensities: data,
+          // Fatigue is red, always — not the accent. The two readings share
+          // this diagram, so colour is what tells you which one you are
+          // looking at without reading the caption.
+          heatColor: _isFatigue ? fatigueColor : null,
+          emptyMessage: _isFatigue
+              ? 'Everything is recovered — nothing you have trained '
+                    'recently is still weighing on you.'
+              : 'No training logged in the last 7 days — finish a '
+                    'workout to light up your muscle map.',
+          caption: _isFatigue
+              ? 'How much recent work each muscle is still carrying. '
+                    'Brighter = less recovered. Halves every two days.'
+              : 'Training volume over the last 7 days. Brighter = more '
+                    'volume.',
+          contrastCaption: _isFatigue
+              ? 'Each muscle has its own colour. Brighter still means '
+                    'less recovered.'
+              : 'Each muscle has its own colour. Brighter still means '
+                    'more volume.',
         ),
-        // A fixed height rather than Expanded: this is a scrolling page, not a
-        // screen the map owns, and an unbounded child inside a ListView has no
-        // height to fill.
-        SizedBox(
-          height: 460,
-          child: MuscleMapView(
-            intensities: data,
-            // Fatigue is red, always — not the accent. The two readings share
-            // this diagram, so colour is what tells you which one you are
-            // looking at without reading the caption.
-            heatColor: _isFatigue ? fatigueColor : null,
-            emptyMessage: _isFatigue
-                ? 'Everything is recovered — nothing you have trained '
-                      'recently is still weighing on you.'
-                : 'No training logged in the last 7 days — finish a '
-                      'workout to light up your muscle map.',
-            caption: _isFatigue
-                ? 'How much recent work each muscle is still carrying. '
-                      'Brighter = less recovered. Halves every two days.'
-                : 'Training volume over the last 7 days. Brighter = more '
-                      'volume.',
-            contrastCaption: _isFatigue
-                ? 'Each muscle has its own colour. Brighter still means '
-                      'less recovered.'
-                : 'Each muscle has its own colour. Brighter still means '
-                      'more volume.',
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
