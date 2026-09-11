@@ -10,6 +10,7 @@ import '../data/workout_repository.dart';
 import '../widgets/split_day_list.dart';
 import 'split_days_screen.dart' show addDayTo;
 import 'split_list_screen.dart' show createSplit;
+import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 
@@ -82,10 +83,12 @@ class WorkoutScreen extends ConsumerWidget {
         actions: [_SwitcherAction(splits: splits, activeId: active.id)],
       ),
       body: (context) => SplitDayList(splitId: active.id),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: AppButton(
+        label: 'Add day',
+        icon: Icons.add,
+        expand: false,
         onPressed: () => addDayTo(context, ref, active.id),
-        icon: const Icon(Icons.add),
-        label: const Text('Add day'),
       ),
     );
   }

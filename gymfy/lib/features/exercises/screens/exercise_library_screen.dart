@@ -7,6 +7,7 @@ import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/exercise_display.dart';
 import '../../../shared/utils/exercise_search.dart';
 import '../../../shared/utils/format.dart';
+import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/muscle_filter_bar.dart';
 import '../../workout/data/workout_repository.dart';
 import '../../../shared/widgets/app_card.dart';
@@ -117,12 +118,14 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
       ),
       // Hidden while selecting: the app bar owns the actions then, and a FAB
       // for an unrelated action would just be in the way.
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: _selecting
           ? null
-          : FloatingActionButton.extended(
+          : AppButton(
+              label: 'Add exercise',
+              icon: Icons.add,
+              expand: false,
               onPressed: () => context.go('/exercises/new'),
-              icon: const Icon(Icons.add),
-              label: const Text('Add exercise'),
             ),
     );
   }

@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gymfy/shared/widgets/app_button.dart';
 import 'package:gymfy/features/workout/data/workout_repository.dart';
 import 'package:gymfy/features/workout/screens/workout_screen.dart';
 import 'package:gymfy/shared/database/app_database.dart';
@@ -195,9 +196,6 @@ void main() {
       ],
     );
 
-    expect(
-      find.widgetWithText(FloatingActionButton, 'Add day'),
-      findsOneWidget,
-    );
+    expect(find.widgetWithText(AppButton, 'Add day'), findsOneWidget);
   });
 }

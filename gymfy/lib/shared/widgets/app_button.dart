@@ -36,6 +36,7 @@ class AppButton extends ConsumerWidget {
     this.iconAfter = false,
     this.kind = AppButtonKind.primary,
     this.height,
+    this.expand = true,
   });
 
   final String label;
@@ -58,6 +59,14 @@ class AppButton extends ConsumerWidget {
 
   /// Overridable for the few places the design draws a shorter one.
   final double? height;
+
+  /// Whether the button fills the width it is given.
+  ///
+  /// True for the action a screen is *for* — it sits in the flow, spans the
+  /// content, and there is only one. False for one that floats over the
+  /// content, where filling the width would make it a bar rather than a
+  /// button, and would cover what is underneath it into the bargain.
+  final bool expand;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -97,6 +106,9 @@ class AppButton extends ConsumerWidget {
           ),
           child: Container(
             height: height ?? (primary ? 54 : 50),
+            // A floating button pads its own sides; one that spans the content
+            // gets its width from the layout instead.
+            padding: expand ? null : const EdgeInsets.symmetric(horizontal: 22),
             decoration: BoxDecoration(
               color: primary
                   ? accent
@@ -130,6 +142,7 @@ class AppButton extends ConsumerWidget {
                 : null,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
               children: [
                 if (icon != null && !iconAfter) ...[
                   Icon(icon, size: 17, color: ink),

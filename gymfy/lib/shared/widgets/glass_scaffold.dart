@@ -25,6 +25,7 @@ class GlassScaffold extends StatelessWidget {
     this.appBar,
     this.body,
     this.floatingActionButton,
+    this.floatingActionButtonLocation,
   });
 
   final PreferredSizeWidget? appBar;
@@ -49,6 +50,10 @@ class GlassScaffold extends StatelessWidget {
   final Widget Function(BuildContext context)? body;
 
   final Widget? floatingActionButton;
+
+  /// Where the floating button sits. Centred for the screens whose only
+  /// floating control it is; a corner is where you put one of several.
+  final FloatingActionButtonLocation? floatingActionButtonLocation;
 
   @override
   Widget build(BuildContext context) {
@@ -77,6 +82,7 @@ class GlassScaffold extends StatelessWidget {
               ),
               child: floatingActionButton,
             ),
+      floatingActionButtonLocation: floatingActionButtonLocation,
       extendBodyBehindAppBar: glassOf(context).enabled,
     );
   }
