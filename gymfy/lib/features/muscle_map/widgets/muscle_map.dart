@@ -106,12 +106,15 @@ const _restColorGlass = Color(0xFF575080);
 ///
 /// Derived from the colour being tinted toward, so it follows the accent — and
 /// follows the fatigue reading's red, which would look muddy lerping out of a
-/// violet. It costs some of the heatmap's range: an unworked muscle now starts
-/// half-lit rather than dark. Worth it, and still legible, because the thing
-/// the diagram is actually asked is "which of these is brightest", not "what
-/// absolute value is this one".
+/// violet.
+///
+/// Two fifths of the way, not half. Tinting the resting body costs the heatmap
+/// range — it starts the scale part-lit — and this is the dial that sets how
+/// much. Far enough that the body still reads as glass the field shines
+/// through; short enough that a worked muscle is obviously a worked muscle,
+/// which is the one thing the picture is for.
 Color _restColorGlassFor(Color heat) =>
-    Color.lerp(_bodyColorGlass, _heatColorGlassFor(heat), 0.5)!;
+    Color.lerp(_bodyColorGlass, _heatColorGlassFor(heat), 0.4)!;
 
 /// The colour a fully-worked muscle is tinted to on the glass theme.
 ///
