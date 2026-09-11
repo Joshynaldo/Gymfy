@@ -41,6 +41,13 @@ class _Body extends ConsumerWidget {
         ref.watch(sessionMuscleIntensitiesProvider(session.id)).value ??
         const <String, double>{};
 
+    // A finished session with nothing in it is not a workout you did — it is a
+    // session you started and walked out of, and the card for it reads "Today ·
+    // 0 min / 0 sets · 0 kg" beside a body with no muscle lit. That is four
+    // zeros and a grey figure telling you nothing, on the most valuable card
+    // space in the app.
+    if (sets.isEmpty) return const SizedBox.shrink();
+
     final volume = sets.fold<double>(0, (sum, s) => sum + s.weight * s.reps);
     final completedAt = session.completedAt ?? session.startedAt;
 
