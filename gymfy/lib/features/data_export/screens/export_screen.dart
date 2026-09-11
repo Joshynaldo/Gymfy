@@ -34,7 +34,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
 
     return GlassScaffold(
       appBar: GlassAppBar(title: const Text('Export data')),
-      body: FadeSlideIn(
+      body: (context) => FadeSlideIn(
         child: ListView(
           padding:
               const EdgeInsets.fromLTRB(16, 12, 16, 24) + barInsets(context),

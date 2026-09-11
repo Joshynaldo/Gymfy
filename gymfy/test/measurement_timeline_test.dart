@@ -30,21 +30,23 @@ void main() {
       );
     }
 
-    test('returns one body part oldest first, skipping unmeasured days',
-        () async {
-      await log(10, MeasurementField.weight, 84);
-      await log(17, MeasurementField.waist, 86); // no weight this day
-      await log(24, MeasurementField.weight, 82.5);
+    test(
+      'returns one body part oldest first, skipping unmeasured days',
+      () async {
+        await log(10, MeasurementField.weight, 84);
+        await log(17, MeasurementField.waist, 86); // no weight this day
+        await log(24, MeasurementField.weight, 82.5);
 
-      final rows = await repo.watchAll().first;
-      final series = seriesFor(rows, MeasurementField.weight);
+        final rows = await repo.watchAll().first;
+        final series = seriesFor(rows, MeasurementField.weight);
 
-      expect(series.map((p) => p.value), [84, 82.5]);
-      expect(series.map((p) => p.day), [
-        DateTime(2026, 7, 10),
-        DateTime(2026, 7, 24),
-      ]);
-    });
+        expect(series.map((p) => p.value), [84, 82.5]);
+        expect(series.map((p) => p.day), [
+          DateTime(2026, 7, 10),
+          DateTime(2026, 7, 24),
+        ]);
+      },
+    );
 
     test('a body part that was never measured has an empty series', () async {
       await log(10, MeasurementField.weight, 84);

@@ -21,6 +21,11 @@ import 'app/theme/accent_color.dart';
 import 'app/theme/app_theme.dart';
 import 'app/theme/glass.dart';
 import 'app/theme/hyper_backdrop.dart';
+import 'features/overload/data/overload_math.dart';
+import 'features/workout/data/rest_timer_controller.dart';
+import 'features/workout/widgets/log_set_sheet.dart';
+import 'features/workout/widgets/rest_timer_bar.dart';
+import 'shared/database/app_database.dart' show Exercise;
 import 'shared/utils/units.dart';
 import 'shared/widgets/animated_count.dart';
 import 'shared/widgets/app_card.dart';
@@ -256,6 +261,31 @@ class _GalleryState extends ConsumerState<_Gallery> {
           ),
         ),
 
+        const AppSectionHeader(title: 'Logging a set'),
+        AppTile(
+          icon: Icons.dialpad,
+          title: 'Log a set',
+          subtitle: 'The sheet and keypad the workout screen opens',
+          onTap: () => showLogSetSheet(
+            context: context,
+            exercise: _previewExercise,
+            isWarmup: false,
+            initialWeight: 102.5,
+            initialReps: 8,
+            unit: WeightUnit.kg,
+            phaseLabel: 'Set 3 · working set',
+            suggestion: const OverloadSuggestion(
+              weight: 102.5,
+              reason: OverloadReason.earned,
+            ),
+          ),
+        ),
+        // Two nested scopes rather than one: the pane reads the timer from a
+        // provider, and the only honest way to show both of its states is to
+        // hand each one a timer of its own.
+        const _RestPanePreview(remaining: 67, label: 'Counting down'),
+        const _RestPanePreview(remaining: 0, label: 'Rest over'),
+
         const AppSectionHeader(title: 'Sets & reps wheels'),
         AppPanel(
           child: Row(
@@ -360,7 +390,7 @@ class _PushedScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return GlassScaffold(
       appBar: const GlassAppBar(title: Text('Pushed screen')),
-      body: ListView(
+      body: (context) => ListView(
         padding: const EdgeInsets.symmetric(vertical: 8) + barInsets(context),
         children: [
           for (var i = 0; i < 8; i++)
@@ -379,3 +409,70 @@ class _PushedScreen extends StatelessWidget {
 /// Height for the gallery only — the real one lives in `body_profile.dart` and
 /// needs the unit setting this harness does not load.
 String formatHeightPreview(int cm) => '$cm cm';
+
+/// A stand-in exercise for the sheet demo.
+///
+/// A real [Exercise] row rather than a lookalike: the sheet asks it whether it
+/// is plate-loaded, and a preview that answers that question differently from
+/// the database is a preview of a screen the app cannot produce.
+final _previewExercise = Exercise(
+  id: 'barbell_bench_press',
+  name: 'Barbell bench press',
+  muscleIds: const ['chest', 'front_deltoid', 'triceps'],
+  isPlateLoaded: true,
+  isCustom: false,
+  isArchived: false,
+);
+
+/// The rest pane with a timer that does not tick.
+///
+/// The real [RestTimerBar] reading a real provider — only the countdown behind
+/// it is held still, so both of its states can be looked at side by side
+/// instead of waited for.
+class _RestPanePreview extends StatelessWidget {
+  const _RestPanePreview({required this.remaining, required this.label});
+
+  final int remaining;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
+      child: ProviderScope(
+        overrides: [
+          restTimerProvider.overrideWith(() => _StillTimer(remaining)),
+        ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 6, bottom: 6),
+              child: Text(
+                label,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            const RestTimerBar(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StillTimer extends RestTimer {
+  _StillTimer(this.remaining);
+
+  final int remaining;
+
+  @override
+  RestTimerState? build() => (
+    exerciseId: 'barbell_bench_press',
+    exerciseName: 'Barbell bench press',
+    totalSeconds: 150,
+    remainingSeconds: remaining,
+  );
+}

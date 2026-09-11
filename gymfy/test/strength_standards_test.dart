@@ -15,10 +15,7 @@ void main() {
         'Advanced',
         'Elite',
       ]);
-      expect(
-        StrengthTier.beginner.index,
-        lessThan(StrengthTier.elite.index),
-      );
+      expect(StrengthTier.beginner.index, lessThan(StrengthTier.elite.index));
     });
 
     test('every tier has a next one except elite', () {
@@ -66,11 +63,7 @@ void main() {
           final male = entry.value.male.ratioFor(tier);
           final female = entry.value.female.ratioFor(tier);
           if (male == null || female == null) continue;
-          expect(
-            female,
-            lessThan(male),
-            reason: '${entry.key} ${tier.label}',
-          );
+          expect(female, lessThan(male), reason: '${entry.key} ${tier.label}');
         }
       }
     });
@@ -108,14 +101,17 @@ void main() {
       }
     });
 
-    test('a barbell or cable lift is ranked even when it is isolation work', () {
-      // The objection to ranking a cable fly was never that it's a small lift
-      // — it's that nobody publishes what a good one is. Where a table exists
-      // and the load is unambiguous, the lift gets a rank.
-      expect(hasStrengthStandard('barbell_biceps_curl'), isTrue);
-      expect(hasStrengthStandard('lat_pulldown'), isTrue);
-      expect(hasStrengthStandard('skull_crusher'), isTrue);
-    });
+    test(
+      'a barbell or cable lift is ranked even when it is isolation work',
+      () {
+        // The objection to ranking a cable fly was never that it's a small lift
+        // — it's that nobody publishes what a good one is. Where a table exists
+        // and the load is unambiguous, the lift gets a rank.
+        expect(hasStrengthStandard('barbell_biceps_curl'), isTrue);
+        expect(hasStrengthStandard('lat_pulldown'), isTrue);
+        expect(hasStrengthStandard('skull_crusher'), isTrue);
+      },
+    );
 
     test('the squat is ranked harder than the bench', () {
       // A sanity check that the numbers weren't transcribed into the wrong

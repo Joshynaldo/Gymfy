@@ -56,13 +56,15 @@ void main() {
       workouts = WorkoutRepository(db);
       sessions = SessionRepository(db);
 
-      await db.into(db.exercises).insert(
-        ExercisesCompanion.insert(
-          id: bench,
-          name: 'Barbell Bench Press',
-          muscleIds: const ['chest'],
-        ),
-      );
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: bench,
+              name: 'Barbell Bench Press',
+              muscleIds: const ['chest'],
+            ),
+          );
       final splitId = await workouts.createSplit('PPL');
       final dayId = await workouts.createDay(splitId, 'Push');
       await workouts.addExercisesToDay(dayId, [bench]);
@@ -76,9 +78,9 @@ void main() {
 
       // A session that earns an increase, so a null answer below can only be
       // the switch and nothing else.
-      final sessionId = await db.into(db.workoutSessions).insert(
-        WorkoutSessionsCompanion.insert(name: 'Push'),
-      );
+      final sessionId = await db
+          .into(db.workoutSessions)
+          .insert(WorkoutSessionsCompanion.insert(name: 'Push'));
       for (var i = 1; i <= 3; i++) {
         await sessions.logSet(
           sessionId: sessionId,

@@ -41,7 +41,7 @@ class _OneRmCalculatorScreenState extends ConsumerState<OneRmCalculatorScreen> {
 
     return GlassScaffold(
       appBar: GlassAppBar(title: const Text('1RM calculator')),
-      body: FadeSlideIn(
+      body: (context) => FadeSlideIn(
         child: ListView(
           padding:
               const EdgeInsets.fromLTRB(16, 12, 16, 32) + barInsets(context),

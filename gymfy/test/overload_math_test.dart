@@ -48,10 +48,13 @@ void main() {
       expect(defaultIncrementKg(['abs', 'obliques']), isNull);
     });
 
-    test('a core exercise that also trains something else still progresses', () {
-      // An ab wheel rollout works the lats too, and that part can be loaded.
-      expect(defaultIncrementKg(['abs', 'lats']), 2.5);
-    });
+    test(
+      'a core exercise that also trains something else still progresses',
+      () {
+        // An ab wheel rollout works the lats too, and that part can be loaded.
+        expect(defaultIncrementKg(['abs', 'lats']), 2.5);
+      },
+    );
   });
 
   group('earnedIncrease', () {
@@ -82,14 +85,22 @@ void main() {
       // Two of three sets at the top of the range is a good session, but it
       // isn't the session that was planned.
       expect(
-        earnedIncrease(sets: sets(60, 12, count: 2), plannedSets: 3, targetReps: 12),
+        earnedIncrease(
+          sets: sets(60, 12, count: 2),
+          plannedSets: 3,
+          targetReps: 12,
+        ),
         isFalse,
       );
     });
 
     test('extra sets beyond the plan do not spoil it', () {
       expect(
-        earnedIncrease(sets: sets(60, 12, count: 5), plannedSets: 3, targetReps: 12),
+        earnedIncrease(
+          sets: sets(60, 12, count: 5),
+          plannedSets: 3,
+          targetReps: 12,
+        ),
         isTrue,
       );
     });

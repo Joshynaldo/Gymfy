@@ -41,7 +41,11 @@ void main() {
   test('updating one field leaves the others alone', () async {
     await repo.setField(day: today, field: MeasurementField.chest, value: 102);
     await repo.setField(day: today, field: MeasurementField.weight, value: 82);
-    await repo.setField(day: today, field: MeasurementField.weight, value: 81.5);
+    await repo.setField(
+      day: today,
+      field: MeasurementField.weight,
+      value: 81.5,
+    );
 
     final row = (await allRows()).single;
     expect(row.weightKg, 81.5);
@@ -52,11 +56,7 @@ void main() {
     await repo.setField(day: today, field: MeasurementField.chest, value: 102);
     await repo.setField(day: today, field: MeasurementField.weight, value: 82);
 
-    await repo.setField(
-      day: today,
-      field: MeasurementField.chest,
-      value: null,
-    );
+    await repo.setField(day: today, field: MeasurementField.chest, value: null);
 
     final row = (await allRows()).single;
     expect(row.chestCm, isNull);

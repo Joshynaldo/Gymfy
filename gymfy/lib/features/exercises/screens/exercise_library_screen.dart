@@ -53,6 +53,11 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
   Widget build(BuildContext context) {
     final exercisesAsync = ref.watch(exerciseListProvider);
 
+    // Computed here rather than inside the list's data callback: the app bar
+    // is built first, so a field filled in further down would leave the chips
+    // empty for that frame — and nothing would rebuild to correct it.
+    final muscles = musclesIn(exercisesAsync.value ?? const <Exercise>[]);
+
     return GlassScaffold(
       appBar: _selecting
           ? GlassAppBar(
@@ -70,8 +75,24 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
                 ),
               ],
             )
-          : const GlassAppBar(title: Text('Exercises')),
-      body: exercisesAsync.when(
+          : GlassAppBar(
+              title: const Text('Exercises'),
+              // In the bar, not at the top of the body. Two things follow from
+              // that: the scrim that fades in on scroll covers the search field
+              // too, so the list passes *under* one surface rather than under
+              // a title and then behind a floating box; and the field cannot
+              // scroll away, which on a screen whose whole purpose is finding
+              // something would be the one control you always have to go back
+              // for.
+              bottom: _SearchHeader(
+                onQuery: (value) => setState(() => _query = value),
+                muscles: muscles,
+                selected: _muscleFilters,
+                onToggle: _toggleMuscle,
+                onClear: () => setState(_muscleFilters.clear),
+              ),
+            ),
+      body: (context) => exercisesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: Padding(
@@ -83,41 +104,14 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
           ),
         ),
         data: (all) {
-          // Muscles that actually appear in the data, for the filter chips.
-          final muscles = musclesIn(all);
-
           final filtered = all.where(_matches).toList();
 
-          // The search field and the filter chips stay put while the list
-          // scrolls under the bars, so they are held clear of the app bar
-          // rather than sliding behind it. A half-legible search box behind a
-          // translucent title is worse than no glass at all.
-          return Padding(
-            padding: topBarInset(context),
-            child: Column(
-              children: [
-                _SearchField(
-                  onChanged: (value) => setState(() => _query = value),
-                ),
-                MuscleFilterBar(
-                  muscles: muscles,
-                  selected: _muscleFilters,
-                  onToggle: _toggleMuscle,
-                  onClear: () => setState(_muscleFilters.clear),
-                ),
-                const SizedBox(height: 4),
-                Expanded(
-                  child: filtered.isEmpty
-                      ? const _NoMatches()
-                      : _CategorisedList(
-                          rows: _rowsFor(filtered),
-                          selected: _selected,
-                          selecting: _selecting,
-                          onToggle: _toggle,
-                        ),
-                ),
-              ],
-            ),
+          if (filtered.isEmpty) return const _NoMatches();
+          return _CategorisedList(
+            rows: _rowsFor(filtered),
+            selected: _selected,
+            selecting: _selecting,
+            onToggle: _toggle,
           );
         },
       ),
@@ -185,6 +179,47 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
       SnackBar(
         content: Text(addedToDayMessage(added: added, asked: ids.length)),
       ),
+    );
+  }
+}
+
+/// The search box and the muscle chips, as the app bar's lower half.
+///
+/// A [PreferredSizeWidget] so the bar reserves room for it, which is also what
+/// makes `barInsets` come out right for the list underneath: Scaffold measures
+/// the whole bar, header included, and hands the body the number.
+class _SearchHeader extends StatelessWidget implements PreferredSizeWidget {
+  const _SearchHeader({
+    required this.onQuery,
+    required this.muscles,
+    required this.selected,
+    required this.onToggle,
+    required this.onClear,
+  });
+
+  final ValueChanged<String> onQuery;
+  final List<String> muscles;
+  final Set<String> selected;
+  final ValueChanged<String> onToggle;
+  final VoidCallback onClear;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(112);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _SearchField(onChanged: onQuery),
+        MuscleFilterBar(
+          muscles: muscles,
+          selected: selected,
+          onToggle: onToggle,
+          onClear: onClear,
+        ),
+        const SizedBox(height: 4),
+      ],
     );
   }
 }
@@ -297,7 +332,10 @@ class _CategorisedList extends StatelessWidget {
       // Room to scroll the last card clear of the FAB, plus whatever the
       // floating navigation pill covers. Only the bottom: the screen has
       // already held its search header clear of the app bar.
-      padding: const EdgeInsets.only(bottom: 96) + bottomBarInset(context),
+      // Both insets: the list runs the full height of the screen and passes
+      // under the bar at the top and the pill at the bottom, which is the
+      // arrangement that gives either of them anything to blur.
+      padding: const EdgeInsets.only(bottom: 96) + barInsets(context),
       itemCount: rows.length,
       itemBuilder: (context, index) {
         final row = rows[index];

@@ -18,13 +18,15 @@ void main() {
     progress = ProgressRepository(db);
     sessions = SessionRepository(db);
 
-    await db.into(db.exercises).insert(
-      ExercisesCompanion.insert(
-        id: 'barbell_back_squat',
-        name: 'Barbell Back Squat',
-        muscleIds: const ['quads', 'glutes'],
-      ),
-    );
+    await db
+        .into(db.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: 'barbell_back_squat',
+            name: 'Barbell Back Squat',
+            muscleIds: const ['quads', 'glutes'],
+          ),
+        );
   });
 
   tearDown(() async {
@@ -33,9 +35,11 @@ void main() {
 
   // Inserts a session with an explicit start date and returns its id.
   Future<int> sessionOn(DateTime date) {
-    return db.into(db.workoutSessions).insert(
-      WorkoutSessionsCompanion.insert(name: 'Legs', startedAt: Value(date)),
-    );
+    return db
+        .into(db.workoutSessions)
+        .insert(
+          WorkoutSessionsCompanion.insert(name: 'Legs', startedAt: Value(date)),
+        );
   }
 
   test('one point per session, top set captured, oldest first', () async {
@@ -66,8 +70,9 @@ void main() {
       reps: 5,
     );
 
-    final history =
-        await progress.watchExerciseHistory('barbell_back_squat').first;
+    final history = await progress
+        .watchExerciseHistory('barbell_back_squat')
+        .first;
 
     expect(history, hasLength(2));
     expect(history[0].date, DateTime(2026, 1, 1));

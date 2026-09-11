@@ -38,7 +38,7 @@ class WorkoutScreen extends ConsumerWidget {
     if (error != null) {
       return GlassScaffold(
         appBar: GlassAppBar(title: const Text('Workout')),
-        body: Center(
+        body: (context) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
@@ -56,7 +56,8 @@ class WorkoutScreen extends ConsumerWidget {
     if (splits.isEmpty) {
       return GlassScaffold(
         appBar: GlassAppBar(title: const Text('Workout')),
-        body: _NoSplitsYet(onCreate: () => createSplit(context, ref)),
+        body: (context) =>
+            _NoSplitsYet(onCreate: () => createSplit(context, ref)),
       );
     }
 
@@ -69,7 +70,7 @@ class WorkoutScreen extends ConsumerWidget {
           title: const Text('Workout'),
           actions: [_SwitcherAction(splits: splits, activeId: null)],
         ),
-        body: _NoActiveSplit(
+        body: (context) => _NoActiveSplit(
           onChoose: () => _openSwitcher(context, ref, splits, null),
         ),
       );
@@ -80,7 +81,7 @@ class WorkoutScreen extends ConsumerWidget {
         title: Text(active.name),
         actions: [_SwitcherAction(splits: splits, activeId: active.id)],
       ),
-      body: SplitDayList(splitId: active.id),
+      body: (context) => SplitDayList(splitId: active.id),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => addDayTo(context, ref, active.id),
         icon: const Icon(Icons.add),

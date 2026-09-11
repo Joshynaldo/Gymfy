@@ -42,7 +42,7 @@ class DayBuilderScreen extends ConsumerWidget {
             ),
         ],
       ),
-      body: exercisesAsync.when(
+      body: (context) => exercisesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: Padding(

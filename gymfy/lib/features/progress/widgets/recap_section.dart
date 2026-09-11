@@ -5,8 +5,8 @@ import '../../../shared/utils/exercise_display.dart';
 import '../../../shared/utils/units.dart';
 import '../../../shared/widgets/bar_chart.dart';
 import '../../muscle_map/data/muscle_colors.dart';
-import '../data/recap.dart';
-import '../data/recap_repository.dart';
+import '../../home/data/recap.dart';
+import '../../home/data/recap_repository.dart';
 import '../../../shared/widgets/app_card.dart';
 
 /// The Home tab's recap: how much, how often, what, and how many records.

@@ -37,7 +37,7 @@ Future<EdgeInsets> _insetsInside(
         theme: buildAppTheme(theme, AccentPalette.blue),
         home: GlassScaffold(
           appBar: AppBar(title: const Text('Screen')),
-          body: wrapInSafeArea
+          body: (context) => wrapInSafeArea
               ? SafeArea(child: Builder(builder: probe))
               : Builder(builder: probe),
         ),
@@ -60,7 +60,7 @@ void main() {
             theme: buildAppTheme(AppTheme.hyper, AccentPalette.blue),
             home: GlassScaffold(
               appBar: AppBar(title: const Text('Screen')),
-              body: const SizedBox.shrink(),
+              body: (context) => const SizedBox.shrink(),
             ),
           ),
         ),
@@ -81,7 +81,7 @@ void main() {
               theme: buildAppTheme(theme, AccentPalette.blue),
               home: GlassScaffold(
                 appBar: AppBar(title: const Text('Screen')),
-                body: const SizedBox.shrink(),
+                body: (context) => const SizedBox.shrink(),
               ),
             ),
           ),
@@ -145,7 +145,7 @@ void main() {
             theme: buildAppTheme(AppTheme.hyper, AccentPalette.blue),
             home: GlassScaffold(
               appBar: AppBar(title: const Text('Screen')),
-              body: Builder(
+              body: (context) => Builder(
                 builder: (context) {
                   whole = barInsets(context);
                   top = topBarInset(context);
@@ -212,17 +212,22 @@ void main() {
       // through is a window.
       await pump(tester, AppTheme.hyper);
 
-      final box = tester.widget<Container>(
-        find
-            .descendant(
-              of: find.byType(BackdropFilter),
-              matching: find.byType(Container),
-            )
-            .first,
-      );
-      final colour = (box.decoration! as BoxDecoration).color!;
+      // Asserted against the material rather than against the widget tree: the
+      // fill is a property of the sheet tier, and a test that reaches for the
+      // third DecoratedBox inside a BackdropFilter breaks every time the pane
+      // gains a wrapper without ever having checked the thing that matters.
+      final glass = buildAppTheme(
+        AppTheme.hyper,
+        AccentPalette.blue,
+      ).extension<GlassStyle>()!;
 
-      expect(colour.a, greaterThan(0.7));
+      for (final stop in glass.sheet.fill) {
+        expect(
+          stop.a,
+          greaterThan(0.7),
+          reason: 'a sheet you can read a paragraph through is a window',
+        );
+      }
     });
   });
 }

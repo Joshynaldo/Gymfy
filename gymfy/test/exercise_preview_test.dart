@@ -18,7 +18,9 @@ void main() {
   /// Every animation actually bundled, keyed by the id it claims to serve.
   Map<String, File> bundled() {
     final out = <String, File>{};
-    for (final file in Directory('assets/exercises').listSync().whereType<File>()) {
+    for (final file in Directory(
+      'assets/exercises',
+    ).listSync().whereType<File>()) {
       final name = file.uri.pathSegments.last;
       final dot = name.lastIndexOf('.');
       if (dot < 0) continue;
@@ -78,7 +80,11 @@ void main() {
           // WebP is a still image unless it carries an ANIM chunk, and a still
           // frame of a bench press is not a demonstration of one.
           final head = String.fromCharCodes(bytes.take(64));
-          expect(head, contains('ANIM'), reason: '${entry.key} is not animated');
+          expect(
+            head,
+            contains('ANIM'),
+            reason: '${entry.key} is not animated',
+          );
         } else {
           expect(header, 'GIF8', reason: '${entry.key} is not a GIF');
         }

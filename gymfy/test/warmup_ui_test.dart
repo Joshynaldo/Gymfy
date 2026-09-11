@@ -140,10 +140,13 @@ void main() {
     }
 
     testWidgets('both phases can be logged from the card', (tester) async {
+      // The working-set button counts rather than saying "Add set": the number
+      // it shows is the one about to be logged, so the card answers "which set
+      // am I on" without the rows above being counted.
       await pumpWorkout(tester);
 
       expect(find.text('Warm-up'), findsOneWidget);
-      expect(find.text('Add set'), findsOneWidget);
+      expect(find.text('Log set 1'), findsOneWidget);
     });
 
     testWidgets('a planned count counts the warm-ups down', (tester) async {

@@ -43,7 +43,7 @@ class _SharePlanScreenState extends ConsumerState<SharePlanScreen> {
 
     return GlassScaffold(
       appBar: GlassAppBar(title: const Text('Share a plan')),
-      body: splitsAsync.when(
+      body: (context) => splitsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: Padding(
