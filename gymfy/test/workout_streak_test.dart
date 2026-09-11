@@ -11,6 +11,8 @@ import 'package:gymfy/shared/database/app_database.dart';
 import 'package:gymfy/shared/utils/dates.dart';
 
 void main() {
+  _longestStreakTests();
+
   group('streakEndingAt', () {
     final today = DateTime(2026, 7, 24);
     DateTime daysAgo(int n) => DateTime(2026, 7, 24 - n);
@@ -118,6 +120,54 @@ void main() {
       await finished(DateTime(2026, 7, 23, 0, 1));
 
       expect(await streak(), 2);
+    });
+  });
+}
+
+void _longestStreakTests() {
+  group('the best streak ever', () {
+    DateTime day(int d) => DateTime(2026, 9, d);
+
+    test('is zero with nothing logged', () {
+      expect(longestStreak(const {}), 0);
+    });
+
+    test('is one for a single day', () {
+      expect(longestStreak({day(4)}), 1);
+    });
+
+    test('finds the longest run, not the most recent one', () {
+      // Five in a row in early September, then a gap, then two. The current
+      // streak is two; the best is five, and showing the smaller of the pair
+      // as "best" is the bug this is here to stop.
+      final days = {
+        day(1), day(2), day(3), day(4), day(5), //
+        day(12), day(13),
+      };
+
+      expect(longestStreak(days), 5);
+    });
+
+    test('a gap of one day breaks the run', () {
+      expect(longestStreak({day(1), day(2), day(4), day(5)}), 2);
+    });
+
+    test('does not care what order the days arrive in', () {
+      // The set comes out of a database query, and a Set has no order to rely
+      // on — so the walk sorts first rather than trusting the iteration.
+      expect(longestStreak({day(3), day(1), day(2)}), 3);
+    });
+
+    test('counts across a month boundary', () {
+      // DateTime(2026, 9, 31) normalises to 1 October, which is exactly how
+      // the walk steps forward — so this is the check that it does.
+      final days = {
+        DateTime(2026, 9, 29),
+        DateTime(2026, 9, 30),
+        DateTime(2026, 10, 1),
+      };
+
+      expect(longestStreak(days), 3);
     });
   });
 }
