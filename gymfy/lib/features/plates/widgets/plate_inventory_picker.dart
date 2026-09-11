@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/data/settings_repository.dart';
 import '../../../shared/utils/units.dart';
+import '../../../shared/widgets/app_chip.dart';
 import '../data/plate_math.dart';
 
 /// Which plate denominations the user's gym actually has.
@@ -42,15 +43,15 @@ class PlateInventoryPicker extends ConsumerWidget {
             runSpacing: 8,
             children: [
               for (final plate in options)
-                FilterChip(
-                  label: Text(formatPlate(plate)),
+                AppChip(
+                  label: formatPlate(plate),
                   selected: selected.contains(plate),
-                  onSelected: (isSelected) => _toggle(
+                  onTap: () => _toggle(
                     ref,
                     key: key,
                     selected: selected,
                     plate: plate,
-                    isSelected: isSelected,
+                    isSelected: !selected.contains(plate),
                   ),
                 ),
             ],

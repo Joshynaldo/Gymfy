@@ -17,6 +17,7 @@ import 'package:gymfy/app/theme/accent_color.dart';
 import 'package:gymfy/app/theme/app_theme.dart';
 import 'package:gymfy/app/theme/glass.dart';
 import 'package:gymfy/shared/widgets/app_card.dart';
+import 'package:gymfy/shared/widgets/app_chip.dart';
 
 import 'support/default_accent.dart';
 
@@ -25,6 +26,7 @@ GlassStyle _glass(AppTheme theme) =>
 
 void main() {
   _shadowTests();
+  _chipTests();
 
   group('the four surfaces', () {
     test('a row is dimmer than a card', () {
@@ -276,6 +278,77 @@ void _shadowTests() {
           'cannot be this dark unless something black is painted behind it',
     );
     // Still violet: the ground shows through rather than being replaced.
+    expect(blue, greaterThan(red));
+  });
+}
+
+/// A filter pill must not paint an opaque background of its own.
+///
+/// Material's `RawChip` wraps its (themeable, translucent) background in a
+/// [Material] of the default `MaterialType.canvas`, which has no `color` and so
+/// falls back to `ThemeData.canvasColor` — opaque, and near-black on every
+/// theme here. On a solid theme that is invisible, because the canvas is the
+/// same colour as the screen. On glass it made the Exercises tab's filter row a
+/// line of solid black pills with the glass sitting uselessly on top, and no
+/// amount of `ChipThemeData` could reach it. Hence [AppChip].
+///
+/// Painted rather than inspected, for the same reason as the shadow test: the
+/// widget tree was correct the whole time the screen was wrong.
+void _chipTests() {
+  testWidgets('a filter pill lets the ground through', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [defaultAccentOverride],
+        child: MaterialApp(
+          theme: buildAppTheme(AppTheme.hyper, AccentPalette.blue),
+          home: RepaintBoundary(
+            key: const Key('screen'),
+            child: Scaffold(
+              backgroundColor: const Color(0xFF6A5AE0),
+              body: Center(
+                child: AppChip(label: 'Chest', selected: false, onTap: () {}),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    // The whole screen, not a boundary around the pill: the pane blurs what is
+    // behind it, and rasterising a boundary that contains only the pill gives
+    // the blur nothing to sample — it comes out as the bare fill over black,
+    // which is exactly the thing being tested for. The ground has to be inside
+    // the picture.
+    final boundary =
+        tester.renderObject(find.byKey(const Key('screen')))
+            as RenderRepaintBoundary;
+    late Uint8List pixels;
+    late int width;
+    await tester.runAsync(() async {
+      final image = await boundary.toImage();
+      final data = await image.toByteData(format: ImageByteFormat.rawRgba);
+      pixels = data!.buffer.asUint8List();
+      width = image.width;
+      image.dispose();
+    });
+
+    // Just inside the pill's left edge, clear of the label's glyphs — sampling
+    // the middle would read whatever the text is painted in. Eight pixels in is
+    // past the 13px corner's widest point at mid-height.
+    final pill = tester.getRect(find.byType(AppChip));
+    final sample = (width * pill.center.dy.round() + pill.left.round() + 8) * 4;
+    final red = pixels[sample];
+    final blue = pixels[sample + 2];
+
+    expect(
+      blue,
+      greaterThan(0x50),
+      reason:
+          'the pill reads as #${red.toRadixString(16)}..'
+          '${blue.toRadixString(16)} — a translucent pill over a violet ground '
+          'cannot be this dark unless something opaque is painted behind it',
+    );
     expect(blue, greaterThan(red));
   });
 }

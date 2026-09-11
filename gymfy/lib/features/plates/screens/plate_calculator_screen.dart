@@ -6,6 +6,7 @@ import '../../../shared/data/settings_repository.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
 import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/app_chip.dart';
 import '../../../shared/widgets/fade_slide_in.dart';
 import '../../../shared/widgets/weight_wheel.dart';
 import '../data/plate_math.dart';
@@ -207,12 +208,12 @@ class _Result extends StatelessWidget {
                   runSpacing: 8,
                   children: [
                     for (final entry in grouped)
-                      Chip(
-                        label: Text(
-                          '${formatPlate(entry.plate)} ${unit.label} '
-                          '× ${entry.count}',
-                        ),
-                        visualDensity: VisualDensity.compact,
+                      AppChip(
+                        label:
+                            '${formatPlate(entry.plate)} ${unit.label} '
+                            '× ${entry.count}',
+                        selected: false,
+                        onTap: null,
                       ),
                   ],
                 ),

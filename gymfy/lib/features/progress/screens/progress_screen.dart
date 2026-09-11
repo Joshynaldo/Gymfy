@@ -9,6 +9,7 @@ import '../../../shared/widgets/app_segmented.dart';
 import '../../../shared/widgets/exercise_thumbnail.dart';
 import '../../../shared/widgets/fade_slide_in.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_icon_button.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../stats/widgets/stats_sections.dart';
 import '../data/progress_repository.dart';
@@ -66,13 +67,13 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
         actions: [
           // Actions rather than list entries, so they are reachable even when
           // a segment shows its empty state.
-          IconButton(
-            icon: const Icon(Icons.photo_library_outlined),
+          GlassIconButton(
+            icon: Icons.photo_library_outlined,
             tooltip: 'Progress photos',
             onPressed: () => context.go('/progress/photos'),
           ),
-          IconButton(
-            icon: const Icon(Icons.straighten),
+          GlassIconButton(
+            icon: Icons.straighten,
             tooltip: 'Measurements',
             onPressed: () => context.go('/progress/measurements'),
           ),
