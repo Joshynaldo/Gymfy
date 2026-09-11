@@ -80,59 +80,37 @@ const _restColor = Color(0xFF4C5361);
 /// the body, not a muscle group, and it has no volume to report.
 const _bodyColor = Color(0xFF2E3440);
 
-/// The silhouette on the glass theme: dark, and violet rather than slate.
-///
-/// Darker than the flat themes' version, not lighter — which is the opposite of
-/// where this started. The figure does not read as glass because it is dimmed;
-/// it reads as glass because it is made of the same colour as everything else
-/// on the screen. Against a body carrying the field's own hue, a dark head and
-/// dark hands are the shadow that gives the muscles somewhere to stand.
-const _bodyColorGlass = Color(0xFF3A3360);
+// On the glass theme the figure is transparent rather than painted, and that
+// is the whole of it: the transparency lives in the fills, not in one blanket
+// opacity over the lot.
+//
+// The earlier attempts all kept every muscle solid and argued about what shade
+// of solid — grey, then violet, then a lighter violet. All of them were wrong
+// in the same way. An untrained muscle has nothing to report, so it should not
+// be reporting a colour; it should be letting the pane through. Volume is what
+// makes a muscle opaque, and the accent belongs only to muscles that earned it.
+// With nothing logged the body is a faint outline on the glass, which is the
+// honest picture of having logged nothing.
 
-/// What an untrained muscle is painted in [MuscleMapMode.contrast] on glass.
-///
-/// Contrast mode gives every worked muscle its own hue, so the unworked ones
-/// have to stay out of the argument — a violet rest would be one more colour
-/// competing with the ones carrying meaning. Dark and barely tinted.
-const _restColorGlass = Color(0xFF575080);
+/// What an untrained muscle is painted on the glass theme: a cool near-white,
+/// and almost entirely see-through — see [_restOpacityGlass].
+const _restColorGlass = Color(0xFFCBD2E4);
 
-/// What an untrained muscle is painted in [MuscleMapMode.heatmap] on glass.
-///
-/// Partway to the colour the map is tinting toward, rather than a neutral grey.
-/// This is the change that finally made the figure look like part of the pane:
-/// a grey body on a violet screen is a grey body no matter what its alpha is,
-/// because neutral is the one hue the field never supplies. Tinted, it reads as
-/// light coming through the glass rather than as a shape laid on top of it.
-///
-/// Derived from the colour being tinted toward, so it follows the accent — and
-/// follows the fatigue reading's red, which would look muddy lerping out of a
-/// violet.
-///
-/// Two fifths of the way, not half. Tinting the resting body costs the heatmap
-/// range — it starts the scale part-lit — and this is the dial that sets how
-/// much. Far enough that the body still reads as glass the field shines
-/// through; short enough that a worked muscle is obviously a worked muscle,
-/// which is the one thing the picture is for.
-Color _restColorGlassFor(Color heat) =>
-    Color.lerp(_bodyColorGlass, _heatColorGlassFor(heat), 0.4)!;
+/// The silhouette on the glass theme. Neutral and faint, like the muscles: it
+/// is the body's outline, not a reading, and it has no volume to report either.
+const _bodyColorGlass = Color(0xFFB4BCD2);
 
-/// The colour a fully-worked muscle is tinted to on the glass theme.
+/// How opaque an untrained muscle is on glass, against 1.0 for a fully worked
+/// one.
 ///
-/// The accent with some white in it. Lifting the *lit* end is what lets the
-/// whole figure get lighter without the diagram losing its point: raising only
-/// the unworked end would close the gap between a trained muscle and an
-/// untrained one, which is the one distinction the picture exists to draw. Both
-/// ends move, so the body brightens and the range stays open.
-Color _heatColorGlassFor(Color heat) => Color.lerp(heat, Colors.white, 0.18)!;
+/// Enough that the muscle is there at all — you can see the shape of a body you
+/// have not trained yet — and little enough that what you mostly see is the
+/// pane behind it.
+const _restOpacityGlass = 0.17;
 
-/// How solid the figure is on the glass theme.
-///
-/// Enough off that the card's own gradient is legible through the body — on a
-/// screen where every other surface admits light, a fully opaque figure is the
-/// one thing that doesn't. Not much more than that, though: the tint is what
-/// does the work here, and past about a quarter off the difference between a
-/// worked muscle and an unworked one starts going with it.
-const _glassOpacity = 0.70;
+/// How opaque the silhouette is on glass. Slightly more than a resting muscle,
+/// so the figure keeps an edge when nothing at all has been logged.
+const _bodyOpacityGlass = 0.24;
 
 /// Matches a muscle path's tag so we can rewrite just its fill, e.g.
 /// `data-muscle="chest" fill="#4C5361"`. A single path may carry more than one
@@ -198,25 +176,20 @@ class MuscleMap extends ConsumerWidget {
         ),
         data: (template) {
           final glass = glassOf(context).enabled;
-          final heat = heatColor ?? accent;
+          // The flat themes get the figure exactly as authored. It sits on an
+          // opaque card there, so there is nothing behind it to be transparent
+          // *to*, and fading it would only make it harder to read.
           final svg = tintMuscles(
             svg: template,
             intensities: intensities,
-            heatColor: glass ? _heatColorGlassFor(heat) : heat,
+            heatColor: heatColor ?? accent,
             mode: mode,
-            restColor: switch ((glass, mode)) {
-              (false, _) => _restColor,
-              (true, MuscleMapMode.heatmap) => _restColorGlassFor(heat),
-              (true, MuscleMapMode.contrast) => _restColorGlass,
-            },
+            restColor: glass ? _restColorGlass : _restColor,
             bodyColor: glass ? _bodyColorGlass : _bodyColor,
+            restOpacity: glass ? _restOpacityGlass : 1,
+            bodyOpacity: glass ? _bodyOpacityGlass : 1,
           );
-          final picture = SvgPicture.string(svg, fit: BoxFit.contain);
-          // The flat themes get the figure as drawn: it sits on an opaque card
-          // there, so there is nothing behind it for it to be translucent *to*,
-          // and dimming it would only make it harder to read.
-          if (!glass) return picture;
-          return Opacity(opacity: _glassOpacity, child: picture);
+          return SvgPicture.string(svg, fit: BoxFit.contain);
         },
       ),
     );
@@ -245,13 +218,23 @@ String tintMuscles({
 
   /// What the silhouette under the muscles is painted.
   Color bodyColor = _bodyColor,
+
+  /// How opaque a muscle at intensity 0 is, rising to fully opaque at 1.
+  ///
+  /// This is what makes an untrained muscle *transparent* rather than merely
+  /// grey. 1 — the default — keeps every muscle solid, which is what the flat
+  /// themes want: they draw on an opaque card, where see-through means nothing.
+  double restOpacity = 1,
+
+  /// How opaque the silhouette is. See [restOpacity].
+  double bodyOpacity = 1,
 }) {
   // The silhouette first, by its literal authored fill: the muscle pass below
   // can produce any colour at all, and rewriting the body afterwards could
   // catch a muscle that happened to land on the same hex.
   final ground = svg.replaceAll(
     'fill="${_toHex(_bodyColor)}"',
-    'fill="${_toHex(bodyColor)}"',
+    'fill="${_toHex(bodyColor)}"${_opacityAttr(bodyOpacity)}',
   );
 
   return ground.replaceAllMapped(_muscleFill, (match) {
@@ -273,9 +256,23 @@ String tintMuscles({
       MuscleMapMode.contrast => muscleColor(strongest),
     };
     final color = Color.lerp(restColor, target, t)!;
-    return 'data-muscle="${match.group(1)}" fill="${_toHex(color)}"';
+    // Volume is what makes a muscle solid: it fades in as it is worked, from
+    // barely-there to fully painted. The colour ramp and the opacity ramp run
+    // together, so a hard-hit muscle is both the brightest and the only one
+    // actually sitting on top of the glass.
+    final opacity = restOpacity + (1 - restOpacity) * t;
+    return 'data-muscle="${match.group(1)}" '
+        'fill="${_toHex(color)}"${_opacityAttr(opacity)}';
   });
 }
+
+/// An SVG `fill-opacity` attribute, or nothing at all when the fill is solid.
+///
+/// Omitted rather than written as `fill-opacity="1.00"` so the default path
+/// produces byte-for-byte the string it always did — the flat themes, and every
+/// test that reads this output, see no change.
+String _opacityAttr(double opacity) =>
+    opacity >= 1 ? '' : ' fill-opacity="${opacity.toStringAsFixed(3)}"';
 
 /// Formats a colour as an SVG `#RRGGBB` string (alpha dropped).
 String _toHex(Color color) {
