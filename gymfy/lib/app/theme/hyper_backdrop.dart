@@ -121,13 +121,18 @@ class _BackdropPainter extends CustomPainter {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            // Light enough that the *middle* of the screen is coloured, not
-            // just the corners an orb happens to sit in. That was the last of
-            // the milkiness problem: a card in the gap between two orbs was
-            // still a translucent pane over near-black, so its interior came
-            // out neutral charcoal while its edges glowed.
-            _shift(accent, 6, 0.72).withValues(alpha: 0.62),
-            _shift(accent, -10, 0.46).withValues(alpha: 0.5),
+            // Enough that the *middle* of the screen is coloured rather than
+            // only the corners an orb sits in — a card in the gap between two
+            // orbs should still be a pane over something, not over black.
+            //
+            // It was brighter than this for one round, because the cards were
+            // coming out charcoal and I turned the field up to compensate. The
+            // charcoal was the card's own shadow painting through it, and once
+            // that was fixed the field was left shouting at a problem that no
+            // longer existed. This is the level that reads as a lit room
+            // rather than a lamp in your face.
+            _shift(accent, 6, 0.5).withValues(alpha: 0.46),
+            _shift(accent, -10, 0.3).withValues(alpha: 0.36),
           ],
         ).createShader(rect),
     );
@@ -221,8 +226,8 @@ class _BackdropPainter extends CustomPainter {
             // them. At 0.62 an orb passing behind a card is visible *in* the
             // card — which is the effect — without the numbers on it losing
             // their edge. Past about three quarters it starts to.
-            colour.withValues(alpha: 0.62),
-            colour.withValues(alpha: 0.46),
+            colour.withValues(alpha: 0.5),
+            colour.withValues(alpha: 0.36),
             colour.withValues(alpha: 0),
           ],
           // Held flat to a quarter of the radius before it falls away, which is
