@@ -19,9 +19,9 @@ class PlanShareRepository {
   /// are not touched — not filtered out later, never read at all, so there is
   /// no path by which they could end up in the file.
   Future<PlanDocument> export(List<int> splitIds, {DateTime? now}) async {
-    final splits = await (_db.select(_db.splits)
-          ..where((t) => t.id.isIn(splitIds)))
-        .get();
+    final splits = await (_db.select(
+      _db.splits,
+    )..where((t) => t.id.isIn(splitIds))).get();
 
     final shared = <SharedSplit>[];
     // Ordered by the caller's selection rather than by row id, so the file
@@ -29,37 +29,34 @@ class PlanShareRepository {
     for (final id in splitIds) {
       final split = splits.where((s) => s.id == id).firstOrNull;
       if (split == null) continue;
-      shared.add(
-        SharedSplit(name: split.name, days: await _daysOf(split.id)),
-      );
+      shared.add(SharedSplit(name: split.name, days: await _daysOf(split.id)));
     }
 
     return PlanDocument(splits: shared, exportedAt: now ?? DateTime.now());
   }
 
   Future<List<SharedDay>> _daysOf(int splitId) async {
-    final days = await (_db.select(_db.workoutDays)
-          ..where((t) => t.splitId.equals(splitId))
-          ..orderBy([(t) => OrderingTerm(expression: t.id)]))
-        .get();
+    final days =
+        await (_db.select(_db.workoutDays)
+              ..where((t) => t.splitId.equals(splitId))
+              ..orderBy([(t) => OrderingTerm(expression: t.id)]))
+            .get();
 
     final result = <SharedDay>[];
     for (final day in days) {
-      final schedules = await (_db.select(_db.workoutDaySchedules)
-            ..where((t) => t.dayId.equals(day.id)))
-          .get();
+      final schedules = await (_db.select(
+        _db.workoutDaySchedules,
+      )..where((t) => t.dayId.equals(day.id))).get();
 
       final planned =
           await (_db.select(_db.workoutExercises).join([
-                innerJoin(
-                  _db.exercises,
-                  _db.exercises.id.equalsExp(_db.workoutExercises.exerciseId),
-                ),
-              ])
+                  innerJoin(
+                    _db.exercises,
+                    _db.exercises.id.equalsExp(_db.workoutExercises.exerciseId),
+                  ),
+                ])
                 ..where(_db.workoutExercises.dayId.equals(day.id))
-                ..orderBy([
-                  OrderingTerm(expression: _db.workoutExercises.id),
-                ]))
+                ..orderBy([OrderingTerm(expression: _db.workoutExercises.id)]))
               .get();
 
       result.add(
@@ -110,17 +107,21 @@ class PlanShareRepository {
           .insert(SplitsCompanion.insert(name: name.trim()));
 
       for (final day in split.days) {
-        final dayId = await _db.into(_db.workoutDays).insert(
-          WorkoutDaysCompanion.insert(splitId: splitId, name: day.name),
-        );
+        final dayId = await _db
+            .into(_db.workoutDays)
+            .insert(
+              WorkoutDaysCompanion.insert(splitId: splitId, name: day.name),
+            );
 
         for (final weekday in day.weekdays) {
-          await _db.into(_db.workoutDaySchedules).insert(
-            WorkoutDaySchedulesCompanion.insert(
-              dayId: dayId,
-              weekday: weekday,
-            ),
-          );
+          await _db
+              .into(_db.workoutDaySchedules)
+              .insert(
+                WorkoutDaySchedulesCompanion.insert(
+                  dayId: dayId,
+                  weekday: weekday,
+                ),
+              );
         }
 
         for (final exercise in day.exercises) {
@@ -129,16 +130,18 @@ class PlanShareRepository {
           // put a nameless exercise in the library forever.
           if (exercise.exerciseId.isEmpty) continue;
           await _ensureExercise(exercise);
-          await _db.into(_db.workoutExercises).insert(
-            WorkoutExercisesCompanion.insert(
-              dayId: dayId,
-              exerciseId: exercise.exerciseId,
-              defaultSets: Value(exercise.sets),
-              defaultReps: Value(exercise.reps),
-              defaultRepsMax: Value(exercise.repsMax),
-              warmupSets: Value(exercise.warmupSets),
-            ),
-          );
+          await _db
+              .into(_db.workoutExercises)
+              .insert(
+                WorkoutExercisesCompanion.insert(
+                  dayId: dayId,
+                  exerciseId: exercise.exerciseId,
+                  defaultSets: Value(exercise.sets),
+                  defaultReps: Value(exercise.reps),
+                  defaultRepsMax: Value(exercise.repsMax),
+                  warmupSets: Value(exercise.warmupSets),
+                ),
+              );
         }
       }
 
@@ -157,19 +160,21 @@ class PlanShareRepository {
   /// An existing exercise is never modified — their "Cable Fly" does not get to
   /// rename yours.
   Future<void> _ensureExercise(SharedExercise exercise) async {
-    final existing = await (_db.select(_db.exercises)
-          ..where((t) => t.id.equals(exercise.exerciseId)))
-        .getSingleOrNull();
+    final existing = await (_db.select(
+      _db.exercises,
+    )..where((t) => t.id.equals(exercise.exerciseId))).getSingleOrNull();
     if (existing != null) return;
 
-    await _db.into(_db.exercises).insert(
-      ExercisesCompanion.insert(
-        id: exercise.exerciseId,
-        name: exercise.name.isEmpty ? exercise.exerciseId : exercise.name,
-        muscleIds: exercise.muscleIds,
-        isCustom: const Value(true),
-      ),
-    );
+    await _db
+        .into(_db.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: exercise.exerciseId,
+            name: exercise.name.isEmpty ? exercise.exerciseId : exercise.name,
+            muscleIds: exercise.muscleIds,
+            isCustom: const Value(true),
+          ),
+        );
   }
 }
 

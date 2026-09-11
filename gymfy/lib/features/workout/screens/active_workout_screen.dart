@@ -6,9 +6,10 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/accent_color.dart';
 import '../../../shared/data/notification_service.dart';
 import '../../../shared/database/app_database.dart';
-import '../../../shared/utils/exercise_display.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
+import '../../../shared/widgets/exercise_thumbnail.dart';
+import '../../exercises/screens/exercise_detail_screen.dart';
 import '../../overload/data/overload_math.dart';
 import '../../overload/data/overload_repository.dart';
 import '../../plates/screens/plate_calculator_screen.dart';
@@ -20,6 +21,13 @@ import '../data/rest_timer_repository.dart';
 import '../data/session_repository.dart';
 import '../data/workout_repository.dart';
 import '../widgets/rest_timer_bar.dart';
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../app/theme/glass.dart';
+import '../../../shared/widgets/glass_dialog.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../app/theme/motion.dart';
+import '../../../shared/widgets/fade_slide_in.dart';
 
 /// The live workout screen: log sets exercise by exercise while you train.
 ///
@@ -35,11 +43,10 @@ class ActiveWorkoutScreen extends ConsumerWidget {
     final sessionAsync = ref.watch(sessionProvider(sessionId));
 
     return sessionAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (error, _) => Scaffold(
-        appBar: AppBar(),
+        appBar: GlassAppBar(),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -52,8 +59,8 @@ class ActiveWorkoutScreen extends ConsumerWidget {
       ),
       data: (session) {
         if (session == null) {
-          return Scaffold(
-            appBar: AppBar(),
+          return GlassScaffold(
+            appBar: GlassAppBar(),
             body: const Center(child: Text('Workout not found.')),
           );
         }
@@ -75,8 +82,8 @@ class _ActiveWorkoutView extends ConsumerWidget {
         ? const <PlannedExercise>[]
         : (ref.watch(dayExercisesProvider(dayId)).value ??
               const <PlannedExercise>[]);
-    final sets = ref.watch(sessionSetsProvider(session.id)).value ??
-        const <LoggedSet>[];
+    final sets =
+        ref.watch(sessionSetsProvider(session.id)).value ?? const <LoggedSet>[];
 
     // Group the logged sets by exercise so each card shows only its own sets.
     final setsByExercise = <String, List<LoggedSet>>{};
@@ -84,8 +91,8 @@ class _ActiveWorkoutView extends ConsumerWidget {
       setsByExercise.putIfAbsent(set.exerciseId, () => []).add(set);
     }
 
-    return Scaffold(
-      appBar: AppBar(
+    return GlassScaffold(
+      appBar: GlassAppBar(
         title: Text(session.name),
         actions: [
           IconButton(
@@ -101,26 +108,34 @@ class _ActiveWorkoutView extends ConsumerWidget {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Renders nothing unless a rest timer is running.
-          const RestTimerBar(),
-          Expanded(
-            child: planned.isEmpty
-                ? const _EmptyState()
-                : ListView(
-                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 32),
-                    children: [
-                      for (final p in planned)
-                        _ExerciseLogCard(
-                          session: session,
-                          planned: p,
-                          loggedSets: setsByExercise[p.exercise.id] ?? const [],
-                        ),
-                    ],
-                  ),
-          ),
-        ],
+      // The rest timer is fixed at the top and must stay readable, so it is
+      // held clear of the app bar; the exercise list below it slides under.
+      body: Padding(
+        padding: topBarInset(context),
+        child: Column(
+          children: [
+            // Renders nothing unless a rest timer is running.
+            const RestTimerBar(),
+            Expanded(
+              child: planned.isEmpty
+                  ? const _EmptyState()
+                  : ListView(
+                      padding:
+                          const EdgeInsets.fromLTRB(12, 12, 12, 32) +
+                          bottomBarInset(context),
+                      children: [
+                        for (final p in planned)
+                          _ExerciseLogCard(
+                            session: session,
+                            planned: p,
+                            loggedSets:
+                                setsByExercise[p.exercise.id] ?? const [],
+                          ),
+                      ],
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -154,25 +169,29 @@ class _ExerciseLogCard extends ConsumerWidget {
     final entry = planned.entry;
     final exercise = planned.exercise;
 
-    return Card(
+    return AppCard(
       margin: const EdgeInsets.symmetric(vertical: 6),
-      clipBehavior: Clip.antiAlias,
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ListTile(
-            leading: CircleAvatar(
-              backgroundColor: accent.withValues(alpha: 0.15),
-              child: Icon(exerciseIcon, color: accent),
-            ),
+            leading: ExerciseThumbnail(gifPath: exercise.gifPath),
             title: Text(exercise.name),
             subtitle: Text(
               'Target: ${formatSetTarget(entry.defaultSets, entry.defaultReps, entry.defaultRepsMax)}',
             ),
             trailing: _SuggestionChip(planned: planned),
+            // Opens the same detail screen the library does — the animation,
+            // the muscles worked, the rank. Mid-set is exactly when you want
+            // to check a movement you're unsure of.
+            //
+            // Pushed rather than routed, for the same reason the plate
+            // calculator is: `go` would switch to the Exercises tab and leave
+            // you navigating back to your own session afterwards.
+            onTap: () => showExerciseDetail(context, exercise.id),
           ),
-          for (final set in loggedSets)
-            _LoggedSetRow(set: set, accent: accent),
+          _LoggedSets(sets: loggedSets, accent: accent),
           Padding(
             padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
             child: Row(
@@ -245,21 +264,24 @@ class _ExerciseLogCard extends ConsumerWidget {
         initialReps: last?.reps ?? planned.entry.defaultReps,
         unit: ref.read(weightUnitProvider),
         plateLoaded: planned.exercise.isPlateLoaded,
+        exercise: planned.exercise,
         suggestion: suggestion,
       ),
     );
     if (result == null) return;
 
-    await ref.read(sessionRepositoryProvider).logSet(
-      sessionId: session.id,
-      exerciseId: planned.exercise.id,
-      // Numbered within its own phase, so working sets read 1, 2, 3 however
-      // long the ramp-up was.
-      setNumber: samePhase.length + 1,
-      weight: result.weight,
-      reps: result.reps,
-      isWarmup: isWarmup,
-    );
+    await ref
+        .read(sessionRepositoryProvider)
+        .logSet(
+          sessionId: session.id,
+          exerciseId: planned.exercise.id,
+          // Numbered within its own phase, so working sets read 1, 2, 3 however
+          // long the ramp-up was.
+          setNumber: samePhase.length + 1,
+          weight: result.weight,
+          reps: result.reps,
+          isWarmup: isWarmup,
+        );
 
     // Logging a set is exactly when rest starts, so the timer needs no button
     // of its own — one less thing to do between sets.
@@ -270,11 +292,13 @@ class _ExerciseLogCard extends ConsumerWidget {
       // the moment it's needed, and a user who never rests is never asked.
       await ref.read(notificationServiceProvider).requestPermission();
     }
-    await ref.read(restTimerProvider.notifier).start(
-      exerciseId: exercise.id,
-      exerciseName: exercise.name,
-      seconds: seconds,
-    );
+    await ref
+        .read(restTimerProvider.notifier)
+        .start(
+          exerciseId: exercise.id,
+          exerciseName: exercise.name,
+          seconds: seconds,
+        );
   }
 }
 
@@ -325,6 +349,44 @@ class _SuggestionChip extends ConsumerWidget {
           style: theme.textTheme.labelLarge?.copyWith(color: colour),
         ),
       ],
+    );
+  }
+}
+
+/// The sets logged so far, with a new one arriving rather than appearing.
+///
+/// Logging a set is the thing this app is for, and it happens perhaps forty
+/// times a session with a phone propped against a rack. Before this, the row
+/// simply existed on the next frame and the card jumped taller under it —
+/// which is indistinguishable from a layout glitch, and gives you nothing to
+/// confirm the tap landed except reading the numbers back.
+///
+/// Each row is keyed by its set id, so only the row that is genuinely new
+/// animates. Keyed by position instead, adding a set would re-run the arrival
+/// on every row beneath it and the card would ripple every time.
+class _LoggedSets extends StatelessWidget {
+  const _LoggedSets({required this.sets, required this.accent});
+
+  final List<LoggedSet> sets;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSize(
+      duration: motionOf(context, AppDurations.standard),
+      curve: AppCurves.settle,
+      // Grows downward from the exercise's name rather than from its middle.
+      alignment: Alignment.topCenter,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final set in sets)
+            FadeSlideIn(
+              key: ValueKey(set.id),
+              child: _LoggedSetRow(set: set, accent: accent),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -416,9 +478,7 @@ class _WarmupBadge extends StatelessWidget {
       ),
       child: Text(
         'W',
-        style: Theme.of(
-          context,
-        ).textTheme.labelSmall?.copyWith(color: colour),
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: colour),
       ),
     );
   }
@@ -437,6 +497,7 @@ class _LogSetDialog extends StatefulWidget {
     required this.unit,
     required this.plateLoaded,
     required this.suggestion,
+    required this.exercise,
   });
 
   /// Whether this row is being logged as a ramp-up set. Only changes the title:
@@ -457,13 +518,18 @@ class _LogSetDialog extends StatefulWidget {
   /// know what went on the bar, not what the total came to.
   final bool plateLoaded;
 
+  /// The exercise being logged, so the plate stacker can use — and change —
+  /// its own bar weight.
+  final Exercise exercise;
+
   @override
   State<_LogSetDialog> createState() => _LogSetDialogState();
 }
 
 class _LogSetDialogState extends State<_LogSetDialog> {
-  late final _repsController =
-      TextEditingController(text: widget.initialReps.toString());
+  late final _repsController = TextEditingController(
+    text: widget.initialReps.toString(),
+  );
 
   /// The weight, in the *display* unit — one value whichever input is showing.
   ///
@@ -485,15 +551,14 @@ class _LogSetDialogState extends State<_LogSetDialog> {
   void _submit() {
     final weight = weightToKilograms(_weight, widget.unit);
     final reps = int.tryParse(_repsController.text) ?? widget.initialReps;
-    Navigator.of(context).pop((
-      weight: weight < 0 ? 0.0 : weight,
-      reps: reps < 0 ? 0 : reps,
-    ));
+    Navigator.of(
+      context,
+    ).pop((weight: weight < 0 ? 0.0 : weight, reps: reps < 0 ? 0 : reps));
   }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return GlassDialog(
       title: Text(widget.isWarmup ? 'Log warm-up set' : 'Log set'),
       content: SingleChildScrollView(
         child: Column(
@@ -510,6 +575,7 @@ class _LogSetDialogState extends State<_LogSetDialog> {
             if (_usePlates)
               PlateStacker(
                 initialWeight: _weight,
+                exerciseId: widget.exercise.id,
                 onChanged: (weight) => _weight = weight,
               )
             else

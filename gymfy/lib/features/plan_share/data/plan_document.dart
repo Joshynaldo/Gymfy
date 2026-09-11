@@ -115,8 +115,7 @@ class SharedDay {
       ],
       exercises: [
         for (final value in _list(json, 'exercises'))
-          if (value is Map<String, dynamic>)
-            SharedExercise.fromJson(value),
+          if (value is Map<String, dynamic>) SharedExercise.fromJson(value),
       ].where((e) => e.exerciseId.isNotEmpty).toList(),
     );
   }
@@ -204,7 +203,9 @@ class PlanDocument {
     ];
 
     if (splits.isEmpty) {
-      throw const PlanFormatException("That plan file doesn't contain a split.");
+      throw const PlanFormatException(
+        "That plan file doesn't contain a split.",
+      );
     }
 
     return PlanDocument(

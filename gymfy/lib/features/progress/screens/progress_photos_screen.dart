@@ -9,6 +9,10 @@ import '../../../shared/utils/dates.dart';
 import '../../../shared/utils/format.dart';
 import '../data/photo_repository.dart';
 import '../widgets/photo_file_image.dart';
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../app/theme/glass.dart';
+import '../../../shared/widgets/glass_dialog.dart';
 
 /// What the add-photo dialog collects before the file is copied in.
 typedef _PhotoDetails = ({DateTime day, String? note});
@@ -29,14 +33,14 @@ class _ProgressPhotosScreenState extends ConsumerState<ProgressPhotosScreen> {
   Widget build(BuildContext context) {
     final photosAsync = ref.watch(progressPhotosProvider);
 
-    return Scaffold(
-      appBar: AppBar(
+    return GlassScaffold(
+      appBar: GlassAppBar(
         title: const Text('Progress photos'),
         actions: [
           IconButton(
             icon: const Icon(Icons.compare),
             tooltip: 'Compare',
-            onPressed: () => context.go('/progress/photos/compare'),
+            onPressed: () => context.go('/more/progress/photos/compare'),
           ),
         ],
       ),
@@ -54,14 +58,15 @@ class _ProgressPhotosScreenState extends ConsumerState<ProgressPhotosScreen> {
         data: (items) => items.isEmpty
             ? const _EmptyState()
             : GridView.builder(
-                padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
-                gridDelegate:
-                    const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 8,
-                      mainAxisSpacing: 8,
-                      childAspectRatio: 3 / 4,
-                    ),
+                padding:
+                    const EdgeInsets.fromLTRB(12, 12, 12, 96) +
+                    barInsets(context),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                  childAspectRatio: 3 / 4,
+                ),
                 itemCount: items.length,
                 itemBuilder: (context, index) => _PhotoTile(
                   item: items[index],
@@ -96,11 +101,13 @@ class _ProgressPhotosScreenState extends ConsumerState<ProgressPhotosScreen> {
       );
       if (details == null || !mounted) return;
 
-      await ref.read(photoRepositoryProvider).addPhoto(
-        day: details.day,
-        source: File(picked.path),
-        note: details.note,
-      );
+      await ref
+          .read(photoRepositoryProvider)
+          .addPhoto(
+            day: details.day,
+            source: File(picked.path),
+            note: details.note,
+          );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -245,7 +252,7 @@ class _PhotoViewer extends StatelessWidget {
   Future<void> _confirmDelete(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => GlassDialog(
         title: const Text('Delete photo?'),
         content: const Text(
           'This removes the photo from Gymfy for good. The original in your '
@@ -302,7 +309,7 @@ class _PhotoDetailsDialogState extends State<_PhotoDetailsDialog> {
   Widget build(BuildContext context) {
     final note = _note.text.trim();
 
-    return AlertDialog(
+    return GlassDialog(
       title: const Text('Add photo'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -332,10 +339,9 @@ class _PhotoDetailsDialogState extends State<_PhotoDetailsDialog> {
           child: const Text('Cancel'),
         ),
         FilledButton(
-          onPressed: () => Navigator.of(context).pop((
-            day: _day,
-            note: note.isEmpty ? null : note,
-          )),
+          onPressed: () => Navigator.of(
+            context,
+          ).pop((day: _day, note: note.isEmpty ? null : note)),
           child: const Text('Save'),
         ),
       ],

@@ -73,21 +73,23 @@ class PhotoRepository {
     final fileName = buildFileName(day: d, source: source.path);
     await source.copy('${dir.path}/$fileName');
 
-    await _db.into(_db.progressPhotos).insert(
-      ProgressPhotosCompanion.insert(
-        date: d,
-        fileName: fileName,
-        note: Value(note),
-      ),
-    );
+    await _db
+        .into(_db.progressPhotos)
+        .insert(
+          ProgressPhotosCompanion.insert(
+            date: d,
+            fileName: fileName,
+            note: Value(note),
+          ),
+        );
   }
 
   /// Removes a photo's row and its file. The row goes first: an orphaned file is
   /// invisible clutter, but a row pointing at a missing file is a broken tile.
   Future<void> deletePhoto(ProgressPhoto photo) async {
-    await (_db.delete(_db.progressPhotos)
-          ..where((t) => t.id.equals(photo.id)))
-        .go();
+    await (_db.delete(
+      _db.progressPhotos,
+    )..where((t) => t.id.equals(photo.id))).go();
 
     final dir = await ensureDir();
     final file = File('${dir.path}/${photo.fileName}');

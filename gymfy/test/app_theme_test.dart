@@ -139,7 +139,16 @@ void main() {
       for (final theme in AppTheme.values) {
         final data = buildAppTheme(theme, AccentPalette.blue);
 
-        expect(data.scaffoldBackgroundColor, theme.palette.background);
+        expect(
+          data.scaffoldBackgroundColor,
+          // A glass theme's scaffold is transparent on purpose: the backdrop
+          // painted underneath is what you see, and an opaque scaffold would
+          // hide the very thing the glass is meant to refract.
+          theme == AppTheme.hyper
+              ? Colors.transparent
+              : theme.palette.background,
+          reason: theme.name,
+        );
         expect(data.colorScheme.surface, theme.palette.surface);
         expect(data.colorScheme.onSurface, theme.palette.textPrimary);
         expect(data.colorScheme.onSurfaceVariant, theme.palette.textMuted);

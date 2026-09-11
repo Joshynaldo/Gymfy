@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../shared/utils/format.dart';
+import '../../../shared/widgets/chart_style.dart';
 import '../data/measurements_repository.dart';
 
 /// The y-axis window for a measurement series: a padded band around the actual
@@ -53,11 +54,6 @@ class MeasurementTimelineChart extends ConsumerWidget {
     final maxX = spots.last.x;
     final yInterval = _niceInterval(range.max - range.min);
 
-    final gridLine = FlLine(
-      color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
-      strokeWidth: 1,
-    );
-
     return LineChart(
       LineChartData(
         minX: 0,
@@ -68,7 +64,7 @@ class MeasurementTimelineChart extends ConsumerWidget {
           show: true,
           drawVerticalLine: false,
           horizontalInterval: yInterval,
-          getDrawingHorizontalLine: (_) => gridLine,
+          getDrawingHorizontalLine: (_) => chartGridLine(context),
         ),
         borderData: FlBorderData(show: false),
         titlesData: FlTitlesData(
@@ -87,7 +83,7 @@ class MeasurementTimelineChart extends ConsumerWidget {
                 padding: const EdgeInsets.only(right: 6),
                 child: Text(
                   formatWeight(value),
-                  style: theme.textTheme.bodySmall,
+                  style: chartLabelStyle(context),
                 ),
               ),
             ),
@@ -106,7 +102,7 @@ class MeasurementTimelineChart extends ConsumerWidget {
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
                     formatShortDate(day),
-                    style: theme.textTheme.bodySmall,
+                    style: chartLabelStyle(context),
                   ),
                 );
               },
@@ -135,20 +131,16 @@ class MeasurementTimelineChart extends ConsumerWidget {
             color: accent,
             barWidth: 3,
             dotData: FlDotData(
-              show: true,
-              getDotPainter: (spot, _, _, _) => FlDotCirclePainter(
-                radius: 4,
-                color: accent,
-                strokeWidth: 0,
-              ),
+              // Only while you can still count them — see chartShowsDots.
+              show: chartShowsDots(spots.length),
+              getDotPainter: (spot, _, _, _) =>
+                  FlDotCirclePainter(radius: 4, color: accent, strokeWidth: 0),
             ),
-            belowBarData: BarAreaData(
-              show: true,
-              color: accent.withValues(alpha: 0.15),
-              // Fill down to the bottom of the visible band, not to zero.
-              cutOffY: range.min,
-              applyCutOffY: true,
-            ),
+            // The shared fill, but cut off at the bottom of the visible band
+            // rather than at zero: this chart zooms in on a narrow range of
+            // body measurements, and filling to zero would shade the whole
+            // plot area solid.
+            belowBarData: chartAreaFill(accent, cutOffY: range.min),
           ),
         ],
       ),

@@ -40,24 +40,25 @@ class MuscleFatigueRepository {
 
   /// Streams current fatigue per muscle, as of [now].
   Stream<Map<String, double>> watchFatigue(DateTime now) {
-    final query = _db.select(_db.loggedSets).join([
-      innerJoin(
-        _db.workoutSessions,
-        _db.workoutSessions.id.equalsExp(_db.loggedSets.sessionId),
-      ),
-      innerJoin(
-        _db.exercises,
-        _db.exercises.id.equalsExp(_db.loggedSets.exerciseId),
-      ),
-    ])..where(
-      _db.workoutSessions.startedAt.isBiggerOrEqualValue(
-        now.subtract(fatigueWindow),
-      ) &
-          // Warm-ups don't fatigue you — ramping up to your working weight is
-          // the opposite of accumulating work. Counting them would make a
-          // careful lifter look more beaten up than a careless one.
-          _db.loggedSets.isWarmup.equals(false),
-    );
+    final query =
+        _db.select(_db.loggedSets).join([
+          innerJoin(
+            _db.workoutSessions,
+            _db.workoutSessions.id.equalsExp(_db.loggedSets.sessionId),
+          ),
+          innerJoin(
+            _db.exercises,
+            _db.exercises.id.equalsExp(_db.loggedSets.exerciseId),
+          ),
+        ])..where(
+          _db.workoutSessions.startedAt.isBiggerOrEqualValue(
+                now.subtract(fatigueWindow),
+              ) &
+              // Warm-ups don't fatigue you — ramping up to your working weight is
+              // the opposite of accumulating work. Counting them would make a
+              // careful lifter look more beaten up than a careless one.
+              _db.loggedSets.isWarmup.equals(false),
+        );
 
     return query.watch().map((rows) {
       final samples = rows.map((row) {
@@ -65,10 +66,7 @@ class MuscleFatigueRepository {
         final exercise = row.readTable(_db.exercises);
         // Sets have no timestamp of their own; the session's start is the best
         // answer available and is never more than a workout's length out.
-        return (
-          performedAt: session.startedAt,
-          muscleIds: exercise.muscleIds,
-        );
+        return (performedAt: session.startedAt, muscleIds: exercise.muscleIds);
       });
       return muscleFatigue(samples, now: now);
     });
@@ -128,7 +126,7 @@ MuscleFatigueRepository muscleFatigueRepository(Ref ref) {
 /// scale of hours, so a map that redrew every second would burn battery to show
 /// the same picture. Re-entering the tab re-reads it.
 final muscleFatigueProvider = StreamProvider<Map<String, double>>((ref) {
-  return ref.watch(muscleFatigueRepositoryProvider).watchFatigue(
-    DateTime.now(),
-  );
+  return ref
+      .watch(muscleFatigueRepositoryProvider)
+      .watchFatigue(DateTime.now());
 });

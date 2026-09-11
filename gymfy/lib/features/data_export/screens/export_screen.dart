@@ -8,6 +8,9 @@ import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/fade_slide_in.dart';
 import '../data/export_format.dart';
 import '../data/export_repository.dart';
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../app/theme/glass.dart';
 
 /// Getting your data out of the app.
 ///
@@ -29,11 +32,12 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Export data')),
+    return GlassScaffold(
+      appBar: GlassAppBar(title: const Text('Export data')),
       body: FadeSlideIn(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          padding:
+              const EdgeInsets.fromLTRB(16, 12, 16, 24) + barInsets(context),
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
@@ -136,9 +140,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
   /// their time and looks like the export is broken.
   bool _isEmpty(ExportData data, String extension) {
     if (extension == 'csv') return data.sets.isEmpty;
-    return data.sets.isEmpty &&
-        data.measurements.isEmpty &&
-        data.meals.isEmpty;
+    return data.sets.isEmpty && data.measurements.isEmpty && data.meals.isEmpty;
   }
 
   void _say(String message) {

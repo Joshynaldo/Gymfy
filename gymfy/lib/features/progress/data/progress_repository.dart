@@ -76,12 +76,7 @@ PersonalRecords? personalRecordsFrom(List<ExerciseHistoryPoint> points) {
 }
 
 /// The set that implies the biggest one-rep max, and what that max is.
-typedef BestOneRm = ({
-  double oneRm,
-  double weight,
-  int reps,
-  DateTime date,
-});
+typedef BestOneRm = ({double oneRm, double weight, int reps, DateTime date});
 
 /// Finds the logged top set with the highest estimated one-rep max.
 ///
@@ -148,19 +143,21 @@ class ProgressRepository {
   /// points is working volume for the same reason — it is what "best volume
   /// day" is measured against.
   Stream<List<ExerciseHistoryPoint>> watchExerciseHistory(String exerciseId) {
-    final query = _db.select(_db.loggedSets).join([
-      innerJoin(
-        _db.workoutSessions,
-        _db.workoutSessions.id.equalsExp(_db.loggedSets.sessionId),
-      ),
-    ])..where(
-      _db.loggedSets.exerciseId.equals(exerciseId) &
-          _db.loggedSets.isWarmup.equals(false),
-    );
+    final query =
+        _db.select(_db.loggedSets).join([
+          innerJoin(
+            _db.workoutSessions,
+            _db.workoutSessions.id.equalsExp(_db.loggedSets.sessionId),
+          ),
+        ])..where(
+          _db.loggedSets.exerciseId.equals(exerciseId) &
+              _db.loggedSets.isWarmup.equals(false),
+        );
 
     return query.watch().map((rows) {
       // Group the sets by the session they belong to.
-      final bySession = <int, List<({DateTime date, double weight, int reps})>>{};
+      final bySession =
+          <int, List<({DateTime date, double weight, int reps})>>{};
       for (final row in rows) {
         final set = row.readTable(_db.loggedSets);
         final session = row.readTable(_db.workoutSessions);
@@ -177,16 +174,19 @@ class ProgressRepository {
         var volume = 0.0;
         for (final s in sets) {
           final heavier = s.weight > top.weight;
-          final sameWeightMoreReps = s.weight == top.weight && s.reps > top.reps;
+          final sameWeightMoreReps =
+              s.weight == top.weight && s.reps > top.reps;
           if (heavier || sameWeightMoreReps) top = s;
           volume += s.weight > 0 ? s.weight * s.reps : s.reps.toDouble();
         }
-        points.add(ExerciseHistoryPoint(
-          date: top.date,
-          topWeight: top.weight,
-          repsAtTop: top.reps,
-          totalVolume: volume,
-        ));
+        points.add(
+          ExerciseHistoryPoint(
+            date: top.date,
+            topWeight: top.weight,
+            repsAtTop: top.reps,
+            totalVolume: volume,
+          ),
+        );
       }
 
       points.sort((a, b) => a.date.compareTo(b.date));

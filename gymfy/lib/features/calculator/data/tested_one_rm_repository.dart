@@ -43,9 +43,9 @@ class TestedOneRmRepository {
 
   /// Forgets the tested max, so the exercise falls back to the estimate.
   Future<void> clearForExercise(String exerciseId) async {
-    await (_db.delete(_db.testedOneRms)
-          ..where((t) => t.exerciseId.equals(exerciseId)))
-        .go();
+    await (_db.delete(
+      _db.testedOneRms,
+    )..where((t) => t.exerciseId.equals(exerciseId))).go();
   }
 }
 

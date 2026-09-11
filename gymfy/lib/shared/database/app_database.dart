@@ -43,7 +43,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 21;
+  int get schemaVersion => 22;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -205,6 +205,12 @@ class AppDatabase extends _$AppDatabase {
       if (from < 21) {
         await m.addColumn(loggedSets, loggedSets.isWarmup);
         await m.addColumn(workoutExercises, workoutExercises.warmupSets);
+      }
+      // Per-exercise bar weight. Nullable and unset, so every existing row
+      // keeps falling back to the gym-wide default for its unit — the
+      // behaviour before this column existed.
+      if (from < 22) {
+        await m.addColumn(exercises, exercises.barWeightKg);
       }
     },
     // SQLite doesn't enforce foreign keys unless we turn them on per

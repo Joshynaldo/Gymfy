@@ -53,15 +53,7 @@ String formatShortDate(DateTime dt) => '${dt.day} ${_monthAbbr[dt.month - 1]}';
 /// Just the month, like "Jul" — used along the top of the activity heatmap.
 String formatMonthAbbr(DateTime dt) => _monthAbbr[dt.month - 1];
 
-const _weekdayAbbr = [
-  'Mon',
-  'Tue',
-  'Wed',
-  'Thu',
-  'Fri',
-  'Sat',
-  'Sun',
-];
+const _weekdayAbbr = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 /// Formats just the weekday like "Fri" — used by the weekly chart axes.
 String formatWeekdayAbbr(DateTime day) => _weekdayAbbr[day.weekday - 1];

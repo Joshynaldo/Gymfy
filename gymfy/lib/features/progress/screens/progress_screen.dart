@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../shared/widgets/exercise_thumbnail.dart';
 import '../../../shared/utils/exercise_display.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/fade_slide_in.dart';
 import '../data/progress_repository.dart';
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../app/theme/glass.dart';
 
 /// The Progress tab: the exercises you've logged, each opening a progress
 /// chart. Only exercises with logged history appear here.
@@ -16,8 +20,8 @@ class ProgressScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final exercisesAsync = ref.watch(exercisesWithHistoryProvider);
 
-    return Scaffold(
-      appBar: AppBar(
+    return GlassScaffold(
+      appBar: GlassAppBar(
         title: const Text('Progress'),
         actions: [
           // An action rather than a list entry, so it's reachable even when
@@ -25,12 +29,12 @@ class ProgressScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.photo_library_outlined),
             tooltip: 'Progress photos',
-            onPressed: () => context.go('/progress/photos'),
+            onPressed: () => context.go('/more/progress/photos'),
           ),
           IconButton(
             icon: const Icon(Icons.straighten),
             tooltip: 'Measurements',
-            onPressed: () => context.go('/progress/measurements'),
+            onPressed: () => context.go('/more/progress/measurements'),
           ),
         ],
       ),
@@ -50,18 +54,21 @@ class ProgressScreen extends ConsumerWidget {
             return const _EmptyState();
           }
           return ListView.builder(
-            padding: const EdgeInsets.only(top: 8, bottom: 24),
+            padding:
+                const EdgeInsets.only(top: 8, bottom: 24) + barInsets(context),
             itemCount: exercises.length,
             itemBuilder: (context, index) {
               final exercise = exercises[index];
               return FadeSlideIn(
                 child: AppTile(
                   icon: exerciseIcon,
+                  leading: ExerciseThumbnail(gifPath: exercise.gifPath),
                   title: exercise.name,
                   // A chart icon rather than a chevron: it says what opening
                   // this gets you, which "›" doesn't.
                   trailing: const Icon(Icons.show_chart, size: 20),
-                  onTap: () => context.go('/progress/exercise/${exercise.id}'),
+                  onTap: () =>
+                      context.go('/more/progress/exercise/${exercise.id}'),
                 ),
               );
             },

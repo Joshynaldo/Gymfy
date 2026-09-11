@@ -98,7 +98,7 @@ class _BodyweightPrompt extends ConsumerWidget {
       action: Align(
         alignment: Alignment.centerLeft,
         child: FilledButton.icon(
-          onPressed: () => context.go('/progress/measurements'),
+          onPressed: () => context.go('/more/progress/measurements'),
           icon: const Icon(Icons.straighten),
           label: const Text('Open measurements'),
         ),

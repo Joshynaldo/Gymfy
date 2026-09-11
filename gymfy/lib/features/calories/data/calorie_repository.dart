@@ -34,16 +34,18 @@ class CalorieRepository {
     int carbs = 0,
     int fat = 0,
   }) {
-    return _db.into(_db.calorieEntries).insert(
-      CalorieEntriesCompanion.insert(
-        date: dateOnly(day),
-        name: name.trim(),
-        calories: Value(calories),
-        protein: Value(protein),
-        carbs: Value(carbs),
-        fat: Value(fat),
-      ),
-    );
+    return _db
+        .into(_db.calorieEntries)
+        .insert(
+          CalorieEntriesCompanion.insert(
+            date: dateOnly(day),
+            name: name.trim(),
+            calories: Value(calories),
+            protein: Value(protein),
+            carbs: Value(carbs),
+            fat: Value(fat),
+          ),
+        );
   }
 
   /// Deletes a single entry.

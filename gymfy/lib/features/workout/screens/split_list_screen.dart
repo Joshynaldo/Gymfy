@@ -8,6 +8,10 @@ import '../../../app/theme/accent_color.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/widgets/name_prompt_dialog.dart';
 import '../data/workout_repository.dart';
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../app/theme/glass.dart';
+import '../../../shared/widgets/glass_dialog.dart';
 
 /// Managing your programmes: every split you've made, which one is active, and
 /// the buttons to create or delete one.
@@ -23,8 +27,8 @@ class SplitListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final splitsAsync = ref.watch(splitListProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Splits')),
+    return GlassScaffold(
+      appBar: GlassAppBar(title: const Text('Splits')),
       body: splitsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
@@ -39,7 +43,7 @@ class SplitListScreen extends ConsumerWidget {
         data: (splits) {
           if (splits.isEmpty) return const _EmptyState();
           return ListView.separated(
-            padding: const EdgeInsets.only(bottom: 88),
+            padding: const EdgeInsets.only(bottom: 88) + barInsets(context),
             itemCount: splits.length,
             separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, index) => _SplitTile(split: splits[index]),
@@ -138,7 +142,7 @@ Future<void> _confirmDelete(
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) {
-      return AlertDialog(
+      return GlassDialog(
         title: Text('Delete "${split.name}"?'),
         content: const Text(
           'This removes the split and everything inside it. This cannot be '

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/accent_color.dart';
 import '../../../shared/utils/weekday.dart';
 import '../../workout/data/workout_repository.dart';
+import '../../../shared/widgets/app_card.dart';
 
 /// What's coming after today.
 ///
@@ -24,8 +25,8 @@ class NextUpCard extends ConsumerWidget {
 
     if (next == null) return const SizedBox.shrink();
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+    return AppCard(
+      padding: EdgeInsets.zero,
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: accent.withValues(alpha: 0.15),

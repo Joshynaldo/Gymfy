@@ -12,6 +12,10 @@ import '../../calculator/data/tested_one_rm_repository.dart';
 import '../../exercises/data/exercise_repository.dart';
 import '../data/progress_repository.dart';
 import '../widgets/exercise_progress_chart.dart';
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../app/theme/glass.dart';
+import '../../../shared/widgets/glass_dialog.dart';
 
 /// Shows one exercise's progress over time: personal records, an estimated
 /// one-rep max from the best set logged, and a chart of top-set weight per
@@ -28,8 +32,8 @@ class ExerciseProgressScreen extends ConsumerWidget {
     final historyAsync = ref.watch(exerciseHistoryProvider(exerciseId));
     final title = exerciseAsync.value?.name ?? 'Progress';
 
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
+    return GlassScaffold(
+      appBar: GlassAppBar(title: Text(title)),
       body: historyAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
@@ -51,7 +55,8 @@ class ExerciseProgressScreen extends ConsumerWidget {
           final bestOneRm = bestEstimatedOneRm(points);
 
           return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            padding:
+                const EdgeInsets.fromLTRB(16, 16, 16, 32) + barInsets(context),
             children: [
               if (records != null) ...[
                 Text('Personal records', style: theme.textTheme.titleMedium),
@@ -264,7 +269,8 @@ class _TestedOneRmDialogState extends State<_TestedOneRmDialog> {
     return weightIn(roundToLoadable(start, widget.unit), widget.unit);
   }();
 
-  late DateTime _testedOn = widget.current?.testedOn ?? dateOnly(DateTime.now());
+  late DateTime _testedOn =
+      widget.current?.testedOn ?? dateOnly(DateTime.now());
 
   Future<void> _pickDate() async {
     final now = DateTime.now();
@@ -282,7 +288,7 @@ class _TestedOneRmDialogState extends State<_TestedOneRmDialog> {
   Widget build(BuildContext context) {
     final weight = _weight > 0 ? weightToKilograms(_weight, widget.unit) : null;
 
-    return AlertDialog(
+    return GlassDialog(
       title: const Text('Tested 1RM'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -306,10 +312,9 @@ class _TestedOneRmDialogState extends State<_TestedOneRmDialog> {
       actions: [
         if (widget.current != null)
           TextButton(
-            onPressed: () => Navigator.of(context).pop((
-              weightKg: null,
-              testedOn: _testedOn,
-            )),
+            onPressed: () => Navigator.of(
+              context,
+            ).pop((weightKg: null, testedOn: _testedOn)),
             child: const Text('Clear'),
           ),
         TextButton(
@@ -320,10 +325,9 @@ class _TestedOneRmDialogState extends State<_TestedOneRmDialog> {
           // Disabled rather than silently rejecting an unparseable number.
           onPressed: weight == null
               ? null
-              : () => Navigator.of(context).pop((
-                  weightKg: weight,
-                  testedOn: _testedOn,
-                )),
+              : () => Navigator.of(
+                  context,
+                ).pop((weightKg: weight, testedOn: _testedOn)),
           child: const Text('Save'),
         ),
       ],
@@ -352,7 +356,8 @@ class _RecordsRow extends ConsumerWidget {
               icon: Icons.fitness_center,
               label: 'Heaviest',
               value: formatWeightUnit(records.heaviestWeight, unit),
-              detail: '× ${records.repsAtHeaviest} '
+              detail:
+                  '× ${records.repsAtHeaviest} '
                   '• ${formatShortDate(records.heaviestDate)}',
             ),
           ),
@@ -362,7 +367,8 @@ class _RecordsRow extends ConsumerWidget {
               icon: Icons.bar_chart,
               label: 'Best volume',
               value: formatWeightUnit(records.bestVolume, unit),
-              detail: 'in a session '
+              detail:
+                  'in a session '
                   '• ${formatShortDate(records.bestVolumeDate)}',
             ),
           ),

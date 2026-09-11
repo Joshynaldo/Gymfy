@@ -9,6 +9,9 @@ import '../../../shared/utils/units.dart';
 import '../data/measurement_units.dart';
 import '../data/measurements_repository.dart';
 import '../widgets/measurement_timeline_chart.dart';
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../app/theme/glass.dart';
 
 /// A timeline of one body measurement, with a picker to switch body part.
 class MeasurementHistoryScreen extends ConsumerStatefulWidget {
@@ -27,8 +30,8 @@ class _MeasurementHistoryScreenState
   Widget build(BuildContext context) {
     final historyAsync = ref.watch(measurementHistoryProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Measurement history')),
+    return GlassScaffold(
+      appBar: GlassAppBar(title: const Text('Measurement history')),
       body: historyAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
@@ -67,7 +70,7 @@ class _Body extends ConsumerWidget {
     final points = seriesFor(rows, field);
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24) + barInsets(context),
       children: [
         _FieldPicker(selected: field, onChanged: onFieldChanged),
         const SizedBox(height: 16),

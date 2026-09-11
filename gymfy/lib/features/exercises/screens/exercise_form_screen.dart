@@ -10,6 +10,9 @@ import '../../../shared/models/exercise.dart' show isBundledAsset;
 import '../../../shared/models/muscle_ids.dart';
 import '../../../shared/utils/exercise_display.dart';
 import '../data/exercise_repository.dart';
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../app/theme/glass.dart';
 
 /// Creates a new custom exercise, or edits an existing one when [exerciseId] is
 /// given.
@@ -63,11 +66,10 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
 
     final exerciseAsync = ref.watch(exerciseProvider(widget.exerciseId!));
     return exerciseAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (error, _) => Scaffold(
-        appBar: AppBar(title: const Text('Edit exercise')),
+        appBar: GlassAppBar(title: const Text('Edit exercise')),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -80,8 +82,8 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
       ),
       data: (exercise) {
         if (exercise == null) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Edit exercise')),
+          return GlassScaffold(
+            appBar: GlassAppBar(title: const Text('Edit exercise')),
             body: const Center(child: Text('Exercise not found.')),
           );
         }
@@ -105,12 +107,12 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
   Widget _form(BuildContext context, {required bool canSave}) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
+    return GlassScaffold(
+      appBar: GlassAppBar(
         title: Text(widget.isEditing ? 'Edit exercise' : 'New exercise'),
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 96) + barInsets(context),
         children: [
           TextField(
             controller: _nameController,

@@ -108,28 +108,32 @@ class MeasurementsRepository {
     required double? value,
   }) async {
     final d = dateOnly(day);
-    final patch = companionFor(field, value).copyWith(
-      updatedAt: Value(DateTime.now()),
-    );
+    final patch = companionFor(
+      field,
+      value,
+    ).copyWith(updatedAt: Value(DateTime.now()));
 
     // The unique key is `date`, not the primary key, so the conflict target has
     // to say so explicitly — otherwise this would try to upsert on `id`.
-    await _db.into(_db.bodyMeasurements).insert(
-      patch.copyWith(date: Value(d)),
-      onConflict: DoUpdate(
-        (_) => patch,
-        target: [_db.bodyMeasurements.date],
-      ),
-    );
+    await _db
+        .into(_db.bodyMeasurements)
+        .insert(
+          patch.copyWith(date: Value(d)),
+          onConflict: DoUpdate(
+            (_) => patch,
+            target: [_db.bodyMeasurements.date],
+          ),
+        );
 
     // Clearing the last value on a day leaves an all-null row behind, which
     // would show up as a phantom entry in the history. Drop it.
-    final row = await (_db.select(_db.bodyMeasurements)
-          ..where((t) => t.date.equals(d)))
-        .getSingleOrNull();
+    final row = await (_db.select(
+      _db.bodyMeasurements,
+    )..where((t) => t.date.equals(d))).getSingleOrNull();
     if (row != null && isEmptyRow(row)) {
-      await (_db.delete(_db.bodyMeasurements)..where((t) => t.date.equals(d)))
-          .go();
+      await (_db.delete(
+        _db.bodyMeasurements,
+      )..where((t) => t.date.equals(d))).go();
     }
   }
 }

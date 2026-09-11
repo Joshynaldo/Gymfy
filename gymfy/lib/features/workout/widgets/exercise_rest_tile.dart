@@ -53,7 +53,10 @@ class ExerciseRestTile extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Rest between sets', style: theme.textTheme.titleSmall),
+                    Text(
+                      'Rest between sets',
+                      style: theme.textTheme.titleSmall,
+                    ),
                     const SizedBox(height: 2),
                     Text(
                       override == null

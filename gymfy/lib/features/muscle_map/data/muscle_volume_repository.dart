@@ -91,13 +91,12 @@ MuscleVolumeRepository muscleVolumeRepository(Ref ref) {
 }
 
 /// Intensities for the last 7 days (the weekly muscle map).
-final weeklyMuscleIntensitiesProvider =
-    StreamProvider<Map<String, double>>((ref) {
-      final since = DateTime.now().subtract(const Duration(days: 7));
-      return ref
-          .watch(muscleVolumeRepositoryProvider)
-          .watchIntensitiesSince(since);
-    });
+final weeklyMuscleIntensitiesProvider = StreamProvider<Map<String, double>>((
+  ref,
+) {
+  final since = DateTime.now().subtract(const Duration(days: 7));
+  return ref.watch(muscleVolumeRepositoryProvider).watchIntensitiesSince(since);
+});
 
 /// Intensities for a single session (the per-workout muscle map).
 final sessionMuscleIntensitiesProvider =
