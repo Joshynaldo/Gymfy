@@ -106,6 +106,27 @@ class _BackdropPainter extends CustomPainter {
     final rect = Offset.zero & size;
     canvas.drawRect(rect, Paint()..color = ground);
 
+    // A wash of the accent over the whole ground before the orbs go on.
+    //
+    // The orbs alone left most of the screen at the ground colour, which is
+    // near-black — and that is what made the glass read as smoked rather than
+    // milky. A pane is only as pale as what is behind it, so the cards were
+    // dark for a reason that had nothing to do with the cards. This lifts the
+    // whole field into the accent's family first; the orbs are then bright
+    // spots *in* a coloured ground rather than three lamps in a dark room.
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            _shift(accent, 6, 0.42).withValues(alpha: 0.55),
+            _shift(accent, -10, 0.24).withValues(alpha: 0.42),
+          ],
+        ).createShader(rect),
+    );
+
     // Three anchors, not three orbits. Each orb belongs to a corner of the
     // screen and only breathes around it: the composition is the same every
     // time you open the app, and what changes is too slow to catch.
@@ -117,8 +138,8 @@ class _BackdropPainter extends CustomPainter {
     _orb(
       canvas,
       size,
-      anchor: const Offset(0.27, 0.11),
-      radius: 0.52,
+      anchor: const Offset(0.24, 0.06),
+      radius: 0.78,
       colour: _shift(accent, 4, 1.06),
       phase: 0,
       travel: const Offset(0.15, 0.10),
@@ -126,8 +147,8 @@ class _BackdropPainter extends CustomPainter {
     _orb(
       canvas,
       size,
-      anchor: const Offset(0.92, 0.58),
-      radius: 0.47,
+      anchor: const Offset(0.95, 0.52),
+      radius: 0.70,
       colour: _shift(accent, -6, 0.94),
       phase: 0.41,
       travel: const Offset(-0.18, -0.07),
@@ -135,8 +156,8 @@ class _BackdropPainter extends CustomPainter {
     _orb(
       canvas,
       size,
-      anchor: const Offset(0.53, 0.93),
-      radius: 0.49,
+      anchor: const Offset(0.5, 0.97),
+      radius: 0.72,
       colour: _shift(accent, 12, 0.98),
       phase: 0.72,
       travel: const Offset(0.10, -0.09),

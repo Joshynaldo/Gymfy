@@ -241,13 +241,12 @@ class _HeatRamp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final label = theme.textTheme.labelSmall?.copyWith(letterSpacing: 0);
-
+    // No "Less"/"More" either side: the caption beside it already says which
+    // way brightness runs, and the swatches are a ramp — the order is the
+    // whole point of the shape.
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('Less', style: label),
-        const SizedBox(width: 6),
         for (final alpha in [0.08, 0.28, 0.5, 0.74, 1.0])
           Padding(
             padding: const EdgeInsets.only(right: 3),
@@ -265,8 +264,6 @@ class _HeatRamp extends StatelessWidget {
               ),
             ),
           ),
-        const SizedBox(width: 3),
-        Text('More', style: label),
       ],
     );
   }
