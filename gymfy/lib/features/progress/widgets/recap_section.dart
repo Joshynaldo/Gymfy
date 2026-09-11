@@ -288,6 +288,10 @@ class _SessionsCard extends StatelessWidget {
       child: SizedBox(
         height: 140,
         child: SimpleBarChart(
+          // White, not the accent: the volume line above it already has the
+          // screen's one accent, and two accent charts on one screen is two
+          // things claiming to be the headline.
+          muted: true,
           labels: [for (final b in recap.buckets) b.label],
           values: [
             for (final b in recap.buckets)

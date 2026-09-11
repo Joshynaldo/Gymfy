@@ -64,7 +64,18 @@ class _Body extends ConsumerWidget {
                 Text(session.name, style: theme.textTheme.titleMedium),
                 const SizedBox(height: 4),
                 Text(
-                  formatDayLabel(completedAt),
+                  // How long it took, beside when it was. The date alone
+                  // answers "did I train" and leaves out the half of the
+                  // question that is "how much of a session was it" — a
+                  // twenty-minute Tuesday and a ninety-minute one are not the
+                  // same entry in your week.
+                  [
+                    formatDayLabel(completedAt),
+                    if (session.completedAt != null)
+                      formatDuration(
+                        session.completedAt!.difference(session.startedAt),
+                      ),
+                  ].join(' · '),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
