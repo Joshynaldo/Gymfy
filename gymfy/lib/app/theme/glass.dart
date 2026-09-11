@@ -302,6 +302,7 @@ class GlassSurface extends StatelessWidget {
     this.tier = GlassTier.raised,
     this.fallbackColor,
     this.selected = false,
+    this.outlined = false,
     this.clip = true,
     this.blurs = true,
   });
@@ -317,6 +318,14 @@ class GlassSurface extends StatelessWidget {
 
   /// Lifts the tint and the edge — the pane catches more light when picked.
   final bool selected;
+
+  /// Draws the hairline right round, and brighter.
+  ///
+  /// For panes that are a *choice* rather than a report: a training day you
+  /// tap to open, where the edge is what says "this is one of several, and you
+  /// can pick it". The fill is left alone — a brighter fill would make it look
+  /// selected instead of selectable.
+  final bool outlined;
 
   /// Off for panes whose child must draw outside them (a popup, a shadow).
   final bool clip;
@@ -351,14 +360,15 @@ class GlassSurface extends StatelessWidget {
 
     final pane = glass.pane(tier);
     final lift = selected ? 1.35 : 1.0;
+    final edgeLift = outlined ? 2.4 : lift;
 
     Widget content = CustomPaint(
       // The edge is painted over the child, not under it: it is the lip of the
       // pane, and anything inside sits beneath that surface.
       foregroundPainter: _EdgePainter(
         borderRadius: borderRadius,
-        edge: _lift(pane.edge, lift),
-        topEdge: _lift(pane.topEdge, lift),
+        edge: _lift(pane.edge, edgeLift),
+        topEdge: _lift(pane.topEdge, outlined ? 1.15 : lift),
       ),
       child: DecoratedBox(
         decoration: BoxDecoration(

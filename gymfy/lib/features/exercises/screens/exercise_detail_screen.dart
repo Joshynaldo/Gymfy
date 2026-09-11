@@ -15,6 +15,7 @@ import '../../calculator/widgets/exercise_rank_badge.dart';
 import '../../workout/widgets/exercise_rest_tile.dart';
 import '../../../shared/utils/exercise_preview.dart';
 import '../data/exercise_repository.dart';
+import '../../../shared/widgets/app_chip.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../app/theme/glass.dart';
@@ -224,9 +225,10 @@ class _ExerciseDetailBody extends ConsumerWidget {
               runSpacing: 8,
               children: [
                 for (final muscleId in exercise.muscleIds)
-                  Chip(
-                    label: Text(muscleLabel(muscleId)),
-                    visualDensity: VisualDensity.compact,
+                  AppChip(
+                    label: muscleLabel(muscleId),
+                    selected: false,
+                    onTap: null,
                   ),
               ],
             ),

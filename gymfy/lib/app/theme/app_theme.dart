@@ -527,7 +527,6 @@ ThemeData buildAppTheme(AppTheme theme, Color accent) {
             ).titleMedium?.copyWith(fontFamily: 'Schibsted Grotesk')
           : null,
     ),
-
     dividerTheme: DividerThemeData(
       color: palette.outline,
       thickness: theme == AppTheme.highContrast ? 1.5 : 1,

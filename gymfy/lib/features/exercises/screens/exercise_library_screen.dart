@@ -256,40 +256,66 @@ class _SearchFieldState extends State<_SearchField> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    final muted = theme.colorScheme.onSurfaceVariant;
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-      child: TextField(
-        controller: _controller,
-        textInputAction: TextInputAction.search,
-        onChanged: (value) {
-          widget.onChanged(value);
-          // Only to swap the clear button in and out — the query itself lives
-          // on the screen above.
-          setState(() {});
-        },
-        decoration: InputDecoration(
-          // Names the second thing it searches, which is otherwise invisible:
-          // "chest" finding the bench press looks like magic or a bug.
-          hintText: 'Search by name or muscle',
-          prefixIcon: const Icon(Icons.search, size: 20),
-          // Absent until there's something to clear, so the field stays quiet
-          // while you're only reading.
-          suffixIcon: _controller.text.isEmpty
-              ? null
-              : IconButton(
-                  icon: const Icon(Icons.close, size: 18),
+      padding: const EdgeInsets.fromLTRB(16, 2, 16, 12),
+      child: GlassSurface(
+        // A pill rather than a rounded rectangle — it reads as a search field
+        // on sight, before the magnifier is even noticed.
+        borderRadius: BorderRadius.circular(22),
+        // The material's own pane, not a filled Material input. An
+        // InputDecoration fill is a flat colour, which on this theme is the one
+        // opaque rectangle in a screen made of glass.
+        tier: GlassTier.quiet,
+        fallbackColor: theme.colorScheme.surfaceContainerHigh,
+        child: SizedBox(
+          height: 44,
+          child: Row(
+            children: [
+              const SizedBox(width: 16),
+              Icon(Icons.search, size: 18, color: muted),
+              const SizedBox(width: 10),
+              Expanded(
+                child: TextField(
+                  controller: _controller,
+                  textInputAction: TextInputAction.search,
+                  style: theme.textTheme.bodyMedium,
+                  onChanged: (value) {
+                    widget.onChanged(value);
+                    // Only to swap the clear button in and out — the query
+                    // itself lives on the screen above.
+                    setState(() {});
+                  },
+                  decoration: InputDecoration(
+                    // Names the second thing it searches, which is otherwise
+                    // invisible: "chest" finding the bench press looks like
+                    // magic or a bug.
+                    hintText: 'Search by name or muscle',
+                    hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                      color: muted,
+                    ),
+                    isDense: true,
+                    // The pane is the field's edge and fill; the input inside
+                    // it draws nothing of its own.
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ),
+              // Absent until there's something to clear, so the field stays
+              // quiet while you're only reading.
+              if (_controller.text.isNotEmpty)
+                IconButton(
+                  icon: Icon(Icons.close, size: 17, color: muted),
+                  visualDensity: VisualDensity.compact,
                   tooltip: 'Clear search',
                   onPressed: _clear,
                 ),
-          filled: true,
-          fillColor: theme.colorScheme.surfaceContainerHigh,
-          isDense: true,
-          contentPadding: const EdgeInsets.symmetric(vertical: 14),
-          border: OutlineInputBorder(
-            // A pill rather than a rounded rectangle — it reads as a search
-            // field on sight, before the magnifier is even noticed.
-            borderRadius: BorderRadius.circular(26),
-            borderSide: BorderSide.none,
+              const SizedBox(width: 6),
+            ],
           ),
         ),
       ),

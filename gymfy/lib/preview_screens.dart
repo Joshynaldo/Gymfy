@@ -32,7 +32,10 @@ import 'features/progress/data/measurements_repository.dart';
 import 'features/progress/data/progress_repository.dart';
 import 'features/progress/screens/progress_screen.dart';
 import 'features/workout/data/session_repository.dart';
+import 'features/exercises/data/exercise_repository.dart';
+import 'features/exercises/screens/exercise_library_screen.dart';
 import 'features/workout/data/workout_repository.dart';
+import 'features/workout/screens/workout_screen.dart';
 import 'shared/database/app_database.dart';
 import 'shared/utils/units.dart';
 import 'shared/widgets/glass_nav_bar.dart';
@@ -236,6 +239,16 @@ final _fakeData = [
       for (final planned in _planned.take(3)) planned.exercise,
     ]),
   ),
+  splitListProvider.overrideWith((ref) => Stream.value([_split])),
+  scheduledDaysProvider.overrideWith(
+    (ref, splitId) => Stream.value([
+      ScheduledDay(day: _pushDay, weekdays: const [1, 4]),
+      ScheduledDay(day: _pullDay, weekdays: const [2, 5]),
+    ]),
+  ),
+  exerciseListProvider.overrideWith(
+    (ref) => Stream.value([for (final p in _planned) p.exercise]),
+  ),
   rankedLiftsProvider.overrideWithValue((
     ranked: const <RankedLift>[],
     unlogged: const <String>[],
@@ -276,12 +289,14 @@ class _ScreensPreviewState extends State<_ScreensPreview> {
             extendBody: glassOf(context).enabled,
             body: switch (_tab) {
               0 => const HomeScreen(),
+              1 => const WorkoutScreen(),
+              2 => const ExerciseLibraryScreen(),
               _ => const ProgressScreen(),
             },
             bottomNavigationBar: GlassNavBar(
-              selectedIndex: _tab == 0 ? 0 : 2,
+              selectedIndex: _tab,
               onDestinationSelected: (index) =>
-                  setState(() => _tab = index == 0 ? 0 : 1),
+                  setState(() => _tab = index.clamp(0, 3)),
               destinations: mainDestinations,
             ),
           ),

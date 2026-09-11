@@ -7,6 +7,7 @@ import '../../onboarding/data/onboarding_repository.dart';
 import '../../progress/widgets/activity_heatmap.dart';
 import '../widgets/last_workout_card.dart';
 
+import '../../../shared/widgets/glass_icon_button.dart';
 import '../widgets/streak_badge.dart';
 import '../widgets/week_card.dart';
 import '../widgets/today_card.dart';
@@ -40,8 +41,8 @@ class HomeScreen extends ConsumerWidget {
           // It moved under More when the bar went to four tabs, and a
           // reference you reach from wherever you happen to be needs a door
           // on the tab you are most often standing on.
-          IconButton(
-            icon: const Icon(Icons.search),
+          GlassIconButton(
+            icon: Icons.search,
             tooltip: 'Find an exercise',
             onPressed: () => context.go('/exercises'),
           ),
