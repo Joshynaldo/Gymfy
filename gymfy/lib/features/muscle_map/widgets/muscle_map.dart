@@ -7,6 +7,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../app/theme/accent_color.dart';
 import '../../../shared/data/lifter_sex.dart';
 import '../data/muscle_colors.dart';
+import '../../../app/theme/glass.dart';
 
 export '../data/muscle_colors.dart' show MuscleMapMode;
 
@@ -75,6 +76,42 @@ final bodyFigureProvider = Provider<BodyFigure>((ref) {
 /// placeholder `fill` authored into the SVG files.
 const _restColor = Color(0xFF4C5361);
 
+/// The silhouette the muscles are laid on, as authored. Never tinted: it is
+/// the body, not a muscle group, and it has no volume to report.
+const _bodyColor = Color(0xFF2E3440);
+
+// On the glass theme the figure is transparent rather than painted, and that
+// is the whole of it: the transparency lives in the fills, not in one blanket
+// opacity over the lot.
+//
+// The earlier attempts all kept every muscle solid and argued about what shade
+// of solid — grey, then violet, then a lighter violet. All of them were wrong
+// in the same way. An untrained muscle has nothing to report, so it should not
+// be reporting a colour; it should be letting the pane through. Volume is what
+// makes a muscle opaque, and the accent belongs only to muscles that earned it.
+// With nothing logged the body is a faint outline on the glass, which is the
+// honest picture of having logged nothing.
+
+/// What an untrained muscle is painted on the glass theme: a cool near-white,
+/// and almost entirely see-through — see [_restOpacityGlass].
+const _restColorGlass = Color(0xFFCBD2E4);
+
+/// The silhouette on the glass theme. Neutral and faint, like the muscles: it
+/// is the body's outline, not a reading, and it has no volume to report either.
+const _bodyColorGlass = Color(0xFFB4BCD2);
+
+/// How opaque an untrained muscle is on glass, against 1.0 for a fully worked
+/// one.
+///
+/// Enough that the muscle is there at all — you can see the shape of a body you
+/// have not trained yet — and little enough that what you mostly see is the
+/// pane behind it.
+const _restOpacityGlass = 0.17;
+
+/// How opaque the silhouette is on glass. Slightly more than a resting muscle,
+/// so the figure keeps an edge when nothing at all has been logged.
+const _bodyOpacityGlass = 0.24;
+
 /// Matches a muscle path's tag so we can rewrite just its fill, e.g.
 /// `data-muscle="chest" fill="#4C5361"`. A single path may carry more than one
 /// space-separated id (e.g. `front_deltoid side_deltoid`) when one anatomical
@@ -138,11 +175,19 @@ class MuscleMap extends ConsumerWidget {
           ),
         ),
         data: (template) {
+          final glass = glassOf(context).enabled;
+          // The flat themes get the figure exactly as authored. It sits on an
+          // opaque card there, so there is nothing behind it to be transparent
+          // *to*, and fading it would only make it harder to read.
           final svg = tintMuscles(
             svg: template,
             intensities: intensities,
             heatColor: heatColor ?? accent,
             mode: mode,
+            restColor: glass ? _restColorGlass : _restColor,
+            bodyColor: glass ? _bodyColorGlass : _bodyColor,
+            restOpacity: glass ? _restOpacityGlass : 1,
+            bodyOpacity: glass ? _bodyOpacityGlass : 1,
           );
           return SvgPicture.string(svg, fit: BoxFit.contain);
         },
@@ -166,8 +211,33 @@ String tintMuscles({
   /// passing a fixed red.
   required Color heatColor,
   MuscleMapMode mode = MuscleMapMode.heatmap,
+
+  /// What a muscle at intensity 0 is painted, and the colour every tint starts
+  /// from. Defaults to the value authored into the files.
+  Color restColor = _restColor,
+
+  /// What the silhouette under the muscles is painted.
+  Color bodyColor = _bodyColor,
+
+  /// How opaque a muscle at intensity 0 is, rising to fully opaque at 1.
+  ///
+  /// This is what makes an untrained muscle *transparent* rather than merely
+  /// grey. 1 — the default — keeps every muscle solid, which is what the flat
+  /// themes want: they draw on an opaque card, where see-through means nothing.
+  double restOpacity = 1,
+
+  /// How opaque the silhouette is. See [restOpacity].
+  double bodyOpacity = 1,
 }) {
-  return svg.replaceAllMapped(_muscleFill, (match) {
+  // The silhouette first, by its literal authored fill: the muscle pass below
+  // can produce any colour at all, and rewriting the body afterwards could
+  // catch a muscle that happened to land on the same hex.
+  final ground = svg.replaceAll(
+    'fill="${_toHex(_bodyColor)}"',
+    'fill="${_toHex(bodyColor)}"${_opacityAttr(bodyOpacity)}',
+  );
+
+  return ground.replaceAllMapped(_muscleFill, (match) {
     final ids = match.group(1)!.split(' ');
     // A region tagged with several ids glows as hard as its most-worked muscle,
     // and — in contrast mode — takes that muscle's colour. Picking the loudest
@@ -185,10 +255,24 @@ String tintMuscles({
       MuscleMapMode.heatmap => heatColor,
       MuscleMapMode.contrast => muscleColor(strongest),
     };
-    final color = Color.lerp(_restColor, target, t)!;
-    return 'data-muscle="${match.group(1)}" fill="${_toHex(color)}"';
+    final color = Color.lerp(restColor, target, t)!;
+    // Volume is what makes a muscle solid: it fades in as it is worked, from
+    // barely-there to fully painted. The colour ramp and the opacity ramp run
+    // together, so a hard-hit muscle is both the brightest and the only one
+    // actually sitting on top of the glass.
+    final opacity = restOpacity + (1 - restOpacity) * t;
+    return 'data-muscle="${match.group(1)}" '
+        'fill="${_toHex(color)}"${_opacityAttr(opacity)}';
   });
 }
+
+/// An SVG `fill-opacity` attribute, or nothing at all when the fill is solid.
+///
+/// Omitted rather than written as `fill-opacity="1.00"` so the default path
+/// produces byte-for-byte the string it always did — the flat themes, and every
+/// test that reads this output, see no change.
+String _opacityAttr(double opacity) =>
+    opacity >= 1 ? '' : ' fill-opacity="${opacity.toStringAsFixed(3)}"';
 
 /// Formats a colour as an SVG `#RRGGBB` string (alpha dropped).
 String _toHex(Color color) {

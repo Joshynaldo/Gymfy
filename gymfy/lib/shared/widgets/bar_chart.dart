@@ -30,6 +30,7 @@ class SimpleBarChart extends ConsumerWidget {
     this.overGoalIsBad = false,
     this.highlightLast = true,
     this.barWidth = 16,
+    this.muted = false,
   });
 
   final List<String> labels;
@@ -52,6 +53,15 @@ class SimpleBarChart extends ConsumerWidget {
   final bool highlightLast;
 
   final double barWidth;
+
+  /// Draws the bars in white rather than the accent.
+  ///
+  /// For a chart that shares a screen with an accent-coloured one: the rule is
+  /// a single accent per screen, on the thing that matters, and on Progress
+  /// that is the volume line. Sessions and muscles are context for it, so they
+  /// are drawn in the material's own white and the eye still knows where to
+  /// land first.
+  final bool muted;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -76,6 +86,8 @@ class SimpleBarChart extends ConsumerWidget {
                     width: barWidth,
                     color: overGoalIsBad && goal != null && values[i]! > goal!
                         ? theme.colorScheme.error
+                        : muted
+                        ? theme.colorScheme.onSurface.withValues(alpha: 0.3)
                         : accent,
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(4),

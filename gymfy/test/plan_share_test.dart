@@ -99,7 +99,10 @@ void main() {
       );
 
       final decoded = PlanDocument.decode(document.encode());
-      expect(decoded.splits.single.days.single.exercises.single.repsMax, isNull);
+      expect(
+        decoded.splits.single.days.single.exercises.single.repsMax,
+        isNull,
+      );
     });
 
     test('rejects a file that is not JSON at all', () {
@@ -166,7 +169,11 @@ void main() {
           {
             'name': 'A',
             'days': [
-              {'name': 'Day', 'weekdays': [1, 9, 0, 7], 'exercises': []},
+              {
+                'name': 'Day',
+                'weekdays': [1, 9, 0, 7],
+                'exercises': [],
+              },
             ],
           },
         ],
@@ -178,31 +185,35 @@ void main() {
       expect(decoded.splits.single.days.single.weekdays, [1, 7]);
     });
 
-    test('survives a missing optional field instead of refusing the import', () {
-      final sparse = jsonEncode({
-        'format': planFormatTag,
-        'version': planFormatVersion,
-        'splits': [
-          {
-            'name': 'A',
-            'days': [
-              {
-                'name': 'Day',
-                'exercises': [
-                  {'exerciseId': 'x', 'name': 'X'},
-                ],
-              },
-            ],
-          },
-        ],
-      });
+    test(
+      'survives a missing optional field instead of refusing the import',
+      () {
+        final sparse = jsonEncode({
+          'format': planFormatTag,
+          'version': planFormatVersion,
+          'splits': [
+            {
+              'name': 'A',
+              'days': [
+                {
+                  'name': 'Day',
+                  'exercises': [
+                    {'exerciseId': 'x', 'name': 'X'},
+                  ],
+                },
+              ],
+            },
+          ],
+        });
 
-      final exercise =
-          PlanDocument.decode(sparse).splits.single.days.single.exercises.single;
-      expect(exercise.sets, 3);
-      expect(exercise.reps, 10);
-      expect(exercise.warmupSets, 0);
-    });
+        final exercise = PlanDocument.decode(
+          sparse,
+        ).splits.single.days.single.exercises.single;
+        expect(exercise.sets, 3);
+        expect(exercise.reps, 10);
+        expect(exercise.warmupSets, 0);
+      },
+    );
 
     test('names the file after the plan', () {
       expect(planFileName(sample), 'push-pull-legs.gymfy');
@@ -243,13 +254,15 @@ void main() {
       workout = WorkoutRepository(db);
       sessions = SessionRepository(db);
 
-      await db.into(db.exercises).insert(
-        ExercisesCompanion.insert(
-          id: 'barbell_bench_press',
-          name: 'Barbell Bench Press',
-          muscleIds: const ['chest', 'triceps'],
-        ),
-      );
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'barbell_bench_press',
+              name: 'Barbell Bench Press',
+              muscleIds: const ['chest', 'triceps'],
+            ),
+          );
     });
 
     tearDown(() => db.close());
@@ -279,10 +292,7 @@ void main() {
     test('the file mentions nothing about what you lifted', () async {
       final splitId = await seedSplit();
       final dayId = (await workout.watchDays(splitId).first).single.id;
-      final sessionId = await sessions.startSession(
-        dayId: dayId,
-        name: 'Push',
-      );
+      final sessionId = await sessions.startSession(dayId: dayId, name: 'Push');
       await sessions.logSet(
         sessionId: sessionId,
         exerciseId: 'barbell_bench_press',
@@ -291,12 +301,14 @@ void main() {
         reps: 5,
       );
       await sessions.completeSession(sessionId);
-      await db.into(db.bodyMeasurements).insert(
-        BodyMeasurementsCompanion.insert(
-          date: DateTime(2026, 8, 24),
-          weightKg: const Value(84.2),
-        ),
-      );
+      await db
+          .into(db.bodyMeasurements)
+          .insert(
+            BodyMeasurementsCompanion.insert(
+              date: DateTime(2026, 8, 24),
+              weightKg: const Value(84.2),
+            ),
+          );
 
       final encoded = (await share.export([splitId])).encode();
 
@@ -332,10 +344,14 @@ void main() {
 
       final splits = await theirWorkout.watchSplits().first;
       expect(splits.single.name, 'PPL');
-      final days = await theirWorkout.watchScheduledDays(splits.single.id).first;
+      final days = await theirWorkout
+          .watchScheduledDays(splits.single.id)
+          .first;
       expect(days.single.day.name, 'Push');
       expect(days.single.weekdays, [1]);
-      final planned = await theirWorkout.watchDayExercises(days.single.day.id).first;
+      final planned = await theirWorkout
+          .watchDayExercises(days.single.day.id)
+          .first;
       expect(planned.single.exercise.name, 'Barbell Bench Press');
     });
 
@@ -345,10 +361,9 @@ void main() {
 
       final theirDb = AppDatabase.forTesting(NativeDatabase.memory());
       addTearDown(theirDb.close);
-      await PlanShareRepository(theirDb).import(
-        document.splits.single,
-        name: 'Theirs',
-      );
+      await PlanShareRepository(
+        theirDb,
+      ).import(document.splits.single, name: 'Theirs');
       // Their own first split, created afterwards, is the one that goes active.
       await WorkoutRepository(theirDb).createSplit('Mine');
 
@@ -370,14 +385,16 @@ void main() {
     });
 
     test('a custom exercise the recipient lacks is recreated', () async {
-      await db.into(db.exercises).insert(
-        ExercisesCompanion.insert(
-          id: 'custom_zercher_carry',
-          name: 'Zercher Carry',
-          muscleIds: const ['core', 'quads'],
-          isCustom: const Value(true),
-        ),
-      );
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'custom_zercher_carry',
+              name: 'Zercher Carry',
+              muscleIds: const ['core', 'quads'],
+              isCustom: const Value(true),
+            ),
+          );
       final splitId = await workout.createSplit('Odd');
       final dayId = await workout.createDay(splitId, 'Day');
       await workout.addExerciseToDay(dayId, 'custom_zercher_carry');
@@ -385,10 +402,9 @@ void main() {
 
       final theirDb = AppDatabase.forTesting(NativeDatabase.memory());
       addTearDown(theirDb.close);
-      await PlanShareRepository(theirDb).import(
-        document.splits.single,
-        name: 'Odd',
-      );
+      await PlanShareRepository(
+        theirDb,
+      ).import(document.splits.single, name: 'Odd');
 
       // Dropping it would lose exactly the exercises most worth sharing.
       final exercise = (await theirDb.select(theirDb.exercises).get()).single;
@@ -407,18 +423,19 @@ void main() {
       // The recipient calls the same slug something else.
       final theirDb = AppDatabase.forTesting(NativeDatabase.memory());
       addTearDown(theirDb.close);
-      await theirDb.into(theirDb.exercises).insert(
-        ExercisesCompanion.insert(
-          id: 'barbell_bench_press',
-          name: 'Bench (my name for it)',
-          muscleIds: const ['chest'],
-        ),
-      );
+      await theirDb
+          .into(theirDb.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'barbell_bench_press',
+              name: 'Bench (my name for it)',
+              muscleIds: const ['chest'],
+            ),
+          );
 
-      await PlanShareRepository(theirDb).import(
-        document.splits.single,
-        name: 'Theirs',
-      );
+      await PlanShareRepository(
+        theirDb,
+      ).import(document.splits.single, name: 'Theirs');
 
       final exercise = (await theirDb.select(theirDb.exercises).get()).single;
       expect(exercise.name, 'Bench (my name for it)');

@@ -29,13 +29,15 @@ class MoreScreen extends ConsumerWidget {
   const MoreScreen({super.key});
 
   static const _tools = [
-    // First, and by some distance the most used thing here — it was a
-    // bottom-nav tab until the bar got too crowded to read.
+    // First, because it is the one people come to More looking for. It had a
+    // bottom-nav tab of its own until four tabs left no room: you reach the
+    // library when you are building a day or checking a movement, and both of
+    // those start somewhere else in the app.
     _Tool(
-      icon: Icons.show_chart,
-      title: 'Progress',
-      subtitle: 'Charts, personal records, photos and measurements',
-      route: '/more/progress',
+      icon: Icons.menu_book,
+      title: 'Exercise library',
+      subtitle: 'Every movement, searchable by name or muscle',
+      route: '/exercises',
     ),
     _Tool(
       icon: Icons.restaurant,
@@ -85,7 +87,7 @@ class MoreScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return GlassScaffold(
       appBar: GlassAppBar(title: const Text('More')),
-      body: ListView.builder(
+      body: (context) => ListView.builder(
         padding: const EdgeInsets.only(top: 8, bottom: 24) + barInsets(context),
         itemCount: _tools.length,
         itemBuilder: (context, index) {

@@ -45,7 +45,7 @@ class HelpScreen extends StatelessWidget {
 
     return GlassScaffold(
       appBar: GlassAppBar(title: const Text('Help')),
-      body: FadeSlideIn(
+      body: (context) => FadeSlideIn(
         child: ListView(
           padding:
               const EdgeInsets.only(top: 8, bottom: 24) + barInsets(context),

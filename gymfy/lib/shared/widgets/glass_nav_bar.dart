@@ -42,6 +42,17 @@ class GlassNavBar extends StatelessWidget {
       // Material's 80 is sized for a bar that runs to the screen edge. Inside a
       // pill with air around it, the same height reads as a slab.
       height: glass.enabled ? 62 : null,
+      // Icons only inside the pill. Four labels across a bar inset from both
+      // edges is four lines of 10px type competing with the screen above them,
+      // and these four destinations are the ones you learn in a day.
+      //
+      // The labels are not deleted, only unshown: each destination still
+      // carries its name, so a screen reader announces "Progress" and a long
+      // press still says it. Hiding a label is a visual decision; removing it
+      // would be an accessibility one.
+      labelBehavior: glass.enabled
+          ? NavigationDestinationLabelBehavior.alwaysHide
+          : null,
       destinations: destinations,
     );
 
@@ -58,6 +69,10 @@ class GlassNavBar extends StatelessWidget {
         // Near-capsule. A pill this tall with a 16-radius card corner looks
         // like a card that ended up in the wrong place.
         borderRadius: BorderRadius.circular(26),
+        // The bar tier: an opaque floor under the tint, a brighter lip, and the
+        // long soft shadow that separates the pill from whatever is sliding
+        // past beneath it.
+        tier: GlassTier.bar,
         // Here the blur is the whole effect, and one of only two places in the
         // app that earns it: the shell lays its body out behind the pill, so
         // what is being filtered is the list actually scrolling underneath.

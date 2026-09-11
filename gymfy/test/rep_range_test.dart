@@ -45,13 +45,15 @@ void main() {
       repo = WorkoutRepository(db);
       final splitId = await repo.createSplit('PPL');
       final dayId = await repo.createDay(splitId, 'Push');
-      await db.into(db.exercises).insert(
-        ExercisesCompanion.insert(
-          id: 'barbell_bench_press',
-          name: 'Barbell Bench Press',
-          muscleIds: const ['chest'],
-        ),
-      );
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'barbell_bench_press',
+              name: 'Barbell Bench Press',
+              muscleIds: const ['chest'],
+            ),
+          );
       await repo.addExercisesToDay(dayId, ['barbell_bench_press']);
       entryId = (await repo.watchDayExercises(dayId).first).single.entry.id;
     });

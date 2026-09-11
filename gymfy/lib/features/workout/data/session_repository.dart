@@ -186,6 +186,27 @@ class SessionRepository {
     });
   }
 
+  /// The current run of training days and the longest one on record.
+  ///
+  /// One query for both: they are the same set of days counted two ways, and
+  /// running a second identical query to ask the second question would double
+  /// the work for nothing.
+  Stream<({int current, int best})> watchStreaks({DateTime? today}) {
+    final query = _db.select(_db.workoutSessions)
+      ..where((t) => t.completedAt.isNotNull());
+
+    return query.watch().map((sessions) {
+      final days = {
+        for (final session in sessions)
+          if (session.completedAt != null) dateOnly(session.completedAt!),
+      };
+      return (
+        current: streakEndingAt(days, dateOnly(today ?? DateTime.now())),
+        best: longestStreak(days),
+      );
+    });
+  }
+
   /// Total volume and workout count over the last seven days.
   ///
   /// Volume is kilograms, like everything stored; the caller converts for
@@ -264,6 +285,11 @@ final lastCompletedSessionProvider = StreamProvider<WorkoutSession?>((ref) {
 /// of you).
 final workoutStreakProvider = StreamProvider<int>((ref) {
   return ref.watch(sessionRepositoryProvider).watchWorkoutStreak();
+});
+
+/// The current streak and the best one ever, for the streak card.
+final workoutStreaksProvider = StreamProvider<({int current, int best})>((ref) {
+  return ref.watch(sessionRepositoryProvider).watchStreaks();
 });
 
 /// A workout left running, if any.

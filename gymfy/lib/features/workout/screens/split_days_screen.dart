@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../shared/database/app_database.dart';
+import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/name_prompt_dialog.dart';
 import '../data/workout_repository.dart';
 import '../widgets/split_day_list.dart';
@@ -36,11 +37,16 @@ class SplitDaysScreen extends ConsumerWidget {
         title: Text(title),
         actions: [if (split != null) ActiveSplitAction(split: split)],
       ),
-      body: SplitDayList(splitId: splitId),
-      floatingActionButton: FloatingActionButton.extended(
+      body: (context) => SplitDayList(splitId: splitId),
+      // Centred, and in the shape the design gives an action: the navigation
+      // pill below it is centred too, and a button tucked into the corner
+      // between them read as something that had been left there.
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: AppButton(
+        label: 'Add day',
+        icon: Icons.add,
+        expand: false,
         onPressed: () => addDayTo(context, ref, splitId),
-        icon: const Icon(Icons.add),
-        label: const Text('Add day'),
       ),
     );
   }

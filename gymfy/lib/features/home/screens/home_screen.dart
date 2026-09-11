@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../shared/widgets/app_card.dart';
-
 import '../../onboarding/data/onboarding_repository.dart';
-import '../widgets/activity_heatmap.dart';
+
+import '../../progress/widgets/activity_heatmap.dart';
 import '../widgets/last_workout_card.dart';
-import '../widgets/next_up_card.dart';
-import '../widgets/recap_section.dart';
+
+import '../../../shared/widgets/glass_icon_button.dart';
 import '../widgets/streak_badge.dart';
+import '../widgets/week_card.dart';
 import '../widgets/today_card.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
@@ -35,46 +35,35 @@ class HomeScreen extends ConsumerWidget {
     return GlassScaffold(
       appBar: GlassAppBar(
         title: Text(name == null ? 'Gymfy' : 'Hi, $name'),
-        actions: const [StreakBadge()],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.only(top: 6, bottom: 24) + barInsets(context),
-        children: [
-          TodayCard(today: today),
-          NextUpCard(today: today),
-          const LastWorkoutCard(),
-          const RecapSection(),
-          // Last: the recap answers "how am I doing lately", and the year view
-          // is the long look back you take after it, not before.
-          ActivityHeatmap(today: today),
-          // Progress lost its bottom-nav tab, so it needs a way in from the
-          // screen people actually open. Placed at the bottom on purpose: it
-          // follows the recap and the year grid, which is exactly the point at
-          // which "show me the actual numbers" occurs to you.
-          const Padding(
-            padding: EdgeInsets.only(top: 12),
-            child: _ProgressLink(),
+        actions: [
+          const StreakBadge(),
+          // The way into the library from the screen people actually open.
+          // It moved under More when the bar went to four tabs, and a
+          // reference you reach from wherever you happen to be needs a door
+          // on the tab you are most often standing on.
+          GlassIconButton(
+            icon: Icons.search,
+            tooltip: 'Find an exercise',
+            onPressed: () => context.go('/exercises'),
           ),
         ],
       ),
-    );
-  }
-}
-
-/// The way into Progress now that it is no longer a tab.
-class _ProgressLink extends StatelessWidget {
-  const _ProgressLink();
-
-  @override
-  Widget build(BuildContext context) {
-    return AppTile(
-      icon: Icons.show_chart,
-      title: 'Progress',
-      subtitle: 'Charts, personal records, photos and measurements',
-      // `go` rather than a push: this genuinely belongs to the More branch now,
-      // and pushing it on top of Home would leave the nav bar highlighting the
-      // wrong tab while you read it.
-      onTap: () => context.go('/more/progress'),
+      body: (context) => ListView(
+        padding: const EdgeInsets.only(top: 6, bottom: 24) + barInsets(context),
+        children: [
+          TodayCard(today: today),
+          // No "up next" card: the template's Home is today, the last
+          // session, and the week — and the Workout tab shows the whole split
+          // anyway. The widget is kept; it was the second accent on a tab whose
+          // accent belongs to Start workout.
+          const LastWorkoutCard(),
+          const WeekCard(),
+          // The year grid. It also lives in Progress → All-time, where it is
+          // the long look back; here it is the short one — how the last few
+          // weeks have actually gone, under the week you are in.
+          ActivityHeatmap(today: today),
+        ],
+      ),
     );
   }
 }

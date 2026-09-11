@@ -61,7 +61,9 @@ void main() {
         .toList();
   }
 
-  testWidgets('defaults to oldest vs newest and shows the span', (tester) async {
+  testWidgets('defaults to oldest vs newest and shows the span', (
+    tester,
+  ) async {
     await pump(tester, photos);
 
     expect(tester.takeException(), isNull);

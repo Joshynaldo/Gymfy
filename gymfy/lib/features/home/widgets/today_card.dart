@@ -4,12 +4,12 @@ import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../app/theme/accent_color.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/weekday.dart';
 import '../../workout/data/session_repository.dart';
 import '../../workout/data/workout_repository.dart';
+import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../app/theme/motion.dart';
 
@@ -117,7 +117,6 @@ class _WorkoutCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final accent = ref.watch(accentColorProvider);
     final planned = ref.watch(dayExercisesProvider(day.id)).value ?? const [];
     final running = ref.watch(inProgressSessionProvider).value;
 
@@ -126,9 +125,12 @@ class _WorkoutCard extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _Heading(weekday: weekday, trailing: split.name),
-          const SizedBox(height: 4),
-          Text(day.name, style: theme.textTheme.headlineSmall),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
+          // The largest word on the tab. It is the answer to the question the
+          // app is opened to ask, and the two tracked caps above it are what
+          // let it be this size without the card needing a title as well.
+          Text(day.name, style: theme.textTheme.headlineMedium),
+          const SizedBox(height: 20),
           if (planned.isEmpty)
             Text(
               'No exercises yet — open the day to add some.',
@@ -139,7 +141,7 @@ class _WorkoutCard extends ConsumerWidget {
           else
             for (final p in planned)
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 3),
+                padding: const EdgeInsets.only(bottom: 11),
                 child: Row(
                   children: [
                     Expanded(
@@ -150,7 +152,7 @@ class _WorkoutCard extends ConsumerWidget {
                         style: theme.textTheme.bodyMedium,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 14),
                     Text(
                       formatSetTarget(
                         p.entry.defaultSets,
@@ -165,29 +167,28 @@ class _WorkoutCard extends ConsumerWidget {
                   ],
                 ),
               ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 13),
           if (running != null)
             // Resuming rather than offering a second Start: two live sessions
             // would split one workout's sets across both.
-            FilledButton.icon(
+            AppButton(
+              label: 'Resume ${running.name}',
+              icon: Icons.play_arrow,
               onPressed: () => context.go('/workout/session/${running.id}'),
-              icon: const Icon(Icons.play_arrow),
-              label: Text('Resume ${running.name}'),
-              style: FilledButton.styleFrom(backgroundColor: accent),
             )
           else if (planned.isNotEmpty)
-            FilledButton.icon(
+            AppButton(
+              label: 'Start workout',
+              icon: Icons.play_arrow,
               onPressed: () => _start(context, ref),
-              icon: const Icon(Icons.play_arrow),
-              label: const Text('Start workout'),
-              style: FilledButton.styleFrom(backgroundColor: accent),
             )
           else
-            OutlinedButton.icon(
+            AppButton(
+              label: 'Add exercises',
+              icon: Icons.add,
+              kind: AppButtonKind.secondary,
               onPressed: () =>
                   context.go('/workout/split/${split.id}/day/${day.id}'),
-              icon: const Icon(Icons.add),
-              label: const Text('Add exercises'),
             ),
         ],
       ),
@@ -308,6 +309,9 @@ class _CardShell extends StatelessWidget {
     // AppCard, not a bare Material Card. Home was the last tab still drawing
     // its own surfaces, so its centrepiece missed the glass pane, the press
     // scale and the highlight every other card in the app has.
-    return AppCard(padding: const EdgeInsets.all(16), child: child);
+    // Twenty-two, not sixteen: this is the one card on the tab with a heading,
+    // a list and an action in it, and at sixteen the button crowds its own
+    // edge. The rest of the app's cards stay at their own padding.
+    return AppCard(padding: const EdgeInsets.all(22), child: child);
   }
 }

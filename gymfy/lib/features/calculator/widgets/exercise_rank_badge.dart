@@ -58,62 +58,80 @@ class _RankCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // A tracked caps label and the tier beside it — no icon, no pill. The
+          // tier *is* the accent on this card; wrapping it in a tinted capsule
+          // as well was saying the same thing twice, and the medal icon was
+          // saying it a third time.
           Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
             children: [
-              Icon(Icons.military_tech_outlined, size: 20, color: accent),
-              const SizedBox(width: 8),
               Expanded(
-                child: Text('Your rank', style: theme.textTheme.titleSmall),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(20),
-                ),
                 child: Text(
-                  rank.tier.label,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: accent,
-                    fontWeight: FontWeight.w700,
+                  'STRENGTH RANK',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
                   ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                rank.tier.label,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: accent,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            '${formatWeightUnit(lift.oneRm, unit)} '
-            '${lift.tested ? 'tested' : 'estimated'} • '
-            '${rank.ratio.toStringAsFixed(2)}× bodyweight',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(3),
             child: LinearProgressIndicator(
               // Elite has nothing above it, so the bar reads full rather than
               // empty — there's no progress left to make.
               value: rank.progressToNext ?? 1,
-              minHeight: 8,
-              backgroundColor: theme.colorScheme.surfaceContainerHigh,
+              minHeight: 6,
+              backgroundColor: theme.colorScheme.onSurface.withValues(
+                alpha: 0.09,
+              ),
               color: accent,
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            next == null
-                ? 'Top tier — nothing above this'
-                : '${formatWeightUnit(rank.weightToNext!, unit)} '
-                      'to ${next.label}',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+          const SizedBox(height: 9),
+          // What you lift, and what is left — one line, split to the two edges.
+          // Stacked, they read as two facts; opposed, they read as a distance.
+          //
+          // The template showed only the ratio here. The weight and whether it
+          // was *tested* or *estimated* are kept anyway: the mock had no way to
+          // know the app distinguishes them, and "is this number measured or
+          // guessed" is the first thing you need in order to trust the rank.
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${formatWeightUnit(lift.oneRm, unit)} '
+                  '${lift.tested ? 'tested' : 'estimated'} · '
+                  '${rank.ratio.toStringAsFixed(2)}× bodyweight',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                next == null
+                    ? 'Top tier'
+                    : '+${formatWeightUnit(rank.weightToNext!, unit)} '
+                          'to ${next.label}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
           ),
         ],
       ),
