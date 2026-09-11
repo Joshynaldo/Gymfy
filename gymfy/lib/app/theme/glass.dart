@@ -1,4 +1,4 @@
-import 'dart:ui' show ColorFilter, ImageFilter;
+import 'dart:ui' show ColorFilter, ImageFilter, PathOperation;
 
 import 'package:flutter/material.dart';
 
@@ -389,16 +389,65 @@ class GlassSurface extends StatelessWidget {
 
     content = ClipRRect(borderRadius: borderRadius, child: content);
 
-    // Outside the clip, or the shape casting the shadow would clip it away.
     if (pane.shadow.isEmpty) return content;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: borderRadius,
-        boxShadow: pane.shadow,
-      ),
+    return CustomPaint(
+      painter: _ShadowPainter(borderRadius: borderRadius, shadows: pane.shadow),
       child: content,
     );
   }
+}
+
+/// The pane's shadow, painted only *outside* the pane.
+///
+/// Not `BoxDecoration.boxShadow`, and the difference is the whole reason this
+/// class exists. CSS clips an outer box-shadow to outside the box, so the
+/// design's `0 2px 30px -16px rgba(0,0,0,0.9)` is a dark halo under the card's
+/// edge and nothing else. Flutter's `BoxShadow` paints the entire blurred
+/// rounded rectangle *behind* the box — and behind a translucent box means
+/// through it.
+///
+/// So every card was a pane of glass with a near-opaque black card slipped
+/// behind it. The interiors came out charcoal no matter how bright the field
+/// got or how milky the fill was, which is exactly how it looked: lit at the
+/// edges, black in the middle.
+class _ShadowPainter extends CustomPainter {
+  const _ShadowPainter({required this.borderRadius, required this.shadows});
+
+  final BorderRadius borderRadius;
+  final List<BoxShadow> shadows;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) return;
+    final rect = Offset.zero & size;
+    final shape = borderRadius.toRRect(rect);
+
+    canvas.save();
+    // Everything the pane itself covers is cut out of the canvas first, so the
+    // blur can only land beyond its edge. A combined path rather than a
+    // difference clip: this Flutter's `clipRRect` takes no clip operation, and
+    // subtracting the shape from a generous rectangle says the same thing.
+    canvas.clipPath(
+      Path.combine(
+        PathOperation.difference,
+        Path()..addRect(rect.inflate(120)),
+        Path()..addRRect(shape),
+      ),
+    );
+    for (final shadow in shadows) {
+      canvas.drawRRect(
+        borderRadius.toRRect(
+          rect.shift(shadow.offset).inflate(shadow.spreadRadius),
+        ),
+        shadow.toPaint(),
+      );
+    }
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_ShadowPainter old) =>
+      old.borderRadius != borderRadius || old.shadows != shadows;
 }
 
 Color _lift(Color colour, double factor) => factor == 1
