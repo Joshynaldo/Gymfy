@@ -17,15 +17,19 @@ import '../widgets/recap_section.dart';
 import '../widgets/streak_card.dart';
 
 /// Which question Progress is answering.
+///
+/// Ordered the way the design orders them, which is also how the question gets
+/// shorter: what does my body look like now, how have the last weeks gone, what
+/// does it all add up to. Present, recent, ever.
 enum ProgressView {
+  /// What your body is doing — the muscle map, measurements and photos.
+  body('Body'),
+
   /// How the last week / month / year went, and each exercise's own curve.
   trends('Trends'),
 
   /// What it all adds up to: totals, the year grid, records, rank.
-  allTime('All-time'),
-
-  /// What your body is doing — the muscle map, measurements and photos.
-  body('Body');
+  allTime('All-time');
 
   const ProgressView(this.label);
 
@@ -50,6 +54,8 @@ class ProgressScreen extends ConsumerStatefulWidget {
 }
 
 class _ProgressScreenState extends ConsumerState<ProgressScreen> {
+  // Opens on Trends rather than on the first segment: it is the view that
+  // answers "how is it going" with numbers, and the one you came for.
   ProgressView _view = ProgressView.trends;
 
   @override

@@ -89,7 +89,7 @@ void main() {
     expect(find.text('Volume'), findsOneWidget);
     expect(find.text('Fatigue'), findsOneWidget);
     expect(
-      find.textContaining('Training volume over the last 7 days'),
+      find.textContaining('more volume this week'),
       findsOneWidget,
     );
   });
@@ -101,8 +101,8 @@ void main() {
     expect(find.text('Fatigue'), findsWidgets);
     // Brightness means something different here, so saying "volume" would be
     // actively wrong.
-    expect(find.textContaining('Brighter = less recovered'), findsOneWidget);
-    expect(find.textContaining('Training volume'), findsNothing);
+    expect(find.textContaining('Brighter means less recovered'), findsOneWidget);
+    expect(find.textContaining('more volume this week'), findsNothing);
   });
 
   testWidgets('an empty fatigue map says you are recovered, not untrained', (
@@ -132,7 +132,7 @@ void main() {
     await tester.pump();
 
     expect(
-      find.textContaining('Training volume over the last 7 days'),
+      find.textContaining('more volume this week'),
       findsOneWidget,
     );
   });
@@ -165,6 +165,6 @@ void main() {
     await tester.pump();
 
     // Still on fatigue — flipping the body must not silently reset the reading.
-    expect(find.textContaining('Brighter = less recovered'), findsOneWidget);
+    expect(find.textContaining('Brighter means less recovered'), findsOneWidget);
   });
 }

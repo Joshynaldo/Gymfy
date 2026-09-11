@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../onboarding/data/onboarding_repository.dart';
 
@@ -33,7 +34,18 @@ class HomeScreen extends ConsumerWidget {
     return GlassScaffold(
       appBar: GlassAppBar(
         title: Text(name == null ? 'Gymfy' : 'Hi, $name'),
-        actions: const [StreakBadge()],
+        actions: [
+          const StreakBadge(),
+          // The way into the library from the screen people actually open.
+          // It moved under More when the bar went to four tabs, and a
+          // reference you reach from wherever you happen to be needs a door
+          // on the tab you are most often standing on.
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: 'Find an exercise',
+            onPressed: () => context.go('/exercises'),
+          ),
+        ],
       ),
       body: (context) => ListView(
         padding: const EdgeInsets.only(top: 6, bottom: 24) + barInsets(context),
