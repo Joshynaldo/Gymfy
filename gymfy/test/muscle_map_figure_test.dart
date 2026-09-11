@@ -68,7 +68,10 @@ void main() {
       // The pack has no lumbar region on either sheet, so the build tool draws
       // it — and it has to be measured off each body, since one set of
       // coordinates lands off the figure entirely on the other viewBox.
-      expect(read(BodyFigure.female, BodySide.back), contains('id="lower_back"'));
+      expect(
+        read(BodyFigure.female, BodySide.back),
+        contains('id="lower_back"'),
+      );
     });
 
     test('ship no leftover pack gradients', () {

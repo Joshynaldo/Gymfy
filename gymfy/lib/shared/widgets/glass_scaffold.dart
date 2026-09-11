@@ -28,14 +28,33 @@ class GlassScaffold extends StatelessWidget {
   });
 
   final PreferredSizeWidget? appBar;
-  final Widget? body;
+
+  /// The screen, built with a context *inside* the Scaffold.
+  ///
+  /// A builder rather than a widget, and this is the whole reason:
+  /// [barInsets] reads `MediaQuery.padding`, and the padding that accounts for
+  /// the app bar only exists **below** the Scaffold. Scaffold hands it to the
+  /// body; nothing above can see it.
+  ///
+  /// A screen that computed its padding in its own `build` therefore got the
+  /// status bar alone — 44 where the answer was 100 — and the app bar's other
+  /// fifty-six pixels landed on top of whatever the screen had pinned to its
+  /// top. The exercise library's search field ended up half behind the bar and
+  /// completely untappable, because a transparent app bar still takes the
+  /// touches in its own band.
+  ///
+  /// Taking a builder is what makes that unrepeatable: the closure's `context`
+  /// shadows the screen's, so the correct one is the one in scope, and the only
+  /// way to get the old answer is to go out of your way for it.
+  final Widget Function(BuildContext context)? body;
+
   final Widget? floatingActionButton;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: appBar,
-      body: body,
+      body: body == null ? null : Builder(builder: body!),
       floatingActionButton: floatingActionButton,
       extendBodyBehindAppBar: glassOf(context).enabled,
     );

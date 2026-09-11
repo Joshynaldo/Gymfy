@@ -36,7 +36,7 @@ class SplitDaysScreen extends ConsumerWidget {
         title: Text(title),
         actions: [if (split != null) ActiveSplitAction(split: split)],
       ),
-      body: SplitDayList(splitId: splitId),
+      body: (context) => SplitDayList(splitId: splitId),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => addDayTo(context, ref, splitId),
         icon: const Icon(Icons.add),

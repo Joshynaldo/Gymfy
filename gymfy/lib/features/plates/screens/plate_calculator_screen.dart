@@ -66,7 +66,7 @@ class _PlateCalculatorScreenState extends ConsumerState<PlateCalculatorScreen> {
 
     return GlassScaffold(
       appBar: GlassAppBar(title: const Text('Plate calculator')),
-      body: FadeSlideIn(
+      body: (context) => FadeSlideIn(
         child: ListView(
           padding:
               const EdgeInsets.fromLTRB(16, 12, 16, 32) + barInsets(context),

@@ -5,7 +5,7 @@ import '../../../app/theme/accent_color.dart';
 import '../../../shared/utils/dates.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/weekday.dart';
-import '../data/activity_repository.dart';
+import '../../home/data/activity_repository.dart';
 import '../../../shared/widgets/app_card.dart';
 
 // Grid geometry. One column per week, one row per weekday.

@@ -28,9 +28,11 @@ Future<void> _pumpScreen(
     child: MaterialApp(
       theme: buildAppTheme(theme, AccentPalette.blue),
       home: Builder(
-        builder: (context) => GlassScaffold(
+        builder: (_) => GlassScaffold(
           appBar: const GlassAppBar(title: Text('Exercises')),
-          body: ListView(
+          // Read inside the scaffold, which is the only place the app bar's
+          // own height is in the padding at all.
+          body: (context) => ListView(
             padding: barInsets(context),
             children: [
               for (var i = 0; i < 40; i++)

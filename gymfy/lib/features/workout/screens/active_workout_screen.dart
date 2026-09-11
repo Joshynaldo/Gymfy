@@ -1,33 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show FilteringTextInputFormatter;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../app/theme/glass.dart';
+import '../../../app/theme/motion.dart';
 import '../../../shared/data/notification_service.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
-import '../../../shared/widgets/exercise_thumbnail.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/fade_slide_in.dart';
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../shared/widgets/pressable.dart';
 import '../../exercises/screens/exercise_detail_screen.dart';
 import '../../overload/data/overload_math.dart';
 import '../../overload/data/overload_repository.dart';
 import '../../plates/screens/plate_calculator_screen.dart';
-import '../../../shared/widgets/weight_wheel.dart';
-import '../../plates/widgets/plate_stacker.dart';
 import '../../settings/data/notification_preferences.dart';
 import '../data/rest_timer_controller.dart';
 import '../data/rest_timer_repository.dart';
 import '../data/session_repository.dart';
 import '../data/workout_repository.dart';
+import '../widgets/log_set_sheet.dart';
 import '../widgets/rest_timer_bar.dart';
-import '../../../shared/widgets/glass_app_bar.dart';
-import '../../../shared/widgets/glass_scaffold.dart';
-import '../../../app/theme/glass.dart';
-import '../../../shared/widgets/glass_dialog.dart';
-import '../../../shared/widgets/app_card.dart';
-import '../../../app/theme/motion.dart';
-import '../../../shared/widgets/fade_slide_in.dart';
 
 /// The live workout screen: log sets exercise by exercise while you train.
 ///
@@ -61,7 +59,7 @@ class ActiveWorkoutScreen extends ConsumerWidget {
         if (session == null) {
           return GlassScaffold(
             appBar: GlassAppBar(),
-            body: const Center(child: Text('Workout not found.')),
+            body: (context) => const Center(child: Text('Workout not found.')),
           );
         }
         return _ActiveWorkoutView(session: session);
@@ -70,13 +68,36 @@ class ActiveWorkoutScreen extends ConsumerWidget {
   }
 }
 
-class _ActiveWorkoutView extends ConsumerWidget {
+/// The screen while a workout is running.
+///
+/// One exercise at a time is a full card — the one you are on — and everything
+/// else is a quiet row under "Up next". The arrangement this replaced gave
+/// every exercise in the day an identical card with its own buttons: five
+/// equally loud surfaces, four of them about something you were not doing.
+/// Mid-set, with the phone propped against a rack, the screen has one job and
+/// it is to show the set you are about to log.
+///
+/// Tapping a row moves the card to that exercise, so logging out of order — the
+/// bench is busy, the rack is taken — is still one tap.
+class _ActiveWorkoutView extends ConsumerStatefulWidget {
   const _ActiveWorkoutView({required this.session});
 
   final WorkoutSession session;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ActiveWorkoutView> createState() => _ActiveWorkoutViewState();
+}
+
+class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
+  /// The exercise you picked by hand, if you picked one.
+  ///
+  /// Held by id rather than by index: the day's plan can change underneath a
+  /// running session, and an index would then point at a different movement.
+  String? _picked;
+
+  @override
+  Widget build(BuildContext context) {
+    final session = widget.session;
     final dayId = session.dayId;
     final planned = dayId == null
         ? const <PlannedExercise>[]
@@ -85,11 +106,18 @@ class _ActiveWorkoutView extends ConsumerWidget {
     final sets =
         ref.watch(sessionSetsProvider(session.id)).value ?? const <LoggedSet>[];
 
-    // Group the logged sets by exercise so each card shows only its own sets.
+    // Group the logged sets by exercise so the card shows only its own.
     final setsByExercise = <String, List<LoggedSet>>{};
     for (final set in sets) {
       setsByExercise.putIfAbsent(set.exerciseId, () => []).add(set);
     }
+
+    // Watched as a boolean rather than as the timer itself: the timer ticks
+    // once a second, and rebuilding this whole screen on every tick is exactly
+    // the cost RestTimerBar exists to keep to itself.
+    final resting = ref.watch(restTimerProvider.select((t) => t != null));
+
+    final current = _current(planned, setsByExercise);
 
     return GlassScaffold(
       appBar: GlassAppBar(
@@ -103,134 +131,104 @@ class _ActiveWorkoutView extends ConsumerWidget {
             onPressed: () => showPlateCalculator(context),
           ),
           TextButton(
-            onPressed: () => _finish(context, ref),
+            onPressed: () => _finish(context),
             child: const Text('Finish'),
           ),
         ],
       ),
-      // The rest timer is fixed at the top and must stay readable, so it is
-      // held clear of the app bar; the exercise list below it slides under.
-      body: Padding(
-        padding: topBarInset(context),
-        child: Column(
-          children: [
-            // Renders nothing unless a rest timer is running.
-            const RestTimerBar(),
-            Expanded(
-              child: planned.isEmpty
-                  ? const _EmptyState()
-                  : ListView(
-                      padding:
-                          const EdgeInsets.fromLTRB(12, 12, 12, 32) +
-                          bottomBarInset(context),
-                      children: [
-                        for (final p in planned)
-                          _ExerciseLogCard(
-                            session: session,
-                            planned: p,
-                            loggedSets:
-                                setsByExercise[p.exercise.id] ?? const [],
-                          ),
-                      ],
-                    ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _finish(BuildContext context, WidgetRef ref) async {
-    // A rest timer outliving the workout it belongs to would be a puzzle, and
-    // its notification would fire long after you've left the gym.
-    ref.read(restTimerProvider.notifier).stop();
-    await ref.read(sessionRepositoryProvider).completeSession(session.id);
-    if (!context.mounted) return;
-    context.go('/workout/summary/${session.id}');
-  }
-}
-
-/// One exercise while training: its planned target, the sets logged so far,
-/// and a button to log another set.
-class _ExerciseLogCard extends ConsumerWidget {
-  const _ExerciseLogCard({
-    required this.session,
-    required this.planned,
-    required this.loggedSets,
-  });
-
-  final WorkoutSession session;
-  final PlannedExercise planned;
-  final List<LoggedSet> loggedSets;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final accent = ref.watch(accentColorProvider);
-    final entry = planned.entry;
-    final exercise = planned.exercise;
-
-    return AppCard(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      padding: EdgeInsets.zero,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ListTile(
-            leading: ExerciseThumbnail(gifPath: exercise.gifPath),
-            title: Text(exercise.name),
-            subtitle: Text(
-              'Target: ${formatSetTarget(entry.defaultSets, entry.defaultReps, entry.defaultRepsMax)}',
-            ),
-            trailing: _SuggestionChip(planned: planned),
-            // Opens the same detail screen the library does — the animation,
-            // the muscles worked, the rank. Mid-set is exactly when you want
-            // to check a movement you're unsure of.
-            //
-            // Pushed rather than routed, for the same reason the plate
-            // calculator is: `go` would switch to the Exercises tab and leave
-            // you navigating back to your own session afterwards.
-            onTap: () => showExerciseDetail(context, exercise.id),
-          ),
-          _LoggedSets(sets: loggedSets, accent: accent),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-            child: Row(
+      body: (context) => planned.isEmpty
+          ? const _EmptyState()
+          : Stack(
               children: [
-                // Offered first while the plan still expects warm-ups, and
-                // quietly available afterwards — some days need a fourth.
-                TextButton.icon(
-                  onPressed: () => _addSet(context, ref, isWarmup: true),
-                  icon: const Icon(Icons.local_fire_department_outlined),
-                  label: Text(_warmupLabel),
+                ListView(
+                  padding:
+                      const EdgeInsets.fromLTRB(16, 8, 16, 32) +
+                      barInsets(context),
+                  children: [
+                    // The gap the rest pane floats in. It opens and closes with
+                    // the pane rather than being permanent chrome, so a workout
+                    // logged without the timer never pays for it.
+                    AnimatedContainer(
+                      duration: motionOf(context, AppDurations.standard),
+                      curve: AppCurves.settle,
+                      height: resting ? 124 : 0,
+                    ),
+                    if (current != null)
+                      _CurrentExerciseCard(
+                        key: ValueKey(current.exercise.id),
+                        planned: current,
+                        loggedSets:
+                            setsByExercise[current.exercise.id] ?? const [],
+                        onLog: (isWarmup) =>
+                            _log(context, current, isWarmup: isWarmup),
+                      ),
+                    ..._upNext(planned, current, setsByExercise),
+                  ],
                 ),
-                const SizedBox(width: 4),
-                TextButton.icon(
-                  onPressed: () => _addSet(context, ref, isWarmup: false),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add set'),
+                // Floating rather than in the flow: this is the one pane on the
+                // screen with something genuinely passing underneath it, which
+                // is what makes its blur worth the pass it costs.
+                Positioned(
+                  top: barInsets(context).top + 6,
+                  left: 14,
+                  right: 14,
+                  child: const RestTimerBar(),
                 ),
               ],
             ),
-          ),
-        ],
-      ),
     );
   }
 
-  /// Sets already logged in the phase [isWarmup] describes.
-  List<LoggedSet> _phase({required bool isWarmup}) =>
-      loggedSets.where((s) => s.isWarmup == isWarmup).toList();
-
-  /// "Warm-up 2 of 3" while the plan still expects some, plain "Warm-up" after.
-  String get _warmupLabel {
-    final planned = this.planned.entry.warmupSets;
-    final done = _phase(isWarmup: true).length;
-    return done < planned ? 'Warm-up ${done + 1} of $planned' : 'Warm-up';
+  /// The exercise the card is showing.
+  ///
+  /// Your pick if you made one, otherwise the first exercise still short of its
+  /// planned working sets — which is where you are on any day you work through
+  /// the plan in order.
+  PlannedExercise? _current(
+    List<PlannedExercise> planned,
+    Map<String, List<LoggedSet>> setsByExercise,
+  ) {
+    if (planned.isEmpty) return null;
+    if (_picked != null) {
+      for (final entry in planned) {
+        if (entry.exercise.id == _picked) return entry;
+      }
+    }
+    for (final entry in planned) {
+      final done = (setsByExercise[entry.exercise.id] ?? const [])
+          .where((s) => !s.isWarmup)
+          .length;
+      if (done < entry.entry.defaultSets) return entry;
+    }
+    return planned.last;
   }
 
-  Future<void> _addSet(
+  List<Widget> _upNext(
+    List<PlannedExercise> planned,
+    PlannedExercise? current,
+    Map<String, List<LoggedSet>> setsByExercise,
+  ) {
+    final rest = planned
+        .where((p) => p.exercise.id != current?.exercise.id)
+        .toList();
+    if (rest.isEmpty) return const [];
+
+    return [
+      const SizedBox(height: 28),
+      const _SectionLabel('UP NEXT'),
+      const SizedBox(height: 12),
+      for (final entry in rest)
+        _UpNextRow(
+          planned: entry,
+          loggedSets: setsByExercise[entry.exercise.id] ?? const [],
+          onTap: () => setState(() => _picked = entry.exercise.id),
+        ),
+    ];
+  }
+
+  Future<void> _log(
     BuildContext context,
-    WidgetRef ref, {
+    PlannedExercise planned, {
     required bool isWarmup,
   }) async {
     // Prefill from the last set logged *in this phase* — you are mid-ramp-up or
@@ -238,7 +236,12 @@ class _ExerciseLogCard extends ConsumerWidget {
     // divide is the one place it must not carry over: after three warm-ups,
     // offering 60 kg for your first working set would be worse than offering
     // nothing.
-    final samePhase = _phase(isWarmup: isWarmup);
+    final logged = ref.read(sessionSetsProvider(widget.session.id)).value ?? [];
+    final samePhase = logged
+        .where(
+          (s) => s.exerciseId == planned.exercise.id && s.isWarmup == isWarmup,
+        )
+        .toList();
     final last = samePhase.isNotEmpty ? samePhase.last : null;
 
     // Warm-ups never take the overload suggestion: it is a target for the
@@ -256,31 +259,44 @@ class _ExerciseLogCard extends ConsumerWidget {
               )
               .value;
 
-    final result = await showDialog<({double weight, int reps})>(
+    final result = await showLogSetSheet(
       context: context,
-      builder: (context) => _LogSetDialog(
-        isWarmup: isWarmup,
-        initialWeight: last?.weight ?? suggestion?.weight ?? 0,
-        initialReps: last?.reps ?? planned.entry.defaultReps,
-        unit: ref.read(weightUnitProvider),
-        plateLoaded: planned.exercise.isPlateLoaded,
-        exercise: planned.exercise,
-        suggestion: suggestion,
-      ),
+      exercise: planned.exercise,
+      isWarmup: isWarmup,
+      initialWeight: last?.weight ?? suggestion?.weight ?? 0,
+      initialReps: last?.reps ?? planned.entry.defaultReps,
+      unit: ref.read(weightUnitProvider),
+      suggestion: suggestion,
+      phaseLabel: isWarmup
+          ? 'Warm-up ${samePhase.length + 1}'
+          : 'Set ${samePhase.length + 1} · working set',
+      repeatable: last,
     );
     if (result == null) return;
+
+    // The sheet owns the warm-up decision from the moment it opens — you often
+    // only know whether that was a ramp-up once the bar is in your hands — so
+    // the set is numbered against whichever phase comes back, not the one the
+    // button asked for.
+    final phase = logged
+        .where(
+          (s) =>
+              s.exerciseId == planned.exercise.id &&
+              s.isWarmup == result.isWarmup,
+        )
+        .length;
 
     await ref
         .read(sessionRepositoryProvider)
         .logSet(
-          sessionId: session.id,
+          sessionId: widget.session.id,
           exerciseId: planned.exercise.id,
           // Numbered within its own phase, so working sets read 1, 2, 3 however
           // long the ramp-up was.
-          setNumber: samePhase.length + 1,
+          setNumber: phase + 1,
           weight: result.weight,
           reps: result.reps,
-          isWarmup: isWarmup,
+          isWarmup: result.isWarmup,
         );
 
     // Logging a set is exactly when rest starts, so the timer needs no button
@@ -300,24 +316,300 @@ class _ExerciseLogCard extends ConsumerWidget {
           seconds: seconds,
         );
   }
+
+  Future<void> _finish(BuildContext context) async {
+    // A rest timer outliving the workout it belongs to would be a puzzle, and
+    // its notification would fire long after you've left the gym.
+    ref.read(restTimerProvider.notifier).stop();
+    await ref
+        .read(sessionRepositoryProvider)
+        .completeSession(widget.session.id);
+    if (!context.mounted) return;
+    context.go('/workout/summary/${widget.session.id}');
+  }
 }
 
-/// The suggested next weight, on the exercise card.
+/// The exercise you are on: its target, what overload has to say, the sets
+/// logged so far, and the one button that matters.
+class _CurrentExerciseCard extends ConsumerWidget {
+  const _CurrentExerciseCard({
+    super.key,
+    required this.planned,
+    required this.loggedSets,
+    required this.onLog,
+  });
+
+  final PlannedExercise planned;
+  final List<LoggedSet> loggedSets;
+
+  /// Takes whether the ramp-up button was the one pressed. The sheet can still
+  /// change its mind afterwards.
+  final void Function(bool isWarmup) onLog;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final accent = ref.watch(accentColorProvider);
+    final entry = planned.entry;
+    final exercise = planned.exercise;
+    final working = loggedSets.where((s) => !s.isWarmup).length;
+
+    return AppPanel(
+      margin: EdgeInsets.zero,
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Pressable(
+                  borderRadius: BorderRadius.circular(8),
+                  splash: false,
+                  // Opens the same detail screen the library does — the
+                  // animation, the muscles worked, the rank. Mid-set is exactly
+                  // when you want to check a movement you are unsure of.
+                  //
+                  // Pushed rather than routed, for the same reason the plate
+                  // calculator is: `go` would switch tabs and leave you
+                  // navigating back to your own session afterwards.
+                  onTap: () => showExerciseDetail(context, exercise.id),
+                  child: Text(
+                    exercise.name,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                formatSetTarget(
+                  entry.defaultSets,
+                  entry.defaultReps,
+                  entry.defaultRepsMax,
+                ),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+          _SuggestionLine(planned: planned),
+          _LoggedSets(sets: loggedSets, accent: accent),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              // Offered first while the plan still expects warm-ups, and
+              // quietly available afterwards — some days need a fourth.
+              _WarmupButton(
+                planned: planned,
+                loggedSets: loggedSets,
+                onPressed: () => onLog(true),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: AppButton(
+                  label: 'Log set ${working + 1}',
+                  icon: Icons.add,
+                  // Deliberately not the accent. On this screen the accent
+                  // belongs to the rest countdown, which is the thing you read
+                  // from across a gym; a second accent surface here would make
+                  // you check which of the two was shouting.
+                  kind: AppButtonKind.secondary,
+                  onPressed: () => onLog(false),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One exercise still to come: its target, and a dot per planned set.
 ///
-/// Shown before you open the dialog so the decision is visible while you're
-/// still deciding whether to take it — a number that only appears once you've
-/// committed to logging is a number you can't think about.
+/// The dots are the whole reason this row can be quiet. They say how far into
+/// the exercise you are without a number having to be read, which is all you
+/// need from something you are not doing yet.
+class _UpNextRow extends StatelessWidget {
+  const _UpNextRow({
+    required this.planned,
+    required this.loggedSets,
+    required this.onTap,
+  });
+
+  final PlannedExercise planned;
+  final List<LoggedSet> loggedSets;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final entry = planned.entry;
+    final done = loggedSets.where((s) => !s.isWarmup).length;
+
+    return AppCard(
+      tier: GlassTier.quiet,
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+      onTap: onTap,
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  planned.exercise.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall,
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  formatSetTarget(
+                    entry.defaultSets,
+                    entry.defaultReps,
+                    entry.defaultRepsMax,
+                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          _SetDots(total: entry.defaultSets, done: done),
+        ],
+      ),
+    );
+  }
+}
+
+/// One dot per planned set, filled as they are logged.
+class _SetDots extends StatelessWidget {
+  const _SetDots({required this.total, required this.done});
+
+  final int total;
+  final int done;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 0; i < total; i++)
+          Container(
+            width: 7,
+            height: 7,
+            margin: const EdgeInsets.only(left: 5),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: theme.colorScheme.onSurface.withValues(
+                alpha: i < done ? 0.62 : 0.22,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// A caps heading over a run of rows.
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 6),
+      child: Text(
+        text,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 1.1,
+        ),
+      ),
+    );
+  }
+}
+
+/// "Warm-up 2 of 3" while the plan still expects some, plain "Warm-up" after.
+class _WarmupButton extends StatelessWidget {
+  const _WarmupButton({
+    required this.planned,
+    required this.loggedSets,
+    required this.onPressed,
+  });
+
+  final PlannedExercise planned;
+  final List<LoggedSet> loggedSets;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final expected = planned.entry.warmupSets;
+    final done = loggedSets.where((s) => s.isWarmup).length;
+    final label = done < expected
+        ? 'Warm-up ${done + 1} of $expected'
+        : 'Warm-up';
+    final radius = BorderRadius.circular(16);
+
+    return Pressable(
+      borderRadius: radius,
+      onTap: onPressed,
+      splash: false,
+      child: Container(
+        height: 50,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+          borderRadius: radius,
+          border: Border.all(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.10),
+          ),
+        ),
+        child: Text(
+          label,
+          style: theme.textTheme.labelLarge?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// What progressive overload has to say about the next set, on the card.
 ///
-/// Renders nothing when overload is off or there's no history yet.
-class _SuggestionChip extends ConsumerWidget {
-  const _SuggestionChip({required this.planned});
+/// Shown before you open the sheet so the decision is visible while you are
+/// still deciding whether to take it — a number that only appears once you have
+/// committed to logging is a number you cannot think about.
+///
+/// Renders nothing when overload is off or there is no history yet.
+class _SuggestionLine extends ConsumerWidget {
+  const _SuggestionLine({required this.planned});
 
   final PlannedExercise planned;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final accent = ref.watch(accentColorProvider);
     final unit = ref.watch(weightUnitProvider);
     final suggestion = ref
         .watch(
@@ -330,25 +622,36 @@ class _SuggestionChip extends ConsumerWidget {
 
     if (suggestion == null) return const SizedBox.shrink();
 
-    final (icon, colour) = switch (suggestion.reason) {
-      OverloadReason.earned => (Icons.trending_up, accent),
+    final weight = formatWeightUnit(suggestion.weight, unit);
+    final (icon, text) = switch (suggestion.reason) {
+      OverloadReason.earned => (
+        Icons.trending_up,
+        'You hit every set last time — going up to $weight',
+      ),
       OverloadReason.deload => (
         Icons.trending_down,
-        theme.colorScheme.onSurfaceVariant,
+        'Several increases in a row — a lighter $weight is suggested',
       ),
-      _ => (Icons.remove, theme.colorScheme.onSurfaceVariant),
+      _ => (Icons.remove, 'Same $weight as last time'),
     };
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 16, color: colour),
-        const SizedBox(width: 4),
-        Text(
-          formatWeightUnit(suggestion.weight, unit),
-          style: theme.textTheme.labelLarge?.copyWith(color: colour),
-        ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.only(top: 9),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 15, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 7),
+          Expanded(
+            child: Text(
+              text,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -380,6 +683,7 @@ class _LoggedSets extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (sets.isNotEmpty) const SizedBox(height: 12),
           for (final set in sets)
             FadeSlideIn(
               key: ValueKey(set.id),
@@ -408,31 +712,33 @@ class _LoggedSetRow extends ConsumerWidget {
     // cutting the card in two.
     final muted = theme.colorScheme.onSurfaceVariant;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 2, 4, 2),
+    return SizedBox(
+      height: 36,
       child: Row(
         children: [
           SizedBox(
-            width: 28,
+            width: 22,
             child: Text(
               '${set.setNumber}',
               style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w600,
                 color: set.isWarmup ? muted : accent,
               ),
             ),
           ),
-          if (set.isWarmup) ...[
-            _WarmupBadge(colour: muted),
-            const SizedBox(width: 8),
-          ],
           Expanded(
             child: Text(
               '${formatWeightUnit(set.weight, unit)} × ${set.reps} reps',
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: set.isWarmup ? muted : null,
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
           ),
+          if (set.isWarmup) ...[
+            _WarmupBadge(colour: muted),
+            const SizedBox(width: 4),
+          ],
           IconButton(
             // Re-tagging is the common repair: you ramp up, the bar feels
             // light, and what you called a warm-up was really your first
@@ -441,7 +747,8 @@ class _LoggedSetRow extends ConsumerWidget {
             icon: Icon(
               set.isWarmup ? Icons.arrow_upward : Icons.local_fire_department,
             ),
-            iconSize: 20,
+            iconSize: 18,
+            visualDensity: VisualDensity.compact,
             tooltip: set.isWarmup
                 ? 'Make this a working set'
                 : 'Make this a warm-up',
@@ -451,7 +758,8 @@ class _LoggedSetRow extends ConsumerWidget {
           ),
           IconButton(
             icon: const Icon(Icons.close),
-            iconSize: 20,
+            iconSize: 18,
+            visualDensity: VisualDensity.compact,
             tooltip: 'Delete set',
             onPressed: () =>
                 ref.read(sessionRepositoryProvider).deleteSet(set.id),
@@ -480,198 +788,6 @@ class _WarmupBadge extends StatelessWidget {
         'W',
         style: Theme.of(context).textTheme.labelSmall?.copyWith(color: colour),
       ),
-    );
-  }
-}
-
-/// Dialog to enter the weight and reps for a set. Owns its controllers via a
-/// [StatefulWidget] so they're disposed at the right time.
-///
-/// Talks to the user in [unit] but takes and returns kilograms, so the rest of
-/// the screen never has to think about which unit is on screen.
-class _LogSetDialog extends StatefulWidget {
-  const _LogSetDialog({
-    required this.isWarmup,
-    required this.initialWeight,
-    required this.initialReps,
-    required this.unit,
-    required this.plateLoaded,
-    required this.suggestion,
-    required this.exercise,
-  });
-
-  /// Whether this row is being logged as a ramp-up set. Only changes the title:
-  /// the inputs are identical, because a warm-up is a real set.
-  final bool isWarmup;
-
-  /// In kilograms, as stored.
-  final double initialWeight;
-  final int initialReps;
-  final WeightUnit unit;
-
-  /// Why the weight is prefilled the way it is, when progressive overload had
-  /// something to say. Null for the ordinary case.
-  final OverloadSuggestion? suggestion;
-
-  /// Whether this exercise is loaded with plates on a bar. When it is, the
-  /// weight is built by tapping plates instead of typed — on a barbell you
-  /// know what went on the bar, not what the total came to.
-  final bool plateLoaded;
-
-  /// The exercise being logged, so the plate stacker can use — and change —
-  /// its own bar weight.
-  final Exercise exercise;
-
-  @override
-  State<_LogSetDialog> createState() => _LogSetDialogState();
-}
-
-class _LogSetDialogState extends State<_LogSetDialog> {
-  late final _repsController = TextEditingController(
-    text: widget.initialReps.toString(),
-  );
-
-  /// The weight, in the *display* unit — one value whichever input is showing.
-  ///
-  /// Plates are physical objects labelled in one unit and the wheel offers that
-  /// unit's steps, so neither input ever speaks kilograms. Conversion happens
-  /// once, on save.
-  late double _weight = weightIn(widget.initialWeight, widget.unit);
-
-  /// Stacking stays optional on a barbell exercise — a fixed-weight bar, or a
-  /// gym with plates the app doesn't know about, still has to be loggable.
-  late bool _usePlates = widget.plateLoaded;
-
-  @override
-  void dispose() {
-    _repsController.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    final weight = weightToKilograms(_weight, widget.unit);
-    final reps = int.tryParse(_repsController.text) ?? widget.initialReps;
-    Navigator.of(
-      context,
-    ).pop((weight: weight < 0 ? 0.0 : weight, reps: reps < 0 ? 0 : reps));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GlassDialog(
-      title: Text(widget.isWarmup ? 'Log warm-up set' : 'Log set'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (widget.suggestion != null) ...[
-              _SuggestionNote(
-                suggestion: widget.suggestion!,
-                unit: widget.unit,
-              ),
-              const SizedBox(height: 12),
-            ],
-            if (_usePlates)
-              PlateStacker(
-                initialWeight: _weight,
-                exerciseId: widget.exercise.id,
-                onChanged: (weight) => _weight = weight,
-              )
-            else
-              WeightWheel(
-                // Keyed on the mode so switching inputs rebuilds the wheel at
-                // the weight currently in hand, rather than reusing the drums'
-                // old position.
-                key: ValueKey(_usePlates),
-                initialWeight: _weight,
-                unit: widget.unit,
-                onChanged: (weight) => _weight = weight,
-              ),
-            if (widget.plateLoaded)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: _toggleInput,
-                  icon: Icon(
-                    _usePlates ? Icons.tune : Icons.donut_large_outlined,
-                  ),
-                  label: Text(_usePlates ? 'Pick a weight' : 'Stack plates'),
-                ),
-              ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _repsController,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              textAlign: TextAlign.center,
-              decoration: const InputDecoration(labelText: 'Reps'),
-              onSubmitted: (_) => _submit(),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(onPressed: _submit, child: const Text('Save')),
-      ],
-    );
-  }
-
-  /// Switches between stacking plates and picking a weight. Both write to the
-  /// same `_weight`, so the number carries across untouched.
-  void _toggleInput() => setState(() => _usePlates = !_usePlates);
-}
-
-/// One line saying where the prefilled weight came from.
-///
-/// A suggested number with no explanation is either obeyed blindly or ignored;
-/// saying why makes it something you can agree or disagree with. And the weight
-/// stays fully editable either way — the app proposes, it doesn't decide.
-class _SuggestionNote extends StatelessWidget {
-  const _SuggestionNote({required this.suggestion, required this.unit});
-
-  final OverloadSuggestion suggestion;
-  final WeightUnit unit;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    final (icon, text) = switch (suggestion.reason) {
-      OverloadReason.earned => (
-        Icons.trending_up,
-        'You hit every set last time — going up to '
-            '${formatWeightUnit(suggestion.weight, unit)}.',
-      ),
-      OverloadReason.deload => (
-        Icons.trending_down,
-        'Several increases in a row. A lighter week at '
-            '${formatWeightUnit(suggestion.weight, unit)} is suggested.',
-      ),
-      _ => (
-        Icons.remove,
-        'Same weight as last time — the rep target wasn\'t met yet.',
-      ),
-    };
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 18, color: theme.colorScheme.onSurfaceVariant),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

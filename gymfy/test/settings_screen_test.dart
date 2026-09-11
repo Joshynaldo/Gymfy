@@ -203,9 +203,9 @@ void main() {
       // which is what makes the picker its own preview.
       expect(container.read(appThemeProvider), AppTheme.amoled);
       expect(
-        await container.read(settingsRepositoryProvider).readRaw(
-          appThemeSetting,
-        ),
+        await container
+            .read(settingsRepositoryProvider)
+            .readRaw(appThemeSetting),
         AppTheme.amoled.name,
       );
     });
@@ -233,9 +233,9 @@ void main() {
 
       expect(container.read(weightUnitProvider), WeightUnit.lbs);
       expect(
-        await container.read(settingsRepositoryProvider).readRaw(
-          weightUnitSetting,
-        ),
+        await container
+            .read(settingsRepositoryProvider)
+            .readRaw(weightUnitSetting),
         'lbs',
       );
     });
@@ -255,7 +255,9 @@ void main() {
       await pump(tester);
 
       expect(
-        find.byWidgetPredicate((w) => w is Semantics && w.properties.button == true),
+        find.byWidgetPredicate(
+          (w) => w is Semantics && w.properties.button == true,
+        ),
         findsAtLeastNWidgets(AccentPalette.options.length),
       );
     });
@@ -283,9 +285,9 @@ void main() {
       expect(container.read(accentColorProvider), target);
       expect(
         parseAccentColor(
-          await container.read(settingsRepositoryProvider).readRaw(
-            accentColorSetting,
-          ),
+          await container
+              .read(settingsRepositoryProvider)
+              .readRaw(accentColorSetting),
         ),
         target,
       );

@@ -30,13 +30,15 @@ void main() {
     sessions = SessionRepository(db);
     progress = ProgressRepository(db);
     overload = OverloadRepository(db);
-    await db.into(db.exercises).insert(
-      ExercisesCompanion.insert(
-        id: 'barbell_bench_press',
-        name: 'Barbell Bench Press',
-        muscleIds: const ['chest'],
-      ),
-    );
+    await db
+        .into(db.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: 'barbell_bench_press',
+            name: 'Barbell Bench Press',
+            muscleIds: const ['chest'],
+          ),
+        );
     final splitId = await db
         .into(db.splits)
         .insert(SplitsCompanion.insert(name: 'PPL'));
@@ -186,14 +188,8 @@ void main() {
 
       // Working sets read 1, 2, 3 no matter how long the ramp-up was —
       // "set 5 of 3" would be a strange thing to see on the card.
-      expect(
-        all.where((s) => s.isWarmup).map((s) => s.setNumber),
-        [1, 2],
-      );
-      expect(
-        all.where((s) => !s.isWarmup).map((s) => s.setNumber),
-        [1, 2, 3],
-      );
+      expect(all.where((s) => s.isWarmup).map((s) => s.setNumber), [1, 2]);
+      expect(all.where((s) => !s.isWarmup).map((s) => s.setNumber), [1, 2, 3]);
     });
 
     test('re-tagging a warm-up renumbers both phases', () async {
@@ -257,12 +253,14 @@ void main() {
       final dayId = await db
           .into(db.workoutDays)
           .insert(WorkoutDaysCompanion.insert(splitId: splitId, name: 'Push'));
-      await db.into(db.workoutExercises).insert(
-        WorkoutExercisesCompanion.insert(
-          dayId: dayId,
-          exerciseId: 'barbell_bench_press',
-        ),
-      );
+      await db
+          .into(db.workoutExercises)
+          .insert(
+            WorkoutExercisesCompanion.insert(
+              dayId: dayId,
+              exerciseId: 'barbell_bench_press',
+            ),
+          );
 
       final planned = (await db.select(db.workoutExercises).get()).single;
 
@@ -277,13 +275,15 @@ void main() {
       final dayId = await db
           .into(db.workoutDays)
           .insert(WorkoutDaysCompanion.insert(splitId: splitId, name: 'Push'));
-      await db.into(db.workoutExercises).insert(
-        WorkoutExercisesCompanion.insert(
-          dayId: dayId,
-          exerciseId: 'barbell_bench_press',
-          warmupSets: const Value(3),
-        ),
-      );
+      await db
+          .into(db.workoutExercises)
+          .insert(
+            WorkoutExercisesCompanion.insert(
+              dayId: dayId,
+              exerciseId: 'barbell_bench_press',
+              warmupSets: const Value(3),
+            ),
+          );
 
       final planned = (await db.select(db.workoutExercises).get()).single;
       expect(planned.warmupSets, 3);

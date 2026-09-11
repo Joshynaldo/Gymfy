@@ -161,18 +161,21 @@ void main() {
           // the text, and muscle_map_widget_test.dart already covers the real
           // SVG.
           bodySvgTemplateProvider(BodyFigure.male, BodySide.front).overrideWith(
-            (ref) => '<svg xmlns="http://www.w3.org/2000/svg" '
+            (ref) =>
+                '<svg xmlns="http://www.w3.org/2000/svg" '
                 'viewBox="0 0 248 558"></svg>',
           ),
         ],
       );
-      await db.into(db.exercises).insert(
-        ExercisesCompanion.insert(
-          id: 'barbell_bench_press',
-          name: 'Barbell Bench Press',
-          muscleIds: const ['chest'],
-        ),
-      );
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'barbell_bench_press',
+              name: 'Barbell Bench Press',
+              muscleIds: const ['chest'],
+            ),
+          );
     });
 
     tearDown(() async {
@@ -192,9 +195,9 @@ void main() {
 
     /// A finished session with [sets] identical sets of 100 kg × 10.
     Future<int> completedSession({String name = 'Push', int sets = 2}) async {
-      final id = await db.into(db.workoutSessions).insert(
-        WorkoutSessionsCompanion.insert(name: name),
-      );
+      final id = await db
+          .into(db.workoutSessions)
+          .insert(WorkoutSessionsCompanion.insert(name: name));
       for (var i = 1; i <= sets; i++) {
         await sessions.logSet(
           sessionId: id,
@@ -217,9 +220,9 @@ void main() {
     });
 
     testWidgets('an unfinished workout is not the last one', (tester) async {
-      await db.into(db.workoutSessions).insert(
-        WorkoutSessionsCompanion.insert(name: 'Push'),
-      );
+      await db
+          .into(db.workoutSessions)
+          .insert(WorkoutSessionsCompanion.insert(name: 'Push'));
 
       await pump(tester);
 
