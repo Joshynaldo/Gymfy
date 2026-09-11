@@ -30,20 +30,21 @@ class OverloadRepository {
     String exerciseId, {
     int limit = 12,
   }) async {
-    final query = _db.select(_db.loggedSets).join([
-      innerJoin(
-        _db.workoutSessions,
-        _db.workoutSessions.id.equalsExp(_db.loggedSets.sessionId) &
-            _db.workoutSessions.completedAt.isNotNull(),
-      ),
-    ])..where(
-      _db.loggedSets.exerciseId.equals(exerciseId) &
-          // Working sets only. Double progression asks "did every planned set
-          // hit the top of the rep range?" — counting ramp-up sets would answer
-          // that with the wrong rows, and a light warm-up would drag the top
-          // weight down and quietly suggest a *decrease*.
-          _db.loggedSets.isWarmup.equals(false),
-    );
+    final query =
+        _db.select(_db.loggedSets).join([
+          innerJoin(
+            _db.workoutSessions,
+            _db.workoutSessions.id.equalsExp(_db.loggedSets.sessionId) &
+                _db.workoutSessions.completedAt.isNotNull(),
+          ),
+        ])..where(
+          _db.loggedSets.exerciseId.equals(exerciseId) &
+              // Working sets only. Double progression asks "did every planned set
+              // hit the top of the rep range?" — counting ramp-up sets would answer
+              // that with the wrong rows, and a light warm-up would drag the top
+              // weight down and quietly suggest a *decrease*.
+              _db.loggedSets.isWarmup.equals(false),
+        );
     query.orderBy([
       OrderingTerm(
         expression: _db.workoutSessions.completedAt,
@@ -51,10 +52,7 @@ class OverloadRepository {
       ),
       // Sessions finished in the same second would otherwise interleave, which
       // would scramble the "increases in a row" walk below.
-      OrderingTerm(
-        expression: _db.workoutSessions.id,
-        mode: OrderingMode.desc,
-      ),
+      OrderingTerm(expression: _db.workoutSessions.id, mode: OrderingMode.desc),
       OrderingTerm(expression: _db.loggedSets.setNumber),
     ]);
 
@@ -65,9 +63,9 @@ class OverloadRepository {
     for (final row in rows) {
       final sessionId = row.readTable(_db.workoutSessions).id;
       if (!bySession.containsKey(sessionId)) order.add(sessionId);
-      bySession.putIfAbsent(sessionId, () => []).add(
-        row.readTable(_db.loggedSets),
-      );
+      bySession
+          .putIfAbsent(sessionId, () => [])
+          .add(row.readTable(_db.loggedSets));
     }
     return [for (final id in order.take(limit)) bySession[id]!];
   }
@@ -177,26 +175,27 @@ double loadableSuggestion({
 /// has no value equality — a family keyed on it would mint a fresh provider on
 /// every rebuild and never reuse a result. Drift's row classes do compare by
 /// value, so a record of them is a stable key.
-final overloadSuggestionProvider = FutureProvider.family<
-  OverloadSuggestion?,
-  ({WorkoutExercise entry, Exercise exercise})
->((ref, key) async {
-  final config = ref.watch(overloadConfigProvider);
-  if (!config.enabled) return null;
+final overloadSuggestionProvider =
+    FutureProvider.family<
+      OverloadSuggestion?,
+      ({WorkoutExercise entry, Exercise exercise})
+    >((ref, key) async {
+      final config = ref.watch(overloadConfigProvider);
+      if (!config.enabled) return null;
 
-  final raw = await ref
-      .watch(overloadRepositoryProvider)
-      .suggestionFor(key.entry, key.exercise, config);
-  if (raw == null || raw.reason == OverloadReason.firstTime) return null;
+      final raw = await ref
+          .watch(overloadRepositoryProvider)
+          .suggestionFor(key.entry, key.exercise, config);
+      if (raw == null || raw.reason == OverloadReason.firstTime) return null;
 
-  return OverloadSuggestion(
-    weight: loadableSuggestion(
-      suggestion: raw,
-      plateLoaded: key.exercise.isPlateLoaded,
-      unit: ref.watch(weightUnitProvider),
-      plates: ref.watch(availablePlatesProvider),
-      bar: ref.watch(barWeightProvider),
-    ),
-    reason: raw.reason,
-  );
-});
+      return OverloadSuggestion(
+        weight: loadableSuggestion(
+          suggestion: raw,
+          plateLoaded: key.exercise.isPlateLoaded,
+          unit: ref.watch(weightUnitProvider),
+          plates: ref.watch(availablePlatesProvider),
+          bar: ref.watch(barWeightProvider),
+        ),
+        reason: raw.reason,
+      );
+    });

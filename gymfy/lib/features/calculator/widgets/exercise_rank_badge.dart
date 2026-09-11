@@ -140,7 +140,10 @@ class _SetupNudge extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('This lift can be ranked', style: theme.textTheme.titleSmall),
+                Text(
+                  'This lift can be ranked',
+                  style: theme.textTheme.titleSmall,
+                ),
                 const SizedBox(height: 2),
                 Text(
                   'Add your bodyweight and pick a standards table to see where '
@@ -153,10 +156,7 @@ class _SetupNudge extends ConsumerWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Icon(
-            Icons.chevron_right,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+          Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
         ],
       ),
     );

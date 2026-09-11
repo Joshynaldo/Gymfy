@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../shared/data/body_profile.dart';
 import '../../../shared/data/lifter_sex.dart';
 import '../../../shared/data/settings_repository.dart';
 import '../../../shared/models/body_measurement.dart';
@@ -28,13 +29,12 @@ final onboardingCompleteProvider = StreamProvider<bool>((ref) {
 
 /// What the user asked to be called, or null if they skipped it.
 final userNameProvider = StreamProvider<String?>((ref) {
-  return ref
-      .watch(settingsRepositoryProvider)
-      .watchRaw(userNameSetting)
-      .map((raw) {
-        final name = raw?.trim();
-        return name == null || name.isEmpty ? null : name;
-      });
+  return ref.watch(settingsRepositoryProvider).watchRaw(userNameSetting).map((
+    raw,
+  ) {
+    final name = raw?.trim();
+    return name == null || name.isEmpty ? null : name;
+  });
 });
 
 /// Writes what onboarding collected.
@@ -61,7 +61,18 @@ class OnboardingRepository {
     required String? name,
     required double? bodyweightKg,
     required LifterSex? sex,
+    required int? heightCm,
+    required int? birthYear,
   }) async {
+    // Skipped stays unset, the same rule the name and the sex follow. A
+    // recorded height nobody gave is worse than no height.
+    if (heightCm != null) {
+      await _settings.write(heightCmSetting, '$heightCm');
+    }
+    if (birthYear != null) {
+      await _settings.write(birthYearSetting, '$birthYear');
+    }
+
     final trimmed = name?.trim();
     if (trimmed != null && trimmed.isNotEmpty) {
       await _settings.write(userNameSetting, trimmed);

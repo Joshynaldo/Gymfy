@@ -5,6 +5,9 @@ import '../../../app/theme/accent_color.dart';
 import '../../../shared/utils/format.dart';
 import '../data/photo_repository.dart';
 import '../widgets/photo_file_image.dart';
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../app/theme/glass.dart';
 
 /// Two progress photos stacked on top of each other, with a slider to fade
 /// between them.
@@ -26,8 +29,7 @@ class PhotoComparisonScreen extends ConsumerStatefulWidget {
       _PhotoComparisonScreenState();
 }
 
-class _PhotoComparisonScreenState
-    extends ConsumerState<PhotoComparisonScreen> {
+class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
   /// Chosen photo ids. Null means "still on the default", which is resolved
   /// against the current list — so the screen survives the chosen photo being
   /// deleted elsewhere.
@@ -53,8 +55,8 @@ class _PhotoComparisonScreenState
   Widget build(BuildContext context) {
     final photosAsync = ref.watch(progressPhotosProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Compare')),
+    return GlassScaffold(
+      appBar: GlassAppBar(title: const Text('Compare')),
       body: photosAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
@@ -75,37 +77,41 @@ class _PhotoComparisonScreenState
           final before = _resolve(items, _beforeId, oldest)!;
           final after = _resolve(items, _afterId, newest)!;
 
-          return Column(
-            children: [
-              _SpanBanner(before: before, after: after),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-                  child: _Overlay(before: before, after: after, fade: _fade),
+          // Nothing here scrolls, so nothing clears the bars on its own: the
+          // span banner was sitting squarely behind the app bar and the bottom
+          // controls behind the navigation pill. A fixed layout on a glass
+          // screen has to hold itself clear.
+          return Padding(
+            padding: barInsets(context),
+            child: Column(
+              children: [
+                _SpanBanner(before: before, after: after),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                    child: _Overlay(before: before, after: after, fade: _fade),
+                  ),
                 ),
-              ),
-              _FadeSlider(
-                fade: _fade,
-                onChanged: (value) => setState(() => _fade = value),
-              ),
-              _Ends(
-                before: before,
-                after: after,
-                onTapBefore: () => _choose(items, isBefore: true),
-                onTapAfter: () => _choose(items, isBefore: false),
-              ),
-              const SizedBox(height: 8),
-            ],
+                _FadeSlider(
+                  fade: _fade,
+                  onChanged: (value) => setState(() => _fade = value),
+                ),
+                _Ends(
+                  before: before,
+                  after: after,
+                  onTapBefore: () => _choose(items, isBefore: true),
+                  onTapAfter: () => _choose(items, isBefore: false),
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
           );
         },
       ),
     );
   }
 
-  Future<void> _choose(
-    List<PhotoItem> items, {
-    required bool isBefore,
-  }) async {
+  Future<void> _choose(List<PhotoItem> items, {required bool isBefore}) async {
     final chosen = await showModalBottomSheet<PhotoItem>(
       context: context,
       builder: (context) => _PhotoPickerSheet(
@@ -238,12 +244,7 @@ class _Ends extends StatelessWidget {
           // Laid out to match the slider: the older photo is what you see at
           // the left end, the newer at the right.
           _End(label: 'Before', item: before, onTap: onTapBefore),
-          _End(
-            label: 'After',
-            item: after,
-            onTap: onTapAfter,
-            alignEnd: true,
-          ),
+          _End(label: 'After', item: after, onTap: onTapAfter, alignEnd: true),
         ],
       ),
     );
@@ -407,4 +408,3 @@ class _NotEnoughPhotos extends StatelessWidget {
     );
   }
 }
-

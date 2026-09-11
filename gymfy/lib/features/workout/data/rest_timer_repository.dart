@@ -59,20 +59,22 @@ class RestTimerRepository {
 
   /// Sets the override for one exercise.
   Future<void> setForExercise(String exerciseId, int seconds) async {
-    await _db.into(_db.restTimers).insertOnConflictUpdate(
-      RestTimersCompanion.insert(
-        exerciseId: exerciseId,
-        seconds: clampRestSeconds(seconds),
-        updatedAt: Value(DateTime.now()),
-      ),
-    );
+    await _db
+        .into(_db.restTimers)
+        .insertOnConflictUpdate(
+          RestTimersCompanion.insert(
+            exerciseId: exerciseId,
+            seconds: clampRestSeconds(seconds),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
   }
 
   /// Removes the override, so the exercise follows the global default again.
   Future<void> clearForExercise(String exerciseId) async {
-    await (_db.delete(_db.restTimers)
-          ..where((t) => t.exerciseId.equals(exerciseId)))
-        .go();
+    await (_db.delete(
+      _db.restTimers,
+    )..where((t) => t.exerciseId.equals(exerciseId))).go();
   }
 }
 
@@ -112,8 +114,7 @@ final restForExerciseProvider = Provider.family<int, String>((ref, exerciseId) {
 
 /// Writes the global default rest length.
 Future<void> setDefaultRest(WidgetRef ref, int seconds) {
-  return ref.read(settingsRepositoryProvider).write(
-    defaultRestSecondsSetting,
-    clampRestSeconds(seconds).toString(),
-  );
+  return ref
+      .read(settingsRepositoryProvider)
+      .write(defaultRestSecondsSetting, clampRestSeconds(seconds).toString());
 }

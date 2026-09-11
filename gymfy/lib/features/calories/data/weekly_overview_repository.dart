@@ -71,11 +71,13 @@ class WeeklyOverviewRepository {
     final start = week.first;
     final end = week.last;
 
-    final calorieEntries = await (_db.select(_db.calorieEntries)..where(
-      (t) =>
-          t.date.isBiggerOrEqualValue(start) &
-          t.date.isSmallerOrEqualValue(end),
-    )).get();
+    final calorieEntries =
+        await (_db.select(_db.calorieEntries)..where(
+              (t) =>
+                  t.date.isBiggerOrEqualValue(start) &
+                  t.date.isSmallerOrEqualValue(end),
+            ))
+            .get();
 
     return buildWeekSummaries(today: today, calorieEntries: calorieEntries);
   }

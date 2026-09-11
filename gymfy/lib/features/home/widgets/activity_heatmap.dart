@@ -6,6 +6,7 @@ import '../../../shared/utils/dates.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/weekday.dart';
 import '../data/activity_repository.dart';
+import '../../../shared/widgets/app_card.dart';
 
 // Grid geometry. One column per week, one row per weekday.
 //
@@ -107,55 +108,53 @@ class _ActivityHeatmapState extends ConsumerState<ActivityHeatmap> {
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
           child: Text('Activity', style: theme.textTheme.titleMedium),
         ),
-        Card(
+        AppCard(
           margin: const EdgeInsets.symmetric(horizontal: 12),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 4, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Outside the scroll view so the labels stay put while the
-                    // year slides past them.
-                    const _WeekdayLabels(),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        controller: _scrollController,
-                        scrollDirection: Axis.horizontal,
-                        child: GestureDetector(
-                          onTapUp: (details) =>
-                              _selectAt(details.localPosition, start, today),
-                          child: CustomPaint(
-                            key: activityGridKey,
-                            size: const Size(activityGridWidth, _gridHeight),
-                            painter: _HeatmapPainter(
-                              start: start,
-                              today: today,
-                              minutes: minutes,
-                              palette: palette,
-                              selected: _selected,
-                              labelColour: theme.colorScheme.onSurfaceVariant,
-                              selectionColour: theme.colorScheme.onSurface,
-                              textDirection: Directionality.of(context),
-                            ),
+          padding: const EdgeInsets.fromLTRB(12, 12, 4, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Outside the scroll view so the labels stay put while the
+                  // year slides past them.
+                  const _WeekdayLabels(),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      controller: _scrollController,
+                      scrollDirection: Axis.horizontal,
+                      child: GestureDetector(
+                        onTapUp: (details) =>
+                            _selectAt(details.localPosition, start, today),
+                        child: CustomPaint(
+                          key: activityGridKey,
+                          size: const Size(activityGridWidth, _gridHeight),
+                          painter: _HeatmapPainter(
+                            start: start,
+                            today: today,
+                            minutes: minutes,
+                            palette: palette,
+                            selected: _selected,
+                            labelColour: theme.colorScheme.onSurfaceVariant,
+                            selectionColour: theme.colorScheme.onSurface,
+                            textDirection: Directionality.of(context),
                           ),
                         ),
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                _Caption(
-                  selected: _selected,
-                  minutes: minutes,
-                  palette: palette,
-                  today: today,
-                ),
-              ],
-            ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              _Caption(
+                selected: _selected,
+                minutes: minutes,
+                palette: palette,
+                today: today,
+              ),
+            ],
           ),
         ),
       ],
@@ -221,9 +220,7 @@ class _WeekdayLabels extends StatelessWidget {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  weekday.isOdd && weekday <= 5
-                      ? weekdayInitial(weekday)
-                      : '',
+                  weekday.isOdd && weekday <= 5 ? weekdayInitial(weekday) : '',
                   style: style,
                 ),
               ),
@@ -287,10 +284,7 @@ class _HeatmapPainter extends CustomPainter {
 
         if (selected != null && day == selected) {
           canvas.drawRRect(
-            RRect.fromRectAndRadius(
-              rect.inflate(2),
-              const Radius.circular(6),
-            ),
+            RRect.fromRectAndRadius(rect.inflate(2), const Radius.circular(6)),
             Paint()
               ..style = PaintingStyle.stroke
               ..strokeWidth = 2
@@ -319,12 +313,12 @@ class _HeatmapPainter extends CustomPainter {
 
   void _paintText(Canvas canvas, String text, Offset at) {
     TextPainter(
-      text: TextSpan(
-        text: text,
-        style: TextStyle(color: labelColour, fontSize: _labelFontSize),
-      ),
-      textDirection: textDirection,
-    )
+        text: TextSpan(
+          text: text,
+          style: TextStyle(color: labelColour, fontSize: _labelFontSize),
+        ),
+        textDirection: textDirection,
+      )
       ..layout()
       ..paint(canvas, at);
   }

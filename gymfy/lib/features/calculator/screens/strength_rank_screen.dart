@@ -10,6 +10,9 @@ import '../../../shared/widgets/fade_slide_in.dart';
 import '../data/rank_inputs.dart';
 import '../data/ranked_lifts.dart';
 import '../widgets/rank_setup_prompt.dart';
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../app/theme/glass.dart';
 
 /// Where your lifts place against published strength standards.
 class StrengthRankScreen extends ConsumerWidget {
@@ -22,11 +25,12 @@ class StrengthRankScreen extends ConsumerWidget {
     final lifts = ref.watch(rankedLiftsProvider);
     final ready = inputs.sex != null && inputs.bodyweightKg != null;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Strength rank')),
+    return GlassScaffold(
+      appBar: GlassAppBar(title: const Text('Strength rank')),
       body: FadeSlideIn(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+          padding:
+              const EdgeInsets.fromLTRB(16, 12, 16, 32) + barInsets(context),
           children: [
             if (!ready)
               RankSetupPrompt(inputs: inputs)
@@ -104,12 +108,14 @@ class _Basis extends ConsumerWidget {
           TextButton(
             // Switching the table is one tap; nothing else about a rank depends
             // on this setting.
-            onPressed: () => ref.read(settingsRepositoryProvider).write(
-              lifterSexSetting,
-              inputs.sex == LifterSex.male
-                  ? LifterSex.female.name
-                  : LifterSex.male.name,
-            ),
+            onPressed: () => ref
+                .read(settingsRepositoryProvider)
+                .write(
+                  lifterSexSetting,
+                  inputs.sex == LifterSex.male
+                      ? LifterSex.female.name
+                      : LifterSex.male.name,
+                ),
             child: Text(
               'Use ${inputs.sex == LifterSex.male ? 'female' : 'male'}',
             ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
+import '../../exercises/data/exercise_repository.dart';
 import '../data/plate_math.dart';
 import 'barbell_diagram.dart';
 
@@ -20,7 +21,19 @@ class PlateStacker extends ConsumerStatefulWidget {
     super.key,
     required this.initialWeight,
     required this.onChanged,
+    this.exerciseId,
   });
+
+  /// The exercise being loaded, when there is one.
+  ///
+  /// An id rather than the row, because the row is *watched* here. Passing the
+  /// `Exercise` down was the first version and it was broken: changing the bar
+  /// wrote to the database, but the dialog was holding a snapshot taken when it
+  /// opened, so the number on screen never moved and the choice looked like it
+  /// had been ignored.
+  ///
+  /// Null from the standalone calculator, which has no exercise in hand.
+  final String? exerciseId;
 
   /// Starting total in the display unit. Decomposed back into plates so
   /// reopening a set you've already logged shows the bar as you loaded it.
@@ -51,7 +64,22 @@ class _PlateStackerState extends ConsumerState<PlateStacker> {
     final theme = Theme.of(context);
     final unit = ref.watch(weightUnitProvider);
     final available = ref.watch(availablePlatesProvider);
-    final bar = ref.watch(barWeightProvider);
+    final id = widget.exerciseId;
+    final bar = barForExercise(
+      id == null ? null : ref.watch(exerciseProvider(id)).value?.barWeightKg,
+      ref.watch(barWeightProvider),
+      unit,
+    );
+
+    // Changing the bar changes the total without touching a single plate, so
+    // the caller has to be told — otherwise the dialog would log the weight
+    // from before the change while showing the one after it.
+    if (id != null) {
+      ref.listen(exerciseProvider(id), (previous, _) {
+        _freezeStack(previous?.value?.barWeightKg, unit);
+        _report();
+      });
+    }
 
     final perSide = _touched
         ? _perSide
@@ -86,14 +114,26 @@ class _PlateStackerState extends ConsumerState<PlateStacker> {
               ),
           ],
         ),
-        Text(
-          // The bar is stated because it's the part you can't see on the
-          // screen and the part people forget.
-          'Bar ${formatPlate(bar)} ${unit.label} + '
-          '${formatWeight(total - bar)} in plates',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                // The bar is stated because it's the part you can't see on the
+                // screen and the part people forget.
+                bar == 0
+                    ? '${formatWeight(total)} ${unit.label} in plates, no bar'
+                    : 'Bar ${formatPlate(bar)} ${unit.label} + '
+                          '${formatWeight(total - bar)} in plates',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            // Only where there is an exercise to remember the answer against.
+            // The standalone calculator keeps its own picker.
+            if (id != null)
+              _BarButton(exerciseId: id, current: bar, unit: unit),
+          ],
         ),
         const SizedBox(height: 12),
         BarbellDiagram(
@@ -132,10 +172,54 @@ class _PlateStackerState extends ConsumerState<PlateStacker> {
     // matter which order the buttons were tapped in.
     final sorted = [...perSide]..sort((a, b) => b.compareTo(a));
     setState(() => _perSide = sorted);
+    _report();
+  }
 
-    final bar = ref.read(barWeightProvider);
+  /// Pins the plates currently on screen before the bar changes underneath
+  /// them.
+  ///
+  /// Until the first tap the stack is derived from the incoming weight, so
+  /// changing the bar would re-derive it — take the 20 kg bar off a 100 kg leg
+  /// press and it would quietly re-arrange 40 a side into 50 a side to keep the
+  /// total at 100. But the plates are physical: they are on the machine, and
+  /// they did not move because you corrected a setting. Freezing them means the
+  /// picture stays put and the *total* is what changes, which is the answer
+  /// you went looking for.
+  void _freezeStack(double? previousBarKg, WeightUnit unit) {
+    if (_touched) return;
+    _perSide = calculatePlates(
+      target: widget.initialWeight,
+      bar: barForExercise(previousBarKg, ref.read(barWeightProvider), unit),
+      plates: ref.read(availablePlatesProvider),
+    ).perSide;
+    _touched = true;
+  }
+
+  /// Tells the caller what the stack currently weighs.
+  ///
+  /// Reads the *exercise's* bar, not the gym-wide one. Reading the global
+  /// default here while the display above used the exercise's would report a
+  /// weight one bar away from the one on screen.
+  void _report() {
+    final id = widget.exerciseId;
+    final effective = barForExercise(
+      id == null ? null : ref.read(exerciseProvider(id)).value?.barWeightKg,
+      ref.read(barWeightProvider),
+      ref.read(weightUnitProvider),
+    );
+    // Before the first tap the stack on screen is derived from the incoming
+    // weight rather than held in [_perSide], so reporting the field alone
+    // would say "just the bar" for a set that clearly shows plates.
+    final perSide = _touched
+        ? _perSide
+        : calculatePlates(
+            target: widget.initialWeight,
+            bar: effective,
+            plates: ref.read(availablePlatesProvider),
+          ).perSide;
+
     widget.onChanged(
-      bar + sorted.fold<double>(0, (sum, p) => sum + p) * 2,
+      effective + perSide.fold<double>(0, (sum, p) => sum + p) * 2,
     );
   }
 
@@ -209,6 +293,68 @@ class _PlateButton extends StatelessWidget {
                 ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Changes which bar this exercise sits on, and remembers the answer.
+///
+/// Lives here rather than in the plate calculator's settings because the bar is
+/// a property of the equipment, not of the gym: a barbell row and a plate-loaded
+/// T-bar row are both "plate-loaded" and take different bars. One shared setting
+/// could only ever be right for one of them.
+class _BarButton extends ConsumerWidget {
+  const _BarButton({
+    required this.exerciseId,
+    required this.current,
+    required this.unit,
+  });
+
+  final String exerciseId;
+
+  /// The bar currently in effect, in display units.
+  final double current;
+
+  final WeightUnit unit;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return PopupMenuButton<double>(
+      tooltip: 'Change the bar',
+      onSelected: (bar) => ref
+          .read(exerciseRepositoryProvider)
+          // Stored in kilograms like every other weight, so switching the
+          // display unit later cannot turn a 20 kg bar into a 20 lb one.
+          .setBarWeight(
+            exerciseId,
+            bar == 0 ? 0 : weightToKilograms(bar, unit),
+          ),
+      itemBuilder: (context) => [
+        for (final bar in barOptionsFor(unit))
+          PopupMenuItem(
+            value: bar,
+            child: Row(
+              children: [
+                Icon(bar == current ? Icons.check : null, size: 18),
+                const SizedBox(width: 8),
+                Text(formatBar(bar, unit)),
+              ],
+            ),
+          ),
+      ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              formatBar(current, unit),
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+            const Icon(Icons.arrow_drop_down, size: 18),
+          ],
         ),
       ),
     );

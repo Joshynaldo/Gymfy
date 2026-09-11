@@ -128,10 +128,12 @@ class RestTimer extends _$RestTimer {
       // the alarm — immediate and reliable, where an inexact alarm can lag.
       // This also cancels the alarm, so it can't buzz again a moment later.
       if (_notificationsOn) {
-        ref.read(notificationServiceProvider).notifyRestOver(
-          exerciseName: current.exerciseName,
-          vibrate: _vibrate,
-        );
+        ref
+            .read(notificationServiceProvider)
+            .notifyRestOver(
+              exerciseName: current.exerciseName,
+              vibrate: _vibrate,
+            );
       }
       return;
     }

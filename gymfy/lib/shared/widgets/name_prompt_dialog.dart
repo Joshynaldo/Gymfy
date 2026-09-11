@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../shared/widgets/glass_dialog.dart';
 
 /// Shows a simple "enter a name" dialog and returns the trimmed text, or null
 /// if the user cancelled or left it blank.
@@ -62,13 +63,16 @@ class _NamePromptDialogState extends State<_NamePromptDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return GlassDialog(
       title: Text(widget.title),
       content: TextField(
         controller: _controller,
         autofocus: true,
         textCapitalization: TextCapitalization.words,
-        decoration: InputDecoration(labelText: widget.label, hintText: widget.hint),
+        decoration: InputDecoration(
+          labelText: widget.label,
+          hintText: widget.hint,
+        ),
         onSubmitted: (_) => _submit(),
       ),
       actions: [

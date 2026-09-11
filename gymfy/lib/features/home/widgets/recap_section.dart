@@ -7,6 +7,7 @@ import '../../../shared/widgets/bar_chart.dart';
 import '../../muscle_map/data/muscle_colors.dart';
 import '../data/recap.dart';
 import '../data/recap_repository.dart';
+import '../../../shared/widgets/app_card.dart';
 
 /// The Home tab's recap: how much, how often, what, and how many records.
 ///
@@ -32,7 +33,8 @@ class _RecapSectionState extends ConsumerState<RecapSection> {
     // Nothing logged in any period yet — the Home tab already tells a new user
     // what to do, and four empty charts underneath would just be furniture.
     if (recap == null || (recap.isEmpty && _period == RecapPeriod.week)) {
-      final hasAnything = ref.watch(recapSetsProvider).value?.isNotEmpty ?? false;
+      final hasAnything =
+          ref.watch(recapSetsProvider).value?.isNotEmpty ?? false;
       if (!hasAnything) return const SizedBox.shrink();
     }
 
@@ -47,9 +49,7 @@ class _RecapSectionState extends ConsumerState<RecapSection> {
               const Spacer(),
               SegmentedButton<RecapPeriod>(
                 showSelectedIcon: false,
-                style: const ButtonStyle(
-                  visualDensity: VisualDensity.compact,
-                ),
+                style: const ButtonStyle(visualDensity: VisualDensity.compact),
                 segments: [
                   for (final period in RecapPeriod.values)
                     ButtonSegment(value: period, label: Text(period.label)),
@@ -86,16 +86,13 @@ class _EmptyPeriod extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Center(
-          child: Text(
-            'Nothing logged in the last ${period.label.toLowerCase()}.',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+    return AppCard(
+      padding: const EdgeInsets.all(24),
+      child: Center(
+        child: Text(
+          'Nothing logged in the last ${period.label.toLowerCase()}.',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
       ),
@@ -120,32 +117,29 @@ class _RecapCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title.toUpperCase(),
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                letterSpacing: 1,
-              ),
+    return AppCard(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title.toUpperCase(),
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              letterSpacing: 1,
             ),
-            const SizedBox(height: 4),
-            Text(headline, style: theme.textTheme.headlineSmall),
-            Text(
-              detail,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+          ),
+          const SizedBox(height: 4),
+          Text(headline, style: theme.textTheme.headlineSmall),
+          Text(
+            detail,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
-            const SizedBox(height: 16),
-            child,
-          ],
-        ),
+          ),
+          const SizedBox(height: 16),
+          child,
+        ],
       ),
     );
   }
@@ -294,7 +288,8 @@ class _MusclesCard extends ConsumerWidget {
                         // The muscle map's own colours, so the two screens
                         // agree about which colour means which muscle.
                         color: muscleColor(entry.key),
-                        backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                        backgroundColor:
+                            theme.colorScheme.surfaceContainerHighest,
                       ),
                     ),
                   ),

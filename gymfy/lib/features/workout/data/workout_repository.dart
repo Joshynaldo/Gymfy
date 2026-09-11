@@ -120,12 +120,11 @@ class WorkoutRepository {
   Future<int> createSplit(String name) async {
     return _db.transaction(() async {
       final isFirst = (await _db.select(_db.splits).get()).isEmpty;
-      return _db.into(_db.splits).insert(
-        SplitsCompanion.insert(
-          name: name.trim(),
-          isActive: Value(isFirst),
-        ),
-      );
+      return _db
+          .into(_db.splits)
+          .insert(
+            SplitsCompanion.insert(name: name.trim(), isActive: Value(isFirst)),
+          );
     });
   }
 
@@ -153,9 +152,11 @@ class WorkoutRepository {
 
   /// Adds a day to a split and returns its generated id.
   Future<int> createDay(int splitId, String name) {
-    return _db.into(_db.workoutDays).insert(
-      WorkoutDaysCompanion.insert(splitId: splitId, name: name.trim()),
-    );
+    return _db
+        .into(_db.workoutDays)
+        .insert(
+          WorkoutDaysCompanion.insert(splitId: splitId, name: name.trim()),
+        );
   }
 
   /// Streams every day in the app, each carrying its split, grouped so all of
@@ -296,27 +297,25 @@ class WorkoutRepository {
   /// day now.
   Future<void> assignWeekday({required int dayId, required int weekday}) {
     return _db.transaction(() async {
-      final day = await (_db.select(_db.workoutDays)
-            ..where((t) => t.id.equals(dayId)))
-          .getSingle();
+      final day = await (_db.select(
+        _db.workoutDays,
+      )..where((t) => t.id.equals(dayId))).getSingle();
 
-      final siblings = await (_db.select(_db.workoutDays)
-            ..where((t) => t.splitId.equals(day.splitId)))
-          .get();
+      final siblings = await (_db.select(
+        _db.workoutDays,
+      )..where((t) => t.splitId.equals(day.splitId))).get();
 
       await (_db.delete(_db.workoutDaySchedules)..where(
-        (t) =>
-            t.weekday.equals(weekday) &
-            t.dayId.isIn(siblings.map((d) => d.id)),
-      )).go();
+            (t) =>
+                t.weekday.equals(weekday) &
+                t.dayId.isIn(siblings.map((d) => d.id)),
+          ))
+          .go();
 
       await _db
           .into(_db.workoutDaySchedules)
           .insert(
-            WorkoutDaySchedulesCompanion.insert(
-              dayId: dayId,
-              weekday: weekday,
-            ),
+            WorkoutDaySchedulesCompanion.insert(dayId: dayId, weekday: weekday),
           );
     });
   }
@@ -324,9 +323,9 @@ class WorkoutRepository {
   /// Takes a day off a weekday, making it a rest day unless another day of the
   /// split claims it.
   Future<void> clearWeekday({required int dayId, required int weekday}) {
-    return (_db.delete(_db.workoutDaySchedules)
-          ..where((t) => t.dayId.equals(dayId) & t.weekday.equals(weekday)))
-        .go();
+    return (_db.delete(
+      _db.workoutDaySchedules,
+    )..where((t) => t.dayId.equals(dayId) & t.weekday.equals(weekday))).go();
   }
 
   /// Deletes a day (and its planned exercises, via cascade).
@@ -366,14 +365,16 @@ class WorkoutRepository {
     int sets = 3,
     int reps = 10,
   }) {
-    return _db.into(_db.workoutExercises).insert(
-      WorkoutExercisesCompanion.insert(
-        dayId: dayId,
-        exerciseId: exerciseId,
-        defaultSets: Value(sets),
-        defaultReps: Value(reps),
-      ),
-    );
+    return _db
+        .into(_db.workoutExercises)
+        .insert(
+          WorkoutExercisesCompanion.insert(
+            dayId: dayId,
+            exerciseId: exerciseId,
+            defaultSets: Value(sets),
+            defaultReps: Value(reps),
+          ),
+        );
   }
 
   /// Adds several exercises to a day at once, skipping any already planned for
@@ -384,18 +385,23 @@ class WorkoutRepository {
   /// entry you then have to notice and remove. The count comes back so the UI
   /// can say what happened instead of claiming all four went in.
   Future<int> addExercisesToDay(int dayId, List<String> exerciseIds) async {
-    final existing = await (_db.select(_db.workoutExercises)
-          ..where((t) => t.dayId.equals(dayId)))
-        .get();
+    final existing = await (_db.select(
+      _db.workoutExercises,
+    )..where((t) => t.dayId.equals(dayId))).get();
     final alreadyThere = {for (final row in existing) row.exerciseId};
 
-    final toAdd = exerciseIds.where((id) => !alreadyThere.contains(id)).toList();
+    final toAdd = exerciseIds
+        .where((id) => !alreadyThere.contains(id))
+        .toList();
     if (toAdd.isEmpty) return 0;
 
     await _db.batch((batch) {
       batch.insertAll(_db.workoutExercises, [
         for (final exerciseId in toAdd)
-          WorkoutExercisesCompanion.insert(dayId: dayId, exerciseId: exerciseId),
+          WorkoutExercisesCompanion.insert(
+            dayId: dayId,
+            exerciseId: exerciseId,
+          ),
       ]);
     });
     return toAdd.length;
@@ -414,25 +420,61 @@ class WorkoutRepository {
     int? repsMax,
     int warmupSets = 0,
   }) {
-    return (_db.update(_db.workoutExercises)..where((t) => t.id.equals(id)))
-        .write(
-          WorkoutExercisesCompanion(
-            defaultSets: Value(sets),
-            defaultReps: Value(reps),
-            defaultRepsMax: Value(
-              repsMax != null && repsMax > reps ? repsMax : null,
-            ),
-            // Never negative: a "minus one warm-up" would make the session's
-            // "Warm-up 1 of -1" label nonsense.
-            warmupSets: Value(warmupSets < 0 ? 0 : warmupSets),
-          ),
-        );
+    return (_db.update(
+      _db.workoutExercises,
+    )..where((t) => t.id.equals(id))).write(
+      WorkoutExercisesCompanion(
+        defaultSets: Value(sets),
+        defaultReps: Value(reps),
+        defaultRepsMax: Value(
+          repsMax != null && repsMax > reps ? repsMax : null,
+        ),
+        // Never negative: a "minus one warm-up" would make the session's
+        // "Warm-up 1 of -1" label nonsense.
+        warmupSets: Value(warmupSets < 0 ? 0 : warmupSets),
+      ),
+    );
+  }
+
+  /// Applies one set of targets to every exercise planned for [dayId].
+  ///
+  /// For the common case the per-exercise dialog exists to serve badly: a whole
+  /// day built on 3×8, edited one row at a time. Written as a single statement
+  /// rather than a loop of [updatePlannedExercise] calls so the day never
+  /// exists half-updated — a stream watching it would otherwise emit each
+  /// intermediate state and the list would visibly ripple.
+  ///
+  /// Returns how many rows it changed, so the caller can say what happened
+  /// rather than guessing.
+  Future<int> updateAllPlannedExercises(
+    int dayId, {
+    required int sets,
+    required int reps,
+    int? repsMax,
+    int warmupSets = 0,
+  }) {
+    return (_db.update(
+      _db.workoutExercises,
+    )..where((t) => t.dayId.equals(dayId))).write(
+      WorkoutExercisesCompanion(
+        defaultSets: Value(sets),
+        defaultReps: Value(reps),
+        // Same rule as the single-row update: a max that isn't above the
+        // minimum is not a range, it's a mistake, and it is dropped rather
+        // than stored backwards.
+        defaultRepsMax: Value(
+          repsMax != null && repsMax > reps ? repsMax : null,
+        ),
+        warmupSets: Value(warmupSets < 0 ? 0 : warmupSets),
+      ),
+    );
   }
 
   /// Removes a planned exercise from its day.
   Future<void> removePlannedExercise(int id) {
-    return (_db.delete(_db.workoutExercises)..where((t) => t.id.equals(id)))
-        .go();
+    return (_db.delete(
+      _db.workoutExercises,
+    )..where((t) => t.id.equals(id))).go();
   }
 }
 
@@ -470,10 +512,12 @@ final activeSplitProvider = StreamProvider<Split?>((ref) {
 });
 
 /// A split's days with the weekdays each is trained on.
-final scheduledDaysProvider =
-    StreamProvider.family<List<ScheduledDay>, int>((ref, splitId) {
-      return ref.watch(workoutRepositoryProvider).watchScheduledDays(splitId);
-    });
+final scheduledDaysProvider = StreamProvider.family<List<ScheduledDay>, int>((
+  ref,
+  splitId,
+) {
+  return ref.watch(workoutRepositoryProvider).watchScheduledDays(splitId);
+});
 
 /// What's planned for a given ISO weekday in the active split — null means rest.
 final dayForWeekdayProvider = StreamProvider.family<WorkoutDay?, int>((
@@ -502,7 +546,9 @@ final dayProvider = StreamProvider.family<WorkoutDay?, int>((ref, id) {
 });
 
 /// The live list of planned exercises in a day.
-final dayExercisesProvider =
-    StreamProvider.family<List<PlannedExercise>, int>((ref, dayId) {
-      return ref.watch(workoutRepositoryProvider).watchDayExercises(dayId);
-    });
+final dayExercisesProvider = StreamProvider.family<List<PlannedExercise>, int>((
+  ref,
+  dayId,
+) {
+  return ref.watch(workoutRepositoryProvider).watchDayExercises(dayId);
+});

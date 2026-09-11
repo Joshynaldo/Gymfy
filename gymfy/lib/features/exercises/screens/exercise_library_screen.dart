@@ -15,6 +15,9 @@ import '../../../shared/widgets/exercise_thumbnail.dart';
 import '../data/exercise_repository.dart';
 import '../data/muscle_groups.dart';
 import 'widgets/add_to_day_sheet.dart';
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../app/theme/glass.dart';
 
 /// The Exercises tab: a searchable, filterable list of the whole exercise
 /// library, read live from the database.
@@ -50,9 +53,9 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
   Widget build(BuildContext context) {
     final exercisesAsync = ref.watch(exerciseListProvider);
 
-    return Scaffold(
+    return GlassScaffold(
       appBar: _selecting
-          ? AppBar(
+          ? GlassAppBar(
               leading: IconButton(
                 icon: const Icon(Icons.close),
                 onPressed: () => setState(_selected.clear),
@@ -67,7 +70,7 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
                 ),
               ],
             )
-          : AppBar(title: const Text('Exercises')),
+          : const GlassAppBar(title: Text('Exercises')),
       body: exercisesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
@@ -85,29 +88,36 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
 
           final filtered = all.where(_matches).toList();
 
-          return Column(
-            children: [
-              _SearchField(
-                onChanged: (value) => setState(() => _query = value),
-              ),
-              MuscleFilterBar(
-                muscles: muscles,
-                selected: _muscleFilters,
-                onToggle: _toggleMuscle,
-                onClear: () => setState(_muscleFilters.clear),
-              ),
-              const SizedBox(height: 4),
-              Expanded(
-                child: filtered.isEmpty
-                    ? const _NoMatches()
-                    : _CategorisedList(
-                        rows: _rowsFor(filtered),
-                        selected: _selected,
-                        selecting: _selecting,
-                        onToggle: _toggle,
-                      ),
-              ),
-            ],
+          // The search field and the filter chips stay put while the list
+          // scrolls under the bars, so they are held clear of the app bar
+          // rather than sliding behind it. A half-legible search box behind a
+          // translucent title is worse than no glass at all.
+          return Padding(
+            padding: topBarInset(context),
+            child: Column(
+              children: [
+                _SearchField(
+                  onChanged: (value) => setState(() => _query = value),
+                ),
+                MuscleFilterBar(
+                  muscles: muscles,
+                  selected: _muscleFilters,
+                  onToggle: _toggleMuscle,
+                  onClear: () => setState(_muscleFilters.clear),
+                ),
+                const SizedBox(height: 4),
+                Expanded(
+                  child: filtered.isEmpty
+                      ? const _NoMatches()
+                      : _CategorisedList(
+                          rows: _rowsFor(filtered),
+                          selected: _selected,
+                          selecting: _selecting,
+                          onToggle: _toggle,
+                        ),
+                ),
+              ],
+            ),
           );
         },
       ),
@@ -284,8 +294,10 @@ class _CategorisedList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      // Room to scroll the last card clear of the FAB.
-      padding: const EdgeInsets.only(bottom: 96),
+      // Room to scroll the last card clear of the FAB, plus whatever the
+      // floating navigation pill covers. Only the bottom: the screen has
+      // already held its search header clear of the app bar.
+      padding: const EdgeInsets.only(bottom: 96) + bottomBarInset(context),
       itemCount: rows.length,
       itemBuilder: (context, index) {
         final row = rows[index];
@@ -303,6 +315,9 @@ class _CategorisedList extends StatelessWidget {
               leading: ExerciseThumbnail(
                 gifPath: row.exercise.gifPath,
                 selected: selected.contains(row.exercise.id),
+                // This is the list the detail screen is pushed from, so this is
+                // the still that flies up into the player there.
+                heroTag: exerciseHeroTag(row.exercise.id),
               ),
               title: row.exercise.name,
               subtitle: row.exercise.muscleIds.map(muscleLabel).join(' · '),

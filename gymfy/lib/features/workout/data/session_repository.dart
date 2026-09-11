@@ -29,9 +29,14 @@ class SessionRepository {
   /// Starts a new session for a planned day, snapshotting the day's [name], and
   /// returns the new session id. `completedAt` stays null until it's finished.
   Future<int> startSession({required int dayId, required String name}) {
-    return _db.into(_db.workoutSessions).insert(
-      WorkoutSessionsCompanion.insert(dayId: Value(dayId), name: name.trim()),
-    );
+    return _db
+        .into(_db.workoutSessions)
+        .insert(
+          WorkoutSessionsCompanion.insert(
+            dayId: Value(dayId),
+            name: name.trim(),
+          ),
+        );
   }
 
   /// Streams a single session by id (null if it doesn't exist).
@@ -58,16 +63,18 @@ class SessionRepository {
     required int reps,
     bool isWarmup = false,
   }) {
-    return _db.into(_db.loggedSets).insert(
-      LoggedSetsCompanion.insert(
-        sessionId: sessionId,
-        exerciseId: exerciseId,
-        setNumber: setNumber,
-        weight: Value(weight),
-        reps: Value(reps),
-        isWarmup: Value(isWarmup),
-      ),
-    );
+    return _db
+        .into(_db.loggedSets)
+        .insert(
+          LoggedSetsCompanion.insert(
+            sessionId: sessionId,
+            exerciseId: exerciseId,
+            setNumber: setNumber,
+            weight: Value(weight),
+            reps: Value(reps),
+            isWarmup: Value(isWarmup),
+          ),
+        );
   }
 
   /// Flips a logged set between warm-up and working, renumbering both phases.
@@ -77,9 +84,9 @@ class SessionRepository {
   /// the only fix is to delete the row and log it again from memory.
   Future<void> setWarmup({required int id, required bool isWarmup}) async {
     await _db.transaction(() async {
-      final set = await (_db.select(_db.loggedSets)
-            ..where((t) => t.id.equals(id)))
-          .getSingleOrNull();
+      final set = await (_db.select(
+        _db.loggedSets,
+      )..where((t) => t.id.equals(id))).getSingleOrNull();
       if (set == null) return;
 
       await (_db.update(_db.loggedSets)..where((t) => t.id.equals(id))).write(
@@ -92,9 +99,9 @@ class SessionRepository {
   /// Deletes a single logged set, then closes the gap it left in the numbering.
   Future<void> deleteSet(int id) async {
     await _db.transaction(() async {
-      final set = await (_db.select(_db.loggedSets)
-            ..where((t) => t.id.equals(id)))
-          .getSingleOrNull();
+      final set = await (_db.select(
+        _db.loggedSets,
+      )..where((t) => t.id.equals(id))).getSingleOrNull();
       if (set == null) return;
 
       await (_db.delete(_db.loggedSets)..where((t) => t.id.equals(id))).go();
@@ -189,15 +196,17 @@ class SessionRepository {
     final end = dateOnly(today ?? DateTime.now());
     final start = DateTime(end.year, end.month, end.day - 6);
 
-    final rows = await (_db.select(_db.workoutSessions).join([
-      leftOuterJoin(
-        _db.loggedSets,
-        _db.loggedSets.sessionId.equalsExp(_db.workoutSessions.id),
-      ),
-    ])..where(
-      _db.workoutSessions.completedAt.isNotNull() &
-          _db.workoutSessions.completedAt.isBiggerOrEqualValue(start),
-    )).get();
+    final rows =
+        await (_db.select(_db.workoutSessions).join([
+              leftOuterJoin(
+                _db.loggedSets,
+                _db.loggedSets.sessionId.equalsExp(_db.workoutSessions.id),
+              ),
+            ])..where(
+              _db.workoutSessions.completedAt.isNotNull() &
+                  _db.workoutSessions.completedAt.isBiggerOrEqualValue(start),
+            ))
+            .get();
 
     var volume = 0.0;
     final sessionIds = <int>{};
@@ -216,7 +225,9 @@ class SessionRepository {
   Stream<WorkoutSession?> watchInProgressSession() {
     final query = _db.select(_db.workoutSessions)
       ..where((t) => t.completedAt.isNull())
-      ..orderBy([(t) => OrderingTerm(expression: t.id, mode: OrderingMode.desc)])
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.id, mode: OrderingMode.desc),
+      ])
       ..limit(1);
     return query.watch().map((rows) => rows.isEmpty ? null : rows.first);
   }
@@ -224,8 +235,9 @@ class SessionRepository {
   /// Deletes a session (and its logged sets, via cascade). Used to discard a
   /// session the user abandons.
   Future<void> deleteSession(int id) {
-    return (_db.delete(_db.workoutSessions)..where((t) => t.id.equals(id)))
-        .go();
+    return (_db.delete(
+      _db.workoutSessions,
+    )..where((t) => t.id.equals(id))).go();
   }
 }
 
@@ -260,7 +272,9 @@ final inProgressSessionProvider = StreamProvider<WorkoutSession?>((ref) {
 });
 
 /// The live list of sets logged in a session.
-final sessionSetsProvider =
-    StreamProvider.family<List<LoggedSet>, int>((ref, sessionId) {
-      return ref.watch(sessionRepositoryProvider).watchSessionSets(sessionId);
-    });
+final sessionSetsProvider = StreamProvider.family<List<LoggedSet>, int>((
+  ref,
+  sessionId,
+) {
+  return ref.watch(sessionRepositoryProvider).watchSessionSets(sessionId);
+});

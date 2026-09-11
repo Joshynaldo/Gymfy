@@ -22,17 +22,18 @@ class WorkoutSessions extends Table {
 
   /// The planned day this session was started from, if any. Nullable and set
   /// to null (not cascaded) if that day is deleted, so past sessions survive.
-  IntColumn get dayId => integer()
-      .nullable()
-      .references(WorkoutDays, #id, onDelete: KeyAction.setNull)();
+  IntColumn get dayId => integer().nullable().references(
+    WorkoutDays,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
 
   /// A readable label for the session, snapshotted from the day name at start
   /// time (e.g. "Push"). Kept on the row so history doesn't depend on the plan.
   TextColumn get name => text().withLength(min: 1, max: 60)();
 
   /// When the session was started.
-  DateTimeColumn get startedAt =>
-      dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get startedAt => dateTime().withDefault(currentDateAndTime)();
 
   /// When the session was finished. Null while it's still in progress.
   DateTimeColumn get completedAt => dateTime().nullable()();

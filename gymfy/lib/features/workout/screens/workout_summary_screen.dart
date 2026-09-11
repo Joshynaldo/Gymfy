@@ -5,11 +5,16 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/accent_color.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/format.dart';
+import '../../../shared/widgets/animated_count.dart';
+import '../../../shared/widgets/celebration.dart';
 import '../../../shared/utils/units.dart';
 import '../../exercises/data/exercise_repository.dart';
 import '../../muscle_map/data/muscle_volume_repository.dart';
 import '../../muscle_map/widgets/muscle_map_view.dart';
 import '../data/session_repository.dart';
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../app/theme/glass.dart';
 
 /// Shown after finishing a workout: a recap of the session just completed —
 /// duration, total sets, total volume, and a per-exercise breakdown.
@@ -25,8 +30,8 @@ class WorkoutSummaryScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final sessionAsync = ref.watch(sessionProvider(sessionId));
 
-    return Scaffold(
-      appBar: AppBar(
+    return GlassScaffold(
+      appBar: GlassAppBar(
         title: const Text('Workout complete'),
         automaticallyImplyLeading: false,
       ),
@@ -60,8 +65,8 @@ class _SummaryBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final sets = ref.watch(sessionSetsProvider(session.id)).value ??
-        const <LoggedSet>[];
+    final sets =
+        ref.watch(sessionSetsProvider(session.id)).value ?? const <LoggedSet>[];
     // Names for the per-exercise breakdown; empty map until the library loads.
     // Archived exercises included on purpose — a session logged before a custom
     // exercise was deleted must still show its name, not a blank row.
@@ -83,21 +88,33 @@ class _SummaryBody extends ConsumerWidget {
     final duration = completedAt.difference(session.startedAt);
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32) + barInsets(context),
       children: [
-        Text(session.name, style: theme.textTheme.headlineSmall),
-        const SizedBox(height: 4),
-        Text(
-          formatDateTime(session.startedAt),
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+        // The one genuine moment of achievement in the app, so it is the one
+        // place that marks itself. Nothing to celebrate about a session that
+        // recorded no sets — and this screen is also reachable from history,
+        // where a bloom for a workout you did last Tuesday would be odd.
+        Celebration(
+          enabled: sets.isNotEmpty,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(session.name, style: theme.textTheme.headlineSmall),
+              const SizedBox(height: 4),
+              Text(
+                formatDateTime(session.startedAt),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 20),
+              _StatsRow(
+                duration: duration,
+                setCount: sets.length,
+                totalVolume: totalVolume,
+              ),
+            ],
           ),
-        ),
-        const SizedBox(height: 20),
-        _StatsRow(
-          duration: duration,
-          setCount: sets.length,
-          totalVolume: totalVolume,
         ),
         const SizedBox(height: 24),
         if (sets.isEmpty)
@@ -158,7 +175,9 @@ class _StatsRow extends ConsumerWidget {
           child: _StatTile(
             icon: Icons.timer_outlined,
             label: 'Duration',
-            value: formatDuration(duration),
+            // Not counted up: a clock that races from 00:00 to your session
+            // length looks like the timer is still running.
+            value: Text(formatDuration(duration), style: _valueStyle(context)),
           ),
         ),
         const SizedBox(width: 12),
@@ -166,7 +185,12 @@ class _StatsRow extends ConsumerWidget {
           child: _StatTile(
             icon: Icons.repeat,
             label: 'Sets',
-            value: '$setCount',
+            value: AnimatedCount(
+              value: setCount.toDouble(),
+              from: 0,
+              format: (value) => '${value.round()}',
+              style: _valueStyle(context),
+            ),
           ),
         ),
         const SizedBox(width: 12),
@@ -174,7 +198,12 @@ class _StatsRow extends ConsumerWidget {
           child: _StatTile(
             icon: Icons.fitness_center,
             label: 'Volume',
-            value: formatWeightUnit(totalVolume, unit),
+            value: AnimatedCount(
+              value: totalVolume,
+              from: 0,
+              format: (value) => formatWeightUnit(value, unit),
+              style: _valueStyle(context),
+            ),
           ),
         ),
       ],
@@ -191,7 +220,10 @@ class _StatTile extends ConsumerWidget {
 
   final IconData icon;
   final String label;
-  final String value;
+
+  /// A widget rather than a string so two of the three can count themselves up
+  /// while the third stays a plain clock.
+  final Widget value;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -208,13 +240,7 @@ class _StatTile extends ConsumerWidget {
         children: [
           Icon(icon, color: accent),
           const SizedBox(height: 8),
-          Text(
-            value,
-            style: theme.textTheme.titleMedium,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
+          value,
           const SizedBox(height: 2),
           Text(
             label,
@@ -253,9 +279,7 @@ class _ExerciseSummaryTile extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Expanded(
-                child: Text(name, style: theme.textTheme.titleSmall),
-              ),
+              Expanded(child: Text(name, style: theme.textTheme.titleSmall)),
               Text(
                 '${sets.length} ${sets.length == 1 ? 'set' : 'sets'}',
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -278,3 +302,12 @@ class _ExerciseSummaryTile extends ConsumerWidget {
     );
   }
 }
+
+/// The shared look of the three headline numbers.
+///
+/// Pulled out because two of them are now an [AnimatedCount], which needs the
+/// style handed to it rather than inheriting the tile's, and having the third
+/// drift out of step with them would be the sort of small wrongness nobody can
+/// name but everybody sees.
+TextStyle? _valueStyle(BuildContext context) =>
+    Theme.of(context).textTheme.titleMedium;

@@ -82,9 +82,5 @@ final recapProvider = Provider.family<RecapSummary?, RecapPeriod>((
 ) {
   final sets = ref.watch(recapSetsProvider).value;
   if (sets == null) return null;
-  return summariseRecap(
-    period: period,
-    today: DateTime.now(),
-    allSets: sets,
-  );
+  return summariseRecap(period: period, today: DateTime.now(), allSets: sets);
 });

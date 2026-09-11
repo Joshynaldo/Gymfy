@@ -15,6 +15,26 @@ import '../../calculator/widgets/exercise_rank_badge.dart';
 import '../../workout/widgets/exercise_rest_tile.dart';
 import '../../../shared/utils/exercise_preview.dart';
 import '../data/exercise_repository.dart';
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../app/theme/glass.dart';
+import '../../../shared/widgets/glass_dialog.dart';
+import '../../../shared/widgets/exercise_thumbnail.dart';
+
+/// Opens the exercise detail screen over the current screen.
+///
+/// A push rather than a route change, so it comes back to wherever it was
+/// opened from. That matters during a workout: `go('/exercises/<id>')` would
+/// switch to the Exercises tab, and getting back to the session you are
+/// halfway through would be the user's problem. Same reasoning as
+/// [showPlateCalculator].
+Future<void> showExerciseDetail(BuildContext context, String exerciseId) {
+  return Navigator.of(context).push<void>(
+    MaterialPageRoute(
+      builder: (context) => ExerciseDetailScreen(exerciseId: exerciseId),
+    ),
+  );
+}
 
 /// Full-screen details for a single exercise: an animated GIF preview (when
 /// one has been added to assets), the movement category, and the muscles it
@@ -35,8 +55,8 @@ class ExerciseDetailScreen extends ConsumerWidget {
     // so the app bar doesn't flicker in and out while the row loads.
     final exercise = exerciseAsync.value;
 
-    return Scaffold(
-      appBar: AppBar(
+    return GlassScaffold(
+      appBar: GlassAppBar(
         title: const Text('Exercise'),
         actions: [
           // Built-in exercises are re-seeded from code on every launch, so an
@@ -96,7 +116,7 @@ class _CustomExerciseMenu extends ConsumerWidget {
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => GlassDialog(
         title: Text('Delete ${exercise.name}?'),
         content: Text(
           hasHistory
@@ -146,14 +166,18 @@ class _ExerciseDetailBody extends ConsumerWidget {
 
     return FadeSlideIn(
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(4, 12, 4, 32),
+        padding: const EdgeInsets.fromLTRB(4, 12, 4, 32) + barInsets(context),
         children: [
           // The preview sits in a panel like everything else, so the screen
           // reads as one stack of surfaces rather than a picture with loose
           // text underneath it.
           AppPanel(
             padding: const EdgeInsets.all(12),
-            child: _GifPreview(gifPath: exercise.gifPath, accent: accent),
+            child: _GifPreview(
+              gifPath: exercise.gifPath,
+              accent: accent,
+              exerciseId: exercise.id,
+            ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
@@ -200,10 +224,18 @@ class _ExerciseDetailBody extends ConsumerWidget {
 /// placeholder. GIF files are added to `assets/exercises/` over time, so a
 /// missing file is expected and must not look like an error.
 class _GifPreview extends StatelessWidget {
-  const _GifPreview({required this.gifPath, required this.accent});
+  const _GifPreview({
+    required this.gifPath,
+    required this.accent,
+    required this.exerciseId,
+  });
 
   final String? gifPath;
   final Color accent;
+
+  /// Matches the still in the library list, so the image the row showed is the
+  /// image that lands here.
+  final String exerciseId;
 
   @override
   Widget build(BuildContext context) {
@@ -211,27 +243,33 @@ class _GifPreview extends StatelessWidget {
 
     return AspectRatio(
       aspectRatio: 1,
-      child: DecoratedBox(
-        // A faint tint rather than `surfaceContainerHighest`: this now sits
-        // inside a card, and the old fill made it a second, slightly different
-        // surface stacked on the first.
-        decoration: BoxDecoration(
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.04),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: switch (gifPath) {
-            null => _Placeholder(accent: accent),
-            // A custom exercise's image is a file the user picked, not
-            // something bundled at build time.
-            final path when !isBundledAsset(path) => Image.file(
-              File(path),
-              fit: BoxFit.contain,
-              errorBuilder: (_, _, _) => _Placeholder(accent: accent),
-            ),
-            final path => _AssetGifOrPlaceholder(path: path, accent: accent),
-          },
+      // Square at both ends, so the flight up from the library row is a clean
+      // scale rather than a stretch. The Hero sits inside the AspectRatio so
+      // the box it flies to is the one the layout has already settled on.
+      child: Hero(
+        tag: exerciseHeroTag(exerciseId),
+        child: DecoratedBox(
+          // A faint tint rather than `surfaceContainerHighest`: this now sits
+          // inside a card, and the old fill made it a second, slightly different
+          // surface stacked on the first.
+          decoration: BoxDecoration(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: switch (gifPath) {
+              null => _Placeholder(accent: accent),
+              // A custom exercise's image is a file the user picked, not
+              // something bundled at build time.
+              final path when !isBundledAsset(path) => Image.file(
+                File(path),
+                fit: BoxFit.contain,
+                errorBuilder: (_, _, _) => _Placeholder(accent: accent),
+              ),
+              final path => _AssetGifOrPlaceholder(path: path, accent: accent),
+            },
+          ),
         ),
       ),
     );

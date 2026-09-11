@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../shared/utils/format.dart';
+import '../../../shared/widgets/chart_style.dart';
 import '../../../shared/utils/units.dart';
 import '../data/progress_repository.dart';
 
@@ -39,11 +40,6 @@ class ExerciseProgressChart extends ConsumerWidget {
     // Show at most ~6 date labels so the axis doesn't get crowded.
     final labelStep = (points.length / 6).ceil().clamp(1, points.length);
 
-    final gridLine = FlLine(
-      color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
-      strokeWidth: 1,
-    );
-
     return LineChart(
       LineChartData(
         minX: 0,
@@ -54,7 +50,7 @@ class ExerciseProgressChart extends ConsumerWidget {
           show: true,
           drawVerticalLine: false,
           horizontalInterval: yInterval,
-          getDrawingHorizontalLine: (_) => gridLine,
+          getDrawingHorizontalLine: (_) => chartGridLine(context),
         ),
         borderData: FlBorderData(show: false),
         titlesData: FlTitlesData(
@@ -73,7 +69,7 @@ class ExerciseProgressChart extends ConsumerWidget {
                 padding: const EdgeInsets.only(right: 6),
                 child: Text(
                   formatWeight(value),
-                  style: theme.textTheme.bodySmall,
+                  style: chartLabelStyle(context),
                 ),
               ),
             ),
@@ -95,7 +91,7 @@ class ExerciseProgressChart extends ConsumerWidget {
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
                     formatShortDate(points[i].date),
-                    style: theme.textTheme.bodySmall,
+                    style: chartLabelStyle(context),
                   ),
                 );
               },
@@ -125,17 +121,12 @@ class ExerciseProgressChart extends ConsumerWidget {
             color: accent,
             barWidth: 3,
             dotData: FlDotData(
-              show: true,
-              getDotPainter: (spot, _, _, _) => FlDotCirclePainter(
-                radius: 4,
-                color: accent,
-                strokeWidth: 0,
-              ),
+              // Only while you can still count them — see chartShowsDots.
+              show: chartShowsDots(spots.length),
+              getDotPainter: (spot, _, _, _) =>
+                  FlDotCirclePainter(radius: 4, color: accent, strokeWidth: 0),
             ),
-            belowBarData: BarAreaData(
-              show: true,
-              color: accent.withValues(alpha: 0.15),
-            ),
+            belowBarData: chartAreaFill(accent),
           ),
         ],
       ),

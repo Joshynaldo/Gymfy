@@ -10,6 +10,8 @@ import '../data/workout_repository.dart';
 import '../widgets/split_day_list.dart';
 import 'split_days_screen.dart' show addDayTo;
 import 'split_list_screen.dart' show createSplit;
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
 
 /// The Workout tab: the split you're actually following, with its days on first
 /// sight.
@@ -29,15 +31,13 @@ class WorkoutScreen extends ConsumerWidget {
     // One loading state for both streams: showing the app bar before we know
     // whether there is a split at all would flash the wrong title.
     if (splitsAsync.isLoading || activeAsync.isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final error = splitsAsync.error ?? activeAsync.error;
     if (error != null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Workout')),
+      return GlassScaffold(
+        appBar: GlassAppBar(title: const Text('Workout')),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -54,8 +54,8 @@ class WorkoutScreen extends ConsumerWidget {
     final active = activeAsync.value;
 
     if (splits.isEmpty) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Workout')),
+      return GlassScaffold(
+        appBar: GlassAppBar(title: const Text('Workout')),
         body: _NoSplitsYet(onCreate: () => createSplit(context, ref)),
       );
     }
@@ -64,8 +64,8 @@ class WorkoutScreen extends ConsumerWidget {
     // active one. There is nothing sensible to show until one is chosen, so we
     // ask instead of guessing.
     if (active == null) {
-      return Scaffold(
-        appBar: AppBar(
+      return GlassScaffold(
+        appBar: GlassAppBar(
           title: const Text('Workout'),
           actions: [_SwitcherAction(splits: splits, activeId: null)],
         ),
@@ -75,8 +75,8 @@ class WorkoutScreen extends ConsumerWidget {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
+    return GlassScaffold(
+      appBar: GlassAppBar(
         title: Text(active.name),
         actions: [_SwitcherAction(splits: splits, activeId: active.id)],
       ),
@@ -121,8 +121,7 @@ Future<void> _openSwitcher(
   final choice = await showModalBottomSheet<_SwitcherChoice>(
     context: context,
     showDragHandle: true,
-    builder: (context) =>
-        _SwitcherSheet(splits: splits, activeId: activeId),
+    builder: (context) => _SwitcherSheet(splits: splits, activeId: activeId),
   );
   if (choice == null || !context.mounted) return;
 

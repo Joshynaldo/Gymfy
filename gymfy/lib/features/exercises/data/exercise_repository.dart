@@ -48,6 +48,15 @@ class ExerciseRepository {
 
   final AppDatabase _db;
 
+  /// Sets (or clears) the bar weight for one exercise, in kilograms.
+  ///
+  /// Null means "use the gym-wide default"; zero means there is no bar at all,
+  /// which is the honest answer for a leg press or a hack squat.
+  Future<void> setBarWeight(String exerciseId, double? barWeightKg) {
+    return (_db.update(_db.exercises)..where((t) => t.id.equals(exerciseId)))
+        .write(ExercisesCompanion(barWeightKg: Value(barWeightKg)));
+  }
+
   /// Loads the built-in [exerciseSeedData] into the database.
   ///
   /// Idempotent: this is an upsert keyed on each exercise's `id`, so running
@@ -122,16 +131,18 @@ class ExerciseRepository {
   }) async {
     final id = await _uniqueId(slugifyExerciseName(name));
 
-    await _db.into(_db.exercises).insert(
-      ExercisesCompanion.insert(
-        id: id,
-        name: name,
-        muscleIds: muscleIds,
-        gifPath: Value(imagePath),
-        isPlateLoaded: Value(isPlateLoaded),
-        isCustom: const Value(true),
-      ),
-    );
+    await _db
+        .into(_db.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: id,
+            name: name,
+            muscleIds: muscleIds,
+            gifPath: Value(imagePath),
+            isPlateLoaded: Value(isPlateLoaded),
+            isCustom: const Value(true),
+          ),
+        );
     return id;
   }
 
@@ -159,16 +170,18 @@ class ExerciseRepository {
 
   /// Whether this exercise appears in any logged set or any planned split day.
   Future<bool> hasHistory(String id) async {
-    final logged = await (_db.select(_db.loggedSets)
-          ..where((t) => t.exerciseId.equals(id))
-          ..limit(1))
-        .get();
+    final logged =
+        await (_db.select(_db.loggedSets)
+              ..where((t) => t.exerciseId.equals(id))
+              ..limit(1))
+            .get();
     if (logged.isNotEmpty) return true;
 
-    final planned = await (_db.select(_db.workoutExercises)
-          ..where((t) => t.exerciseId.equals(id))
-          ..limit(1))
-        .get();
+    final planned =
+        await (_db.select(_db.workoutExercises)
+              ..where((t) => t.exerciseId.equals(id))
+              ..limit(1))
+            .get();
     return planned.isNotEmpty;
   }
 
@@ -183,17 +196,16 @@ class ExerciseRepository {
   /// row intact for name lookups.
   Future<bool> deleteCustom(Exercise exercise) async {
     if (await hasHistory(exercise.id)) {
-      await (_db.update(_db.exercises)
-            ..where((t) => t.id.equals(exercise.id)))
+      await (_db.update(_db.exercises)..where((t) => t.id.equals(exercise.id)))
           .write(const ExercisesCompanion(isArchived: Value(true)));
       return true;
     }
 
     // Never used, so nothing to preserve. The row goes first; its image is
     // cleanup that must not block the delete if it fails.
-    await (_db.delete(_db.exercises)
-          ..where((t) => t.id.equals(exercise.id)))
-        .go();
+    await (_db.delete(
+      _db.exercises,
+    )..where((t) => t.id.equals(exercise.id))).go();
     await _deleteImage(exercise.gifPath);
     return false;
   }
@@ -211,9 +223,9 @@ class ExerciseRepository {
     var candidate = base;
     var suffix = 1;
     while (true) {
-      final existing = await (_db.select(_db.exercises)
-            ..where((t) => t.id.equals(candidate)))
-          .getSingleOrNull();
+      final existing = await (_db.select(
+        _db.exercises,
+      )..where((t) => t.id.equals(candidate))).getSingleOrNull();
       if (existing == null) return candidate;
       suffix++;
       candidate = '${base}_$suffix';

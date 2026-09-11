@@ -10,6 +10,10 @@ import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/fade_slide_in.dart';
 import '../data/calorie_repository.dart';
 import '../widgets/macro_breakdown.dart';
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../app/theme/glass.dart';
+import '../../../shared/widgets/glass_dialog.dart';
 
 /// A record returned by the add-meal dialog.
 typedef _MealInput = ({
@@ -40,34 +44,39 @@ class _CalorieLogScreenState extends ConsumerState<CalorieLogScreen> {
   Widget build(BuildContext context) {
     final entriesAsync = ref.watch(calorieEntriesForDayProvider(_day));
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Calorie log')),
-      body: Column(
-        children: [
-          _DayNavigator(
-            day: _day,
-            onPrevious: () => _shiftDay(-1),
-            // Don't let the user page into the future.
-            onNext: _day.isBefore(dateOnly(DateTime.now()))
-                ? () => _shiftDay(1)
-                : null,
-          ),
-          Expanded(
-            child: entriesAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(
-                    'Could not load the log.\n$error',
-                    textAlign: TextAlign.center,
+    return GlassScaffold(
+      appBar: GlassAppBar(title: const Text('Calorie log')),
+      // The day stepper is fixed, so it is held clear of the app bar; only the
+      // list below it slides under the bars.
+      body: Padding(
+        padding: topBarInset(context),
+        child: Column(
+          children: [
+            _DayNavigator(
+              day: _day,
+              onPrevious: () => _shiftDay(-1),
+              // Don't let the user page into the future.
+              onNext: _day.isBefore(dateOnly(DateTime.now()))
+                  ? () => _shiftDay(1)
+                  : null,
+            ),
+            Expanded(
+              child: entriesAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, _) => Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      'Could not load the log.\n$error',
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
+                data: (entries) => _DayContent(entries: entries),
               ),
-              data: (entries) => _DayContent(entries: entries),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addMeal,
@@ -84,14 +93,16 @@ class _CalorieLogScreenState extends ConsumerState<CalorieLogScreen> {
     );
     if (meal == null) return;
 
-    await ref.read(calorieRepositoryProvider).addEntry(
-      day: _day,
-      name: meal.name,
-      calories: meal.calories,
-      protein: meal.protein,
-      carbs: meal.carbs,
-      fat: meal.fat,
-    );
+    await ref
+        .read(calorieRepositoryProvider)
+        .addEntry(
+          day: _day,
+          name: meal.name,
+          calories: meal.calories,
+          protein: meal.protein,
+          carbs: meal.carbs,
+          fat: meal.fat,
+        );
   }
 }
 
@@ -147,7 +158,7 @@ class _DayContent extends StatelessWidget {
       // The list itself carries no horizontal padding any more: cards bring
       // their own margin, so the meals line up with the cards on every other
       // tab instead of sitting inset by a further 16.
-      padding: const EdgeInsets.fromLTRB(4, 4, 4, 96),
+      padding: const EdgeInsets.fromLTRB(4, 4, 4, 96) + bottomBarInset(context),
       children: [
         _CalorieSummary(total: totalCalories, goal: defaultCalorieGoal),
         Padding(
@@ -314,7 +325,7 @@ class _AddMealDialogState extends State<_AddMealDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return GlassDialog(
       title: const Text('Add meal'),
       content: SingleChildScrollView(
         child: Column(
@@ -333,11 +344,17 @@ class _AddMealDialogState extends State<_AddMealDialog> {
             _NumberField(controller: _calories, label: 'Calories (kcal)'),
             Row(
               children: [
-                Expanded(child: _NumberField(controller: _protein, label: 'Protein g')),
+                Expanded(
+                  child: _NumberField(controller: _protein, label: 'Protein g'),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: _NumberField(controller: _carbs, label: 'Carbs g')),
+                Expanded(
+                  child: _NumberField(controller: _carbs, label: 'Carbs g'),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: _NumberField(controller: _fat, label: 'Fat g')),
+                Expanded(
+                  child: _NumberField(controller: _fat, label: 'Fat g'),
+                ),
               ],
             ),
           ],

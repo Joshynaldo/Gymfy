@@ -20,6 +20,7 @@ class MuscleMapView extends StatefulWidget {
     this.caption,
     this.contrastCaption =
         'Each muscle has its own colour. Brighter still means more volume.',
+    this.heatColor,
   });
 
   /// The intensities to display (loading / error / data).
@@ -35,6 +36,12 @@ class MuscleMapView extends StatefulWidget {
   /// wording, which is what every caller but the fatigue map wants — brightness
   /// means something different there and saying "volume" would be wrong.
   final String contrastCaption;
+
+  /// Overrides the accent as the colour muscles heat toward.
+  ///
+  /// The fatigue reading passes a fixed red, so the two readings of this one
+  /// diagram are told apart by colour rather than only by their captions.
+  final Color? heatColor;
 
   @override
   State<MuscleMapView> createState() => _MuscleMapViewState();
@@ -110,6 +117,7 @@ class _MuscleMapViewState extends State<MuscleMapView> {
                 side: _side,
                 intensities: intensities,
                 mode: _mode,
+                heatColor: widget.heatColor,
               ),
             ),
           ),
@@ -140,9 +148,7 @@ class _MuscleMapViewState extends State<MuscleMapView> {
   /// reshuffle between rebuilds.
   List<String> get _trainedMuscles {
     final data = widget.intensities.value ?? const <String, double>{};
-    return colouredMuscles
-        .where((id) => (data[id] ?? 0) > 0)
-        .toList();
+    return colouredMuscles.where((id) => (data[id] ?? 0) > 0).toList();
   }
 
   String get _captionText {

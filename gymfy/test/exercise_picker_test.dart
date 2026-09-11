@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/features/exercises/data/exercise_repository.dart';
 import 'package:gymfy/features/workout/screens/widgets/exercise_picker.dart';
 import 'package:gymfy/shared/database/app_database.dart';
+import 'package:gymfy/shared/widgets/exercise_thumbnail.dart';
 
 import 'support/default_accent.dart';
 
@@ -16,6 +17,7 @@ final _sample = <Exercise>[
     id: 'barbell_bench_press',
     name: 'Barbell Bench Press',
     muscleIds: const ['chest', 'triceps'],
+    gifPath: 'assets/exercises/barbell_bench_press.gif',
     isPlateLoaded: true,
     isCustom: false,
     isArchived: false,
@@ -170,6 +172,30 @@ void main() {
     await tester.tap(find.text('Push-Up'));
     await tester.pumpAndSettle();
     expect(find.text('Nothing selected'), findsOneWidget);
+  });
+
+  testWidgets('rows show a still of the movement', (tester) async {
+    await _openPicker(tester);
+
+    // This is the screen where the thumbnail earns the most: you are scanning
+    // a long list for a lift you already have in mind, and a shape matches
+    // faster than a name.
+    expect(find.byType(ExerciseThumbnail), findsNWidgets(3));
+    // Only the bench press has one in the fixtures; the other two have to fall
+    // back to the icon rather than leaving a hole in the row.
+    expect(find.byType(Image), findsOneWidget);
+  });
+
+  testWidgets('picking a row swaps its still for a tick', (tester) async {
+    await _openPicker(tester);
+
+    await tester.tap(find.text('Barbell Bench Press'));
+    await tester.pumpAndSettle();
+
+    // The row has to say "picked" more loudly than it says which exercise it
+    // is, so the picture gets out of the way entirely.
+    expect(find.byIcon(Icons.check), findsOneWidget);
+    expect(find.byType(Image), findsNothing);
   });
 
   testWidgets('dismissing returns null rather than an empty list', (

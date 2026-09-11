@@ -76,9 +76,7 @@ class _WeekdayToggle extends StatelessWidget {
               color: selected ? accent : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: selected
-                    ? accent
-                    : theme.colorScheme.outlineVariant,
+                color: selected ? accent : theme.colorScheme.outlineVariant,
               ),
             ),
             child: Text(

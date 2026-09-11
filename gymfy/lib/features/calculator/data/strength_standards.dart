@@ -62,10 +62,7 @@ class StrengthStandard {
 }
 
 /// Ratios per sex for one exercise.
-typedef ExerciseStandards = ({
-  StrengthStandard male,
-  StrengthStandard female,
-});
+typedef ExerciseStandards = ({StrengthStandard male, StrengthStandard female});
 
 /// Standards keyed by the seed-data exercise id.
 ///

@@ -10,18 +10,17 @@ import '../../features/exercises/screens/exercise_form_screen.dart';
 import '../../features/exercises/screens/exercise_library_screen.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/more/screens/more_screen.dart';
-import '../../features/muscle_map/screens/muscle_map_screen.dart';
 import '../../features/progress/screens/exercise_progress_screen.dart';
 import '../../features/progress/screens/measurement_history_screen.dart';
 import '../../features/progress/screens/measurements_screen.dart';
 import '../../features/progress/screens/photo_comparison_screen.dart';
-import '../../features/plates/screens/plate_calculator_screen.dart';
 import '../../features/progress/screens/progress_photos_screen.dart';
 import '../../features/data_export/screens/export_screen.dart';
 import '../../features/help/screens/help_screen.dart';
 import '../../features/plan_share/screens/share_plan_screen.dart';
 import '../../features/progress/screens/progress_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
+import '../../features/stats/screens/stats_screen.dart';
 import '../../features/workout/screens/active_workout_screen.dart';
 import '../../features/workout/screens/day_builder_screen.dart';
 import '../../features/workout/screens/split_days_screen.dart';
@@ -132,61 +131,63 @@ GoRouter goRouter(Ref ref) {
               ),
             ],
           ),
-          // Tab 3 — Muscle map
+          // Tab 3 — Stats (rank, muscle map, lifetime totals)
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/muscle-map',
-                builder: (context, state) => const MuscleMapScreen(),
+                path: '/stats',
+                builder: (context, state) => const StatsScreen(),
               ),
             ],
           ),
-          // Tab 4 — Progress
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/progress',
-                builder: (context, state) => const ProgressScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'exercise/:exerciseId',
-                    builder: (context, state) => ExerciseProgressScreen(
-                      exerciseId: state.pathParameters['exerciseId']!,
-                    ),
-                  ),
-                  GoRoute(
-                    path: 'photos',
-                    builder: (context, state) => const ProgressPhotosScreen(),
-                    routes: [
-                      GoRoute(
-                        path: 'compare',
-                        builder: (context, state) =>
-                            const PhotoComparisonScreen(),
-                      ),
-                    ],
-                  ),
-                  GoRoute(
-                    path: 'measurements',
-                    builder: (context, state) => const MeasurementsScreen(),
-                    routes: [
-                      GoRoute(
-                        path: 'history',
-                        builder: (context, state) =>
-                            const MeasurementHistoryScreen(),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-          // Tab 5 — More (hub for extra tools)
+          // Tab 4 — More (hub for extra tools)
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/more',
                 builder: (context, state) => const MoreScreen(),
                 routes: [
+                  // Progress used to be a bottom-nav tab of its own. Six tabs
+                  // was one too many — the bar was crowded and every label had
+                  // to shrink — and of the six, this is the one you consult
+                  // rather than use: you check a chart after training, not
+                  // during. Its whole subtree moved with it, so the photos and
+                  // measurements screens keep their place underneath it.
+                  GoRoute(
+                    path: 'progress',
+                    builder: (context, state) => const ProgressScreen(),
+                    routes: [
+                      GoRoute(
+                        path: 'exercise/:exerciseId',
+                        builder: (context, state) => ExerciseProgressScreen(
+                          exerciseId: state.pathParameters['exerciseId']!,
+                        ),
+                      ),
+                      GoRoute(
+                        path: 'photos',
+                        builder: (context, state) =>
+                            const ProgressPhotosScreen(),
+                        routes: [
+                          GoRoute(
+                            path: 'compare',
+                            builder: (context, state) =>
+                                const PhotoComparisonScreen(),
+                          ),
+                        ],
+                      ),
+                      GoRoute(
+                        path: 'measurements',
+                        builder: (context, state) => const MeasurementsScreen(),
+                        routes: [
+                          GoRoute(
+                            path: 'history',
+                            builder: (context, state) =>
+                                const MeasurementHistoryScreen(),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                   GoRoute(
                     path: 'calories',
                     builder: (context, state) => const CalorieLogScreen(),
@@ -197,18 +198,7 @@ GoRouter goRouter(Ref ref) {
                   ),
                   GoRoute(
                     path: 'one-rm',
-                    builder: (context, state) =>
-                        const OneRmCalculatorScreen(),
-                  ),
-                  GoRoute(
-                    path: 'plates',
-                    builder: (context, state) => PlateCalculatorScreen(
-                      // Optional prefill, so a weight can be handed over from
-                      // the 1RM calculator or a logged set.
-                      initialWeight: double.tryParse(
-                        state.uri.queryParameters['weight'] ?? '',
-                      ),
-                    ),
+                    builder: (context, state) => const OneRmCalculatorScreen(),
                   ),
                   GoRoute(
                     path: 'rank',

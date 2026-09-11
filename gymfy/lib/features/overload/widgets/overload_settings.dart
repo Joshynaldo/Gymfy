@@ -76,8 +76,7 @@ class OverloadSettingsPanel extends ConsumerWidget {
                 ChoiceChip(
                   label: const Text('Never'),
                   selected: config.deloadWeeks == null,
-                  onSelected: (_) =>
-                      update(config.copyWith(clearDeload: true)),
+                  onSelected: (_) => update(config.copyWith(clearDeload: true)),
                 ),
                 for (final weeks in overloadDeloadOptions)
                   ChoiceChip(

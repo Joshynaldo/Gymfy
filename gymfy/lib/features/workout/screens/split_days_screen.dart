@@ -8,6 +8,8 @@ import '../../../shared/database/app_database.dart';
 import '../../../shared/widgets/name_prompt_dialog.dart';
 import '../data/workout_repository.dart';
 import '../widgets/split_day_list.dart';
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
 
 /// The overview of *one* split: every day shown as a card, each listing its
 /// planned exercises inline so the whole programme is visible at a glance.
@@ -29,8 +31,8 @@ class SplitDaysScreen extends ConsumerWidget {
     final split = splitAsync.value;
     final title = split?.name ?? 'Split';
 
-    return Scaffold(
-      appBar: AppBar(
+    return GlassScaffold(
+      appBar: GlassAppBar(
         title: Text(title),
         actions: [if (split != null) ActiveSplitAction(split: split)],
       ),

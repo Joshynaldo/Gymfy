@@ -36,8 +36,7 @@ class Splits extends Table {
   BoolColumn get isActive => boolean().withDefault(const Constant(false))();
 
   /// When it was created — handy for a default "newest first" ordering.
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
 
 /// A single day within a [Split], e.g. "Push" or "Leg Day A".

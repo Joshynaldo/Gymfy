@@ -8,6 +8,7 @@ import '../../../shared/utils/units.dart';
 import '../../muscle_map/data/muscle_volume_repository.dart';
 import '../../muscle_map/widgets/muscle_map.dart';
 import '../../workout/data/session_repository.dart';
+import '../../../shared/widgets/app_card.dart';
 
 /// The last workout you finished: when, how much, and which muscles it hit.
 ///
@@ -43,58 +44,49 @@ class _Body extends ConsumerWidget {
     final volume = sets.fold<double>(0, (sum, s) => sum + s.weight * s.reps);
     final completedAt = session.completedAt ?? session.startedAt;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.go('/workout/summary/${session.id}'),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'LAST WORKOUT',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(session.name, style: theme.textTheme.titleMedium),
-                    const SizedBox(height: 4),
-                    Text(
-                      formatDayLabel(completedAt),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${sets.length} ${sets.length == 1 ? 'set' : 'sets'} • '
-                      '${formatWeightUnit(volume, unit)}',
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                  ],
+    return AppCard(
+      padding: const EdgeInsets.all(16),
+      onTap: () => context.go('/workout/summary/${session.id}'),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'LAST WORKOUT',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    letterSpacing: 1,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              // Front only. The back would double the width for a thumbnail
-              // this size, and the point here is recognition — "that was a
-              // chest day" — not study.
-              SizedBox(
-                width: 64,
-                child: MuscleMap(
-                  side: BodySide.front,
-                  intensities: intensities,
+                const SizedBox(height: 4),
+                Text(session.name, style: theme.textTheme.titleMedium),
+                const SizedBox(height: 4),
+                Text(
+                  formatDayLabel(completedAt),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  '${sets.length} ${sets.length == 1 ? 'set' : 'sets'} • '
+                  '${formatWeightUnit(volume, unit)}',
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ],
+            ),
           ),
-        ),
+          const SizedBox(width: 12),
+          // Front only. The back would double the width for a thumbnail
+          // this size, and the point here is recognition — "that was a
+          // chest day" — not study.
+          SizedBox(
+            width: 64,
+            child: MuscleMap(side: BodySide.front, intensities: intensities),
+          ),
+        ],
       ),
     );
   }

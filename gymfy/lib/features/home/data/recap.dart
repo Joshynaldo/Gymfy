@@ -129,9 +129,7 @@ List<DateTime> bucketStarts(RecapPeriod period, DateTime today) {
 /// The short label under a bucket.
 String bucketLabel(DateTime start, RecapGrain grain) {
   const weekdays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-  const months = [
-    'J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D',
-  ];
+  const months = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
   return switch (grain) {
     RecapGrain.day => weekdays[start.weekday - 1],
     // Day-of-month: a week bar is identified by when it started, and "12"

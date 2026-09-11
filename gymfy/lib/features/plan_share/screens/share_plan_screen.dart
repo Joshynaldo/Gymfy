@@ -14,6 +14,10 @@ import '../../workout/data/workout_repository.dart';
 import '../data/plan_document.dart';
 import '../data/plan_pdf.dart';
 import '../data/plan_share_repository.dart';
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../app/theme/glass.dart';
+import '../../../shared/widgets/glass_dialog.dart';
 
 /// Sharing plans: send your splits as a file, print them, or take someone
 /// else's in.
@@ -37,8 +41,8 @@ class _SharePlanScreenState extends ConsumerState<SharePlanScreen> {
   Widget build(BuildContext context) {
     final splitsAsync = ref.watch(splitListProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Share a plan')),
+    return GlassScaffold(
+      appBar: GlassAppBar(title: const Text('Share a plan')),
       body: splitsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
@@ -52,7 +56,8 @@ class _SharePlanScreenState extends ConsumerState<SharePlanScreen> {
         ),
         data: (splits) => FadeSlideIn(
           child: ListView(
-            padding: const EdgeInsets.only(top: 4, bottom: 24),
+            padding:
+                const EdgeInsets.only(top: 4, bottom: 24) + barInsets(context),
             children: [
               const _Explainer(),
               if (splits.isEmpty)
@@ -216,9 +221,9 @@ class _SharePlanScreenState extends ConsumerState<SharePlanScreen> {
 
   void _complain(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _say(String message) => _complain(message);
@@ -263,7 +268,7 @@ class _RenameDialogState extends State<_RenameDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return GlassDialog(
       title: const Text('Name already used'),
       content: Column(
         mainAxisSize: MainAxisSize.min,

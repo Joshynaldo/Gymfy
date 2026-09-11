@@ -5,6 +5,7 @@ import '../../../../app/theme/accent_color.dart';
 import '../../../../shared/database/app_database.dart';
 import '../../../../shared/utils/exercise_display.dart';
 import '../../../../shared/utils/exercise_search.dart';
+import '../../../../shared/widgets/exercise_thumbnail.dart';
 import '../../../../shared/widgets/muscle_filter_bar.dart';
 import '../../../exercises/data/exercise_repository.dart';
 
@@ -198,13 +199,11 @@ class _PickerTile extends ConsumerWidget {
     return ListTile(
       selected: selected,
       selectedTileColor: accent.withValues(alpha: 0.08),
-      leading: CircleAvatar(
-        backgroundColor: selected ? accent : accent.withValues(alpha: 0.15),
-        child: Icon(
-          selected ? Icons.check : exerciseIcon,
-          color: selected ? Colors.white : accent,
-        ),
-      ),
+      // A still of the movement rather than the same symbol on every row. This
+      // is the screen where it earns the most: you are scanning a long list
+      // for a lift you have in mind, and a shape is quicker to match than a
+      // name. Selection still swaps it for the tick.
+      leading: ExerciseThumbnail(gifPath: exercise.gifPath, selected: selected),
       title: Text(exercise.name),
       subtitle: Text(
         exercise.muscleIds.map(muscleLabel).join(', '),

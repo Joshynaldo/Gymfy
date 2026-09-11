@@ -1,6 +1,7 @@
 // Building a weight by stacking plates — the reverse of the calculator, used
 // when logging a barbell set.
 
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,7 +37,11 @@ void main() {
     await db.close();
   });
 
-  Future<void> pump(WidgetTester tester, {double initialWeight = 20}) async {
+  Future<void> pump(
+    WidgetTester tester, {
+    double initialWeight = 20,
+    String? exerciseId,
+  }) async {
     tester.view.physicalSize = const Size(1000, 2000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -48,6 +53,7 @@ void main() {
           home: Scaffold(
             body: PlateStacker(
               initialWeight: initialWeight,
+              exerciseId: exerciseId,
               onChanged: reported.add,
             ),
           ),
@@ -158,5 +164,72 @@ void main() {
 
     expect(find.widgetWithText(InkWell, '20'), findsWidgets);
     expect(find.widgetWithText(InkWell, '25'), findsNothing);
+  });
+
+  group('the exercise bar', () {
+    /// Seeds one plate-loaded exercise and returns its id.
+    Future<String> seedExercise() async {
+      await db
+          .into(db.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'leg_press',
+              name: 'Leg Press',
+              muscleIds: const ['quads'],
+              isPlateLoaded: const Value(true),
+            ),
+          );
+      return 'leg_press';
+    }
+
+    testWidgets('picking a bar actually changes the weight on screen', (
+      tester,
+    ) async {
+      // The bug this was written for: the choice was written to the database
+      // and the number never moved, because the widget had been handed a
+      // snapshot of the exercise taken when the dialog opened. It looked for
+      // all the world like the tap had been ignored.
+      final id = await seedExercise();
+      await pump(tester, initialWeight: 100, exerciseId: id);
+
+      expect(find.text('100'), findsOneWidget);
+
+      await tester.tap(find.text('20 kg'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('None').last);
+      await tester.runAsync(() => pumpEventQueue());
+      await tester.pumpAndSettle();
+
+      // Same plates, no bar: 20 kg lighter, and the caption stops mentioning
+      // a bar that isn't there.
+      expect(find.text('80'), findsOneWidget);
+      expect(find.textContaining('no bar'), findsOneWidget);
+    });
+
+    testWidgets('the new weight is reported, not just displayed', (
+      tester,
+    ) async {
+      // Changing the bar changes the total without touching a plate. If the
+      // caller isn't told, the dialog logs the old weight while showing the
+      // new one — wrong in the database and right on screen, the worst pair.
+      final id = await seedExercise();
+      await pump(tester, initialWeight: 100, exerciseId: id);
+
+      await tester.tap(find.text('20 kg'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('None').last);
+      await tester.runAsync(() => pumpEventQueue());
+      await tester.pumpAndSettle();
+
+      expect(reported.last, 80);
+    });
+
+    testWidgets('without an exercise there is no bar button', (tester) async {
+      // The standalone calculator has nowhere to remember the answer, so it
+      // keeps its own picker rather than offering one that forgets.
+      await pump(tester, initialWeight: 100);
+
+      expect(find.text('None'), findsNothing);
+    });
   });
 }

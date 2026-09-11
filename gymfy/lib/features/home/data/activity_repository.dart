@@ -130,7 +130,7 @@ ActivityRepository activityRepository(Ref ref) {
 /// a provider that ticked to catch that would rebuild the Home tab all day to
 /// redraw the same squares.
 final activityMinutesProvider = StreamProvider<Map<DateTime, int>>((ref) {
-  return ref.watch(activityRepositoryProvider).watchMinutesByDay(
-    DateTime.now(),
-  );
+  return ref
+      .watch(activityRepositoryProvider)
+      .watchMinutesByDay(DateTime.now());
 });

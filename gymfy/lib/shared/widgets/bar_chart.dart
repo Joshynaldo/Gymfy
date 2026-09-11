@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/theme/accent_color.dart';
+import 'chart_style.dart';
 
 /// A bar chart with a label under each bar.
 ///
@@ -87,10 +88,7 @@ class SimpleBarChart extends ConsumerWidget {
           show: true,
           drawVerticalLine: false,
           horizontalInterval: interval,
-          getDrawingHorizontalLine: (_) => FlLine(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
-            strokeWidth: 1,
-          ),
+          getDrawingHorizontalLine: (_) => chartGridLine(context),
         ),
         borderData: FlBorderData(show: false),
         extraLinesData: ExtraLinesData(
@@ -118,7 +116,7 @@ class SimpleBarChart extends ConsumerWidget {
               interval: interval,
               getTitlesWidget: (value, _) => Padding(
                 padding: const EdgeInsets.only(right: 6),
-                child: Text(yLabel(value), style: theme.textTheme.bodySmall),
+                child: Text(yLabel(value), style: chartLabelStyle(context)),
               ),
             ),
           ),
@@ -135,7 +133,7 @@ class SimpleBarChart extends ConsumerWidget {
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
                     labels[i],
-                    style: theme.textTheme.bodySmall?.copyWith(
+                    style: chartLabelStyle(context)?.copyWith(
                       color: isLast ? accent : null,
                       fontWeight: isLast ? FontWeight.w700 : null,
                     ),
@@ -166,8 +164,24 @@ class SimpleBarChart extends ConsumerWidget {
 double niceAxisInterval(double maxY) {
   final rough = maxY / 4;
   const steps = [
-    0.1, 0.2, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 25.0, 50.0,
-    100.0, 250.0, 500.0, 1000.0, 2500.0, 5000.0, 10000.0, 25000.0,
+    0.1,
+    0.2,
+    0.25,
+    0.5,
+    1.0,
+    2.0,
+    5.0,
+    10.0,
+    25.0,
+    50.0,
+    100.0,
+    250.0,
+    500.0,
+    1000.0,
+    2500.0,
+    5000.0,
+    10000.0,
+    25000.0,
   ];
   for (final step in steps) {
     if (step >= rough) return step;

@@ -87,8 +87,7 @@ Color plateColor(double weight, WeightUnit unit) {
 }
 
 /// Whether [plateColor] returns something light enough to need dark text on it.
-bool plateNeedsDarkLabel(Color color) =>
-    color.computeLuminance() > 0.5;
+bool plateNeedsDarkLabel(Color color) => color.computeLuminance() > 0.5;
 
 /// The result of loading a bar: what goes on each side, and what's left over.
 class PlateLoad {
@@ -134,7 +133,12 @@ PlateLoad calculatePlates({
   required List<double> plates,
 }) {
   if (target < bar - 0.001) {
-    return PlateLoad(perSide: const [], achieved: bar, target: target, bar: bar);
+    return PlateLoad(
+      perSide: const [],
+      achieved: bar,
+      target: target,
+      bar: bar,
+    );
   }
 
   final available = [...plates]..sort((a, b) => b.compareTo(a));
@@ -221,10 +225,42 @@ final availablePlatesProvider = Provider<List<double>>((ref) {
 final barWeightProvider = Provider<double>((ref) {
   final unit = ref.watch(weightUnitProvider);
   final key = unit == WeightUnit.kg ? barKgSetting : barLbsSetting;
-  final bars = unit == WeightUnit.kg ? barsKg : barsLbs;
+  final bars = barOptionsFor(unit);
   final raw = ref.watch(rawSettingProvider(key)).value;
   final parsed = double.tryParse(raw ?? '');
   // Only a bar we actually offer: a stored value from some other build
-  // shouldn't put an unloadable bar weight on screen.
+  // shouldn't put an unloadable bar weight on screen. Zero is among the
+  // options now, so "no bar" survives a restart like any other choice.
   return parsed != null && bars.contains(parsed) ? parsed : bars.first;
 });
+
+/// The bar options offered for [unit], including "no bar" at the end.
+///
+/// Zero is a real answer, not a placeholder. "Plate-loaded" does not mean "on a
+/// barbell": a hack squat, a leg press and a plate-loaded T-bar all take plates
+/// onto a carriage whose weight is not 20 kg — and adding a bar that isn't
+/// there made the calculator's total wrong by exactly one bar, every time.
+///
+/// Last rather than first, so it never reads as the default.
+List<double> barOptionsFor(WeightUnit unit) => [
+  ...(unit == WeightUnit.kg ? barsKg : barsLbs),
+  0,
+];
+
+/// How a bar weight reads on a picker.
+String formatBar(double bar, WeightUnit unit) =>
+    bar == 0 ? 'None' : '${formatPlate(bar)} ${unit.label}';
+
+/// The bar for one exercise, in the current unit.
+///
+/// Falls back to the gym-wide default when the exercise has no bar of its own,
+/// which is every exercise until someone says otherwise.
+///
+/// The stored value is kilograms — the unit everything is stored in — so a
+/// pounds user who sets "no bar" still gets zero, and a 20 kg bar does not
+/// become a 20 lb one by changing the display unit.
+double barForExercise(double? storedKg, double gymDefault, WeightUnit unit) {
+  if (storedKg == null) return gymDefault;
+  if (storedKg == 0) return 0;
+  return weightIn(storedKg, unit);
+}

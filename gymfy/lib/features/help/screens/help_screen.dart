@@ -5,6 +5,9 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/fade_slide_in.dart';
 import '../data/feedback_mail.dart';
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../app/theme/glass.dart';
 
 /// Where the developer can be found.
 ///
@@ -40,11 +43,12 @@ class HelpScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Help')),
+    return GlassScaffold(
+      appBar: GlassAppBar(title: const Text('Help')),
       body: FadeSlideIn(
         child: ListView(
-          padding: const EdgeInsets.only(top: 8, bottom: 24),
+          padding:
+              const EdgeInsets.only(top: 8, bottom: 24) + barInsets(context),
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
@@ -63,7 +67,8 @@ class HelpScreen extends StatelessWidget {
               // reporting in this app, so a bug that is never written down is a
               // bug that is never fixed — but that is not a reason to attach
               // anything the user didn't agree to.
-              subtitle: 'Opens your mail app · only the app version is '
+              subtitle:
+                  'Opens your mail app · only the app version is '
                   'attached',
               trailing: const Icon(Icons.open_in_new, size: 18),
               onTap: () => sendFeedback(context),
@@ -133,9 +138,8 @@ Future<void> sendFeedback(BuildContext context) async {
       content: const Text('No mail app found. Write to $feedbackAddress'),
       action: SnackBarAction(
         label: 'Copy',
-        onPressed: () => Clipboard.setData(
-          const ClipboardData(text: feedbackAddress),
-        ),
+        onPressed: () =>
+            Clipboard.setData(const ClipboardData(text: feedbackAddress)),
       ),
     ),
   );

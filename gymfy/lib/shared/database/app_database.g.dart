@@ -62,6 +62,17 @@ class $ExercisesTable extends Exercises
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _barWeightKgMeta = const VerificationMeta(
+    'barWeightKg',
+  );
+  @override
+  late final GeneratedColumn<double> barWeightKg = GeneratedColumn<double>(
+    'bar_weight_kg',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _isCustomMeta = const VerificationMeta(
     'isCustom',
   );
@@ -99,6 +110,7 @@ class $ExercisesTable extends Exercises
     muscleIds,
     gifPath,
     isPlateLoaded,
+    barWeightKg,
     isCustom,
     isArchived,
   ];
@@ -139,6 +151,15 @@ class $ExercisesTable extends Exercises
         isPlateLoaded.isAcceptableOrUnknown(
           data['is_plate_loaded']!,
           _isPlateLoadedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('bar_weight_kg')) {
+      context.handle(
+        _barWeightKgMeta,
+        barWeightKg.isAcceptableOrUnknown(
+          data['bar_weight_kg']!,
+          _barWeightKgMeta,
         ),
       );
     }
@@ -185,6 +206,10 @@ class $ExercisesTable extends Exercises
         DriftSqlType.bool,
         data['${effectivePrefix}is_plate_loaded'],
       )!,
+      barWeightKg: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}bar_weight_kg'],
+      ),
       isCustom: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_custom'],
@@ -238,6 +263,21 @@ class Exercise extends DataClass implements Insertable<Exercise> {
   /// number for everything else.
   final bool isPlateLoaded;
 
+  /// What the empty bar or carriage weighs, in kilograms, or null to use the
+  /// gym-wide default for the unit.
+  ///
+  /// Per exercise because "plate-loaded" does not mean "on a barbell". A
+  /// T-bar row, a hack squat, a leg press: plates go on, but there is no 20 kg
+  /// bar in the equation, and the calculator's total was wrong by exactly one
+  /// bar every time. Zero is a legitimate value here and means what it says —
+  /// nothing to add.
+  ///
+  /// Deliberately *not* set by [exerciseSeedData]. The seed upsert rewrites
+  /// every built-in row on launch, but only the columns its companions carry,
+  /// so leaving this one absent is what lets a value the user chose survive.
+  /// `exercise_bar_test.dart` re-seeds and checks exactly that.
+  final double? barWeightKg;
+
   /// True for exercises the user created themselves.
   ///
   /// This is what gates editing and deleting: the built-in library is upserted
@@ -259,6 +299,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     required this.muscleIds,
     this.gifPath,
     required this.isPlateLoaded,
+    this.barWeightKg,
     required this.isCustom,
     required this.isArchived,
   });
@@ -276,6 +317,9 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       map['gif_path'] = Variable<String>(gifPath);
     }
     map['is_plate_loaded'] = Variable<bool>(isPlateLoaded);
+    if (!nullToAbsent || barWeightKg != null) {
+      map['bar_weight_kg'] = Variable<double>(barWeightKg);
+    }
     map['is_custom'] = Variable<bool>(isCustom);
     map['is_archived'] = Variable<bool>(isArchived);
     return map;
@@ -290,6 +334,9 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           ? const Value.absent()
           : Value(gifPath),
       isPlateLoaded: Value(isPlateLoaded),
+      barWeightKg: barWeightKg == null && nullToAbsent
+          ? const Value.absent()
+          : Value(barWeightKg),
       isCustom: Value(isCustom),
       isArchived: Value(isArchived),
     );
@@ -306,6 +353,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       muscleIds: serializer.fromJson<List<String>>(json['muscleIds']),
       gifPath: serializer.fromJson<String?>(json['gifPath']),
       isPlateLoaded: serializer.fromJson<bool>(json['isPlateLoaded']),
+      barWeightKg: serializer.fromJson<double?>(json['barWeightKg']),
       isCustom: serializer.fromJson<bool>(json['isCustom']),
       isArchived: serializer.fromJson<bool>(json['isArchived']),
     );
@@ -319,6 +367,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       'muscleIds': serializer.toJson<List<String>>(muscleIds),
       'gifPath': serializer.toJson<String?>(gifPath),
       'isPlateLoaded': serializer.toJson<bool>(isPlateLoaded),
+      'barWeightKg': serializer.toJson<double?>(barWeightKg),
       'isCustom': serializer.toJson<bool>(isCustom),
       'isArchived': serializer.toJson<bool>(isArchived),
     };
@@ -330,6 +379,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     List<String>? muscleIds,
     Value<String?> gifPath = const Value.absent(),
     bool? isPlateLoaded,
+    Value<double?> barWeightKg = const Value.absent(),
     bool? isCustom,
     bool? isArchived,
   }) => Exercise(
@@ -338,6 +388,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     muscleIds: muscleIds ?? this.muscleIds,
     gifPath: gifPath.present ? gifPath.value : this.gifPath,
     isPlateLoaded: isPlateLoaded ?? this.isPlateLoaded,
+    barWeightKg: barWeightKg.present ? barWeightKg.value : this.barWeightKg,
     isCustom: isCustom ?? this.isCustom,
     isArchived: isArchived ?? this.isArchived,
   );
@@ -350,6 +401,9 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       isPlateLoaded: data.isPlateLoaded.present
           ? data.isPlateLoaded.value
           : this.isPlateLoaded,
+      barWeightKg: data.barWeightKg.present
+          ? data.barWeightKg.value
+          : this.barWeightKg,
       isCustom: data.isCustom.present ? data.isCustom.value : this.isCustom,
       isArchived: data.isArchived.present
           ? data.isArchived.value
@@ -365,6 +419,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           ..write('muscleIds: $muscleIds, ')
           ..write('gifPath: $gifPath, ')
           ..write('isPlateLoaded: $isPlateLoaded, ')
+          ..write('barWeightKg: $barWeightKg, ')
           ..write('isCustom: $isCustom, ')
           ..write('isArchived: $isArchived')
           ..write(')'))
@@ -378,6 +433,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     muscleIds,
     gifPath,
     isPlateLoaded,
+    barWeightKg,
     isCustom,
     isArchived,
   );
@@ -390,6 +446,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           other.muscleIds == this.muscleIds &&
           other.gifPath == this.gifPath &&
           other.isPlateLoaded == this.isPlateLoaded &&
+          other.barWeightKg == this.barWeightKg &&
           other.isCustom == this.isCustom &&
           other.isArchived == this.isArchived);
 }
@@ -400,6 +457,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
   final Value<List<String>> muscleIds;
   final Value<String?> gifPath;
   final Value<bool> isPlateLoaded;
+  final Value<double?> barWeightKg;
   final Value<bool> isCustom;
   final Value<bool> isArchived;
   final Value<int> rowid;
@@ -409,6 +467,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     this.muscleIds = const Value.absent(),
     this.gifPath = const Value.absent(),
     this.isPlateLoaded = const Value.absent(),
+    this.barWeightKg = const Value.absent(),
     this.isCustom = const Value.absent(),
     this.isArchived = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -419,6 +478,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     required List<String> muscleIds,
     this.gifPath = const Value.absent(),
     this.isPlateLoaded = const Value.absent(),
+    this.barWeightKg = const Value.absent(),
     this.isCustom = const Value.absent(),
     this.isArchived = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -431,6 +491,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     Expression<String>? muscleIds,
     Expression<String>? gifPath,
     Expression<bool>? isPlateLoaded,
+    Expression<double>? barWeightKg,
     Expression<bool>? isCustom,
     Expression<bool>? isArchived,
     Expression<int>? rowid,
@@ -441,6 +502,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
       if (muscleIds != null) 'muscle_ids': muscleIds,
       if (gifPath != null) 'gif_path': gifPath,
       if (isPlateLoaded != null) 'is_plate_loaded': isPlateLoaded,
+      if (barWeightKg != null) 'bar_weight_kg': barWeightKg,
       if (isCustom != null) 'is_custom': isCustom,
       if (isArchived != null) 'is_archived': isArchived,
       if (rowid != null) 'rowid': rowid,
@@ -453,6 +515,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     Value<List<String>>? muscleIds,
     Value<String?>? gifPath,
     Value<bool>? isPlateLoaded,
+    Value<double?>? barWeightKg,
     Value<bool>? isCustom,
     Value<bool>? isArchived,
     Value<int>? rowid,
@@ -463,6 +526,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
       muscleIds: muscleIds ?? this.muscleIds,
       gifPath: gifPath ?? this.gifPath,
       isPlateLoaded: isPlateLoaded ?? this.isPlateLoaded,
+      barWeightKg: barWeightKg ?? this.barWeightKg,
       isCustom: isCustom ?? this.isCustom,
       isArchived: isArchived ?? this.isArchived,
       rowid: rowid ?? this.rowid,
@@ -489,6 +553,9 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     if (isPlateLoaded.present) {
       map['is_plate_loaded'] = Variable<bool>(isPlateLoaded.value);
     }
+    if (barWeightKg.present) {
+      map['bar_weight_kg'] = Variable<double>(barWeightKg.value);
+    }
     if (isCustom.present) {
       map['is_custom'] = Variable<bool>(isCustom.value);
     }
@@ -509,6 +576,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
           ..write('muscleIds: $muscleIds, ')
           ..write('gifPath: $gifPath, ')
           ..write('isPlateLoaded: $isPlateLoaded, ')
+          ..write('barWeightKg: $barWeightKg, ')
           ..write('isCustom: $isCustom, ')
           ..write('isArchived: $isArchived, ')
           ..write('rowid: $rowid')
@@ -5174,6 +5242,7 @@ typedef $$ExercisesTableCreateCompanionBuilder =
       required List<String> muscleIds,
       Value<String?> gifPath,
       Value<bool> isPlateLoaded,
+      Value<double?> barWeightKg,
       Value<bool> isCustom,
       Value<bool> isArchived,
       Value<int> rowid,
@@ -5185,6 +5254,7 @@ typedef $$ExercisesTableUpdateCompanionBuilder =
       Value<List<String>> muscleIds,
       Value<String?> gifPath,
       Value<bool> isPlateLoaded,
+      Value<double?> barWeightKg,
       Value<bool> isCustom,
       Value<bool> isArchived,
       Value<int> rowid,
@@ -5301,6 +5371,11 @@ class $$ExercisesTableFilterComposer
 
   ColumnFilters<bool> get isPlateLoaded => $composableBuilder(
     column: $table.isPlateLoaded,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get barWeightKg => $composableBuilder(
+    column: $table.barWeightKg,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5449,6 +5524,11 @@ class $$ExercisesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get barWeightKg => $composableBuilder(
+    column: $table.barWeightKg,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isCustom => $composableBuilder(
     column: $table.isCustom,
     builder: (column) => ColumnOrderings(column),
@@ -5483,6 +5563,11 @@ class $$ExercisesTableAnnotationComposer
 
   GeneratedColumn<bool> get isPlateLoaded => $composableBuilder(
     column: $table.isPlateLoaded,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get barWeightKg => $composableBuilder(
+    column: $table.barWeightKg,
     builder: (column) => column,
   );
 
@@ -5633,6 +5718,7 @@ class $$ExercisesTableTableManager
                 Value<List<String>> muscleIds = const Value.absent(),
                 Value<String?> gifPath = const Value.absent(),
                 Value<bool> isPlateLoaded = const Value.absent(),
+                Value<double?> barWeightKg = const Value.absent(),
                 Value<bool> isCustom = const Value.absent(),
                 Value<bool> isArchived = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -5642,6 +5728,7 @@ class $$ExercisesTableTableManager
                 muscleIds: muscleIds,
                 gifPath: gifPath,
                 isPlateLoaded: isPlateLoaded,
+                barWeightKg: barWeightKg,
                 isCustom: isCustom,
                 isArchived: isArchived,
                 rowid: rowid,
@@ -5653,6 +5740,7 @@ class $$ExercisesTableTableManager
                 required List<String> muscleIds,
                 Value<String?> gifPath = const Value.absent(),
                 Value<bool> isPlateLoaded = const Value.absent(),
+                Value<double?> barWeightKg = const Value.absent(),
                 Value<bool> isCustom = const Value.absent(),
                 Value<bool> isArchived = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -5662,6 +5750,7 @@ class $$ExercisesTableTableManager
                 muscleIds: muscleIds,
                 gifPath: gifPath,
                 isPlateLoaded: isPlateLoaded,
+                barWeightKg: barWeightKg,
                 isCustom: isCustom,
                 isArchived: isArchived,
                 rowid: rowid,

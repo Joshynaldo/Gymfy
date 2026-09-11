@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/fade_slide_in.dart';
+import '../../../shared/widgets/glass_app_bar.dart';
+import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../app/theme/glass.dart';
 
 /// A tool the "More" hub links to.
 class _Tool {
@@ -26,6 +29,14 @@ class MoreScreen extends ConsumerWidget {
   const MoreScreen({super.key});
 
   static const _tools = [
+    // First, and by some distance the most used thing here — it was a
+    // bottom-nav tab until the bar got too crowded to read.
+    _Tool(
+      icon: Icons.show_chart,
+      title: 'Progress',
+      subtitle: 'Charts, personal records, photos and measurements',
+      route: '/more/progress',
+    ),
     _Tool(
       icon: Icons.restaurant,
       title: 'Calorie log',
@@ -43,12 +54,6 @@ class MoreScreen extends ConsumerWidget {
       title: '1RM calculator',
       subtitle: 'Estimate your one-rep max from any set',
       route: '/more/one-rm',
-    ),
-    _Tool(
-      icon: Icons.donut_large_outlined,
-      title: 'Plate calculator',
-      subtitle: 'What to put on the bar for any weight',
-      route: '/more/plates',
     ),
     _Tool(
       icon: Icons.military_tech_outlined,
@@ -78,10 +83,10 @@ class MoreScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('More')),
+    return GlassScaffold(
+      appBar: GlassAppBar(title: const Text('More')),
       body: ListView.builder(
-        padding: const EdgeInsets.only(top: 8, bottom: 24),
+        padding: const EdgeInsets.only(top: 8, bottom: 24) + barInsets(context),
         itemCount: _tools.length,
         itemBuilder: (context, index) {
           final tool = _tools[index];

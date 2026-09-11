@@ -294,7 +294,16 @@ void main() {
     testWidgets('a name that was never set reads as not set', (tester) async {
       await pump(tester);
 
-      expect(find.text('Not set'), findsOneWidget);
+      // Scoped to the Name row: height and age say "Not set" too, so a bare
+      // text finder would pass or fail depending on how many other unanswered
+      // profile fields happen to be on the screen.
+      expect(
+        find.descendant(
+          of: find.widgetWithText(ListTile, 'Name'),
+          matching: find.text('Not set'),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('a stored name is shown', (tester) async {
