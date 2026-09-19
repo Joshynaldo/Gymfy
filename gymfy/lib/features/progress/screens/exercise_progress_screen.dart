@@ -54,6 +54,10 @@ class ExerciseProgressScreen extends ConsumerWidget {
           final records = personalRecordsFrom(points);
           final bestOneRm = bestEstimatedOneRm(points);
 
+          // An exercise logged by time. Everything below that talks about
+          // weight has to say something else, or say nothing.
+          final holds = points.any((p) => p.isHold);
+
           return ListView(
             padding:
                 const EdgeInsets.fromLTRB(16, 16, 16, 32) + barInsets(context),
@@ -64,12 +68,23 @@ class ExerciseProgressScreen extends ConsumerWidget {
                 _RecordsRow(records: records),
                 const SizedBox(height: 24),
               ],
-              _OneRmBadge(exerciseId: exerciseId, best: bestOneRm),
-              const SizedBox(height: 24),
-              Text('Top-set weight', style: theme.textTheme.titleMedium),
+              // No one-rep max on a hold. There is no rep to take a maximum
+              // of, and the whole panel — including the "test your 1RM"
+              // prompt inside it — would be asking about a number that does
+              // not exist for a plank.
+              if (!holds) ...[
+                _OneRmBadge(exerciseId: exerciseId, best: bestOneRm),
+                const SizedBox(height: 24),
+              ],
+              Text(
+                holds ? 'Longest hold' : 'Top-set weight',
+                style: theme.textTheme.titleMedium,
+              ),
               const SizedBox(height: 4),
               Text(
-                'The heaviest set you did each session.',
+                holds
+                    ? 'The longest single hold each session.'
+                    : 'The heaviest set you did each session.',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -347,29 +362,43 @@ class _RecordsRow extends ConsumerWidget {
     // IntrinsicHeight gives the Row a finite height so the tiles can stretch to
     // match each other; without it, `stretch` inside a scrolling list forces an
     // infinite height and the screen fails to lay out.
+    // A hold has different records. "Heaviest 0 kg × 0 reps" under a plank is
+    // not a missing feature, it is a wrong statement — and the numbers behind
+    // it are real, they are just seconds.
+    final hold = records.isHold;
+
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
-            child: _RecordTile(
-              icon: Icons.fitness_center,
-              label: 'Heaviest',
-              value: formatWeightUnit(records.heaviestWeight, unit),
-              detail:
-                  '× ${records.repsAtHeaviest} '
-                  '• ${formatShortDate(records.heaviestDate)}',
-            ),
+            child: hold
+                ? _RecordTile(
+                    icon: Icons.timer_outlined,
+                    label: 'Longest hold',
+                    value: formatSetDuration(records.longestHold!),
+                    detail: formatShortDate(records.longestHoldDate!),
+                  )
+                : _RecordTile(
+                    icon: Icons.fitness_center,
+                    label: 'Heaviest',
+                    value: formatWeightUnit(records.heaviestWeight, unit),
+                    detail:
+                        '× ${records.repsAtHeaviest} '
+                        '• ${formatShortDate(records.heaviestDate)}',
+                  ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: _RecordTile(
               icon: Icons.bar_chart,
-              label: 'Best volume',
-              value: formatWeightUnit(records.bestVolume, unit),
+              label: hold ? 'Most time' : 'Best volume',
+              value: hold
+                  ? formatSetDuration(records.bestSeconds)
+                  : formatWeightUnit(records.bestVolume, unit),
               detail:
                   'in a session '
-                  '• ${formatShortDate(records.bestVolumeDate)}',
+                  '• ${formatShortDate(hold ? records.bestSecondsDate! : records.bestVolumeDate)}',
             ),
           ),
         ],

@@ -306,6 +306,7 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
           weight: result.weight,
           reps: result.reps,
           isWarmup: result.isWarmup,
+          seconds: result.seconds,
         );
 
     // Logging a set is exactly when rest starts, so the timer needs no button
@@ -746,7 +747,12 @@ class _LoggedSetRow extends ConsumerWidget {
           ),
           Expanded(
             child: Text(
-              '${formatWeightUnit(set.weight, unit)} × ${set.reps} reps',
+              formatLoggedSet(
+                weightKg: set.weight,
+                reps: set.reps,
+                seconds: set.seconds,
+                unit: unit,
+              ),
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: set.isWarmup ? muted : null,
                 fontFeatures: const [FontFeature.tabularFigures()],

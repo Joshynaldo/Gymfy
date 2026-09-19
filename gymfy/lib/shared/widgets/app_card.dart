@@ -406,9 +406,16 @@ class AppSectionHeader extends StatelessWidget {
     required this.title,
     this.count,
     this.countLabel,
+    this.first = false,
   });
 
   final String title;
+
+  /// True for the heading at the very top of a list that already sits under
+  /// a filter bar or a search field. Trims the air above it, which is there
+  /// to separate one section from the card above — a job nothing needs doing
+  /// when there is no card above.
+  final bool first;
 
   /// Shown after the title when there is one — it answers "is it worth
   /// scrolling into this?" before you do.
@@ -428,9 +435,12 @@ class AppSectionHeader extends StatelessWidget {
       // sections by, less the card margin that follows it. Air above a heading
       // is what makes it read as the start of something rather than a label
       // stuck on the card beneath it.
+      // Except when it is the first thing on a list that already sits under
+      // a filter bar: the bar has done the separating, and the full 23 on top
+      // of it opens a gap that reads as something failing to load.
       padding: glass.enabled
-          ? const EdgeInsets.fromLTRB(20, 23, 20, 3)
-          : const EdgeInsets.fromLTRB(20, 18, 20, 6),
+          ? EdgeInsets.fromLTRB(20, first ? 3 : 23, 20, 3)
+          : EdgeInsets.fromLTRB(20, first ? 3 : 18, 20, 6),
       child: Row(
         children: [
           // Expanded rather than a bare Text plus a Spacer. Two unconstrained

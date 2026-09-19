@@ -35,6 +35,8 @@ final _exercises = [
     isPlateLoaded: true,
     isCustom: false,
     isArchived: false,
+  isTimed: false,
+  equipment: 'other',
   ),
   Exercise(
     id: 'barbell_row',
@@ -43,6 +45,8 @@ final _exercises = [
     isPlateLoaded: true,
     isCustom: false,
     isArchived: false,
+  isTimed: false,
+  equipment: 'other',
   ),
 ];
 

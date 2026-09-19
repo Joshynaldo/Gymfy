@@ -93,6 +93,29 @@ String formatWeightUnit(double kilograms, WeightUnit unit) {
       '${unit.label}';
 }
 
+/// How one logged set reads: `80 kg × 8 reps`, or `20 kg × 1:30` for a hold.
+///
+/// One function rather than the same conditional on the session screen and
+/// the summary, because the two have to agree: a set that reads as a hold in
+/// one place and as `0 reps` in the other looks like a bug in whichever one
+/// you are looking at.
+///
+/// A held set with no added load drops the weight entirely — `0 kg × 1:30`
+/// invites the question of where the weight went, when the answer is that a
+/// plank never had one.
+String formatLoggedSet({
+  required double weightKg,
+  required int reps,
+  required int? seconds,
+  required WeightUnit unit,
+}) {
+  if (seconds != null) {
+    final held = formatSetDuration(seconds);
+    return weightKg > 0 ? '${formatWeightUnit(weightKg, unit)} × $held' : held;
+  }
+  return '${formatWeightUnit(weightKg, unit)} × $reps reps';
+}
+
 /// Parses a user-typed weight in [unit] and returns it in kilograms.
 ///
 /// Returns null for anything that isn't a positive number, so callers can show

@@ -103,6 +103,34 @@ class $ExercisesTable extends Exercises
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _equipmentMeta = const VerificationMeta(
+    'equipment',
+  );
+  @override
+  late final GeneratedColumn<String> equipment = GeneratedColumn<String>(
+    'equipment',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(maxTextLength: 20),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('other'),
+  );
+  static const VerificationMeta _isTimedMeta = const VerificationMeta(
+    'isTimed',
+  );
+  @override
+  late final GeneratedColumn<bool> isTimed = GeneratedColumn<bool>(
+    'is_timed',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_timed" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _notesMeta = const VerificationMeta('notes');
   @override
   late final GeneratedColumn<String> notes = GeneratedColumn<String>(
@@ -122,6 +150,8 @@ class $ExercisesTable extends Exercises
     barWeightKg,
     isCustom,
     isArchived,
+    equipment,
+    isTimed,
     notes,
   ];
   @override
@@ -185,6 +215,18 @@ class $ExercisesTable extends Exercises
         isArchived.isAcceptableOrUnknown(data['is_archived']!, _isArchivedMeta),
       );
     }
+    if (data.containsKey('equipment')) {
+      context.handle(
+        _equipmentMeta,
+        equipment.isAcceptableOrUnknown(data['equipment']!, _equipmentMeta),
+      );
+    }
+    if (data.containsKey('is_timed')) {
+      context.handle(
+        _isTimedMeta,
+        isTimed.isAcceptableOrUnknown(data['is_timed']!, _isTimedMeta),
+      );
+    }
     if (data.containsKey('notes')) {
       context.handle(
         _notesMeta,
@@ -233,6 +275,14 @@ class $ExercisesTable extends Exercises
       isArchived: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_archived'],
+      )!,
+      equipment: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}equipment'],
+      )!,
+      isTimed: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_timed'],
       )!,
       notes: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -314,6 +364,32 @@ class Exercise extends DataClass implements Insertable<Exercise> {
   /// history to protect, so no tombstone to leave behind.
   final bool isArchived;
 
+  /// What the movement needs: barbell, dumbbell, machine, cable, bodyweight
+  /// or other. Stored as the [Equipment] slug.
+  ///
+  /// Carried by the seed companions, like [isTimed] and unlike [notes]: a
+  /// bench press needs a barbell whoever is holding it, so the built-in
+  /// library should keep asserting that on every launch.
+  ///
+  /// Defaults to `other` rather than being nullable. "Unclassified" and
+  /// "something else" would show up identically on a filter bar, and a second
+  /// state that renders the same as the first is a state nobody can act on.
+  final String equipment;
+
+  /// True for movements measured in time rather than reps — planks, hangs,
+  /// wall sits, loaded carries, and cardio.
+  ///
+  /// On the exercise rather than on the set, because it is a fact about the
+  /// movement: a plank is never counted in reps, on any day, in any
+  /// programme. It decides which of the two the log sheet asks for, so a
+  /// per-set flag would let you log a plank in reps by accident.
+  ///
+  /// Carried by the seed companions, unlike [notes] and [barWeightKg] — this
+  /// is a property of the movement itself, not something the user chose, so
+  /// the built-in library should keep telling the truth about it on every
+  /// launch even if a past version got one wrong.
+  final bool isTimed;
+
   /// The user's own note about this exercise — seat height, pin position, grip
   /// width, which machine in the gym, a cue that makes the lift click.
   ///
@@ -343,6 +419,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     this.barWeightKg,
     required this.isCustom,
     required this.isArchived,
+    required this.equipment,
+    required this.isTimed,
     this.notes,
   });
   @override
@@ -364,6 +442,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     }
     map['is_custom'] = Variable<bool>(isCustom);
     map['is_archived'] = Variable<bool>(isArchived);
+    map['equipment'] = Variable<String>(equipment);
+    map['is_timed'] = Variable<bool>(isTimed);
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
     }
@@ -384,6 +464,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           : Value(barWeightKg),
       isCustom: Value(isCustom),
       isArchived: Value(isArchived),
+      equipment: Value(equipment),
+      isTimed: Value(isTimed),
       notes: notes == null && nullToAbsent
           ? const Value.absent()
           : Value(notes),
@@ -404,6 +486,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       barWeightKg: serializer.fromJson<double?>(json['barWeightKg']),
       isCustom: serializer.fromJson<bool>(json['isCustom']),
       isArchived: serializer.fromJson<bool>(json['isArchived']),
+      equipment: serializer.fromJson<String>(json['equipment']),
+      isTimed: serializer.fromJson<bool>(json['isTimed']),
       notes: serializer.fromJson<String?>(json['notes']),
     );
   }
@@ -419,6 +503,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       'barWeightKg': serializer.toJson<double?>(barWeightKg),
       'isCustom': serializer.toJson<bool>(isCustom),
       'isArchived': serializer.toJson<bool>(isArchived),
+      'equipment': serializer.toJson<String>(equipment),
+      'isTimed': serializer.toJson<bool>(isTimed),
       'notes': serializer.toJson<String?>(notes),
     };
   }
@@ -432,6 +518,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     Value<double?> barWeightKg = const Value.absent(),
     bool? isCustom,
     bool? isArchived,
+    String? equipment,
+    bool? isTimed,
     Value<String?> notes = const Value.absent(),
   }) => Exercise(
     id: id ?? this.id,
@@ -442,6 +530,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     barWeightKg: barWeightKg.present ? barWeightKg.value : this.barWeightKg,
     isCustom: isCustom ?? this.isCustom,
     isArchived: isArchived ?? this.isArchived,
+    equipment: equipment ?? this.equipment,
+    isTimed: isTimed ?? this.isTimed,
     notes: notes.present ? notes.value : this.notes,
   );
   Exercise copyWithCompanion(ExercisesCompanion data) {
@@ -460,6 +550,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       isArchived: data.isArchived.present
           ? data.isArchived.value
           : this.isArchived,
+      equipment: data.equipment.present ? data.equipment.value : this.equipment,
+      isTimed: data.isTimed.present ? data.isTimed.value : this.isTimed,
       notes: data.notes.present ? data.notes.value : this.notes,
     );
   }
@@ -475,6 +567,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           ..write('barWeightKg: $barWeightKg, ')
           ..write('isCustom: $isCustom, ')
           ..write('isArchived: $isArchived, ')
+          ..write('equipment: $equipment, ')
+          ..write('isTimed: $isTimed, ')
           ..write('notes: $notes')
           ..write(')'))
         .toString();
@@ -490,6 +584,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     barWeightKg,
     isCustom,
     isArchived,
+    equipment,
+    isTimed,
     notes,
   );
   @override
@@ -504,6 +600,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           other.barWeightKg == this.barWeightKg &&
           other.isCustom == this.isCustom &&
           other.isArchived == this.isArchived &&
+          other.equipment == this.equipment &&
+          other.isTimed == this.isTimed &&
           other.notes == this.notes);
 }
 
@@ -516,6 +614,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
   final Value<double?> barWeightKg;
   final Value<bool> isCustom;
   final Value<bool> isArchived;
+  final Value<String> equipment;
+  final Value<bool> isTimed;
   final Value<String?> notes;
   final Value<int> rowid;
   const ExercisesCompanion({
@@ -527,6 +627,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     this.barWeightKg = const Value.absent(),
     this.isCustom = const Value.absent(),
     this.isArchived = const Value.absent(),
+    this.equipment = const Value.absent(),
+    this.isTimed = const Value.absent(),
     this.notes = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -539,6 +641,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     this.barWeightKg = const Value.absent(),
     this.isCustom = const Value.absent(),
     this.isArchived = const Value.absent(),
+    this.equipment = const Value.absent(),
+    this.isTimed = const Value.absent(),
     this.notes = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -553,6 +657,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     Expression<double>? barWeightKg,
     Expression<bool>? isCustom,
     Expression<bool>? isArchived,
+    Expression<String>? equipment,
+    Expression<bool>? isTimed,
     Expression<String>? notes,
     Expression<int>? rowid,
   }) {
@@ -565,6 +671,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
       if (barWeightKg != null) 'bar_weight_kg': barWeightKg,
       if (isCustom != null) 'is_custom': isCustom,
       if (isArchived != null) 'is_archived': isArchived,
+      if (equipment != null) 'equipment': equipment,
+      if (isTimed != null) 'is_timed': isTimed,
       if (notes != null) 'notes': notes,
       if (rowid != null) 'rowid': rowid,
     });
@@ -579,6 +687,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     Value<double?>? barWeightKg,
     Value<bool>? isCustom,
     Value<bool>? isArchived,
+    Value<String>? equipment,
+    Value<bool>? isTimed,
     Value<String?>? notes,
     Value<int>? rowid,
   }) {
@@ -591,6 +701,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
       barWeightKg: barWeightKg ?? this.barWeightKg,
       isCustom: isCustom ?? this.isCustom,
       isArchived: isArchived ?? this.isArchived,
+      equipment: equipment ?? this.equipment,
+      isTimed: isTimed ?? this.isTimed,
       notes: notes ?? this.notes,
       rowid: rowid ?? this.rowid,
     );
@@ -625,6 +737,12 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     if (isArchived.present) {
       map['is_archived'] = Variable<bool>(isArchived.value);
     }
+    if (equipment.present) {
+      map['equipment'] = Variable<String>(equipment.value);
+    }
+    if (isTimed.present) {
+      map['is_timed'] = Variable<bool>(isTimed.value);
+    }
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
     }
@@ -645,6 +763,8 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
           ..write('barWeightKg: $barWeightKg, ')
           ..write('isCustom: $isCustom, ')
           ..write('isArchived: $isArchived, ')
+          ..write('equipment: $equipment, ')
+          ..write('isTimed: $isTimed, ')
           ..write('notes: $notes, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -2540,6 +2660,17 @@ class $LoggedSetsTable extends LoggedSets
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _secondsMeta = const VerificationMeta(
+    'seconds',
+  );
+  @override
+  late final GeneratedColumn<int> seconds = GeneratedColumn<int>(
+    'seconds',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _isWarmupMeta = const VerificationMeta(
     'isWarmup',
   );
@@ -2563,6 +2694,7 @@ class $LoggedSetsTable extends LoggedSets
     setNumber,
     weight,
     reps,
+    seconds,
     isWarmup,
   ];
   @override
@@ -2616,6 +2748,12 @@ class $LoggedSetsTable extends LoggedSets
         reps.isAcceptableOrUnknown(data['reps']!, _repsMeta),
       );
     }
+    if (data.containsKey('seconds')) {
+      context.handle(
+        _secondsMeta,
+        seconds.isAcceptableOrUnknown(data['seconds']!, _secondsMeta),
+      );
+    }
     if (data.containsKey('is_warmup')) {
       context.handle(
         _isWarmupMeta,
@@ -2655,6 +2793,10 @@ class $LoggedSetsTable extends LoggedSets
         DriftSqlType.int,
         data['${effectivePrefix}reps'],
       )!,
+      seconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}seconds'],
+      ),
       isWarmup: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_warmup'],
@@ -2684,8 +2826,21 @@ class LoggedSet extends DataClass implements Insertable<LoggedSet> {
   /// Weight lifted. A real number so half-kilo / half-pound plates work.
   final double weight;
 
-  /// Reps completed for this set.
+  /// Reps completed for this set. Zero on a set logged by time.
   final int reps;
+
+  /// How long the set was held, in seconds — planks, hangs, wall sits, loaded
+  /// carries. Null on an ordinary set counted in reps.
+  ///
+  /// Null rather than zero, because the two say different things: zero would
+  /// be a set that lasted no time, and every screen deciding how to render a
+  /// set reads exactly this distinction. A set has one or the other, never
+  /// both — a plank has no rep count and a bench press has no useful duration.
+  ///
+  /// [weight] still applies: a loaded carry and a weighted plank both have
+  /// one, and a set of 45 seconds with 20 kg is a different set from 45
+  /// seconds with nothing.
+  final int? seconds;
 
   /// Whether this was a ramp-up set rather than a working set.
   ///
@@ -2704,6 +2859,7 @@ class LoggedSet extends DataClass implements Insertable<LoggedSet> {
     required this.setNumber,
     required this.weight,
     required this.reps,
+    this.seconds,
     required this.isWarmup,
   });
   @override
@@ -2715,6 +2871,9 @@ class LoggedSet extends DataClass implements Insertable<LoggedSet> {
     map['set_number'] = Variable<int>(setNumber);
     map['weight'] = Variable<double>(weight);
     map['reps'] = Variable<int>(reps);
+    if (!nullToAbsent || seconds != null) {
+      map['seconds'] = Variable<int>(seconds);
+    }
     map['is_warmup'] = Variable<bool>(isWarmup);
     return map;
   }
@@ -2727,6 +2886,9 @@ class LoggedSet extends DataClass implements Insertable<LoggedSet> {
       setNumber: Value(setNumber),
       weight: Value(weight),
       reps: Value(reps),
+      seconds: seconds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(seconds),
       isWarmup: Value(isWarmup),
     );
   }
@@ -2743,6 +2905,7 @@ class LoggedSet extends DataClass implements Insertable<LoggedSet> {
       setNumber: serializer.fromJson<int>(json['setNumber']),
       weight: serializer.fromJson<double>(json['weight']),
       reps: serializer.fromJson<int>(json['reps']),
+      seconds: serializer.fromJson<int?>(json['seconds']),
       isWarmup: serializer.fromJson<bool>(json['isWarmup']),
     );
   }
@@ -2756,6 +2919,7 @@ class LoggedSet extends DataClass implements Insertable<LoggedSet> {
       'setNumber': serializer.toJson<int>(setNumber),
       'weight': serializer.toJson<double>(weight),
       'reps': serializer.toJson<int>(reps),
+      'seconds': serializer.toJson<int?>(seconds),
       'isWarmup': serializer.toJson<bool>(isWarmup),
     };
   }
@@ -2767,6 +2931,7 @@ class LoggedSet extends DataClass implements Insertable<LoggedSet> {
     int? setNumber,
     double? weight,
     int? reps,
+    Value<int?> seconds = const Value.absent(),
     bool? isWarmup,
   }) => LoggedSet(
     id: id ?? this.id,
@@ -2775,6 +2940,7 @@ class LoggedSet extends DataClass implements Insertable<LoggedSet> {
     setNumber: setNumber ?? this.setNumber,
     weight: weight ?? this.weight,
     reps: reps ?? this.reps,
+    seconds: seconds.present ? seconds.value : this.seconds,
     isWarmup: isWarmup ?? this.isWarmup,
   );
   LoggedSet copyWithCompanion(LoggedSetsCompanion data) {
@@ -2787,6 +2953,7 @@ class LoggedSet extends DataClass implements Insertable<LoggedSet> {
       setNumber: data.setNumber.present ? data.setNumber.value : this.setNumber,
       weight: data.weight.present ? data.weight.value : this.weight,
       reps: data.reps.present ? data.reps.value : this.reps,
+      seconds: data.seconds.present ? data.seconds.value : this.seconds,
       isWarmup: data.isWarmup.present ? data.isWarmup.value : this.isWarmup,
     );
   }
@@ -2800,14 +2967,23 @@ class LoggedSet extends DataClass implements Insertable<LoggedSet> {
           ..write('setNumber: $setNumber, ')
           ..write('weight: $weight, ')
           ..write('reps: $reps, ')
+          ..write('seconds: $seconds, ')
           ..write('isWarmup: $isWarmup')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, sessionId, exerciseId, setNumber, weight, reps, isWarmup);
+  int get hashCode => Object.hash(
+    id,
+    sessionId,
+    exerciseId,
+    setNumber,
+    weight,
+    reps,
+    seconds,
+    isWarmup,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2818,6 +2994,7 @@ class LoggedSet extends DataClass implements Insertable<LoggedSet> {
           other.setNumber == this.setNumber &&
           other.weight == this.weight &&
           other.reps == this.reps &&
+          other.seconds == this.seconds &&
           other.isWarmup == this.isWarmup);
 }
 
@@ -2828,6 +3005,7 @@ class LoggedSetsCompanion extends UpdateCompanion<LoggedSet> {
   final Value<int> setNumber;
   final Value<double> weight;
   final Value<int> reps;
+  final Value<int?> seconds;
   final Value<bool> isWarmup;
   const LoggedSetsCompanion({
     this.id = const Value.absent(),
@@ -2836,6 +3014,7 @@ class LoggedSetsCompanion extends UpdateCompanion<LoggedSet> {
     this.setNumber = const Value.absent(),
     this.weight = const Value.absent(),
     this.reps = const Value.absent(),
+    this.seconds = const Value.absent(),
     this.isWarmup = const Value.absent(),
   });
   LoggedSetsCompanion.insert({
@@ -2845,6 +3024,7 @@ class LoggedSetsCompanion extends UpdateCompanion<LoggedSet> {
     required int setNumber,
     this.weight = const Value.absent(),
     this.reps = const Value.absent(),
+    this.seconds = const Value.absent(),
     this.isWarmup = const Value.absent(),
   }) : sessionId = Value(sessionId),
        exerciseId = Value(exerciseId),
@@ -2856,6 +3036,7 @@ class LoggedSetsCompanion extends UpdateCompanion<LoggedSet> {
     Expression<int>? setNumber,
     Expression<double>? weight,
     Expression<int>? reps,
+    Expression<int>? seconds,
     Expression<bool>? isWarmup,
   }) {
     return RawValuesInsertable({
@@ -2865,6 +3046,7 @@ class LoggedSetsCompanion extends UpdateCompanion<LoggedSet> {
       if (setNumber != null) 'set_number': setNumber,
       if (weight != null) 'weight': weight,
       if (reps != null) 'reps': reps,
+      if (seconds != null) 'seconds': seconds,
       if (isWarmup != null) 'is_warmup': isWarmup,
     });
   }
@@ -2876,6 +3058,7 @@ class LoggedSetsCompanion extends UpdateCompanion<LoggedSet> {
     Value<int>? setNumber,
     Value<double>? weight,
     Value<int>? reps,
+    Value<int?>? seconds,
     Value<bool>? isWarmup,
   }) {
     return LoggedSetsCompanion(
@@ -2885,6 +3068,7 @@ class LoggedSetsCompanion extends UpdateCompanion<LoggedSet> {
       setNumber: setNumber ?? this.setNumber,
       weight: weight ?? this.weight,
       reps: reps ?? this.reps,
+      seconds: seconds ?? this.seconds,
       isWarmup: isWarmup ?? this.isWarmup,
     );
   }
@@ -2910,6 +3094,9 @@ class LoggedSetsCompanion extends UpdateCompanion<LoggedSet> {
     if (reps.present) {
       map['reps'] = Variable<int>(reps.value);
     }
+    if (seconds.present) {
+      map['seconds'] = Variable<int>(seconds.value);
+    }
     if (isWarmup.present) {
       map['is_warmup'] = Variable<bool>(isWarmup.value);
     }
@@ -2925,6 +3112,7 @@ class LoggedSetsCompanion extends UpdateCompanion<LoggedSet> {
           ..write('setNumber: $setNumber, ')
           ..write('weight: $weight, ')
           ..write('reps: $reps, ')
+          ..write('seconds: $seconds, ')
           ..write('isWarmup: $isWarmup')
           ..write(')'))
         .toString();
@@ -5312,6 +5500,8 @@ typedef $$ExercisesTableCreateCompanionBuilder =
       Value<double?> barWeightKg,
       Value<bool> isCustom,
       Value<bool> isArchived,
+      Value<String> equipment,
+      Value<bool> isTimed,
       Value<String?> notes,
       Value<int> rowid,
     });
@@ -5325,6 +5515,8 @@ typedef $$ExercisesTableUpdateCompanionBuilder =
       Value<double?> barWeightKg,
       Value<bool> isCustom,
       Value<bool> isArchived,
+      Value<String> equipment,
+      Value<bool> isTimed,
       Value<String?> notes,
       Value<int> rowid,
     });
@@ -5455,6 +5647,16 @@ class $$ExercisesTableFilterComposer
 
   ColumnFilters<bool> get isArchived => $composableBuilder(
     column: $table.isArchived,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get equipment => $composableBuilder(
+    column: $table.equipment,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isTimed => $composableBuilder(
+    column: $table.isTimed,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5613,6 +5815,16 @@ class $$ExercisesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get equipment => $composableBuilder(
+    column: $table.equipment,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isTimed => $composableBuilder(
+    column: $table.isTimed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get notes => $composableBuilder(
     column: $table.notes,
     builder: (column) => ColumnOrderings(column),
@@ -5657,6 +5869,12 @@ class $$ExercisesTableAnnotationComposer
     column: $table.isArchived,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get equipment =>
+      $composableBuilder(column: $table.equipment, builder: (column) => column);
+
+  GeneratedColumn<bool> get isTimed =>
+      $composableBuilder(column: $table.isTimed, builder: (column) => column);
 
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
@@ -5803,6 +6021,8 @@ class $$ExercisesTableTableManager
                 Value<double?> barWeightKg = const Value.absent(),
                 Value<bool> isCustom = const Value.absent(),
                 Value<bool> isArchived = const Value.absent(),
+                Value<String> equipment = const Value.absent(),
+                Value<bool> isTimed = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExercisesCompanion(
@@ -5814,6 +6034,8 @@ class $$ExercisesTableTableManager
                 barWeightKg: barWeightKg,
                 isCustom: isCustom,
                 isArchived: isArchived,
+                equipment: equipment,
+                isTimed: isTimed,
                 notes: notes,
                 rowid: rowid,
               ),
@@ -5827,6 +6049,8 @@ class $$ExercisesTableTableManager
                 Value<double?> barWeightKg = const Value.absent(),
                 Value<bool> isCustom = const Value.absent(),
                 Value<bool> isArchived = const Value.absent(),
+                Value<String> equipment = const Value.absent(),
+                Value<bool> isTimed = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExercisesCompanion.insert(
@@ -5838,6 +6062,8 @@ class $$ExercisesTableTableManager
                 barWeightKg: barWeightKg,
                 isCustom: isCustom,
                 isArchived: isArchived,
+                equipment: equipment,
+                isTimed: isTimed,
                 notes: notes,
                 rowid: rowid,
               ),
@@ -8029,6 +8255,7 @@ typedef $$LoggedSetsTableCreateCompanionBuilder =
       required int setNumber,
       Value<double> weight,
       Value<int> reps,
+      Value<int?> seconds,
       Value<bool> isWarmup,
     });
 typedef $$LoggedSetsTableUpdateCompanionBuilder =
@@ -8039,6 +8266,7 @@ typedef $$LoggedSetsTableUpdateCompanionBuilder =
       Value<int> setNumber,
       Value<double> weight,
       Value<int> reps,
+      Value<int?> seconds,
       Value<bool> isWarmup,
     });
 
@@ -8108,6 +8336,11 @@ class $$LoggedSetsTableFilterComposer
 
   ColumnFilters<int> get reps => $composableBuilder(
     column: $table.reps,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get seconds => $composableBuilder(
+    column: $table.seconds,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8192,6 +8425,11 @@ class $$LoggedSetsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get seconds => $composableBuilder(
+    column: $table.seconds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isWarmup => $composableBuilder(
     column: $table.isWarmup,
     builder: (column) => ColumnOrderings(column),
@@ -8264,6 +8502,9 @@ class $$LoggedSetsTableAnnotationComposer
 
   GeneratedColumn<int> get reps =>
       $composableBuilder(column: $table.reps, builder: (column) => column);
+
+  GeneratedColumn<int> get seconds =>
+      $composableBuilder(column: $table.seconds, builder: (column) => column);
 
   GeneratedColumn<bool> get isWarmup =>
       $composableBuilder(column: $table.isWarmup, builder: (column) => column);
@@ -8349,6 +8590,7 @@ class $$LoggedSetsTableTableManager
                 Value<int> setNumber = const Value.absent(),
                 Value<double> weight = const Value.absent(),
                 Value<int> reps = const Value.absent(),
+                Value<int?> seconds = const Value.absent(),
                 Value<bool> isWarmup = const Value.absent(),
               }) => LoggedSetsCompanion(
                 id: id,
@@ -8357,6 +8599,7 @@ class $$LoggedSetsTableTableManager
                 setNumber: setNumber,
                 weight: weight,
                 reps: reps,
+                seconds: seconds,
                 isWarmup: isWarmup,
               ),
           createCompanionCallback:
@@ -8367,6 +8610,7 @@ class $$LoggedSetsTableTableManager
                 required int setNumber,
                 Value<double> weight = const Value.absent(),
                 Value<int> reps = const Value.absent(),
+                Value<int?> seconds = const Value.absent(),
                 Value<bool> isWarmup = const Value.absent(),
               }) => LoggedSetsCompanion.insert(
                 id: id,
@@ -8375,6 +8619,7 @@ class $$LoggedSetsTableTableManager
                 setNumber: setNumber,
                 weight: weight,
                 reps: reps,
+                seconds: seconds,
                 isWarmup: isWarmup,
               ),
           withReferenceMapper: (p0) => p0

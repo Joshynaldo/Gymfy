@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../shared/database/app_database.dart';
+import '../../../shared/models/equipment.dart';
 import '../../../shared/models/exercise.dart' show isBundledAsset;
 import 'exercise_seed_data.dart';
 
@@ -70,14 +71,13 @@ class ExerciseRepository {
   /// on the way in, so a note of three spaces is no note.
   Future<void> setNotes(String exerciseId, String? notes) {
     final trimmed = notes?.trim();
-    return (_db.update(_db.exercises)..where((t) => t.id.equals(exerciseId)))
-        .write(
-          ExercisesCompanion(
-            notes: Value(
-              trimmed == null || trimmed.isEmpty ? null : trimmed,
-            ),
-          ),
-        );
+    return (_db.update(
+      _db.exercises,
+    )..where((t) => t.id.equals(exerciseId))).write(
+      ExercisesCompanion(
+        notes: Value(trimmed == null || trimmed.isEmpty ? null : trimmed),
+      ),
+    );
   }
 
   /// Loads the built-in [exerciseSeedData] into the database.
@@ -150,6 +150,7 @@ class ExerciseRepository {
     required String name,
     required bool isPlateLoaded,
     required List<String> muscleIds,
+    Equipment equipment = Equipment.other,
     String? imagePath,
   }) async {
     final id = await _uniqueId(slugifyExerciseName(name));
@@ -163,6 +164,7 @@ class ExerciseRepository {
             muscleIds: muscleIds,
             gifPath: Value(imagePath),
             isPlateLoaded: Value(isPlateLoaded),
+            equipment: Value(equipment.name),
             isCustom: const Value(true),
           ),
         );
@@ -179,6 +181,7 @@ class ExerciseRepository {
     required String name,
     required bool isPlateLoaded,
     required List<String> muscleIds,
+    Equipment equipment = Equipment.other,
     required String? imagePath,
   }) async {
     await (_db.update(_db.exercises)..where((t) => t.id.equals(id))).write(
@@ -186,6 +189,7 @@ class ExerciseRepository {
         name: Value(name),
         muscleIds: Value(muscleIds),
         isPlateLoaded: Value(isPlateLoaded),
+        equipment: Value(equipment.name),
         gifPath: Value(imagePath),
       ),
     );

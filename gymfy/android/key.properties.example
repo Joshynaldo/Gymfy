@@ -1,0 +1,16 @@
+# Copy to android/key.properties and fill in. That file is gitignored: the
+# upload key is what proves an update comes from you, and there is no way to
+# revoke a leaked one on an already-published app.
+#
+# Create the keystore once (keytool ships with the JDK that Android Studio
+# installs):
+#
+#   keytool -genkey -v -keystore %USERPROFILE%\gymfy-upload.jks ^
+#     -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+#
+# Back up that .jks file somewhere that is not this machine. Losing it means
+# losing the ability to update Gymfy on Play.
+storeFile=C:\Users\Joshua\gymfy-upload.jks
+storePassword=
+keyAlias=upload
+keyPassword=

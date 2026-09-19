@@ -235,6 +235,83 @@ Date,Exercise,Weight,Weight Unit,Reps
     });
   });
 
+  group('sets logged by time', () {
+    // Before the app could store a hold, every one of these was skipped —
+    // a plank or a carry in someone's history simply vanished on import.
+    const csv = '''
+title,start_time,exercise_title,weight_kg,reps,duration_seconds
+Core,2026-05-01 18:00:00,Plank,0,,60
+Core,2026-05-01 18:00:00,Farmer's Walk,20,,45
+Core,2026-05-01 18:00:00,Crunch,0,15,
+''';
+
+    test('a hold is kept, with its duration and no reps', () {
+      final sets = parseWorkoutCsv(csv).sessions.single.sets;
+
+      expect(sets, hasLength(3));
+      expect(sets[0].seconds, 60);
+      expect(sets[0].reps, 0);
+    });
+
+    test('a loaded carry keeps its weight as well as its time', () {
+      final carry = parseWorkoutCsv(csv).sessions.single.sets[1];
+
+      expect(carry.seconds, 45);
+      expect(carry.weightKg, 20);
+    });
+
+    test('a counted set carries no duration', () {
+      final crunch = parseWorkoutCsv(csv).sessions.single.sets[2];
+
+      expect(crunch.reps, 15);
+      expect(crunch.seconds, isNull);
+    });
+
+    test('a clock-formatted duration is read', () {
+      // StrengthLog writes `00:01:30` where Hevy writes `90`.
+      const clockCsv = '''
+title,start,exercise,weight,reps,time
+Core,2026-05-01 18:00:00,Plank,0,,00:01:30
+''';
+      expect(
+        parseWorkoutCsv(clockCsv).sessions.single.sets.single.seconds,
+        90,
+      );
+    });
+
+    test('a zero-length duration is not a set', () {
+      // `00:00:00` is what an exporter writes for a set that was set up and
+      // never done — importing it would put a zero-second plank in the
+      // history.
+      const zeroCsv = '''
+title,start,exercise,weight,reps,time,distanceM
+Core,2026-05-01 18:00:00,Doomscrolling,,,00:00:00,0
+''';
+      final result = parseWorkoutCsv(zeroCsv);
+
+      expect(result.setCount, 0);
+      expect(result.skippedRows, 1);
+    });
+  });
+
+  group('parseDurationCell', () {
+    test('reads plain seconds', () {
+      expect(parseDurationCell('45'), 45);
+    });
+
+    test('reads a clock', () {
+      expect(parseDurationCell('1:30'), 90);
+      expect(parseDurationCell('00:01:30'), 90);
+      expect(parseDurationCell('1:00:00'), 3600);
+    });
+
+    test('nothing, zero and nonsense all read as no duration', () {
+      for (final raw in ['', '0', '00:00', '00:00:00', 'a while', '1:2:3:4']) {
+        expect(parseDurationCell(raw), isNull, reason: raw);
+      }
+    });
+  });
+
   group('rows that are not sets', () {
     test('are skipped and counted, not invented', () {
       // A summary line, a cardio row logged by distance, a blank. Turning
