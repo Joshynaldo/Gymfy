@@ -164,15 +164,16 @@ class ExerciseNoteTile extends ConsumerWidget {
                   // labelled blank is a thing to wonder about; an example is
                   // an instruction.
                   note ?? 'Add a note — seat height, pin, grip…',
-                  style: (dense
-                          ? theme.textTheme.bodySmall
-                          : theme.textTheme.bodyMedium)
-                      ?.copyWith(
-                        color: note == null
-                            ? theme.colorScheme.onSurfaceVariant
-                            : null,
-                        height: 1.35,
-                      ),
+                  style:
+                      (dense
+                              ? theme.textTheme.bodySmall
+                              : theme.textTheme.bodyMedium)
+                          ?.copyWith(
+                            color: note == null
+                                ? theme.colorScheme.onSurfaceVariant
+                                : null,
+                            height: 1.35,
+                          ),
                 ),
               ),
             ],

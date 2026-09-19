@@ -66,6 +66,8 @@ Exercise _exercise(String id, String name, List<String> muscles) => Exercise(
   isPlateLoaded: true,
   isCustom: false,
   isArchived: false,
+  isTimed: false,
+  equipment: 'other',
 );
 
 typedef _Plan = ({

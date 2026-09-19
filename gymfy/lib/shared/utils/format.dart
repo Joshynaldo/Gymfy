@@ -108,6 +108,16 @@ String formatDuration(Duration d) {
   return '$hours h $minutes min';
 }
 
+/// Formats how long a set was held: `0:45`, `1:30`, `12:05`.
+///
+/// Not [formatDuration], which rounds to whole minutes for session lengths —
+/// a 45-second plank would read as "0 min" there, and the seconds are the
+/// whole content of a timed set.
+String formatSetDuration(int seconds) {
+  final minutes = seconds ~/ 60;
+  return '$minutes:${(seconds % 60).toString().padLeft(2, '0')}';
+}
+
 /// Formats a rep target: `10` for a fixed number, `8–12` for a range.
 ///
 /// A null [max] means no range. An en dash rather than a hyphen — it's the

@@ -43,7 +43,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 23;
+  int get schemaVersion => 25;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -216,6 +216,23 @@ class AppDatabase extends _$AppDatabase {
       // every existing row reads as "no note" — which is what it was.
       if (from < 23) {
         await m.addColumn(exercises, exercises.notes);
+      }
+      // v24 adds exercises measured in time rather than reps, and the
+      // duration of a set. Both are additive and read as "nothing here is
+      // timed": every existing exercise stays a rep exercise and every set
+      // already logged keeps its reps. The built-in library gets its real
+      // values from the seed upsert on the very next launch.
+      if (from < 24) {
+        await m.addColumn(exercises, exercises.isTimed);
+        await m.addColumn(loggedSets, loggedSets.seconds);
+      }
+      // v25 records what each movement needs. Everything already on the
+      // device lands in "other" — the honest answer, since nothing in an
+      // existing row says which it is. The built-in library gets its real
+      // values from the seed upsert on the very next launch, and a custom
+      // exercise keeps "other" until its owner says otherwise.
+      if (from < 25) {
+        await m.addColumn(exercises, exercises.equipment);
       }
     },
     // SQLite doesn't enforce foreign keys unless we turn them on per

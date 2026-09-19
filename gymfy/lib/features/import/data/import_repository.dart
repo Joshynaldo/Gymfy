@@ -212,6 +212,7 @@ class ImportRepository {
                   weight: Value(set.weightKg),
                   reps: Value(set.reps),
                   isWarmup: Value(set.isWarmup),
+                  seconds: Value(set.seconds),
                 ),
               );
           setsAdded++;

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy — Gymfy</title>
+<style>
+  :root { color-scheme: light dark; --fg:#1a1c22; --muted:#5c6170; --bg:#fff; --rule:#e3e5ea; --accent:#4f6bed; }
+  @media (prefers-color-scheme: dark) {
+    :root { --fg:#e8eaf0; --muted:#9aa0b0; --bg:#151821; --rule:#2a2e3a; --accent:#8fa2ff; }
+  }
+  body { background:var(--bg); color:var(--fg); margin:0; padding:40px 16px 80px;
+         font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+  main { max-width:44rem; margin:0 auto; }
+  h1 { font-size:1.9rem; margin:0 0 .25rem; letter-spacing:-.02em; }
+  h2 { font-size:1.15rem; margin:2.25rem 0 .5rem; padding-top:1.25rem; border-top:1px solid var(--rule); }
+  .date { color:var(--muted); margin:0 0 2rem; }
+  .lede { font-size:1.05rem; }
+  strong { font-weight:600; }
+  ul { padding-left:1.25rem; }
+  li { margin:.3rem 0; }
+  a { color:var(--accent); }
+  footer { margin-top:3rem; padding-top:1.25rem; border-top:1px solid var(--rule); color:var(--muted); font-size:.9rem; }
+</style>
+</head>
+<body>
+<main>
+<h1>Privacy Policy — Gymfy</h1>
+<p class="date">Last updated: 19 September 2026</p>
+
+<p class="lede">Gymfy is a workout tracker for Android. It has no account, no server and no internet connection.</p>
+
+<h2>The short version</h2>
+<p><strong>Nothing you enter into Gymfy ever leaves your phone.</strong> The app contains no networking code of any kind. It cannot upload your data, because it cannot talk to anything.</p>
+
+<h2>What Gymfy stores, and where</h2>
+<p>Everything you log — workouts, sets, weights, exercises, notes, body measurements, progress photos, calorie entries, your name, bodyweight, height and birth year — is written to a database inside the app's own private storage on your device. Other apps cannot read it. It is never transmitted.</p>
+<p>There is no user account, no sign-in, and no identifier of any kind is created for you.</p>
+
+<h2>What Gymfy does <em>not</em> do</h2>
+<ul>
+  <li>No analytics, telemetry or usage statistics</li>
+  <li>No crash reporting</li>
+  <li>No advertising and no ad identifiers</li>
+  <li>No third-party SDKs that collect data</li>
+  <li>No tracking across apps or websites</li>
+  <li>No data sold or shared with anyone</li>
+</ul>
+
+<h2>Permissions, and why each one exists</h2>
+<p><strong>Notifications</strong> — so the rest timer can alert you when a set's rest is over while you are in another app or the screen is off. The app asks the first time you start a timer. If you decline, the app still works; you just get the on-screen countdown only.</p>
+<p><strong>Run at startup</strong> (<code>RECEIVE_BOOT_COMPLETED</code>) — so a rest alert that is already scheduled survives the phone restarting mid-workout. Gymfy does not run in the background otherwise.</p>
+<p><strong>Photos</strong> — only when you add a progress photo, and only for the picture you pick. The chosen image is copied into the app's own private storage so your photo stays in Gymfy even if you later delete the original from your gallery. Photos are never uploaded. Gymfy never opens the camera.</p>
+
+<h2>When data leaves the app — always because you asked</h2>
+<p>Three features can move data off the device. Each one is started by you, shows you what it will do, and hands the result to another app of your choosing.</p>
+<p><strong>Export</strong> (Settings → Data → Export data) writes your logged data to a CSV or JSON file at a location you pick. Where the file goes afterwards is up to you.</p>
+<p><strong>Share a plan</strong> exports a training plan as a file or PDF through the system share sheet. It contains the plan only — no logged sets, measurements or photos.</p>
+<p><strong>Send feedback</strong> (Help → Send feedback) opens <em>your</em> mail app with a draft message. Gymfy does not send it; you read it, edit it and send it yourself. The draft includes exactly two technical lines — the app version and your Android version — and says so on screen. You can delete them before sending. No personal data from the app is attached.</p>
+
+<h2>Import</h2>
+<p>Importing a history file (More → Import a history) reads a CSV you choose from your own device. The file is parsed on the phone and nothing is uploaded.</p>
+
+<h2>Deleting your data</h2>
+<p>Uninstalling Gymfy deletes the database and every photo it holds. There is no copy anywhere else, so there is nothing to request and nobody to request it from. Individual entries can be deleted inside the app at any time.</p>
+<p>Because the data lives only on your phone, <strong>Gymfy has no backup</strong>. If you want a copy, use Export before changing devices.</p>
+
+<h2>Children</h2>
+<p>Gymfy is not directed at children under 13 and collects no data from anyone.</p>
+
+<h2>Changes to this policy</h2>
+<p>If a future version of Gymfy ever collects anything, this page will be updated before that version ships, and the change will be described in the release notes rather than made quietly.</p>
+
+<h2>Contact</h2>
+<p><a href="mailto:gymfy.dev@gmail.com">gymfy.dev@gmail.com</a></p>
+
+<footer>Gymfy — <a href="https://github.com/Joshynaldo/Gymfy">github.com/Joshynaldo/Gymfy</a></footer>
+</main>
+</body>
+</html>

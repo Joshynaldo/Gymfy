@@ -31,6 +31,8 @@ final _squat = Exercise(
   isPlateLoaded: true,
   isCustom: false,
   isArchived: false,
+  isTimed: false,
+  equipment: 'other',
 );
 
 void main() {

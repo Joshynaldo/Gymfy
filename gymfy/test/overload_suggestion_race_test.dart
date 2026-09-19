@@ -47,6 +47,8 @@ final _squat = Exercise(
   isPlateLoaded: false,
   isCustom: false,
   isArchived: false,
+  isTimed: false,
+  equipment: 'other',
 );
 
 final _planned = PlannedExercise(

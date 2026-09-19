@@ -21,6 +21,8 @@ final _sample = <Exercise>[
     isPlateLoaded: true,
     isCustom: false,
     isArchived: false,
+  isTimed: false,
+  equipment: 'other',
   ),
   Exercise(
     id: 'push_up',
@@ -29,6 +31,8 @@ final _sample = <Exercise>[
     isPlateLoaded: false,
     isCustom: false,
     isArchived: false,
+  isTimed: false,
+  equipment: 'other',
   ),
   Exercise(
     id: 'pull_up',
@@ -37,6 +41,8 @@ final _sample = <Exercise>[
     isPlateLoaded: false,
     isCustom: false,
     isArchived: false,
+  isTimed: false,
+  equipment: 'other',
   ),
 ];
 

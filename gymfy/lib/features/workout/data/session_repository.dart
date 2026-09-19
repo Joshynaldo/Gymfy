@@ -62,6 +62,7 @@ class SessionRepository {
     required double weight,
     required int reps,
     bool isWarmup = false,
+    int? seconds,
   }) {
     return _db
         .into(_db.loggedSets)
@@ -73,6 +74,9 @@ class SessionRepository {
             weight: Value(weight),
             reps: Value(reps),
             isWarmup: Value(isWarmup),
+            // Null for an ordinary set. A held set carries its duration here
+            // and zero reps; the two are never both set.
+            seconds: Value(seconds),
           ),
         );
   }

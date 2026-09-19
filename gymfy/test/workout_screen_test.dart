@@ -39,6 +39,8 @@ final _bench = Exercise(
   isPlateLoaded: true,
   isCustom: false,
   isArchived: false,
+  isTimed: false,
+  equipment: 'other',
 );
 
 /// Renders the tab with the split/day data injected, so no database is opened.
