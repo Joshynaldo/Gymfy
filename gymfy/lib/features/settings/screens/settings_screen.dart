@@ -15,7 +15,6 @@ import '../../plates/widgets/plate_inventory_picker.dart';
 import '../../workout/data/rest_timer_repository.dart';
 import '../../workout/widgets/rest_length_picker.dart';
 import '../data/notification_preferences.dart';
-import '../../../shared/widgets/fade_slide_in.dart';
 import '../widgets/theme_picker.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
@@ -30,43 +29,43 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return GlassScaffold(
       appBar: GlassAppBar(title: const Text('Settings')),
-      // One animation for the whole screen rather than one per section: a
-      // settings list is read top to bottom in a glance, and eight staggered
-      // sections would draw the eye down the page instead of letting it land.
-      body: (context) => FadeSlideIn(
-        child: ListView(
-          padding: const EdgeInsets.only(bottom: 32) + barInsets(context),
-          children: const [
-            _SectionHeader('Theme'),
-            ThemePicker(),
-            Divider(height: 1),
-            _SectionHeader('Accent'),
-            _AccentPicker(),
-            Divider(height: 1),
-            _SectionHeader('Units'),
-            _UnitPicker(),
-            Divider(height: 1),
-            _SectionHeader('Plates'),
-            PlateInventoryPicker(),
-            Divider(height: 1),
-            _SectionHeader('Progressive overload'),
-            Padding(
-              padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: OverloadSettingsPanel(),
-            ),
-            Divider(height: 1),
-            _SectionHeader('You'),
-            _NameTile(),
-            _LifterSexTile(),
-            _BodyProfileTiles(),
-            Divider(height: 1),
-            _SectionHeader('Rest timer'),
-            _RestTimerPreferences(),
-            Divider(height: 1),
-            _SectionHeader('Data'),
-            _ExportTile(),
-          ],
-        ),
+      // No entrance of its own. The push already slides and fades this screen
+      // in, and a settings list is read top to bottom in a glance — a second
+      // animation underneath the first only made the content arrive late and
+      // from a different direction. Staggering the sections would be worse
+      // still: it draws the eye down the page instead of letting it land.
+      body: (context) => ListView(
+        padding: const EdgeInsets.only(bottom: 32) + barInsets(context),
+        children: const [
+          _SectionHeader('Theme'),
+          ThemePicker(),
+          Divider(height: 1),
+          _SectionHeader('Accent'),
+          _AccentPicker(),
+          Divider(height: 1),
+          _SectionHeader('Units'),
+          _UnitPicker(),
+          Divider(height: 1),
+          _SectionHeader('Plates'),
+          PlateInventoryPicker(),
+          Divider(height: 1),
+          _SectionHeader('Progressive overload'),
+          Padding(
+            padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: OverloadSettingsPanel(),
+          ),
+          Divider(height: 1),
+          _SectionHeader('You'),
+          _NameTile(),
+          _LifterSexTile(),
+          _BodyProfileTiles(),
+          Divider(height: 1),
+          _SectionHeader('Rest timer'),
+          _RestTimerPreferences(),
+          Divider(height: 1),
+          _SectionHeader('Data'),
+          _ExportTile(),
+        ],
       ),
     );
   }

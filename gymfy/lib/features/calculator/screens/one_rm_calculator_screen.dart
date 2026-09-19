@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/accent_color.dart';
 import '../../../shared/utils/units.dart';
 import '../../../shared/widgets/app_card.dart';
-import '../../../shared/widgets/fade_slide_in.dart';
 import '../../../shared/widgets/weight_wheel.dart';
 import '../../plates/screens/plate_calculator_screen.dart';
 import '../data/one_rm_math.dart';
@@ -41,71 +40,68 @@ class _OneRmCalculatorScreenState extends ConsumerState<OneRmCalculatorScreen> {
 
     return GlassScaffold(
       appBar: GlassAppBar(title: const Text('1RM calculator')),
-      body: (context) => FadeSlideIn(
-        child: ListView(
-          padding:
-              const EdgeInsets.fromLTRB(16, 12, 16, 32) + barInsets(context),
-          children: [
-            AppPanel(
-              icon: Icons.fitness_center,
-              title: 'The set you did',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  WeightWheel(
-                    key: ValueKey(unit),
-                    initialWeight: _weight,
-                    unit: unit,
-                    label: 'Weight lifted',
-                    // Rebuild on every notch so the estimate tracks the drum.
-                    onChanged: (value) => setState(() => _weight = value),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Text(
-                        'Reps',
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        '$_reps',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Slider(
-                    value: _reps.toDouble(),
-                    min: 1,
-                    max: oneRmMaxReps.toDouble(),
-                    divisions: oneRmMaxReps - 1,
-                    label: '$_reps',
-                    onChanged: (value) => setState(() => _reps = value.round()),
-                  ),
-                ],
-              ),
-            ),
-            if (estimates == null)
-              AppPanel(
-                child: Text(
-                  'Enter the weight you lifted and how many reps you got, and '
-                  'the estimate appears here.',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+      body: (context) => ListView(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32) + barInsets(context),
+        children: [
+          AppPanel(
+            icon: Icons.fitness_center,
+            title: 'The set you did',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                WeightWheel(
+                  key: ValueKey(unit),
+                  initialWeight: _weight,
+                  unit: unit,
+                  label: 'Weight lifted',
+                  // Rebuild on every notch so the estimate tracks the drum.
+                  onChanged: (value) => setState(() => _weight = value),
                 ),
-              )
-            else ...[
-              _Result(estimates: estimates, reps: _reps),
-              _FormulaComparison(estimates: estimates),
-              _PercentageTable(oneRm: estimates.average, highlightReps: _reps),
-            ],
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Text(
+                      'Reps',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '$_reps',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+                Slider(
+                  value: _reps.toDouble(),
+                  min: 1,
+                  max: oneRmMaxReps.toDouble(),
+                  divisions: oneRmMaxReps - 1,
+                  label: '$_reps',
+                  onChanged: (value) => setState(() => _reps = value.round()),
+                ),
+              ],
+            ),
+          ),
+          if (estimates == null)
+            AppPanel(
+              child: Text(
+                'Enter the weight you lifted and how many reps you got, and '
+                'the estimate appears here.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            )
+          else ...[
+            _Result(estimates: estimates, reps: _reps),
+            _FormulaComparison(estimates: estimates),
+            _PercentageTable(oneRm: estimates.average, highlightReps: _reps),
           ],
-        ),
+        ],
       ),
     );
   }

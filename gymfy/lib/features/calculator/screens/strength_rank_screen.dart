@@ -6,7 +6,6 @@ import '../../../shared/data/settings_repository.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
 import '../../../shared/widgets/app_card.dart';
-import '../../../shared/widgets/fade_slide_in.dart';
 import '../data/rank_inputs.dart';
 import '../data/ranked_lifts.dart';
 import '../widgets/rank_setup_prompt.dart';
@@ -27,53 +26,47 @@ class StrengthRankScreen extends ConsumerWidget {
 
     return GlassScaffold(
       appBar: GlassAppBar(title: const Text('Strength rank')),
-      body: (context) => FadeSlideIn(
-        child: ListView(
-          padding:
-              const EdgeInsets.fromLTRB(16, 12, 16, 32) + barInsets(context),
-          children: [
-            if (!ready)
-              RankSetupPrompt(inputs: inputs)
-            else ...[
-              _Basis(inputs: inputs),
-              if (lifts.ranked.isNotEmpty)
-                AppSectionHeader(
-                  title: 'Your lifts',
-                  count: lifts.ranked.length,
-                ),
-              for (final lift in lifts.ranked) _LiftCard(lift: lift),
-              if (lifts.ranked.isEmpty) const _NothingRankedYet(),
-              if (lifts.unlogged.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Text(
-                    'Not logged yet: ${lifts.unlogged.join(', ')}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 16),
-              // A caveat, not a footnote. Someone reading "Novice" next to
-              // their best squat deserves to see why that word is softer than
-              // it looks, in the same weight as the ranks themselves.
-              AppPanel(
-                icon: Icons.balance,
-                title: 'How to read this',
+      body: (context) => ListView(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32) + barInsets(context),
+        children: [
+          if (!ready)
+            RankSetupPrompt(inputs: inputs)
+          else ...[
+            _Basis(inputs: inputs),
+            if (lifts.ranked.isNotEmpty)
+              AppSectionHeader(title: 'Your lifts', count: lifts.ranked.length),
+            for (final lift in lifts.ranked) _LiftCard(lift: lift),
+            if (lifts.ranked.isEmpty) const _NothingRankedYet(),
+            if (lifts.unlogged.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Text(
-                  'Standards are population averages from published tables, '
-                  'not physics. Limb lengths and bodyweight both skew them — '
-                  'treat a rank as a rough bracket, not a verdict.',
+                  'Not logged yet: ${lifts.unlogged.join(', ')}',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
             ],
+            const SizedBox(height: 16),
+            // A caveat, not a footnote. Someone reading "Novice" next to
+            // their best squat deserves to see why that word is softer than
+            // it looks, in the same weight as the ranks themselves.
+            AppPanel(
+              icon: Icons.balance,
+              title: 'How to read this',
+              child: Text(
+                'Standards are population averages from published tables, '
+                'not physics. Limb lengths and bodyweight both skew them — '
+                'treat a rank as a rough bracket, not a verdict.',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }

@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/bar_chart.dart';
-import '../../../shared/widgets/fade_slide_in.dart';
 import '../data/calorie_repository.dart';
 import '../data/weekly_overview_repository.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
@@ -32,12 +31,10 @@ class WeeklyOverviewScreen extends ConsumerWidget {
             ),
           ),
         ),
-        data: (week) => FadeSlideIn(
-          child: ListView(
-            padding:
-                const EdgeInsets.fromLTRB(16, 8, 16, 24) + barInsets(context),
-            children: [_CaloriesSection(week: week)],
-          ),
+        data: (week) => ListView(
+          padding:
+              const EdgeInsets.fromLTRB(16, 8, 16, 24) + barInsets(context),
+          children: [_CaloriesSection(week: week)],
         ),
       ),
     );

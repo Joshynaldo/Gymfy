@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/workout/data/session_repository.dart';
 import '../../shared/widgets/glass_nav_bar.dart';
 import '../theme/glass.dart';
 import '../theme/motion.dart';
@@ -37,25 +39,53 @@ const mainDestinations = [
 /// [navigationShell] is supplied by [StatefulShellRoute.indexedStack] in
 /// `app_router.dart`. Switching tabs is done through
 /// [StatefulNavigationShell.goBranch].
-class ScaffoldWithNavBar extends StatelessWidget {
+class ScaffoldWithNavBar extends ConsumerWidget {
   const ScaffoldWithNavBar({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
-  void _onDestinationSelected(int index) {
+  /// The Workout tab's position in [mainDestinations].
+  static const workoutBranch = 1;
+
+  void _onDestinationSelected(WidgetRef ref, int index) {
     // The bar is the one control you hit without looking, mid-set, and a tap
     // that lands on the tab you are already on otherwise gives no sign it
     // registered at all.
     HapticFeedback.selectionClick();
-    navigationShell.goBranch(
-      index,
-      // Tapping the tab you're already on pops it back to its first screen.
-      initialLocation: index == navigationShell.currentIndex,
-    );
+    navigationShell.goBranch(index, initialLocation: _resets(ref, index));
+  }
+
+  /// Whether arriving at [index] should drop whatever was left open there.
+  ///
+  /// A tab is a *place*, not a bookmark. Leaving More on the exercise library
+  /// and coming back three taps later to find the library still sitting there
+  /// reads as the app having missed the tap: you asked for the menu and got a
+  /// screen you were finished with. So every branch pops back to its root on
+  /// arrival, which also covers the older behaviour of tapping the tab you are
+  /// already on.
+  ///
+  /// The one exception is a running workout. That is not a screen left open,
+  /// it is something still happening — the phone goes down between sets, gets
+  /// picked up to check last week's numbers on Progress, and the way back has
+  /// to be one tap onto the set you were in the middle of. Resetting there
+  /// would mean walking split → day → session again with a bar loaded.
+  ///
+  /// Keyed on a session actually being in progress rather than on where the
+  /// branch currently points, because the session is the reason, not the
+  /// route.
+  bool _resets(WidgetRef ref, int index) {
+    if (index != workoutBranch) return true;
+    return ref.read(inProgressSessionProvider).value == null;
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Watched, not merely read inside the tap handler. [_resets] needs an
+    // answer in the same frame as the tap, and a stream provider nobody is
+    // listening to hands back `loading` on its first read — indistinguishable
+    // from "no session", which would throw away the one thing this protects.
+    ref.watch(inProgressSessionProvider);
+
     return Scaffold(
       // Content runs the full height of the screen and passes *under* the
       // floating pill rather than stopping above it. That is what gives the
@@ -70,7 +100,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
       ),
       bottomNavigationBar: GlassNavBar(
         selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: _onDestinationSelected,
+        onDestinationSelected: (index) => _onDestinationSelected(ref, index),
         destinations: mainDestinations,
       ),
     );

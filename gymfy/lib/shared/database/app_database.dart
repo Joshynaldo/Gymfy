@@ -43,7 +43,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 22;
+  int get schemaVersion => 23;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -211,6 +211,11 @@ class AppDatabase extends _$AppDatabase {
       // behaviour before this column existed.
       if (from < 22) {
         await m.addColumn(exercises, exercises.barWeightKg);
+      }
+      // v23 adds the user's own note per exercise. Nullable and unset, so
+      // every existing row reads as "no note" — which is what it was.
+      if (from < 23) {
+        await m.addColumn(exercises, exercises.notes);
       }
     },
     // SQLite doesn't enforce foreign keys unless we turn them on per

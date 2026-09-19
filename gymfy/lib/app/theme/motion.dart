@@ -107,9 +107,6 @@ abstract final class AppDurations {
 
   /// Whole screens and sheets, where the distance travelled is larger.
   static const slow = Duration(milliseconds: 380);
-
-  /// One-off celebrations. Long because it is the only thing happening.
-  static const celebrate = Duration(milliseconds: 1100);
 }
 
 /// [duration], or nothing at all when the system asks for reduced motion.

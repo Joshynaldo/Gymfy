@@ -9,7 +9,6 @@ import 'package:printing/printing.dart';
 
 import '../../../shared/database/app_database.dart';
 import '../../../shared/widgets/app_card.dart';
-import '../../../shared/widgets/fade_slide_in.dart';
 import '../../workout/data/workout_repository.dart';
 import '../data/plan_document.dart';
 import '../data/plan_pdf.dart';
@@ -54,52 +53,50 @@ class _SharePlanScreenState extends ConsumerState<SharePlanScreen> {
             ),
           ),
         ),
-        data: (splits) => FadeSlideIn(
-          child: ListView(
-            padding:
-                const EdgeInsets.only(top: 4, bottom: 24) + barInsets(context),
-            children: [
-              const _Explainer(),
-              if (splits.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(20, 8, 20, 16),
-                  child: Text(
-                    'You have no splits to save yet — but you can still '
-                    'import one from someone else.',
-                  ),
-                )
-              else ...[
-                AppSectionHeader(
-                  title: 'Send',
-                  // Counts what is ticked, not how many exist: the number that
-                  // matters here is how many are about to leave the phone.
-                  count: _selected.isEmpty ? null : _selected.length,
+        data: (splits) => ListView(
+          padding:
+              const EdgeInsets.only(top: 4, bottom: 24) + barInsets(context),
+          children: [
+            const _Explainer(),
+            if (splits.isEmpty)
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 8, 20, 16),
+                child: Text(
+                  'You have no splits to save yet — but you can still '
+                  'import one from someone else.',
                 ),
-                for (final split in splits)
-                  _SplitCheckbox(
-                    split: split,
-                    selected: _selected.contains(split.id),
-                    onChanged: (_) => setState(() {
-                      if (!_selected.remove(split.id)) _selected.add(split.id);
-                    }),
-                  ),
-                const SizedBox(height: 4),
-                _Actions(
-                  enabled: _selected.isNotEmpty && !_busy,
-                  onSave: _saveFile,
-                  onPrint: _printPdf,
+              )
+            else ...[
+              AppSectionHeader(
+                title: 'Send',
+                // Counts what is ticked, not how many exist: the number that
+                // matters here is how many are about to leave the phone.
+                count: _selected.isEmpty ? null : _selected.length,
+              ),
+              for (final split in splits)
+                _SplitCheckbox(
+                  split: split,
+                  selected: _selected.contains(split.id),
+                  onChanged: (_) => setState(() {
+                    if (!_selected.remove(split.id)) _selected.add(split.id);
+                  }),
                 ),
-              ],
-              const AppSectionHeader(title: 'Receive'),
-              AppTile(
-                icon: Icons.download,
-                title: 'Import a plan',
-                subtitle: 'Open a .gymfy file someone sent you',
-                trailing: null,
-                onTap: _busy ? null : _import,
+              const SizedBox(height: 4),
+              _Actions(
+                enabled: _selected.isNotEmpty && !_busy,
+                onSave: _saveFile,
+                onPrint: _printPdf,
               ),
             ],
-          ),
+            const AppSectionHeader(title: 'Receive'),
+            AppTile(
+              icon: Icons.download,
+              title: 'Import a plan',
+              subtitle: 'Open a .gymfy file someone sent you',
+              trailing: null,
+              onTap: _busy ? null : _import,
+            ),
+          ],
         ),
       ),
     );

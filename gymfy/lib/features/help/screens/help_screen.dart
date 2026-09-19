@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../shared/widgets/app_card.dart';
-import '../../../shared/widgets/fade_slide_in.dart';
 import '../data/feedback_mail.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
@@ -45,57 +44,54 @@ class HelpScreen extends StatelessWidget {
 
     return GlassScaffold(
       appBar: GlassAppBar(title: const Text('Help')),
-      body: (context) => FadeSlideIn(
-        child: ListView(
-          padding:
-              const EdgeInsets.only(top: 8, bottom: 24) + barInsets(context),
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-              child: Text(
-                'Gymfy is made by one person. Everything you log stays on your '
-                'phone — there is no account and no server.',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+      body: (context) => ListView(
+        padding: const EdgeInsets.only(top: 8, bottom: 24) + barInsets(context),
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            child: Text(
+              'Gymfy is made by one person. Everything you log stays on your '
+              'phone — there is no account and no server.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            AppTile(
-              icon: Icons.mail_outline,
-              title: 'Send feedback',
-              // Says up front what the mail will carry. There is no crash
-              // reporting in this app, so a bug that is never written down is a
-              // bug that is never fixed — but that is not a reason to attach
-              // anything the user didn't agree to.
-              subtitle:
-                  'Opens your mail app · only the app version is '
-                  'attached',
-              trailing: const Icon(Icons.open_in_new, size: 18),
-              onTap: () => sendFeedback(context),
-            ),
-            AppTile(
-              icon: Icons.code,
-              title: 'Developer',
-              subtitle: 'Joshynaldo on GitHub',
-              trailing: const Icon(Icons.open_in_new, size: 18),
-              onTap: () => openDeveloperPage(context),
-            ),
-            AppTile(
-              icon: Icons.animation,
-              title: 'Exercise animations',
-              subtitle: 'ExerciseGymGifsDB · used with permission',
-              trailing: const Icon(Icons.open_in_new, size: 18),
-              onTap: () => openLink(context, exerciseAnimationCredit),
-            ),
-            AppTile(
-              icon: Icons.info_outline,
-              title: 'Version',
-              subtitle: appVersion,
-              // Nothing to tap, so no chevron promising otherwise.
-              trailing: null,
-            ),
-          ],
-        ),
+          ),
+          AppTile(
+            icon: Icons.mail_outline,
+            title: 'Send feedback',
+            // Says up front what the mail will carry. There is no crash
+            // reporting in this app, so a bug that is never written down is a
+            // bug that is never fixed — but that is not a reason to attach
+            // anything the user didn't agree to.
+            subtitle:
+                'Opens your mail app · only the app version is '
+                'attached',
+            trailing: const Icon(Icons.open_in_new, size: 18),
+            onTap: () => sendFeedback(context),
+          ),
+          AppTile(
+            icon: Icons.code,
+            title: 'Developer',
+            subtitle: 'Joshynaldo on GitHub',
+            trailing: const Icon(Icons.open_in_new, size: 18),
+            onTap: () => openDeveloperPage(context),
+          ),
+          AppTile(
+            icon: Icons.animation,
+            title: 'Exercise animations',
+            subtitle: 'ExerciseGymGifsDB · used with permission',
+            trailing: const Icon(Icons.open_in_new, size: 18),
+            onTap: () => openLink(context, exerciseAnimationCredit),
+          ),
+          AppTile(
+            icon: Icons.info_outline,
+            title: 'Version',
+            subtitle: appVersion,
+            // Nothing to tap, so no chevron promising otherwise.
+            trailing: null,
+          ),
+        ],
       ),
     );
   }

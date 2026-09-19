@@ -111,13 +111,22 @@ class _LogSetSheetState extends ConsumerState<_LogSetSheet> {
 
   /// Stacking stays available on a barbell exercise: on a bar you know what you
   /// put on it, not what the total came to.
+  ///
+  /// It is an alternative way to enter the *weight*, not a mode the whole sheet
+  /// goes into — see the build method, where it replaces the keypad only while
+  /// the weight step is the one showing.
   bool _plates = false;
 
-  String get _initialWeightText {
-    final shown = weightIn(widget.initialWeight, widget.unit);
+  String get _initialWeightText =>
+      _weightText(weightIn(widget.initialWeight, widget.unit));
+
+  /// A weight, as the readout should spell it.
+  ///
+  /// Whole numbers lose the ".0" — a pad showing "100.0" invites a tap on the
+  /// decimal point that does nothing, and the next digit typed would land after
+  /// it and turn 100 into 100.05.
+  static String _weightText(double shown) {
     if (shown <= 0) return '';
-    // Whole numbers lose the ".0" — a pad showing "100.0" invites a tap on the
-    // decimal point that does nothing.
     return shown == shown.roundToDouble()
         ? shown.round().toString()
         : shown.toString();
@@ -242,11 +251,21 @@ class _LogSetSheetState extends ConsumerState<_LogSetSheet> {
 
             const SizedBox(height: 22),
 
-            if (_plates)
+            // The stacker stands in for the keypad on the weight step only.
+            // Wiring it as a mode for the whole sheet was the original bug:
+            // step two showed the stacker again, there was no way to enter a
+            // rep count, and "Save set" stayed disabled — you loaded the bar,
+            // tapped through, and nothing was ever written.
+            if (_plates && onWeight)
               PlateStacker(
                 initialWeight: _weightValue,
                 exerciseId: widget.exercise.id,
-                onChanged: (weight) => _weight = weight.toString(),
+                // Through `setState`, because this is the value the readout
+                // shows the moment you switch back to typing. Spelled the same
+                // way the keypad spells it, so the next digit appends to "60"
+                // rather than to "60.0".
+                onChanged: (weight) =>
+                    setState(() => _weight = _weightText(weight)),
               )
             else ...[
               _Readout(
@@ -270,7 +289,10 @@ class _LogSetSheetState extends ConsumerState<_LogSetSheet> {
               _Keypad(withDecimal: onWeight, onKey: _key),
             ],
 
-            if (widget.exercise.isPlateLoaded) ...[
+            // Only alongside the weight. On the reps step it would offer to
+            // switch an input that is not on screen, and the sheet would grow
+            // a control that does nothing visible.
+            if (widget.exercise.isPlateLoaded && onWeight) ...[
               const SizedBox(height: 6),
               Align(
                 alignment: Alignment.centerLeft,

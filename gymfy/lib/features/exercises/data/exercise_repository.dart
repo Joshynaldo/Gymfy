@@ -57,6 +57,29 @@ class ExerciseRepository {
         .write(ExercisesCompanion(barWeightKg: Value(barWeightKg)));
   }
 
+  /// Saves the user's note for an exercise, or clears it.
+  ///
+  /// Works on built-in exercises as well as custom ones, unlike [updateCustom]
+  /// — and that is the point of the feature. The seat height you need is on
+  /// the leg press, which nobody invented. It survives the launch upsert
+  /// because `notes` is not one of the columns the seed companions carry.
+  ///
+  /// Blank input is stored as null rather than as "". They would read the same
+  /// on screen, but only one of them means "there is no note here", and the UI
+  /// decides whether to draw a heading from exactly that distinction. Trimmed
+  /// on the way in, so a note of three spaces is no note.
+  Future<void> setNotes(String exerciseId, String? notes) {
+    final trimmed = notes?.trim();
+    return (_db.update(_db.exercises)..where((t) => t.id.equals(exerciseId)))
+        .write(
+          ExercisesCompanion(
+            notes: Value(
+              trimmed == null || trimmed.isEmpty ? null : trimmed,
+            ),
+          ),
+        );
+  }
+
   /// Loads the built-in [exerciseSeedData] into the database.
   ///
   /// Idempotent: this is an upsert keyed on each exercise's `id`, so running

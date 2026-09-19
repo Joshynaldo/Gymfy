@@ -70,6 +70,12 @@ class MoreScreen extends ConsumerWidget {
       route: '/more/share-plan',
     ),
     _Tool(
+      icon: Icons.move_to_inbox_outlined,
+      title: 'Import a history',
+      subtitle: 'Bring your workouts over from Hevy, Strong or similar',
+      route: '/more/import',
+    ),
+    _Tool(
       icon: Icons.help_outline,
       title: 'Help',
       subtitle: 'About Gymfy and who made it',

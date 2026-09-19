@@ -6,7 +6,6 @@ import '../../../app/theme/accent_color.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/widgets/animated_count.dart';
-import '../../../shared/widgets/celebration.dart';
 import '../../../shared/utils/units.dart';
 import '../../exercises/data/exercise_repository.dart';
 import '../../muscle_map/data/muscle_volume_repository.dart';
@@ -90,31 +89,27 @@ class _SummaryBody extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32) + barInsets(context),
       children: [
-        // The one genuine moment of achievement in the app, so it is the one
-        // place that marks itself. Nothing to celebrate about a session that
-        // recorded no sets — and this screen is also reachable from history,
-        // where a bloom for a workout you did last Tuesday would be odd.
-        Celebration(
-          enabled: sets.isNotEmpty,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(session.name, style: theme.textTheme.headlineSmall),
-              const SizedBox(height: 4),
-              Text(
-                formatDateTime(session.startedAt),
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+        // No flourish here. There was a bloom of light behind this header when
+        // a session was finished; it was removed because it looked broken
+        // rather than celebratory. The numbers are the reward.
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(session.name, style: theme.textTheme.headlineSmall),
+            const SizedBox(height: 4),
+            Text(
+              formatDateTime(session.startedAt),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
-              const SizedBox(height: 20),
-              _StatsRow(
-                duration: duration,
-                setCount: sets.length,
-                totalVolume: totalVolume,
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 20),
+            _StatsRow(
+              duration: duration,
+              setCount: sets.length,
+              totalVolume: totalVolume,
+            ),
+          ],
         ),
         const SizedBox(height: 24),
         if (sets.isEmpty)
