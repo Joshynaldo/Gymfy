@@ -60,6 +60,11 @@ dependencies:
   # while share_plus 13.3 fails to compile its own Kotlin against AGP 9
   # (`Unresolved reference 'SharePlusPendingIntent'`). `saveFile` covers export
   # on its own, and PDFs go out through `printing`'s system sheet.
+  # Wall-clock time behind a seam, so anything that measures a duration can be
+  # tested by moving a fake clock instead of by waiting. Already in the tree
+  # via flutter_test and flutter_local_notifications; pure Dart, no platform
+  # code, so none of the toolchain trouble the plugins above caused.
+  clock: ^1.1.2
   file_picker: ^12.0.0
   # Printing a plan. `pdf` builds the document, `printing` shows the system
   # print/share sheet for it.

@@ -9,7 +9,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/shared/widgets/app_button.dart';
 import 'package:gymfy/features/exercises/data/exercise_repository.dart';
 import 'package:gymfy/features/exercises/screens/exercise_library_screen.dart';
+import 'package:gymfy/shared/widgets/app_card.dart';
 import 'package:gymfy/shared/widgets/exercise_thumbnail.dart';
+import 'package:gymfy/shared/widgets/muscle_filter_bar.dart';
 import 'package:gymfy/features/workout/data/workout_repository.dart';
 import 'package:gymfy/shared/database/app_database.dart';
 
@@ -24,6 +26,8 @@ final _sample = <Exercise>[
     isPlateLoaded: false,
     isCustom: false,
     isArchived: false,
+    isTimed: false,
+    equipment: 'other',
   ),
   Exercise(
     id: 'pull_up',
@@ -32,6 +36,8 @@ final _sample = <Exercise>[
     isPlateLoaded: false,
     isCustom: false,
     isArchived: false,
+    isTimed: false,
+    equipment: 'other',
   ),
   Exercise(
     id: 'barbell_back_squat',
@@ -40,6 +46,8 @@ final _sample = <Exercise>[
     isPlateLoaded: false,
     isCustom: false,
     isArchived: false,
+    isTimed: false,
+    equipment: 'other',
   ),
   // A user-created one, on a muscle none of the others use so it stays out of
   // the filter tests above.
@@ -50,6 +58,8 @@ final _sample = <Exercise>[
     isPlateLoaded: false,
     isCustom: true,
     isArchived: false,
+    isTimed: false,
+    equipment: 'other',
   ),
 ];
 
@@ -98,6 +108,35 @@ Future<void> _selectByLongPress(WidgetTester tester, String name) async {
 }
 
 void main() {
+  testWidgets('the list starts right under the chips', (tester) async {
+    // A gap nobody could find by reading either widget: the app bar sizes its
+    // bottom from a single declared number, and that number was hand-kept at
+    // 108 against 102 of real content. The six pixels landed under the chips
+    // and read as sloppy padding.
+    //
+    // Measured rather than asserted against the constant, because the whole
+    // failure was a constant that no longer described the thing it sized.
+    await _pumpScreen(tester);
+
+    final chipsBottom = tester.getRect(find.byType(MuscleFilterBar)).bottom;
+    // The first section heading in the list — "Chest" or whichever group
+    // sorts first.
+    final firstHeading = tester
+        .getRect(find.byType(AppSectionHeader).first)
+        .top;
+
+    expect(
+      firstHeading - chipsBottom,
+      lessThan(8),
+      reason: 'dead space between the filter bar and the list',
+    );
+    expect(
+      firstHeading - chipsBottom,
+      greaterThanOrEqualTo(0),
+      reason: 'and they must not overlap',
+    );
+  });
+
   testWidgets('lists every exercise from the provider', (tester) async {
     await _pumpScreen(tester);
 

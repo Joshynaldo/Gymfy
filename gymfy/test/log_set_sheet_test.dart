@@ -24,6 +24,8 @@ final _bench = Exercise(
   isPlateLoaded: false,
   isCustom: false,
   isArchived: false,
+  isTimed: false,
+  equipment: 'other',
 );
 
 LoggedSet _set({double weight = 100, int reps = 8, bool isWarmup = false}) =>

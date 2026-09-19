@@ -23,6 +23,11 @@ import 'package:gymfy/shared/database/app_database.dart';
 /// Undoes what version N's migration branch added. Keyed by N, applied in
 /// descending order by [rewindTo].
 const _undoVersion = <int, List<String>>{
+  25: ['ALTER TABLE exercises DROP COLUMN equipment'],
+  24: [
+    'ALTER TABLE exercises DROP COLUMN is_timed',
+    'ALTER TABLE logged_sets DROP COLUMN seconds',
+  ],
   23: ['ALTER TABLE exercises DROP COLUMN notes'],
   22: ['ALTER TABLE exercises DROP COLUMN bar_weight_kg'],
   21: [
@@ -105,13 +110,13 @@ void main() {
     final db = AppDatabase.forTesting(NativeDatabase.memory());
     addTearDown(db.close);
 
-    expect(db.schemaVersion, 23);
+    expect(db.schemaVersion, 25);
   });
 
   test('every version above the oldest test target can be wound back', () {
     // Guards the helper itself: a new migration with no undo entry would make
     // every rewind test below fail with a confusing SQL error instead of this.
-    for (var v = 10; v <= 23; v++) {
+    for (var v = 10; v <= 25; v++) {
       expect(_undoVersion.keys, contains(v), reason: 'no undo for v$v');
     }
   });
@@ -406,6 +411,51 @@ void main() {
     // And the row it was added to is otherwise untouched.
     expect(exercise.name, 'Leg Press');
     expect(exercise.muscleIds, ['quads']);
+  });
+
+  test('upgrading from v23 leaves everything counted in reps', () async {
+    // The safe direction. Marking an existing exercise as timed would make
+    // the log sheet ask for a duration for a lift the user counts in reps,
+    // and a logged set that grew a duration would start rendering as a hold.
+    final file = _tempDatabase('v23');
+
+    final old = AppDatabase.forTesting(NativeDatabase(file));
+    await old
+        .into(old.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: 'plank',
+            name: 'Plank',
+            muscleIds: const ['abs'],
+          ),
+        );
+    final sessionId = await old
+        .into(old.workoutSessions)
+        .insert(WorkoutSessionsCompanion.insert(name: 'Core'));
+    await old
+        .into(old.loggedSets)
+        .insert(
+          LoggedSetsCompanion.insert(
+            sessionId: sessionId,
+            exerciseId: 'plank',
+            setNumber: 1,
+            reps: const Value(12),
+          ),
+        );
+    await rewindTo(old, 23);
+    await old.close();
+
+    final upgraded = AppDatabase.forTesting(NativeDatabase(file));
+    addTearDown(upgraded.close);
+
+    // Even the plank: the seed upsert is what will mark it timed on the next
+    // launch, and the migration itself must not guess.
+    final exercise = (await upgraded.select(upgraded.exercises).get()).single;
+    expect(exercise.isTimed, isFalse);
+
+    final set = (await upgraded.select(upgraded.loggedSets).get()).single;
+    expect(set.seconds, isNull);
+    expect(set.reps, 12);
   });
 
   test('a rest override is removed with the exercise it belongs to', () async {

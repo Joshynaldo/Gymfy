@@ -12,9 +12,9 @@ void main() {
   test('normalizes so the hardest-worked muscle is 1.0', () {
     final result = muscleIntensities(const [
       // chest+triceps: 100 * 5 = 500 volume each
-      (weight: 100, reps: 5, muscleIds: ['chest', 'triceps']),
+      (weight: 100, reps: 5, seconds: null, muscleIds: ['chest', 'triceps']),
       // biceps: 20 * 10 = 200 volume
-      (weight: 20, reps: 10, muscleIds: ['biceps']),
+      (weight: 20, reps: 10, seconds: null, muscleIds: ['biceps']),
     ]);
 
     expect(result['chest'], 1.0);
@@ -24,9 +24,9 @@ void main() {
 
   test('accumulates volume across sets for the same muscle', () {
     final result = muscleIntensities(const [
-      (weight: 50, reps: 10, muscleIds: ['chest']), // 500
-      (weight: 50, reps: 10, muscleIds: ['chest']), // +500 = 1000
-      (weight: 100, reps: 5, muscleIds: ['triceps']), // 500
+      (weight: 50, reps: 10, seconds: null, muscleIds: ['chest']), // 500
+      (weight: 50, reps: 10, seconds: null, muscleIds: ['chest']), // +500 = 1000
+      (weight: 100, reps: 5, seconds: null, muscleIds: ['triceps']), // 500
     ]);
 
     expect(result['chest'], 1.0); // 1000 is the max
@@ -35,8 +35,8 @@ void main() {
 
   test('bodyweight sets (weight 0) count reps as effort', () {
     final result = muscleIntensities(const [
-      (weight: 0, reps: 20, muscleIds: ['abs']), // effort 20
-      (weight: 0, reps: 10, muscleIds: ['lats']), // effort 10
+      (weight: 0, reps: 20, seconds: null, muscleIds: ['abs']), // effort 20
+      (weight: 0, reps: 10, seconds: null, muscleIds: ['lats']), // effort 10
     ]);
 
     expect(result['abs'], 1.0);

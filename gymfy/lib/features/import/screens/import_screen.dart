@@ -172,8 +172,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                     : 'Import ${preview.sessions.length - _alreadyHere} '
                           'workouts',
                 icon: Icons.download,
-                onPressed:
-                    _busy || preview.sessions.length - _alreadyHere == 0
+                onPressed: _busy || preview.sessions.length - _alreadyHere == 0
                     ? null
                     : _import,
               ),

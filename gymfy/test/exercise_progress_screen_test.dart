@@ -23,6 +23,8 @@ void main() {
       isPlateLoaded: false,
       isCustom: false,
       isArchived: false,
+  isTimed: false,
+  equipment: 'other',
     );
     final points = [
       ExerciseHistoryPoint(

@@ -285,9 +285,15 @@ class _ExerciseSummaryTile extends ConsumerWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            'Top set ${formatWeightUnit(topSet.weight, unit)} '
-            '× ${topSet.reps}  •  '
-            '${formatWeightUnit(volume, unit)} total',
+            // Through the shared formatter, so a hold reads as "1:30" here
+            // exactly as it did on the card you logged it from. The volume
+            // half is dropped for a timed exercise: weight × reps is zero for
+            // every held set, and "0 kg total" under a set of planks reads as
+            // a bug rather than as an absence.
+            topSet.seconds != null
+                ? 'Top set ${formatLoggedSet(weightKg: topSet.weight, reps: topSet.reps, seconds: topSet.seconds, unit: unit)}'
+                : 'Top set ${formatLoggedSet(weightKg: topSet.weight, reps: topSet.reps, seconds: null, unit: unit)}'
+                      '  •  ${formatWeightUnit(volume, unit)} total',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),

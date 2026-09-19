@@ -7,10 +7,12 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../shared/database/app_database.dart';
 import '../../../shared/models/exercise.dart' show isBundledAsset;
+import '../../../shared/models/equipment.dart';
 import '../../../shared/models/muscle_ids.dart';
 import '../../../shared/utils/exercise_display.dart';
 import '../data/exercise_repository.dart';
 import '../../../shared/widgets/app_chip.dart';
+import '../../../shared/widgets/app_picker.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../app/theme/glass.dart';
@@ -40,6 +42,11 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
 
   /// Whether sets for this exercise are logged by stacking plates.
   bool _plateLoaded = false;
+
+  /// Defaults to `other` rather than guessing from the name: a guess that is
+  /// wrong puts the exercise behind the wrong chip, where its owner will not
+  /// think to look for it.
+  Equipment _equipment = Equipment.other;
 
   /// The stored image path, once saved. Null means "no image".
   String? _imagePath;
@@ -102,6 +109,7 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
       ..clear()
       ..addAll(exercise.muscleIds);
     _plateLoaded = exercise.isPlateLoaded;
+    _equipment = Equipment.parse(exercise.equipment);
     _imagePath = exercise.gifPath;
   }
 
@@ -153,6 +161,27 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
                   }),
                 ),
             ],
+          ),
+          const SizedBox(height: 12),
+          // Above the plate switch, because it is the coarser question and
+          // the answer to it often settles the switch: nothing bodyweight is
+          // plate-loaded.
+          AppPickerField(
+            label: 'Equipment',
+            value: _equipment.label,
+            icon: Icons.fitness_center,
+            onTap: () async {
+              final picked = await showOptionPicker<Equipment>(
+                context: context,
+                title: 'Equipment',
+                selected: _equipment,
+                options: [
+                  for (final equipment in Equipment.values)
+                    (value: equipment, label: equipment.label, subtitle: null),
+                ],
+              );
+              if (picked != null) setState(() => _equipment = picked);
+            },
           ),
           const SizedBox(height: 12),
           SwitchListTile(
@@ -226,6 +255,7 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
           id: id,
           name: name,
           isPlateLoaded: _plateLoaded,
+          equipment: _equipment,
           muscleIds: muscleIds,
           imagePath: imagePath,
         );
@@ -235,6 +265,7 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
         final id = await repository.createCustom(
           name: name,
           isPlateLoaded: _plateLoaded,
+          equipment: _equipment,
           muscleIds: muscleIds,
         );
         if (_pickedImage != null) {
@@ -246,6 +277,7 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
             id: id,
             name: name,
             isPlateLoaded: _plateLoaded,
+            equipment: _equipment,
             muscleIds: muscleIds,
             imagePath: imagePath,
           );

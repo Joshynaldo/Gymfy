@@ -8,7 +8,25 @@ part 'muscle_volume_repository.g.dart';
 
 /// One logged set reduced to just what the muscle map needs: how much work it
 /// represents and which muscles it hits.
-typedef VolumeSample = ({double weight, int reps, List<String> muscleIds});
+typedef VolumeSample = ({
+  double weight,
+  int reps,
+  int? seconds,
+  List<String> muscleIds,
+});
+
+/// Seconds of a hold treated as worth one rep.
+///
+/// A convention, not a measurement — there is no true exchange rate between
+/// a second of plank and a rep of crunch. It exists because the alternatives
+/// are worse: counting a hold as zero leaves a core session showing a grey
+/// body after you plainly trained, and counting each second as a rep makes a
+/// one-minute plank outweigh sixty crunches and wash out the whole map.
+///
+/// Three is the usual rule of thumb for a controlled rep, and the map is
+/// normalised anyway — only the ratio between exercises matters, never the
+/// absolute number.
+const secondsPerRepEquivalent = 3;
 
 /// Turns logged sets into a normalized 0.0–1.0 intensity per muscle, for the
 /// heatmap. Reads from the workout log joined with the exercise library.
@@ -53,6 +71,7 @@ class MuscleVolumeRepository {
       return (
         weight: set.weight,
         reps: set.reps,
+        seconds: set.seconds,
         muscleIds: exercise.muscleIds,
       );
     });
@@ -62,14 +81,20 @@ class MuscleVolumeRepository {
 /// Aggregates [samples] into a normalized intensity (0.0–1.0) per muscle id.
 ///
 /// Each set's effort is its volume (weight × reps), falling back to plain reps
-/// for bodyweight sets (weight 0) so movements like pull-ups still register.
-/// That effort is added to every muscle the exercise trains, then the whole
-/// map is scaled so the hardest-worked muscle is 1.0 and the rest are relative
-/// to it. Returns an empty map if there's nothing to show.
+/// for bodyweight sets (weight 0) so movements like pull-ups still register,
+/// and to rep-equivalents of time for a hold. That effort is added to every
+/// muscle the exercise trains, then the whole map is scaled so the
+/// hardest-worked muscle is 1.0 and the rest are relative to it. Returns an
+/// empty map if there's nothing to show.
 Map<String, double> muscleIntensities(Iterable<VolumeSample> samples) {
   final totals = <String, double>{};
   for (final s in samples) {
-    final effort = s.weight > 0 ? s.weight * s.reps : s.reps.toDouble();
+    // A held set has no reps, so the ladder needs its own rung or a core
+    // session leaves the body grey after you plainly trained.
+    final reps = s.seconds != null
+        ? s.seconds! / secondsPerRepEquivalent
+        : s.reps.toDouble();
+    final effort = s.weight > 0 ? s.weight * reps : reps;
     if (effort <= 0) continue;
     for (final muscle in s.muscleIds) {
       totals[muscle] = (totals[muscle] ?? 0) + effort;

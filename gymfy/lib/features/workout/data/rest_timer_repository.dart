@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../shared/data/settings_repository.dart';
 import '../../../shared/database/app_database.dart';
+import '../../../shared/utils/format.dart';
 
 part 'rest_timer_repository.g.dart';
 
@@ -38,11 +39,11 @@ int? parseRestSeconds(String? raw) {
 }
 
 /// Formats a rest length as "1:30" — the way a timer reads, not "90 s".
-String formatRest(int seconds) {
-  final minutes = seconds ~/ 60;
-  final rest = (seconds % 60).toString().padLeft(2, '0');
-  return '$minutes:$rest';
-}
+///
+/// Kept as a name of its own because rest is what this file is about, but it
+/// is the same clock face a held set is shown on, so there is one
+/// implementation rather than two that could drift apart.
+String formatRest(int seconds) => formatSetDuration(seconds);
 
 /// Database access for per-exercise rest lengths.
 class RestTimerRepository {

@@ -1,4 +1,4 @@
-package com.example.gymfy
+package de.kopten.gymfy
 
 import io.flutter.embedding.android.FlutterActivity
 

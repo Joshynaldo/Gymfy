@@ -40,6 +40,8 @@ Exercise _exercise(String id, String name) => Exercise(
   isPlateLoaded: false,
   isCustom: false,
   isArchived: false,
+  isTimed: false,
+  equipment: 'other',
 );
 
 final _bench = _exercise('barbell_bench_press', 'Barbell bench press');

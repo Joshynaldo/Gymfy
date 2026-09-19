@@ -62,7 +62,11 @@ class AppChip extends StatelessWidget {
         child: Padding(
           // Vertical 10 against the bar's 44 leaves the pill 40 tall, the same
           // height Material's chip lands at — the row keeps its rhythm.
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          // Eight, so a chip laid out in a `Wrap` — the exercise form, the
+          // plate inventory — comes out the same 36 as one in the filter bar,
+          // where the row's tight cross-axis constraint sets the height and
+          // this padding is ignored entirely.
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           child: Text(
             label,
             style: theme.textTheme.labelLarge?.copyWith(

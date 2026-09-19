@@ -6,7 +6,9 @@ import '../../../../shared/database/app_database.dart';
 import '../../../../shared/utils/exercise_display.dart';
 import '../../../../shared/utils/exercise_search.dart';
 import '../../../../shared/widgets/exercise_thumbnail.dart';
+import '../../../../shared/models/equipment.dart';
 import '../../../../shared/widgets/muscle_filter_bar.dart';
+import '../../../exercises/widgets/equipment_filter_sheet.dart';
 import '../../../exercises/data/exercise_repository.dart';
 
 /// Opens a bottom sheet over the exercise library and returns the ids of every
@@ -38,6 +40,9 @@ class _ExercisePickerSheetState extends ConsumerState<_ExercisePickerSheet> {
 
   /// The muscles being filtered on. Empty means "All".
   final _muscleFilters = <String>{};
+
+  /// The equipment being filtered on. Empty means "All".
+  final _equipmentFilters = <Equipment>{};
 
   /// Ids picked so far. Ids rather than rows, so a selection survives the list
   /// re-filtering underneath it — narrowing the search does not silently drop
@@ -115,17 +120,41 @@ class _ExercisePickerSheetState extends ConsumerState<_ExercisePickerSheet> {
                           e,
                           query: _query,
                           muscleFilters: _muscleFilters,
+                          equipmentFilters: _equipmentFilters,
                         ),
                       )
                       .toList();
 
+                  // The same faceting as the library: each bar offers what
+                  // survives the *other* filters, so nothing on screen leads
+                  // to an empty list.
+                  final options = filterOptionsFor(
+                    all,
+                    query: _query,
+                    muscleFilters: _muscleFilters,
+                    equipmentFilters: _equipmentFilters,
+                  );
+
                   return Column(
                     children: [
                       MuscleFilterBar(
-                        muscles: musclesIn(all),
+                        muscles: options.muscles,
                         selected: _muscleFilters,
                         onToggle: _toggleMuscle,
                         onClear: () => setState(_muscleFilters.clear),
+                        leading: options.equipment.length > 1
+                            ? EquipmentFilterButton(
+                                count: _equipmentFilters.length,
+                                onPressed: () => showEquipmentFilterSheet(
+                                  context: context,
+                                  available: options.equipment,
+                                  selected: _equipmentFilters,
+                                  onToggle: _toggleEquipment,
+                                  onClear: () =>
+                                      setState(_equipmentFilters.clear),
+                                ),
+                              )
+                            : null,
                       ),
                       const SizedBox(height: 4),
                       Expanded(
@@ -170,6 +199,14 @@ class _ExercisePickerSheetState extends ConsumerState<_ExercisePickerSheet> {
   void _toggleMuscle(String muscleId) {
     setState(() {
       if (!_muscleFilters.remove(muscleId)) _muscleFilters.add(muscleId);
+    });
+  }
+
+  void _toggleEquipment(Equipment equipment) {
+    setState(() {
+      if (!_equipmentFilters.remove(equipment)) {
+        _equipmentFilters.add(equipment);
+      }
     });
   }
 

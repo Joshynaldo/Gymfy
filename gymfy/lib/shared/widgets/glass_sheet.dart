@@ -73,7 +73,7 @@ class GlassSheet extends StatelessWidget {
                   ),
                 if (title != null)
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                    padding: const EdgeInsets.fromLTRB(20, 14, 20, 12),
                     child: Text(
                       title!,
                       style: theme.textTheme.titleMedium?.copyWith(

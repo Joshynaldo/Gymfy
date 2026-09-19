@@ -57,8 +57,21 @@ class LoggedSets extends Table {
   /// Weight lifted. A real number so half-kilo / half-pound plates work.
   RealColumn get weight => real().withDefault(const Constant(0))();
 
-  /// Reps completed for this set.
+  /// Reps completed for this set. Zero on a set logged by time.
   IntColumn get reps => integer().withDefault(const Constant(0))();
+
+  /// How long the set was held, in seconds — planks, hangs, wall sits, loaded
+  /// carries. Null on an ordinary set counted in reps.
+  ///
+  /// Null rather than zero, because the two say different things: zero would
+  /// be a set that lasted no time, and every screen deciding how to render a
+  /// set reads exactly this distinction. A set has one or the other, never
+  /// both — a plank has no rep count and a bench press has no useful duration.
+  ///
+  /// [weight] still applies: a loaded carry and a weighted plank both have
+  /// one, and a set of 45 seconds with 20 kg is a different set from 45
+  /// seconds with nothing.
+  IntColumn get seconds => integer().nullable()();
 
   /// Whether this was a ramp-up set rather than a working set.
   ///

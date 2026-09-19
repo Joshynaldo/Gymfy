@@ -15,6 +15,8 @@ class ExerciseHistoryPoint {
     required this.topWeight,
     required this.repsAtTop,
     required this.totalVolume,
+    this.longestHold,
+    this.totalSeconds = 0,
   });
 
   /// When the session was performed.
@@ -29,6 +31,23 @@ class ExerciseHistoryPoint {
   /// Total volume for the exercise in the session (Σ weight × reps, with reps
   /// as the fallback for bodyweight sets).
   final double totalVolume;
+
+  /// The longest single hold that session, for an exercise logged by time.
+  /// Null when no set in the session was a hold.
+  ///
+  /// A separate field rather than folded into [topWeight], because they are
+  /// different quantities: a chart plotting both on one axis would put 45
+  /// seconds and 45 kilograms at the same height. Before this, a plank
+  /// charted as a flat line at zero and its personal record read "0 kg × 0
+  /// reps" — present and wrong, which is worse than absent.
+  final int? longestHold;
+
+  /// Seconds held across the session. The time equivalent of [totalVolume],
+  /// kept apart from it for the same reason.
+  final int totalSeconds;
+
+  /// Whether this session was time rather than reps.
+  bool get isHold => longestHold != null;
 }
 
 /// The personal records for one exercise, derived from its history.
@@ -39,6 +58,10 @@ class PersonalRecords {
     required this.heaviestDate,
     required this.bestVolume,
     required this.bestVolumeDate,
+    this.longestHold,
+    this.longestHoldDate,
+    this.bestSeconds = 0,
+    this.bestSecondsDate,
   });
 
   /// Heaviest weight ever lifted for this exercise, and the reps done on it.
@@ -49,6 +72,19 @@ class PersonalRecords {
   /// Best single-session volume (Σ weight × reps) for this exercise.
   final double bestVolume;
   final DateTime bestVolumeDate;
+
+  /// The longest hold ever, for an exercise logged by time. Null for one
+  /// counted in reps — which is also how the screen decides which records to
+  /// show, rather than printing "0 kg" under a plank.
+  final int? longestHold;
+  final DateTime? longestHoldDate;
+
+  /// Most time under tension in one session — the hold's answer to
+  /// [bestVolume].
+  final int bestSeconds;
+  final DateTime? bestSecondsDate;
+
+  bool get isHold => longestHold != null;
 }
 
 /// Derives [PersonalRecords] from an exercise's per-session [points], or null
@@ -58,12 +94,23 @@ PersonalRecords? personalRecordsFrom(List<ExerciseHistoryPoint> points) {
 
   var heaviest = points.first;
   var bestVolume = points.first;
+  ExerciseHistoryPoint? bestHold;
+  ExerciseHistoryPoint? bestSeconds;
   for (final p in points) {
     final beatsWeight = p.topWeight > heaviest.topWeight;
     final tiesWeightMoreReps =
         p.topWeight == heaviest.topWeight && p.repsAtTop > heaviest.repsAtTop;
     if (beatsWeight || tiesWeightMoreReps) heaviest = p;
     if (p.totalVolume > bestVolume.totalVolume) bestVolume = p;
+
+    if (p.longestHold != null &&
+        (bestHold == null || p.longestHold! > bestHold.longestHold!)) {
+      bestHold = p;
+    }
+    if (p.totalSeconds > 0 &&
+        (bestSeconds == null || p.totalSeconds > bestSeconds.totalSeconds)) {
+      bestSeconds = p;
+    }
   }
 
   return PersonalRecords(
@@ -72,6 +119,10 @@ PersonalRecords? personalRecordsFrom(List<ExerciseHistoryPoint> points) {
     heaviestDate: heaviest.date,
     bestVolume: bestVolume.totalVolume,
     bestVolumeDate: bestVolume.date,
+    longestHold: bestHold?.longestHold,
+    longestHoldDate: bestHold?.date,
+    bestSeconds: bestSeconds?.totalSeconds ?? 0,
+    bestSecondsDate: bestSeconds?.date,
   );
 }
 
@@ -157,7 +208,7 @@ class ProgressRepository {
     return query.watch().map((rows) {
       // Group the sets by the session they belong to.
       final bySession =
-          <int, List<({DateTime date, double weight, int reps})>>{};
+          <int, List<({DateTime date, double weight, int reps, int? seconds})>>{};
       for (final row in rows) {
         final set = row.readTable(_db.loggedSets);
         final session = row.readTable(_db.workoutSessions);
@@ -165,6 +216,7 @@ class ProgressRepository {
           date: session.startedAt,
           weight: set.weight,
           reps: set.reps,
+          seconds: set.seconds,
         ));
       }
 
@@ -172,12 +224,25 @@ class ProgressRepository {
       for (final sets in bySession.values) {
         var top = sets.first;
         var volume = 0.0;
+        int? longestHold;
+        var totalSeconds = 0;
         for (final s in sets) {
           final heavier = s.weight > top.weight;
           final sameWeightMoreReps =
               s.weight == top.weight && s.reps > top.reps;
           if (heavier || sameWeightMoreReps) top = s;
           volume += s.weight > 0 ? s.weight * s.reps : s.reps.toDouble();
+
+          // Time is tracked beside the weight rather than converted into it.
+          // A hold and a lift are different quantities, and one axis carrying
+          // both would put 45 seconds level with 45 kilograms.
+          final seconds = s.seconds;
+          if (seconds != null) {
+            totalSeconds += seconds;
+            if (longestHold == null || seconds > longestHold) {
+              longestHold = seconds;
+            }
+          }
         }
         points.add(
           ExerciseHistoryPoint(
@@ -185,6 +250,8 @@ class ProgressRepository {
             topWeight: top.weight,
             repsAtTop: top.reps,
             totalVolume: volume,
+            longestHold: longestHold,
+            totalSeconds: totalSeconds,
           ),
         );
       }

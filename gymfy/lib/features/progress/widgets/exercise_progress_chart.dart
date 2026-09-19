@@ -24,12 +24,26 @@ class ExerciseProgressChart extends ConsumerWidget {
     final accent = ref.watch(accentColorProvider);
     final unit = ref.watch(weightUnitProvider);
 
+    // An exercise logged by time is charted by time. Plotting its weight
+    // would draw a flat line along zero and call it progress — the numbers
+    // are there, they are just seconds.
+    //
+    // Decided per *series* rather than per point, from whether any session
+    // was a hold: an exercise does not change kind halfway through, and a
+    // chart that switched axis mid-line would be unreadable.
+    final holds = points.any((p) => p.isHold);
+
     // Plotted in the display unit rather than in kilograms, so the gridlines
     // and axis labels land on round numbers in whichever unit is on screen —
     // converting only the labels would give ticks like 110, 220, 331.
     final spots = [
       for (var i = 0; i < points.length; i++)
-        FlSpot(i.toDouble(), weightIn(points[i].topWeight, unit)),
+        FlSpot(
+          i.toDouble(),
+          holds
+              ? (points[i].longestHold ?? 0).toDouble()
+              : weightIn(points[i].topWeight, unit),
+        ),
     ];
 
     final maxWeight = spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
@@ -68,7 +82,11 @@ class ExerciseProgressChart extends ConsumerWidget {
               getTitlesWidget: (value, _) => Padding(
                 padding: const EdgeInsets.only(right: 6),
                 child: Text(
-                  formatWeight(value),
+                  // Seconds read as a clock on the axis too, so "90" never
+                  // sits there ambiguously between a weight and a duration.
+                  holds
+                      ? formatSetDuration(value.round())
+                      : formatWeight(value),
                   style: chartLabelStyle(context),
                 ),
               ),
@@ -103,9 +121,11 @@ class ExerciseProgressChart extends ConsumerWidget {
             getTooltipColor: (_) => theme.colorScheme.inverseSurface,
             getTooltipItems: (touchedSpots) => touchedSpots.map((spot) {
               final p = points[spot.x.round()];
+              final headline = holds
+                  ? formatSetDuration(p.longestHold ?? 0)
+                  : '${formatWeightUnit(p.topWeight, unit)} × ${p.repsAtTop}';
               return LineTooltipItem(
-                '${formatWeightUnit(p.topWeight, unit)} × ${p.repsAtTop}\n'
-                '${formatShortDate(p.date)}',
+                '$headline\n${formatShortDate(p.date)}',
                 TextStyle(
                   color: theme.colorScheme.onInverseSurface,
                   fontWeight: FontWeight.w600,

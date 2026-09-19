@@ -29,6 +29,7 @@ const List<ExercisesCompanion> exerciseSeedData = [
   // ---------------- CHEST ----------------
   ExercisesCompanion(
     id: Value('barbell_bench_press'),
+    equipment: Value('barbell'),
     name: Value('Barbell Bench Press'),
     muscleIds: Value([MuscleId.chest, MuscleId.frontDeltoid, MuscleId.triceps]),
     gifPath: Value('assets/exercises/barbell_bench_press.gif'),
@@ -36,12 +37,14 @@ const List<ExercisesCompanion> exerciseSeedData = [
   ),
   ExercisesCompanion(
     id: Value('dumbbell_bench_press'),
+    equipment: Value('dumbbell'),
     name: Value('Dumbbell Bench Press'),
     muscleIds: Value([MuscleId.chest, MuscleId.frontDeltoid, MuscleId.triceps]),
     gifPath: Value('assets/exercises/dumbbell_bench_press.gif'),
   ),
   ExercisesCompanion(
     id: Value('incline_barbell_press'),
+    equipment: Value('barbell'),
     name: Value('Incline Barbell Press'),
     muscleIds: Value([MuscleId.chest, MuscleId.frontDeltoid, MuscleId.triceps]),
     gifPath: Value('assets/exercises/incline_barbell_press.gif'),
@@ -49,12 +52,14 @@ const List<ExercisesCompanion> exerciseSeedData = [
   ),
   ExercisesCompanion(
     id: Value('incline_dumbbell_press'),
+    equipment: Value('dumbbell'),
     name: Value('Incline Dumbbell Press'),
     muscleIds: Value([MuscleId.chest, MuscleId.frontDeltoid, MuscleId.triceps]),
     gifPath: Value('assets/exercises/incline_dumbbell_press.gif'),
   ),
   ExercisesCompanion(
     id: Value('decline_barbell_press'),
+    equipment: Value('barbell'),
     name: Value('Decline Barbell Press'),
     muscleIds: Value([MuscleId.chest, MuscleId.triceps]),
     gifPath: Value('assets/exercises/decline_barbell_press.gif'),
@@ -62,30 +67,35 @@ const List<ExercisesCompanion> exerciseSeedData = [
   ),
   ExercisesCompanion(
     id: Value('push_up'),
+    equipment: Value('bodyweight'),
     name: Value('Push-Up'),
     muscleIds: Value([MuscleId.chest, MuscleId.frontDeltoid, MuscleId.triceps]),
     gifPath: Value('assets/exercises/push_up.gif'),
   ),
   ExercisesCompanion(
     id: Value('chest_dip'),
+    equipment: Value('bodyweight'),
     name: Value('Chest Dip'),
     muscleIds: Value([MuscleId.chest, MuscleId.triceps, MuscleId.frontDeltoid]),
     gifPath: Value('assets/exercises/chest_dip.gif'),
   ),
   ExercisesCompanion(
     id: Value('cable_fly'),
+    equipment: Value('cable'),
     name: Value('Cable Fly'),
     muscleIds: Value([MuscleId.chest, MuscleId.frontDeltoid]),
     gifPath: Value('assets/exercises/cable_fly.gif'),
   ),
   ExercisesCompanion(
     id: Value('dumbbell_fly'),
+    equipment: Value('dumbbell'),
     name: Value('Dumbbell Fly'),
     muscleIds: Value([MuscleId.chest, MuscleId.frontDeltoid]),
     gifPath: Value('assets/exercises/dumbbell_fly.gif'),
   ),
   ExercisesCompanion(
     id: Value('pec_deck'),
+    equipment: Value('machine'),
     name: Value('Pec Deck'),
     muscleIds: Value([MuscleId.chest]),
     gifPath: Value('assets/exercises/pec_deck.gif'),
@@ -94,30 +104,35 @@ const List<ExercisesCompanion> exerciseSeedData = [
   // ---------------- BACK ----------------
   ExercisesCompanion(
     id: Value('pull_up'),
+    equipment: Value('bodyweight'),
     name: Value('Pull-Up'),
     muscleIds: Value([MuscleId.lats, MuscleId.biceps, MuscleId.rearDeltoid]),
     gifPath: Value('assets/exercises/pull_up.gif'),
   ),
   ExercisesCompanion(
     id: Value('chin_up'),
+    equipment: Value('bodyweight'),
     name: Value('Chin-Up'),
     muscleIds: Value([MuscleId.lats, MuscleId.biceps]),
     gifPath: Value('assets/exercises/chin_up.gif'),
   ),
   ExercisesCompanion(
     id: Value('lat_pulldown'),
+    equipment: Value('cable'),
     name: Value('Lat Pulldown'),
     muscleIds: Value([MuscleId.lats, MuscleId.biceps]),
     gifPath: Value('assets/exercises/lat_pulldown.gif'),
   ),
   ExercisesCompanion(
     id: Value('straight_arm_pulldown'),
+    equipment: Value('cable'),
     name: Value('Straight-Arm Pulldown'),
     muscleIds: Value([MuscleId.lats, MuscleId.triceps]),
     gifPath: Value('assets/exercises/straight_arm_pulldown.gif'),
   ),
   ExercisesCompanion(
     id: Value('barbell_row'),
+    equipment: Value('barbell'),
     name: Value('Barbell Row'),
     muscleIds: Value([
       MuscleId.lats,
@@ -130,12 +145,14 @@ const List<ExercisesCompanion> exerciseSeedData = [
   ),
   ExercisesCompanion(
     id: Value('dumbbell_row'),
+    equipment: Value('dumbbell'),
     name: Value('Dumbbell Row'),
     muscleIds: Value([MuscleId.lats, MuscleId.trapezius, MuscleId.biceps]),
     gifPath: Value('assets/exercises/dumbbell_row.gif'),
   ),
   ExercisesCompanion(
     id: Value('t_bar_row'),
+    equipment: Value('barbell'),
     name: Value('T-Bar Row'),
     muscleIds: Value([
       MuscleId.lats,
@@ -148,6 +165,7 @@ const List<ExercisesCompanion> exerciseSeedData = [
   ),
   ExercisesCompanion(
     id: Value('seated_cable_row'),
+    equipment: Value('cable'),
     name: Value('Seated Cable Row'),
     muscleIds: Value([
       MuscleId.lats,
@@ -159,18 +177,21 @@ const List<ExercisesCompanion> exerciseSeedData = [
   ),
   ExercisesCompanion(
     id: Value('inverted_row'),
+    equipment: Value('bodyweight'),
     name: Value('Inverted Row'),
     muscleIds: Value([MuscleId.lats, MuscleId.trapezius, MuscleId.biceps]),
     gifPath: Value('assets/exercises/inverted_row.gif'),
   ),
   ExercisesCompanion(
     id: Value('lat_pullover'),
+    equipment: Value('dumbbell'),
     name: Value('Lat Pullover'),
     muscleIds: Value([MuscleId.lats, MuscleId.chest, MuscleId.triceps]),
     gifPath: Value('assets/exercises/lat_pullover.gif'),
   ),
   ExercisesCompanion(
     id: Value('barbell_shrug'),
+    equipment: Value('barbell'),
     name: Value('Barbell Shrug'),
     muscleIds: Value([MuscleId.trapezius, MuscleId.forearms]),
     gifPath: Value('assets/exercises/barbell_shrug.gif'),
@@ -178,6 +199,7 @@ const List<ExercisesCompanion> exerciseSeedData = [
   ),
   ExercisesCompanion(
     id: Value('deadlift'),
+    equipment: Value('barbell'),
     name: Value('Deadlift'),
     muscleIds: Value([
       MuscleId.lowerBack,
@@ -191,6 +213,7 @@ const List<ExercisesCompanion> exerciseSeedData = [
   ),
   ExercisesCompanion(
     id: Value('good_morning'),
+    equipment: Value('barbell'),
     name: Value('Good Morning'),
     muscleIds: Value([
       MuscleId.lowerBack,
@@ -202,6 +225,7 @@ const List<ExercisesCompanion> exerciseSeedData = [
   ),
   ExercisesCompanion(
     id: Value('back_extension'),
+    equipment: Value('bodyweight'),
     name: Value('Back Extension'),
     muscleIds: Value([
       MuscleId.lowerBack,
@@ -214,6 +238,7 @@ const List<ExercisesCompanion> exerciseSeedData = [
   // ---------------- SHOULDERS ----------------
   ExercisesCompanion(
     id: Value('overhead_barbell_press'),
+    equipment: Value('barbell'),
     name: Value('Overhead Barbell Press'),
     muscleIds: Value([
       MuscleId.frontDeltoid,
@@ -225,18 +250,21 @@ const List<ExercisesCompanion> exerciseSeedData = [
   ),
   ExercisesCompanion(
     id: Value('dumbbell_shoulder_press'),
+    equipment: Value('dumbbell'),
     name: Value('Dumbbell Shoulder Press'),
     muscleIds: Value([MuscleId.frontDeltoid, MuscleId.triceps]),
     gifPath: Value('assets/exercises/dumbbell_shoulder_press.gif'),
   ),
   ExercisesCompanion(
     id: Value('machine_shoulder_press'),
+    equipment: Value('machine'),
     name: Value('Machine Shoulder Press'),
     muscleIds: Value([MuscleId.frontDeltoid, MuscleId.triceps]),
     gifPath: Value('assets/exercises/machine_shoulder_press.gif'),
   ),
   ExercisesCompanion(
     id: Value('arnold_press'),
+    equipment: Value('dumbbell'),
     name: Value('Arnold Press'),
     muscleIds: Value([
       MuscleId.frontDeltoid,
@@ -247,36 +275,42 @@ const List<ExercisesCompanion> exerciseSeedData = [
   ),
   ExercisesCompanion(
     id: Value('dumbbell_lateral_raise'),
+    equipment: Value('dumbbell'),
     name: Value('Dumbbell Lateral Raise'),
     muscleIds: Value([MuscleId.sideDeltoid]),
     gifPath: Value('assets/exercises/dumbbell_lateral_raise.gif'),
   ),
   ExercisesCompanion(
     id: Value('cable_lateral_raise'),
+    equipment: Value('cable'),
     name: Value('Cable Lateral Raise'),
     muscleIds: Value([MuscleId.sideDeltoid]),
     gifPath: Value('assets/exercises/cable_lateral_raise.gif'),
   ),
   ExercisesCompanion(
     id: Value('front_raise'),
+    equipment: Value('dumbbell'),
     name: Value('Front Raise'),
     muscleIds: Value([MuscleId.frontDeltoid]),
     gifPath: Value('assets/exercises/front_raise.gif'),
   ),
   ExercisesCompanion(
     id: Value('rear_delt_fly'),
+    equipment: Value('dumbbell'),
     name: Value('Rear Delt Fly'),
     muscleIds: Value([MuscleId.rearDeltoid, MuscleId.trapezius]),
     gifPath: Value('assets/exercises/rear_delt_fly.gif'),
   ),
   ExercisesCompanion(
     id: Value('face_pull'),
+    equipment: Value('cable'),
     name: Value('Face Pull'),
     muscleIds: Value([MuscleId.rearDeltoid, MuscleId.trapezius]),
     gifPath: Value('assets/exercises/face_pull.gif'),
   ),
   ExercisesCompanion(
     id: Value('upright_row'),
+    equipment: Value('barbell'),
     name: Value('Upright Row'),
     muscleIds: Value([
       MuscleId.sideDeltoid,
@@ -290,6 +324,7 @@ const List<ExercisesCompanion> exerciseSeedData = [
   // ---------------- ARMS ----------------
   ExercisesCompanion(
     id: Value('barbell_biceps_curl'),
+    equipment: Value('barbell'),
     name: Value('Barbell Biceps Curl'),
     muscleIds: Value([MuscleId.biceps, MuscleId.forearms]),
     gifPath: Value('assets/exercises/barbell_biceps_curl.gif'),
@@ -297,18 +332,21 @@ const List<ExercisesCompanion> exerciseSeedData = [
   ),
   ExercisesCompanion(
     id: Value('dumbbell_hammer_curl'),
+    equipment: Value('dumbbell'),
     name: Value('Dumbbell Hammer Curl'),
     muscleIds: Value([MuscleId.biceps, MuscleId.forearms]),
     gifPath: Value('assets/exercises/dumbbell_hammer_curl.gif'),
   ),
   ExercisesCompanion(
     id: Value('incline_dumbbell_curl'),
+    equipment: Value('dumbbell'),
     name: Value('Incline Dumbbell Curl'),
     muscleIds: Value([MuscleId.biceps]),
     gifPath: Value('assets/exercises/incline_dumbbell_curl.gif'),
   ),
   ExercisesCompanion(
     id: Value('preacher_curl'),
+    equipment: Value('barbell'),
     name: Value('Preacher Curl'),
     muscleIds: Value([MuscleId.biceps]),
     gifPath: Value('assets/exercises/preacher_curl.gif'),
@@ -316,18 +354,21 @@ const List<ExercisesCompanion> exerciseSeedData = [
   ),
   ExercisesCompanion(
     id: Value('cable_curl'),
+    equipment: Value('cable'),
     name: Value('Cable Curl'),
     muscleIds: Value([MuscleId.biceps, MuscleId.forearms]),
     gifPath: Value('assets/exercises/cable_curl.gif'),
   ),
   ExercisesCompanion(
     id: Value('concentration_curl'),
+    equipment: Value('dumbbell'),
     name: Value('Concentration Curl'),
     muscleIds: Value([MuscleId.biceps]),
     gifPath: Value('assets/exercises/concentration_curl.gif'),
   ),
   ExercisesCompanion(
     id: Value('reverse_curl'),
+    equipment: Value('barbell'),
     name: Value('Reverse Curl'),
     muscleIds: Value([MuscleId.forearms, MuscleId.biceps]),
     gifPath: Value('assets/exercises/reverse_curl.gif'),
@@ -335,6 +376,7 @@ const List<ExercisesCompanion> exerciseSeedData = [
   ),
   ExercisesCompanion(
     id: Value('wrist_curl'),
+    equipment: Value('barbell'),
     name: Value('Wrist Curl'),
     muscleIds: Value([MuscleId.forearms]),
     gifPath: Value('assets/exercises/wrist_curl.gif'),
@@ -342,18 +384,21 @@ const List<ExercisesCompanion> exerciseSeedData = [
   ),
   ExercisesCompanion(
     id: Value('triceps_pushdown'),
+    equipment: Value('cable'),
     name: Value('Triceps Pushdown'),
     muscleIds: Value([MuscleId.triceps]),
     gifPath: Value('assets/exercises/triceps_pushdown.gif'),
   ),
   ExercisesCompanion(
     id: Value('overhead_triceps_extension'),
+    equipment: Value('dumbbell'),
     name: Value('Overhead Triceps Extension'),
     muscleIds: Value([MuscleId.triceps]),
     gifPath: Value('assets/exercises/overhead_triceps_extension.gif'),
   ),
   ExercisesCompanion(
     id: Value('skull_crusher'),
+    equipment: Value('barbell'),
     name: Value('Skull Crusher'),
     muscleIds: Value([MuscleId.triceps]),
     gifPath: Value('assets/exercises/skull_crusher.gif'),
@@ -361,6 +406,7 @@ const List<ExercisesCompanion> exerciseSeedData = [
   ),
   ExercisesCompanion(
     id: Value('close_grip_bench_press'),
+    equipment: Value('barbell'),
     name: Value('Close-Grip Bench Press'),
     muscleIds: Value([MuscleId.triceps, MuscleId.chest, MuscleId.frontDeltoid]),
     gifPath: Value('assets/exercises/close_grip_bench_press.gif'),
@@ -368,6 +414,7 @@ const List<ExercisesCompanion> exerciseSeedData = [
   ),
   ExercisesCompanion(
     id: Value('bench_dip'),
+    equipment: Value('bodyweight'),
     name: Value('Bench Dip'),
     muscleIds: Value([MuscleId.triceps, MuscleId.frontDeltoid]),
     gifPath: Value('assets/exercises/bench_dip.gif'),
@@ -376,6 +423,7 @@ const List<ExercisesCompanion> exerciseSeedData = [
   // ---------------- LEGS ----------------
   ExercisesCompanion(
     id: Value('barbell_back_squat'),
+    equipment: Value('barbell'),
     name: Value('Barbell Back Squat'),
     muscleIds: Value([
       MuscleId.quads,
@@ -388,6 +436,7 @@ const List<ExercisesCompanion> exerciseSeedData = [
   ),
   ExercisesCompanion(
     id: Value('front_squat'),
+    equipment: Value('barbell'),
     name: Value('Front Squat'),
     muscleIds: Value([MuscleId.quads, MuscleId.glutes, MuscleId.abs]),
     gifPath: Value('assets/exercises/front_squat.gif'),
@@ -395,24 +444,28 @@ const List<ExercisesCompanion> exerciseSeedData = [
   ),
   ExercisesCompanion(
     id: Value('goblet_squat'),
+    equipment: Value('dumbbell'),
     name: Value('Goblet Squat'),
     muscleIds: Value([MuscleId.quads, MuscleId.glutes]),
     gifPath: Value('assets/exercises/goblet_squat.gif'),
   ),
   ExercisesCompanion(
     id: Value('hack_squat'),
+    equipment: Value('machine'),
     name: Value('Hack Squat'),
     muscleIds: Value([MuscleId.quads, MuscleId.glutes]),
     gifPath: Value('assets/exercises/hack_squat.gif'),
   ),
   ExercisesCompanion(
     id: Value('leg_press'),
+    equipment: Value('machine'),
     name: Value('Leg Press'),
     muscleIds: Value([MuscleId.quads, MuscleId.glutes, MuscleId.hamstrings]),
     gifPath: Value('assets/exercises/leg_press.gif'),
   ),
   ExercisesCompanion(
     id: Value('sumo_deadlift'),
+    equipment: Value('barbell'),
     name: Value('Sumo Deadlift'),
     muscleIds: Value([
       MuscleId.glutes,
@@ -425,6 +478,7 @@ const List<ExercisesCompanion> exerciseSeedData = [
   ),
   ExercisesCompanion(
     id: Value('romanian_deadlift'),
+    equipment: Value('barbell'),
     name: Value('Romanian Deadlift'),
     muscleIds: Value([
       MuscleId.hamstrings,
@@ -436,42 +490,49 @@ const List<ExercisesCompanion> exerciseSeedData = [
   ),
   ExercisesCompanion(
     id: Value('walking_lunge'),
+    equipment: Value('dumbbell'),
     name: Value('Walking Lunge'),
     muscleIds: Value([MuscleId.quads, MuscleId.glutes, MuscleId.hamstrings]),
     gifPath: Value('assets/exercises/walking_lunge.gif'),
   ),
   ExercisesCompanion(
     id: Value('bulgarian_split_squat'),
+    equipment: Value('dumbbell'),
     name: Value('Bulgarian Split Squat'),
     muscleIds: Value([MuscleId.quads, MuscleId.glutes, MuscleId.hamstrings]),
     gifPath: Value('assets/exercises/bulgarian_split_squat.gif'),
   ),
   ExercisesCompanion(
     id: Value('step_up'),
+    equipment: Value('dumbbell'),
     name: Value('Step-Up'),
     muscleIds: Value([MuscleId.quads, MuscleId.glutes]),
     gifPath: Value('assets/exercises/step_up.gif'),
   ),
   ExercisesCompanion(
     id: Value('leg_extension'),
+    equipment: Value('machine'),
     name: Value('Leg Extension'),
     muscleIds: Value([MuscleId.quads]),
     gifPath: Value('assets/exercises/leg_extension.gif'),
   ),
   ExercisesCompanion(
     id: Value('lying_leg_curl'),
+    equipment: Value('machine'),
     name: Value('Lying Leg Curl'),
     muscleIds: Value([MuscleId.hamstrings]),
     gifPath: Value('assets/exercises/lying_leg_curl.gif'),
   ),
   ExercisesCompanion(
     id: Value('seated_leg_curl'),
+    equipment: Value('machine'),
     name: Value('Seated Leg Curl'),
     muscleIds: Value([MuscleId.hamstrings]),
     gifPath: Value('assets/exercises/seated_leg_curl.gif'),
   ),
   ExercisesCompanion(
     id: Value('barbell_hip_thrust'),
+    equipment: Value('barbell'),
     name: Value('Barbell Hip Thrust'),
     muscleIds: Value([MuscleId.glutes, MuscleId.hamstrings]),
     gifPath: Value('assets/exercises/barbell_hip_thrust.gif'),
@@ -479,24 +540,28 @@ const List<ExercisesCompanion> exerciseSeedData = [
   ),
   ExercisesCompanion(
     id: Value('glute_bridge'),
+    equipment: Value('bodyweight'),
     name: Value('Glute Bridge'),
     muscleIds: Value([MuscleId.glutes, MuscleId.hamstrings]),
     gifPath: Value('assets/exercises/glute_bridge.gif'),
   ),
   ExercisesCompanion(
     id: Value('hip_adduction'),
+    equipment: Value('machine'),
     name: Value('Hip Adduction'),
     muscleIds: Value([MuscleId.adductors]),
     gifPath: Value('assets/exercises/hip_adduction.gif'),
   ),
   ExercisesCompanion(
     id: Value('standing_calf_raise'),
+    equipment: Value('machine'),
     name: Value('Standing Calf Raise'),
     muscleIds: Value([MuscleId.calves]),
     gifPath: Value('assets/exercises/standing_calf_raise.gif'),
   ),
   ExercisesCompanion(
     id: Value('seated_calf_raise'),
+    equipment: Value('machine'),
     name: Value('Seated Calf Raise'),
     muscleIds: Value([MuscleId.calves]),
     gifPath: Value('assets/exercises/seated_calf_raise.gif'),
@@ -505,54 +570,65 @@ const List<ExercisesCompanion> exerciseSeedData = [
   // ---------------- CORE ----------------
   ExercisesCompanion(
     id: Value('plank'),
+    equipment: Value('bodyweight'),
     name: Value('Plank'),
     muscleIds: Value([MuscleId.abs, MuscleId.obliques]),
+    isTimed: Value(true),
     gifPath: Value('assets/exercises/plank.gif'),
   ),
   ExercisesCompanion(
     id: Value('side_plank'),
+    equipment: Value('bodyweight'),
     name: Value('Side Plank'),
     muscleIds: Value([MuscleId.obliques, MuscleId.abs]),
+    isTimed: Value(true),
     gifPath: Value('assets/exercises/side_plank.gif'),
   ),
   ExercisesCompanion(
     id: Value('crunch'),
+    equipment: Value('bodyweight'),
     name: Value('Crunch'),
     muscleIds: Value([MuscleId.abs]),
     gifPath: Value('assets/exercises/crunch.gif'),
   ),
   ExercisesCompanion(
     id: Value('cable_crunch'),
+    equipment: Value('cable'),
     name: Value('Cable Crunch'),
     muscleIds: Value([MuscleId.abs]),
     gifPath: Value('assets/exercises/cable_crunch.gif'),
   ),
   ExercisesCompanion(
     id: Value('hanging_leg_raise'),
+    equipment: Value('bodyweight'),
     name: Value('Hanging Leg Raise'),
     muscleIds: Value([MuscleId.abs, MuscleId.obliques]),
     gifPath: Value('assets/exercises/hanging_leg_raise.gif'),
   ),
   ExercisesCompanion(
     id: Value('ab_wheel_rollout'),
+    equipment: Value('other'),
     name: Value('Ab Wheel Rollout'),
     muscleIds: Value([MuscleId.abs, MuscleId.obliques, MuscleId.lats]),
     gifPath: Value('assets/exercises/ab_wheel_rollout.gif'),
   ),
   ExercisesCompanion(
     id: Value('russian_twist'),
+    equipment: Value('bodyweight'),
     name: Value('Russian Twist'),
     muscleIds: Value([MuscleId.obliques, MuscleId.abs]),
     gifPath: Value('assets/exercises/russian_twist.gif'),
   ),
   ExercisesCompanion(
     id: Value('bicycle_crunch'),
+    equipment: Value('bodyweight'),
     name: Value('Bicycle Crunch'),
     muscleIds: Value([MuscleId.obliques, MuscleId.abs]),
     gifPath: Value('assets/exercises/bicycle_crunch.gif'),
   ),
   ExercisesCompanion(
     id: Value('mountain_climber'),
+    equipment: Value('bodyweight'),
     name: Value('Mountain Climber'),
     muscleIds: Value([MuscleId.abs, MuscleId.obliques, MuscleId.quads]),
     gifPath: Value('assets/exercises/mountain_climber.gif'),
@@ -561,6 +637,7 @@ const List<ExercisesCompanion> exerciseSeedData = [
   // ---------------- FULL BODY ----------------
   ExercisesCompanion(
     id: Value('power_clean'),
+    equipment: Value('barbell'),
     name: Value('Power Clean'),
     muscleIds: Value([
       MuscleId.trapezius,
@@ -574,6 +651,7 @@ const List<ExercisesCompanion> exerciseSeedData = [
   ),
   ExercisesCompanion(
     id: Value('push_press'),
+    equipment: Value('barbell'),
     name: Value('Push Press'),
     muscleIds: Value([
       MuscleId.frontDeltoid,
@@ -586,6 +664,7 @@ const List<ExercisesCompanion> exerciseSeedData = [
   ),
   ExercisesCompanion(
     id: Value('kettlebell_swing'),
+    equipment: Value('other'),
     name: Value('Kettlebell Swing'),
     muscleIds: Value([
       MuscleId.glutes,
@@ -596,6 +675,7 @@ const List<ExercisesCompanion> exerciseSeedData = [
   ),
   ExercisesCompanion(
     id: Value('farmers_walk'),
+    equipment: Value('dumbbell'),
     name: Value("Farmer's Walk"),
     muscleIds: Value([
       MuscleId.forearms,
@@ -603,6 +683,7 @@ const List<ExercisesCompanion> exerciseSeedData = [
       MuscleId.abs,
       MuscleId.quads,
     ]),
+    isTimed: Value(true),
     gifPath: Value('assets/exercises/farmers_walk.gif'),
   ),
 ];

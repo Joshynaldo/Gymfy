@@ -85,6 +85,33 @@ class Exercises extends Table {
   /// history to protect, so no tombstone to leave behind.
   BoolColumn get isArchived => boolean().withDefault(const Constant(false))();
 
+  /// What the movement needs: barbell, dumbbell, machine, cable, bodyweight
+  /// or other. Stored as the [Equipment] slug.
+  ///
+  /// Carried by the seed companions, like [isTimed] and unlike [notes]: a
+  /// bench press needs a barbell whoever is holding it, so the built-in
+  /// library should keep asserting that on every launch.
+  ///
+  /// Defaults to `other` rather than being nullable. "Unclassified" and
+  /// "something else" would show up identically on a filter bar, and a second
+  /// state that renders the same as the first is a state nobody can act on.
+  TextColumn get equipment =>
+      text().withDefault(const Constant('other')).withLength(max: 20)();
+
+  /// True for movements measured in time rather than reps — planks, hangs,
+  /// wall sits, loaded carries, and cardio.
+  ///
+  /// On the exercise rather than on the set, because it is a fact about the
+  /// movement: a plank is never counted in reps, on any day, in any
+  /// programme. It decides which of the two the log sheet asks for, so a
+  /// per-set flag would let you log a plank in reps by accident.
+  ///
+  /// Carried by the seed companions, unlike [notes] and [barWeightKg] — this
+  /// is a property of the movement itself, not something the user chose, so
+  /// the built-in library should keep telling the truth about it on every
+  /// launch even if a past version got one wrong.
+  BoolColumn get isTimed => boolean().withDefault(const Constant(false))();
+
   /// The user's own note about this exercise — seat height, pin position, grip
   /// width, which machine in the gym, a cue that makes the lift click.
   ///

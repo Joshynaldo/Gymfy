@@ -60,6 +60,16 @@ class ImportColumns {
   static const setOrder = ['set_index', 'set_order', 'set_number', 'set'];
   static const setType = ['set_type', 'type'];
 
+  /// How long a set was held. Hevy writes `duration_seconds`, StrengthLog a
+  /// `time` column spelled `mm:ss` or `hh:mm:ss`.
+  static const seconds = [
+    'duration_seconds',
+    'set_duration_sec',
+    'seconds',
+    'time',
+    'duration',
+  ];
+
   /// A boolean warm-up column, as opposed to a set-*type* string.
   ///
   /// StrengthLog writes `warmup,true`. Read as a set type that would be a
@@ -97,6 +107,7 @@ class ImportedSet {
     required this.weightKg,
     required this.reps,
     required this.isWarmup,
+    required this.seconds,
   });
 
   final String exerciseName;
@@ -105,6 +116,9 @@ class ImportedSet {
   final double weightKg;
 
   final int reps;
+
+  /// Seconds held, for a set logged by time. Null for a counted set.
+  final int? seconds;
 
   /// Exporters that distinguish a ramp-up say so in a "set type" column.
   /// Where they don't, everything is a working set — the safe direction,
@@ -220,6 +234,7 @@ WorkoutImport parseWorkoutCsv(
   final workoutColumn = table.columnFor(ImportColumns.workout);
   final endColumn = table.columnFor(ImportColumns.endDate);
   final typeColumn = table.columnFor(ImportColumns.setType);
+  final secondsColumn = table.columnFor(ImportColumns.seconds);
   final warmupColumn = table.columnFor(ImportColumns.warmupFlag);
   final extraColumn = table.columnFor(ImportColumns.extraWeight);
 
@@ -244,16 +259,21 @@ WorkoutImport parseWorkoutCsv(
     final weight =
         _number(cell(row, weightColumn)) ?? _number(cell(row, extraColumn));
 
-    // A row is a set only if it has a date, an exercise, and reps that
-    // actually happened. Everything else — a blank line, a summary row, a
-    // cardio entry logged by distance — is not something this app can store.
+    final seconds = parseDurationCell(cell(row, secondsColumn));
+
+    // A row is a set only if it has a date, an exercise, and either reps that
+    // actually happened or a hold that lasted. Everything else — a blank
+    // line, a summary row, a cardio entry logged only by distance — is not
+    // something this app can store.
     //
     // `reps == 0` is the one worth spelling out: an exporter writes out the
     // *planned* rows of a workout template whether or not they were
-    // performed, so a day you cut short leaves behind sets of 0 × 0. This
-    // file has 28 of them. Importing those would add phantom sets to the
+    // performed, so a day you cut short leaves behind sets of 0 × 0. One real
+    // export had 28 of them. Importing those would add phantom sets to the
     // history, inflate every set count, and put a 0 kg entry in the charts.
-    if (start == null || exerciseName.isEmpty || reps == null || reps <= 0) {
+    final counted = reps != null && reps > 0;
+    final held = seconds != null && seconds > 0;
+    if (start == null || exerciseName.isEmpty || (!counted && !held)) {
       skipped++;
       continue;
     }
@@ -263,7 +283,9 @@ WorkoutImport parseWorkoutCsv(
     if (!grouped.containsKey(key)) {
       order.add(key);
       starts[key] = start;
-      ends[key] = endColumn == null ? null : parseImportDate(cell(row, endColumn));
+      ends[key] = endColumn == null
+          ? null
+          : parseImportDate(cell(row, endColumn));
       names[key] = name.isEmpty ? 'Imported workout' : name;
       grouped[key] = [];
     }
@@ -281,7 +303,12 @@ WorkoutImport parseWorkoutCsv(
           weight ?? 0,
           parseUnitCell(cell(row, unitColumn)) ?? unit,
         ),
-        reps: reps,
+        // One or the other, matching how the app stores them. A row with
+        // both is read as counted: reps are the more specific claim, and an
+        // exporter that also records how long the set took is describing the
+        // same set, not a second one.
+        reps: counted ? reps : 0,
+        seconds: counted ? null : seconds,
         // Either spelling: a set-type string, or a boolean column of its own.
         isWarmup:
             isWarmupType(cell(row, typeColumn)) ||
@@ -404,6 +431,32 @@ DateTime? parseImportDate(String raw) {
     int.tryParse(match.group(5) ?? '') ?? 0,
     int.tryParse(match.group(6) ?? '') ?? 0,
   );
+}
+
+/// Reads a duration cell, in seconds.
+///
+/// Two spellings, because exporters use both: a plain number of seconds
+/// (`45`), and a clock (`0:45`, `1:30:00`). Returns null for anything else,
+/// and for a zero-length one — `00:00:00` is what an exporter writes for a
+/// set that was set up and never done, and importing that as a hold would put
+/// a zero-second plank in the history.
+int? parseDurationCell(String raw) {
+  final text = raw.trim();
+  if (text.isEmpty) return null;
+
+  final plain = int.tryParse(text);
+  if (plain != null) return plain > 0 ? plain : null;
+
+  final parts = text.split(':');
+  if (parts.length < 2 || parts.length > 3) return null;
+
+  var total = 0;
+  for (final part in parts) {
+    final value = int.tryParse(part.trim());
+    if (value == null || value < 0) return null;
+    total = total * 60 + value;
+  }
+  return total > 0 ? total : null;
 }
 
 /// Whether a boolean-ish cell means yes.

@@ -422,6 +422,8 @@ final _previewExercise = Exercise(
   isPlateLoaded: true,
   isCustom: false,
   isArchived: false,
+  isTimed: false,
+  equipment: 'other',
 );
 
 /// The rest pane with a timer that does not tick.

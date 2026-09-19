@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../shared/database/app_database.dart';
+import '../../../shared/models/equipment.dart';
 import '../../../shared/utils/exercise_display.dart';
 import '../../../shared/utils/exercise_search.dart';
 import '../../../shared/utils/format.dart';
@@ -14,6 +15,7 @@ import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/fade_slide_in.dart';
 import '../../../shared/widgets/exercise_thumbnail.dart';
 import '../data/exercise_repository.dart';
+import '../widgets/equipment_filter_sheet.dart';
 import '../data/muscle_groups.dart';
 import 'widgets/add_to_day_sheet.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
@@ -41,6 +43,9 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
   /// The muscles being filtered on. Empty means "All".
   final _muscleFilters = <String>{};
 
+  /// The equipment being filtered on. Empty means "All".
+  final _equipmentFilters = <Equipment>{};
+
   /// Exercise ids picked for a bulk "add to day".
   ///
   /// Ids rather than rows, so a selection survives the list re-sorting or an
@@ -57,7 +62,16 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
     // Computed here rather than inside the list's data callback: the app bar
     // is built first, so a field filled in further down would leave the chips
     // empty for that frame — and nothing would rebuild to correct it.
-    final muscles = musclesIn(exercisesAsync.value ?? const <Exercise>[]);
+    //
+    // Each bar is offered the options that survive the *other* filters, so
+    // every chip on screen has results behind it. See `filterOptionsFor` for
+    // why each facet excludes its own selection.
+    final options = filterOptionsFor(
+      exercisesAsync.value ?? const <Exercise>[],
+      query: _query,
+      muscleFilters: _muscleFilters,
+      equipmentFilters: _equipmentFilters,
+    );
 
     return GlassScaffold(
       appBar: _selecting
@@ -87,10 +101,26 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
               // for.
               bottom: _SearchHeader(
                 onQuery: (value) => setState(() => _query = value),
-                muscles: muscles,
+                muscles: options.muscles,
                 selected: _muscleFilters,
                 onToggle: _toggleMuscle,
                 onClear: () => setState(_muscleFilters.clear),
+                // Leads the chips rather than sitting in the app bar: both
+                // narrow the same list, so they read as one row of filters.
+                // Only once there is more than one kind to choose between —
+                // one kind is a label on the only answer there is.
+                equipmentButton: options.equipment.length > 1
+                    ? EquipmentFilterButton(
+                        count: _equipmentFilters.length,
+                        onPressed: () => showEquipmentFilterSheet(
+                          context: context,
+                          available: options.equipment,
+                          selected: _equipmentFilters,
+                          onToggle: _toggleEquipment,
+                          onClear: () => setState(_equipmentFilters.clear),
+                        ),
+                      )
+                    : null,
               ),
             ),
       body: (context) => exercisesAsync.when(
@@ -136,6 +166,14 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
     });
   }
 
+  void _toggleEquipment(Equipment equipment) {
+    setState(() {
+      if (!_equipmentFilters.remove(equipment)) {
+        _equipmentFilters.add(equipment);
+      }
+    });
+  }
+
   /// Whether an exercise survives the search box and the muscle chips. The
   /// rules live in `shared/utils/exercise_search.dart` so the exercise picker
   /// filters identically.
@@ -143,6 +181,7 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
     exercise,
     query: _query,
     muscleFilters: _muscleFilters,
+    equipmentFilters: _equipmentFilters,
   );
 
   void _toggle(String id) {
@@ -198,6 +237,7 @@ class _SearchHeader extends StatelessWidget implements PreferredSizeWidget {
     required this.selected,
     required this.onToggle,
     required this.onClear,
+    this.equipmentButton,
   });
 
   final ValueChanged<String> onQuery;
@@ -205,9 +245,15 @@ class _SearchHeader extends StatelessWidget implements PreferredSizeWidget {
   final Set<String> selected;
   final ValueChanged<String> onToggle;
   final VoidCallback onClear;
+  final Widget? equipmentButton;
 
+  /// Added up rather than written down. An app bar sizes its bottom from this
+  /// number alone, so any slack between it and the real content becomes a gap
+  /// under the chips that nothing on screen explains — which is what the
+  /// previous hand-kept 108 was, against 102 of content.
   @override
-  Size get preferredSize => const Size.fromHeight(112);
+  Size get preferredSize =>
+      const Size.fromHeight(_SearchField.height + filterBarHeight);
 
   @override
   Widget build(BuildContext context) {
@@ -220,8 +266,8 @@ class _SearchHeader extends StatelessWidget implements PreferredSizeWidget {
           selected: selected,
           onToggle: onToggle,
           onClear: onClear,
+          leading: equipmentButton,
         ),
-        const SizedBox(height: 4),
       ],
     );
   }
@@ -230,6 +276,10 @@ class _SearchHeader extends StatelessWidget implements PreferredSizeWidget {
 /// The search box: rounded, filled, and clearable.
 class _SearchField extends StatefulWidget {
   const _SearchField({required this.onChanged});
+
+  /// Two above, a 44 pill, ten below. Stated here so the app bar hosting it
+  /// can add it up instead of remembering it.
+  static const double height = 2 + 44 + 8;
 
   final ValueChanged<String> onChanged;
 
@@ -259,7 +309,7 @@ class _SearchFieldState extends State<_SearchField> {
     final muted = theme.colorScheme.onSurfaceVariant;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 2, 16, 12),
+      padding: const EdgeInsets.fromLTRB(16, 2, 16, 8),
       child: GlassSurface(
         // A pill rather than a rounded rectangle — it reads as a search field
         // on sight, before the magnifier is even noticed.
@@ -373,6 +423,7 @@ class _CategorisedList extends StatelessWidget {
             _HeaderRow() => AppSectionHeader(
               title: row.group.label,
               count: row.count,
+              first: index == 0,
             ),
             _ExerciseRow() => AppTile(
               icon: exerciseIcon,
