@@ -76,14 +76,17 @@ class _HyperBackdropState extends State<HyperBackdrop>
       children: [
         Positioned.fill(
           child: RepaintBoundary(
-            child: AnimatedBuilder(
-              animation: _drift,
-              builder: (context, _) => CustomPaint(
-                painter: _BackdropPainter(
-                  t: _drift.value,
-                  accent: theme.colorScheme.primary,
-                  ground: const Color(0xFF07070F),
-                ),
+            // Repainted from the controller directly rather than through an
+            // AnimatedBuilder. The builder rebuilt this subtree once per
+            // frame, which meant a brand-new painter every frame — and the
+            // painter does real work in its constructor. Handing the
+            // controller to `repaint:` gives one painter that lives across
+            // the whole drift and is only replaced when the accent changes.
+            child: CustomPaint(
+              painter: _BackdropPainter(
+                drift: _drift,
+                accent: theme.colorScheme.primary,
+                ground: const Color(0xFF07070F),
               ),
             ),
           ),
@@ -102,20 +105,47 @@ class _HyperBackdropState extends State<HyperBackdrop>
 /// Android hardware this app targets.
 class _BackdropPainter extends CustomPainter {
   _BackdropPainter({
-    required this.t,
+    required Animation<double> drift,
     required this.accent,
     required this.ground,
-  });
+  }) : _drift = drift,
+       // Computed once per painter, not once per frame. Each of these is an
+       // RGB→HSL→RGB round trip and none of them depends on the drift, so
+       // five of them ran sixty times a second for the entire session,
+       // behind every screen, always arriving at the same five values.
+       _washTop = _shift(accent, 6, 0.5).withValues(alpha: 0.46),
+       _washBottom = _shift(accent, -10, 0.3).withValues(alpha: 0.36),
+       _orbColours = [
+         _shift(accent, 4, 1.06),
+         _shift(accent, -6, 0.94),
+         _shift(accent, 12, 0.98),
+       ],
+       _groundPaint = Paint()..color = ground,
+       super(repaint: drift);
 
-  /// 0..1, wrapping. One full turn of the drift.
-  final double t;
+  /// 0..1, wrapping. One full turn of the drift. Read per frame; the painter
+  /// itself outlives the frame.
+  final Animation<double> _drift;
   final Color accent;
   final Color ground;
 
+  final Color _washTop;
+  final Color _washBottom;
+  final List<Color> _orbColours;
+  final Paint _groundPaint;
+
+  /// The accent wash covers the whole canvas and does not move, so its shader
+  /// only has to be rebuilt when the canvas is a different size. Building a
+  /// full-screen gradient shader every frame was the most expensive thing in
+  /// this file, and it produced an identical shader each time.
+  Rect? _washRect;
+  Paint? _washPaint;
+
   @override
   void paint(Canvas canvas, Size size) {
+    final t = _drift.value;
     final rect = Offset.zero & size;
-    canvas.drawRect(rect, Paint()..color = ground);
+    canvas.drawRect(rect, _groundPaint);
 
     // A wash of the accent over the whole ground before the orbs go on.
     //
@@ -125,28 +155,26 @@ class _BackdropPainter extends CustomPainter {
     // dark for a reason that had nothing to do with the cards. This lifts the
     // whole field into the accent's family first; the orbs are then bright
     // spots *in* a coloured ground rather than three lamps in a dark room.
-    canvas.drawRect(
-      rect,
-      Paint()
+    //
+    // The two colours are `_washTop` / `_washBottom`, computed once in the
+    // constructor. They sit at the level that reads as a lit room rather
+    // than a lamp in your face — enough that the *middle* of the screen is
+    // coloured rather than only the corners an orb sits in, because a card
+    // in the gap between two orbs should still be a pane over something.
+    // It was brighter for one round, to compensate for cards coming out
+    // charcoal; the charcoal turned out to be the card's own shadow painting
+    // through it, and once that was fixed the field was left shouting at a
+    // problem that no longer existed.
+    if (_washRect != rect) {
+      _washRect = rect;
+      _washPaint = Paint()
         ..shader = LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            // Enough that the *middle* of the screen is coloured rather than
-            // only the corners an orb sits in — a card in the gap between two
-            // orbs should still be a pane over something, not over black.
-            //
-            // It was brighter than this for one round, because the cards were
-            // coming out charcoal and I turned the field up to compensate. The
-            // charcoal was the card's own shadow painting through it, and once
-            // that was fixed the field was left shouting at a problem that no
-            // longer existed. This is the level that reads as a lit room
-            // rather than a lamp in your face.
-            _shift(accent, 6, 0.5).withValues(alpha: 0.46),
-            _shift(accent, -10, 0.3).withValues(alpha: 0.36),
-          ],
-        ).createShader(rect),
-    );
+          colors: [_washTop, _washBottom],
+        ).createShader(rect);
+    }
+    canvas.drawRect(rect, _washPaint!);
 
     // Three anchors, not three orbits. Each orb belongs to a corner of the
     // screen and only breathes around it: the composition is the same every
@@ -159,27 +187,30 @@ class _BackdropPainter extends CustomPainter {
     _orb(
       canvas,
       size,
+      t: t,
       anchor: const Offset(0.24, 0.06),
       radius: 0.78,
-      colour: _shift(accent, 4, 1.06),
+      colour: _orbColours[0],
       phase: 0,
       travel: const Offset(0.15, 0.10),
     );
     _orb(
       canvas,
       size,
+      t: t,
       anchor: const Offset(0.95, 0.52),
       radius: 0.70,
-      colour: _shift(accent, -6, 0.94),
+      colour: _orbColours[1],
       phase: 0.41,
       travel: const Offset(-0.18, -0.07),
     );
     _orb(
       canvas,
       size,
+      t: t,
       anchor: const Offset(0.5, 0.97),
       radius: 0.72,
-      colour: _shift(accent, 12, 0.98),
+      colour: _orbColours[2],
       phase: 0.72,
       travel: const Offset(0.10, -0.09),
     );
@@ -197,7 +228,7 @@ class _BackdropPainter extends CustomPainter {
   /// the ground — so an orb painted in the accent's own saturation arrives
   /// greyer than the accent, every time. Pushing it up first is how the colour
   /// survives the dilution.
-  Color _shift(Color colour, double degrees, double lightness) {
+  static Color _shift(Color colour, double degrees, double lightness) {
     final hsl = HSLColor.fromColor(colour);
     return hsl
         .withHue((hsl.hue + degrees) % 360)
@@ -209,6 +240,7 @@ class _BackdropPainter extends CustomPainter {
   void _orb(
     Canvas canvas,
     Size size, {
+    required double t,
     required Offset anchor,
     required double radius,
     required Color colour,
@@ -250,5 +282,8 @@ class _BackdropPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_BackdropPainter old) =>
-      old.t != t || old.accent != accent;
+      // No `t` here any more: the drift repaints through `repaint:`, so this
+      // only has to answer "is this a different painter", which happens when
+      // the accent or the ground changes.
+      old.accent != accent || old.ground != ground;
 }

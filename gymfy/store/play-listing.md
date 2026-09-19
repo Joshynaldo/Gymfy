@@ -117,18 +117,19 @@ gymfy.dev@gmail.com
 
 ### Hosting the privacy policy
 
-Play requires a public URL, not a file. The cheapest route with no new
-account:
+Play requires a public URL, not a file. The page is built and waiting in
+`docs/privacy-policy.html`, alongside the landing page.
 
-1. Copy `store/privacy-policy.html` to `docs/privacy-policy.html` in the
-   repository root.
-2. GitHub → Settings → Pages → Source: *Deploy from a branch*, branch `main`,
-   folder `/docs`.
-3. The URL is then
-   `https://joshynaldo.github.io/Gymfy/privacy-policy.html`.
+**It cannot be served from this repository as things stand.** GitHub Pages on
+a free account requires the repository to be public, and `Joshynaldo/Gymfy`
+has to stay private because it contains the purchased Envato muscle-map pack.
+`docs/README.md` lays out the three ways round it; the recommended one is a
+separate public repository holding only `docs/`, which gives
+`https://joshynaldo.github.io/privacy-policy.html`.
 
-It has to stay reachable for as long as the app is listed — a dead privacy
-policy link is grounds for removal, not just rejection.
+Whichever route you take, the URL has to stay reachable for as long as the app
+is listed — a dead privacy policy link is grounds for removal, not just
+rejection.
 
 ---
 
@@ -180,6 +181,21 @@ Expected outcome: **PEGI 3 / ESRB Everyone**.
 The Help screen links to the developer's GitHub profile, which in turn links
 to a donation page. That is a link to a profile, not a call to action inside
 the app, and there is nothing to purchase in Gymfy — so both answers stay No.
+
+**And they have to stay No.** The muscle-map artwork is licensed under an
+Envato *Regular License*, which covers the end product only while it is
+distributed free to end users. Setting a price, adding a paid tier or
+introducing any in-app purchase requires buying an Extended License for that
+item first. Details and the clause text: `assets/musclemap/README.md`.
+
+Set the app's price to **Free** at publish, which the licence requires anyway.
+Be aware that this is permanent: Play lets a paid app become free, but *never*
+the reverse — "once your app has been offered for free, the app can't be
+changed to paid… you need to create a new app with a new package name".
+
+So charging for Gymfy later would take both a new package name and an Extended
+License. Two one-way doors pointing the same way, which is fine — just know
+the door is closing.
 
 ---
 
