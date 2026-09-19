@@ -16,6 +16,7 @@ import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../shared/widgets/pressable.dart';
 import '../../exercises/screens/exercise_detail_screen.dart';
+import '../../exercises/widgets/exercise_note.dart';
 import '../../overload/data/overload_math.dart';
 import '../../overload/data/overload_repository.dart';
 import '../../plates/screens/plate_calculator_screen.dart';
@@ -248,16 +249,24 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
     // working sets, and putting it on the bar for a ramp-up set would make the
     // ramp-up pointless. The suggestion is also only for the first working set,
     // because that is the moment the decision is actually being made.
+    //
+    // Awaited, not read off the current snapshot. `ref.read(...).value` on a
+    // FutureProvider is whatever has resolved *so far*, so a suggestion still
+    // in flight reads as no suggestion at all — the sheet then opens empty and
+    // the increase you earned last week silently never appears. The window is
+    // small but it is exactly the one the user is in: tap an exercise under Up
+    // next, tap Log set, and the query for that exercise started one frame
+    // ago. Awaiting costs a few milliseconds of a database read the screen is
+    // already running anyway.
     final suggestion = (isWarmup || last != null)
         ? null
-        : ref
-              .read(
-                overloadSuggestionProvider((
-                  entry: planned.entry,
-                  exercise: planned.exercise,
-                )),
-              )
-              .value;
+        : await ref.read(
+            overloadSuggestionProvider((
+              entry: planned.entry,
+              exercise: planned.exercise,
+            )).future,
+          );
+    if (!context.mounted) return;
 
     final result = await showLogSetSheet(
       context: context,
@@ -397,6 +406,15 @@ class _CurrentExerciseCard extends ConsumerWidget {
             ],
           ),
           _SuggestionLine(planned: planned),
+          // The reason the feature exists. A seat height is worth nothing in a
+          // library you have to go and find — it is worth something in the
+          // eight seconds you are standing at the machine deciding where to
+          // put the pin. On the current card only: one row here is useful, a
+          // row on all six exercises is a list of placeholders.
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: ExerciseNoteTile(exercise: exercise, dense: true),
+          ),
           _LoggedSets(sets: loggedSets, accent: accent),
           const SizedBox(height: 14),
           Row(

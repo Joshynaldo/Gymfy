@@ -1,14 +1,11 @@
 // The small motions: a surface giving way under a finger, a number travelling
-// to its new value, and one bloom of light for the moments worth marking.
+// to its new value, and content arriving into a screen already on display.
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/shared/widgets/animated_count.dart';
-import 'package:gymfy/shared/widgets/celebration.dart';
+import 'package:gymfy/shared/widgets/fade_slide_in.dart';
 import 'package:gymfy/shared/widgets/pressable.dart';
-
-import 'support/default_accent.dart';
 
 /// The scale the [Pressable] is currently drawing its child at.
 double _scale(WidgetTester tester) {
@@ -241,73 +238,70 @@ void main() {
     });
   });
 
-  group('Celebration', () {
-    /// How many painters are on screen with nothing celebrating.
-    Future<int> baseline(WidgetTester tester) async {
-      // Same overrides as the real pump below: a ProviderScope cannot change
-      // how many overrides it carries between builds.
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [defaultAccentOverride],
-          child: const MaterialApp(home: Scaffold(body: Text('done'))),
-        ),
+  group('FadeSlideIn', () {
+    // Used on list rows, the staggered hub, and keyed content swaps. It was
+    // the only animated widget in the app that never asked about reduced
+    // motion — so a person who turns that setting on because movement makes
+    // them ill still had every row in the app slide and fade at them.
+    //
+    // Checked through the widget's own output rather than its internals: the
+    // opacity and the offset are what a person actually receives.
+
+    /// The opacity and vertical offset [FadeSlideIn] is currently drawing at.
+    (double, double) drawnAt(WidgetTester tester) {
+      final fade = tester.widget<FadeTransition>(
+        find
+            .descendant(
+              of: find.byType(FadeSlideIn),
+              matching: find.byType(FadeTransition),
+            )
+            .first,
       );
-      return find.byType(CustomPaint).evaluate().length;
+      final transform = tester.widget<Transform>(
+        find
+            .descendant(
+              of: find.byType(FadeSlideIn),
+              matching: find.byType(Transform),
+            )
+            .first,
+      );
+      return (fade.opacity.value, transform.transform.getTranslation().y);
     }
 
-    Future<void> pump(WidgetTester tester, {bool enabled = true}) =>
-        tester.pumpWidget(
-          ProviderScope(
-            overrides: [defaultAccentOverride],
-            child: MaterialApp(
-              home: Scaffold(
-                body: Celebration(enabled: enabled, child: const Text('done')),
-              ),
-            ),
-          ),
-        );
-
-    testWidgets('blooms once and then leaves nothing behind', (tester) async {
-      final quiet = await baseline(tester);
-
-      await pump(tester);
-      await tester.pump(const Duration(milliseconds: 100));
-      expect(find.byType(CustomPaint).evaluate().length, greaterThan(quiet));
-
-      await tester.pumpAndSettle();
-      // The important half. A celebration that leaves a repainting layer behind
-      // is a celebration you keep paying for until the screen is closed.
-      expect(find.byType(CustomPaint).evaluate().length, quiet);
-      expect(find.text('done'), findsOneWidget);
-    });
-
-    testWidgets('says nothing when there is nothing to say', (tester) async {
-      final quiet = await baseline(tester);
-
-      await pump(tester, enabled: false);
-      await tester.pump(const Duration(milliseconds: 100));
-
-      expect(find.byType(CustomPaint).evaluate().length, quiet);
-      expect(find.text('done'), findsOneWidget);
-    });
-
-    testWidgets('does not bloom under reduced motion', (tester) async {
-      final quiet = await baseline(tester);
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [defaultAccentOverride],
-          child: const MaterialApp(
-            home: MediaQuery(
-              data: MediaQueryData(disableAnimations: true),
-              child: Scaffold(body: Celebration(child: Text('done'))),
-            ),
+    Future<void> pump(WidgetTester tester, {required bool reduceMotion}) {
+      return tester.pumpWidget(
+        MaterialApp(
+          home: MediaQuery(
+            data: MediaQueryData(disableAnimations: reduceMotion),
+            child: const Scaffold(body: FadeSlideIn(child: Text('a row'))),
           ),
         ),
       );
-      await tester.pump(const Duration(milliseconds: 100));
+    }
 
-      expect(find.byType(CustomPaint).evaluate().length, quiet);
+    testWidgets('arrives already in place under reduced motion', (
+      tester,
+    ) async {
+      await pump(tester, reduceMotion: true);
+
+      // On the very first frame, before any time has passed. Not "faster" —
+      // there is nothing to wait through, because a shortened animation is
+      // still an animation.
+      expect(drawnAt(tester), (1.0, 0.0));
+    });
+
+    testWidgets('still animates when motion is welcome', (tester) async {
+      // The other half. Without this, deleting the animation entirely would
+      // pass the test above, and the app would lose the thing it was built
+      // for.
+      await pump(tester, reduceMotion: false);
+
+      final (opacity, offset) = drawnAt(tester);
+      expect(opacity, lessThan(1), reason: 'it should start transparent');
+      expect(offset, greaterThan(0), reason: 'and a few pixels low');
+
+      await tester.pumpAndSettle();
+      expect(drawnAt(tester), (1.0, 0.0), reason: 'and settle flush');
     });
   });
 }

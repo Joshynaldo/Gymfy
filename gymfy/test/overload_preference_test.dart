@@ -38,6 +38,61 @@ void main() {
     });
   });
 
+  group('OverloadConfig compares by value', () {
+    // Not housekeeping. `overloadConfigProvider` builds a fresh config every
+    // time one of its five settings streams emits, and all five emit on
+    // startup. On identity equality each of those is a new config, so every
+    // overload suggestion on screen throws away its result and re-runs its
+    // database join — several times, before the first screen has settled.
+    test('two configs with the same values are the same config', () {
+      expect(
+        defaultOverloadConfig,
+        equals(
+          const OverloadConfig(
+            enabled: true,
+            mode: OverloadMode.auto,
+            fixedKg: 2.5,
+            percent: 2.5,
+            deloadWeeks: null,
+          ),
+        ),
+      );
+    });
+
+    test('a changed field makes it a different config', () {
+      // The other half: equality that is too generous would stop a real
+      // settings change from ever reaching the suggestions, which is a worse
+      // bug than the churn it was meant to fix. One case per field.
+      expect(
+        defaultOverloadConfig,
+        isNot(defaultOverloadConfig.copyWith(enabled: false)),
+      );
+      expect(
+        defaultOverloadConfig,
+        isNot(defaultOverloadConfig.copyWith(mode: OverloadMode.percent)),
+      );
+      expect(
+        defaultOverloadConfig,
+        isNot(defaultOverloadConfig.copyWith(fixedKg: 5)),
+      );
+      expect(
+        defaultOverloadConfig,
+        isNot(defaultOverloadConfig.copyWith(percent: 5)),
+      );
+      expect(
+        defaultOverloadConfig,
+        isNot(defaultOverloadConfig.copyWith(deloadWeeks: 4)),
+      );
+    });
+
+    test('equal configs hash alike', () {
+      expect(
+        defaultOverloadConfig.hashCode,
+        defaultOverloadConfig.copyWith().hashCode,
+      );
+    });
+  });
+
   group('the switch gates real suggestions', () {
     const bench = 'barbell_bench_press';
 
