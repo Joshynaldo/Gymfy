@@ -103,6 +103,15 @@ class $ExercisesTable extends Exercises
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -113,6 +122,7 @@ class $ExercisesTable extends Exercises
     barWeightKg,
     isCustom,
     isArchived,
+    notes,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -175,6 +185,12 @@ class $ExercisesTable extends Exercises
         isArchived.isAcceptableOrUnknown(data['is_archived']!, _isArchivedMeta),
       );
     }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
     return context;
   }
 
@@ -218,6 +234,10 @@ class $ExercisesTable extends Exercises
         DriftSqlType.bool,
         data['${effectivePrefix}is_archived'],
       )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
     );
   }
 
@@ -293,6 +313,27 @@ class Exercise extends DataClass implements Insertable<Exercise> {
   /// Deleting a custom exercise that was never logged removes it outright — no
   /// history to protect, so no tombstone to leave behind.
   final bool isArchived;
+
+  /// The user's own note about this exercise — seat height, pin position, grip
+  /// width, which machine in the gym, a cue that makes the lift click.
+  ///
+  /// On the *exercise*, not on the planned entry or the session. A seat height
+  /// is a fact about the machine, so it is the same on push day and pull day
+  /// and in a programme written next year. Hanging it off the plan would mean
+  /// retyping it for every day the lift appears in, and losing it when the
+  /// plan is rewritten.
+  ///
+  /// Null means "never written", which is not the same as an empty note — an
+  /// empty string would still draw a heading with nothing under it. Clearing
+  /// the text stores null again.
+  ///
+  /// Available on built-in exercises too, and that is the main case: the leg
+  /// press is not something you invented. Like [barWeightKg] this is
+  /// deliberately absent from [exerciseSeedData], so the launch upsert — which
+  /// rewrites every built-in row but only the columns its companions carry —
+  /// cannot wipe what you wrote. `exercise_notes_test.dart` re-seeds and
+  /// checks exactly that.
+  final String? notes;
   const Exercise({
     required this.id,
     required this.name,
@@ -302,6 +343,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     this.barWeightKg,
     required this.isCustom,
     required this.isArchived,
+    this.notes,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -322,6 +364,9 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     }
     map['is_custom'] = Variable<bool>(isCustom);
     map['is_archived'] = Variable<bool>(isArchived);
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
     return map;
   }
 
@@ -339,6 +384,9 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           : Value(barWeightKg),
       isCustom: Value(isCustom),
       isArchived: Value(isArchived),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
     );
   }
 
@@ -356,6 +404,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       barWeightKg: serializer.fromJson<double?>(json['barWeightKg']),
       isCustom: serializer.fromJson<bool>(json['isCustom']),
       isArchived: serializer.fromJson<bool>(json['isArchived']),
+      notes: serializer.fromJson<String?>(json['notes']),
     );
   }
   @override
@@ -370,6 +419,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       'barWeightKg': serializer.toJson<double?>(barWeightKg),
       'isCustom': serializer.toJson<bool>(isCustom),
       'isArchived': serializer.toJson<bool>(isArchived),
+      'notes': serializer.toJson<String?>(notes),
     };
   }
 
@@ -382,6 +432,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     Value<double?> barWeightKg = const Value.absent(),
     bool? isCustom,
     bool? isArchived,
+    Value<String?> notes = const Value.absent(),
   }) => Exercise(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -391,6 +442,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     barWeightKg: barWeightKg.present ? barWeightKg.value : this.barWeightKg,
     isCustom: isCustom ?? this.isCustom,
     isArchived: isArchived ?? this.isArchived,
+    notes: notes.present ? notes.value : this.notes,
   );
   Exercise copyWithCompanion(ExercisesCompanion data) {
     return Exercise(
@@ -408,6 +460,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
       isArchived: data.isArchived.present
           ? data.isArchived.value
           : this.isArchived,
+      notes: data.notes.present ? data.notes.value : this.notes,
     );
   }
 
@@ -421,7 +474,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           ..write('isPlateLoaded: $isPlateLoaded, ')
           ..write('barWeightKg: $barWeightKg, ')
           ..write('isCustom: $isCustom, ')
-          ..write('isArchived: $isArchived')
+          ..write('isArchived: $isArchived, ')
+          ..write('notes: $notes')
           ..write(')'))
         .toString();
   }
@@ -436,6 +490,7 @@ class Exercise extends DataClass implements Insertable<Exercise> {
     barWeightKg,
     isCustom,
     isArchived,
+    notes,
   );
   @override
   bool operator ==(Object other) =>
@@ -448,7 +503,8 @@ class Exercise extends DataClass implements Insertable<Exercise> {
           other.isPlateLoaded == this.isPlateLoaded &&
           other.barWeightKg == this.barWeightKg &&
           other.isCustom == this.isCustom &&
-          other.isArchived == this.isArchived);
+          other.isArchived == this.isArchived &&
+          other.notes == this.notes);
 }
 
 class ExercisesCompanion extends UpdateCompanion<Exercise> {
@@ -460,6 +516,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
   final Value<double?> barWeightKg;
   final Value<bool> isCustom;
   final Value<bool> isArchived;
+  final Value<String?> notes;
   final Value<int> rowid;
   const ExercisesCompanion({
     this.id = const Value.absent(),
@@ -470,6 +527,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     this.barWeightKg = const Value.absent(),
     this.isCustom = const Value.absent(),
     this.isArchived = const Value.absent(),
+    this.notes = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ExercisesCompanion.insert({
@@ -481,6 +539,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     this.barWeightKg = const Value.absent(),
     this.isCustom = const Value.absent(),
     this.isArchived = const Value.absent(),
+    this.notes = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name),
@@ -494,6 +553,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     Expression<double>? barWeightKg,
     Expression<bool>? isCustom,
     Expression<bool>? isArchived,
+    Expression<String>? notes,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -505,6 +565,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
       if (barWeightKg != null) 'bar_weight_kg': barWeightKg,
       if (isCustom != null) 'is_custom': isCustom,
       if (isArchived != null) 'is_archived': isArchived,
+      if (notes != null) 'notes': notes,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -518,6 +579,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     Value<double?>? barWeightKg,
     Value<bool>? isCustom,
     Value<bool>? isArchived,
+    Value<String?>? notes,
     Value<int>? rowid,
   }) {
     return ExercisesCompanion(
@@ -529,6 +591,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
       barWeightKg: barWeightKg ?? this.barWeightKg,
       isCustom: isCustom ?? this.isCustom,
       isArchived: isArchived ?? this.isArchived,
+      notes: notes ?? this.notes,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -562,6 +625,9 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
     if (isArchived.present) {
       map['is_archived'] = Variable<bool>(isArchived.value);
     }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -579,6 +645,7 @@ class ExercisesCompanion extends UpdateCompanion<Exercise> {
           ..write('barWeightKg: $barWeightKg, ')
           ..write('isCustom: $isCustom, ')
           ..write('isArchived: $isArchived, ')
+          ..write('notes: $notes, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -5245,6 +5312,7 @@ typedef $$ExercisesTableCreateCompanionBuilder =
       Value<double?> barWeightKg,
       Value<bool> isCustom,
       Value<bool> isArchived,
+      Value<String?> notes,
       Value<int> rowid,
     });
 typedef $$ExercisesTableUpdateCompanionBuilder =
@@ -5257,6 +5325,7 @@ typedef $$ExercisesTableUpdateCompanionBuilder =
       Value<double?> barWeightKg,
       Value<bool> isCustom,
       Value<bool> isArchived,
+      Value<String?> notes,
       Value<int> rowid,
     });
 
@@ -5386,6 +5455,11 @@ class $$ExercisesTableFilterComposer
 
   ColumnFilters<bool> get isArchived => $composableBuilder(
     column: $table.isArchived,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5538,6 +5612,11 @@ class $$ExercisesTableOrderingComposer
     column: $table.isArchived,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ExercisesTableAnnotationComposer
@@ -5578,6 +5657,9 @@ class $$ExercisesTableAnnotationComposer
     column: $table.isArchived,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
 
   Expression<T> workoutExercisesRefs<T extends Object>(
     Expression<T> Function($$WorkoutExercisesTableAnnotationComposer a) f,
@@ -5721,6 +5803,7 @@ class $$ExercisesTableTableManager
                 Value<double?> barWeightKg = const Value.absent(),
                 Value<bool> isCustom = const Value.absent(),
                 Value<bool> isArchived = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExercisesCompanion(
                 id: id,
@@ -5731,6 +5814,7 @@ class $$ExercisesTableTableManager
                 barWeightKg: barWeightKg,
                 isCustom: isCustom,
                 isArchived: isArchived,
+                notes: notes,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -5743,6 +5827,7 @@ class $$ExercisesTableTableManager
                 Value<double?> barWeightKg = const Value.absent(),
                 Value<bool> isCustom = const Value.absent(),
                 Value<bool> isArchived = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExercisesCompanion.insert(
                 id: id,
@@ -5753,6 +5838,7 @@ class $$ExercisesTableTableManager
                 barWeightKg: barWeightKg,
                 isCustom: isCustom,
                 isArchived: isArchived,
+                notes: notes,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

@@ -99,6 +99,26 @@ class OverloadConfig {
       deloadWeeks: clearDeload ? null : (deloadWeeks ?? this.deloadWeeks),
     );
   }
+
+  // Compared by value, because `overloadConfigProvider` rebuilds this object
+  // whenever any of the five settings streams emits — which every one of them
+  // does at least once on startup. Without value equality each of those
+  // rebuilds is a *different* config as far as Riverpod is concerned, so every
+  // visible overload suggestion re-runs its database join several times before
+  // the screen has settled. Nothing looks wrong; it is just work, on the
+  // hardware least able to spare it, and it widens the window in which a
+  // suggestion has not arrived yet.
+  @override
+  bool operator ==(Object other) =>
+      other is OverloadConfig &&
+      other.enabled == enabled &&
+      other.mode == mode &&
+      other.fixedKg == fixedKg &&
+      other.percent == percent &&
+      other.deloadWeeks == deloadWeeks;
+
+  @override
+  int get hashCode => Object.hash(enabled, mode, fixedKg, percent, deloadWeeks);
 }
 
 /// What a fresh install gets.

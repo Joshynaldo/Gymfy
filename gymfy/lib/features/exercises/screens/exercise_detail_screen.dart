@@ -10,11 +10,11 @@ import '../../../shared/database/app_database.dart';
 import '../../../shared/models/exercise.dart' show isBundledAsset;
 import '../../../shared/utils/exercise_display.dart';
 import '../../../shared/widgets/app_card.dart';
-import '../../../shared/widgets/fade_slide_in.dart';
 import '../../calculator/widgets/exercise_rank_badge.dart';
 import '../../workout/widgets/exercise_rest_tile.dart';
 import '../../../shared/utils/exercise_preview.dart';
 import '../data/exercise_repository.dart';
+import '../widgets/exercise_note.dart';
 import '../../../shared/widgets/app_chip.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
@@ -165,76 +165,81 @@ class _ExerciseDetailBody extends ConsumerWidget {
     final theme = Theme.of(context);
     final accent = ref.watch(accentColorProvider);
 
-    return FadeSlideIn(
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(4, 12, 4, 32) + barInsets(context),
-        children: [
-          // The preview sits in a panel like everything else, so the screen
-          // reads as one stack of surfaces rather than a picture with loose
-          // text underneath it.
-          AppPanel(
-            // Fourteen of glass all the way round a square still. The frame is
-            // what makes the animation part of the surface rather than a
-            // picture that happens to be on the screen — and square, because
-            // the stills are square and letterboxing one inside a wide panel
-            // leaves two dead strips doing nothing.
-            padding: const EdgeInsets.all(14),
-            child: AspectRatio(
-              aspectRatio: 1,
-              child: _GifPreview(
-                gifPath: exercise.gifPath,
-                accent: accent,
-                exerciseId: exercise.id,
-              ),
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(4, 12, 4, 32) + barInsets(context),
+      children: [
+        // The preview sits in a panel like everything else, so the screen
+        // reads as one stack of surfaces rather than a picture with loose
+        // text underneath it.
+        AppPanel(
+          // Fourteen of glass all the way round a square still. The frame is
+          // what makes the animation part of the surface rather than a
+          // picture that happens to be on the screen — and square, because
+          // the stills are square and letterboxing one inside a wide panel
+          // leaves two dead strips doing nothing.
+          padding: const EdgeInsets.all(14),
+          child: AspectRatio(
+            aspectRatio: 1,
+            child: _GifPreview(
+              gifPath: exercise.gifPath,
+              accent: accent,
+              exerciseId: exercise.id,
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(22, 8, 22, 0),
-            child: Text(
-              exercise.name,
-              // The subject of the screen, at the size the scale reserves for
-              // exactly that. Not the 28px of a headline number: this is a
-              // name, and names read badly when they are set as figures.
-              style: theme.textTheme.titleLarge,
-            ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(22, 8, 22, 0),
+          child: Text(
+            exercise.name,
+            // The subject of the screen, at the size the scale reserves for
+            // exactly that. Not the 28px of a headline number: this is a
+            // name, and names read badly when they are set as figures.
+            style: theme.textTheme.titleLarge,
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(22, 6, 22, 0),
-            child: Text(
-              exercise.muscleIds.map(muscleLabel).join(' · '),
-              style: theme.textTheme.bodySmall,
-            ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(22, 6, 22, 0),
+          child: Text(
+            exercise.muscleIds.map(muscleLabel).join(' · '),
+            style: theme.textTheme.bodySmall,
           ),
-          const SizedBox(height: 10),
-          // Renders nothing at all for the many exercises with no published
-          // standards, and carries its own bottom spacing so it leaves no gap
-          // behind when it does.
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: ExerciseRankBadge(exerciseId: exercise.id),
+        ),
+        const SizedBox(height: 10),
+        // Above the rank and the rest timer: the note is the one thing here
+        // you wrote yourself, and on a machine lift it is the reason you
+        // opened this screen at all.
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+          child: ExerciseNoteTile(exercise: exercise),
+        ),
+        // Renders nothing at all for the many exercises with no published
+        // standards, and carries its own bottom spacing so it leaves no gap
+        // behind when it does.
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: ExerciseRankBadge(exerciseId: exercise.id),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: ExerciseRestTile(exerciseId: exercise.id),
+        ),
+        AppPanel(
+          icon: Icons.accessibility_new,
+          title: 'Muscles worked',
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final muscleId in exercise.muscleIds)
+                AppChip(
+                  label: muscleLabel(muscleId),
+                  selected: false,
+                  onTap: null,
+                ),
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: ExerciseRestTile(exerciseId: exercise.id),
-          ),
-          AppPanel(
-            icon: Icons.accessibility_new,
-            title: 'Muscles worked',
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final muscleId in exercise.muscleIds)
-                  AppChip(
-                    label: muscleLabel(muscleId),
-                    selected: false,
-                    onTap: null,
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

@@ -42,7 +42,18 @@ class _HyperBackdropState extends State<HyperBackdrop>
     // nothing to see, a wake-up every frame, and a widget tree that never
     // settles. It cost a phone battery all day and hung every widget test that
     // waited for the app to come to rest.
-    final wanted = glassOf(context).enabled;
+    // Reduced motion stops the drift but keeps the field. The orbs are not
+    // decoration — a translucent pane over flat black is just another grey,
+    // and every glass surface in the app depends on there being something
+    // behind it to take colour from. So the backdrop is still painted, it
+    // simply holds still.
+    //
+    // This one matters more than any single row fade: it is continuous, it is
+    // behind everything, and it never ends. Ambient movement in the corner of
+    // the eye for the whole session is exactly what somebody turns the setting
+    // on to be rid of.
+    final wanted =
+        glassOf(context).enabled && !MediaQuery.disableAnimationsOf(context);
     if (wanted && !_drift.isAnimating) {
       _drift.repeat();
     } else if (!wanted && _drift.isAnimating) {

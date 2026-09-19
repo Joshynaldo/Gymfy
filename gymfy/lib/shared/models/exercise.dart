@@ -85,6 +85,27 @@ class Exercises extends Table {
   /// history to protect, so no tombstone to leave behind.
   BoolColumn get isArchived => boolean().withDefault(const Constant(false))();
 
+  /// The user's own note about this exercise — seat height, pin position, grip
+  /// width, which machine in the gym, a cue that makes the lift click.
+  ///
+  /// On the *exercise*, not on the planned entry or the session. A seat height
+  /// is a fact about the machine, so it is the same on push day and pull day
+  /// and in a programme written next year. Hanging it off the plan would mean
+  /// retyping it for every day the lift appears in, and losing it when the
+  /// plan is rewritten.
+  ///
+  /// Null means "never written", which is not the same as an empty note — an
+  /// empty string would still draw a heading with nothing under it. Clearing
+  /// the text stores null again.
+  ///
+  /// Available on built-in exercises too, and that is the main case: the leg
+  /// press is not something you invented. Like [barWeightKg] this is
+  /// deliberately absent from [exerciseSeedData], so the launch upsert — which
+  /// rewrites every built-in row but only the columns its companions carry —
+  /// cannot wipe what you wrote. `exercise_notes_test.dart` re-seeds and
+  /// checks exactly that.
+  TextColumn get notes => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }

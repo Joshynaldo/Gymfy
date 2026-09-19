@@ -102,6 +102,36 @@ void main() {
 
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets('holds still under reduced motion, but stays painted', (
+      tester,
+    ) async {
+      // The drift is continuous, behind everything, and never ends — the
+      // clearest case in the app for the setting, and it was ignoring it.
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [defaultAccentOverride],
+          child: MaterialApp(
+            theme: buildAppTheme(AppTheme.hyper, AccentPalette.blue),
+            builder: (context, inner) => MediaQuery(
+              data: const MediaQueryData(disableAnimations: true),
+              child: HyperBackdrop(child: inner!),
+            ),
+            home: const Scaffold(body: SizedBox.shrink()),
+          ),
+        ),
+      );
+
+      // Settles, where the same tree on the glass theme never does. That is
+      // the whole assertion: the ticker is not running.
+      await tester.pumpAndSettle();
+
+      // And the field is still there. Removing it instead of freezing it would
+      // also pass the line above, and would leave every glass surface tinting
+      // flat black — which is what the backdrop exists to prevent.
+      expect(find.byType(HyperBackdrop), findsOneWidget);
+      expect(find.byType(CustomPaint), findsWidgets);
+    });
   });
 
   group('cards', () {

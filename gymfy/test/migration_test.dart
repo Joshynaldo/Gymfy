@@ -23,6 +23,7 @@ import 'package:gymfy/shared/database/app_database.dart';
 /// Undoes what version N's migration branch added. Keyed by N, applied in
 /// descending order by [rewindTo].
 const _undoVersion = <int, List<String>>{
+  23: ['ALTER TABLE exercises DROP COLUMN notes'],
   22: ['ALTER TABLE exercises DROP COLUMN bar_weight_kg'],
   21: [
     'ALTER TABLE logged_sets DROP COLUMN is_warmup',
@@ -104,13 +105,13 @@ void main() {
     final db = AppDatabase.forTesting(NativeDatabase.memory());
     addTearDown(db.close);
 
-    expect(db.schemaVersion, 22);
+    expect(db.schemaVersion, 23);
   });
 
   test('every version above the oldest test target can be wound back', () {
     // Guards the helper itself: a new migration with no undo entry would make
     // every rewind test below fail with a confusing SQL error instead of this.
-    for (var v = 10; v <= 22; v++) {
+    for (var v = 10; v <= 23; v++) {
       expect(_undoVersion.keys, contains(v), reason: 'no undo for v$v');
     }
   });
@@ -375,6 +376,36 @@ void main() {
     final planned =
         (await upgraded.select(upgraded.workoutExercises).get()).single;
     expect(planned.warmupSets, 0);
+  });
+
+  test('upgrading from v22 leaves every exercise without a note', () async {
+    // The safe and only honest direction: the app cannot invent a note, and
+    // "" would be worse than null — the UI draws its empty state from exactly
+    // that distinction, so a blank string would render a note heading over
+    // nothing.
+    final file = _tempDatabase('v22');
+
+    final old = AppDatabase.forTesting(NativeDatabase(file));
+    await old
+        .into(old.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: 'leg_press',
+            name: 'Leg Press',
+            muscleIds: const ['quads'],
+          ),
+        );
+    await rewindTo(old, 22);
+    await old.close();
+
+    final upgraded = AppDatabase.forTesting(NativeDatabase(file));
+    addTearDown(upgraded.close);
+
+    final exercise = (await upgraded.select(upgraded.exercises).get()).single;
+    expect(exercise.notes, isNull);
+    // And the row it was added to is otherwise untouched.
+    expect(exercise.name, 'Leg Press');
+    expect(exercise.muscleIds, ['quads']);
   });
 
   test('a rest override is removed with the exercise it belongs to', () async {

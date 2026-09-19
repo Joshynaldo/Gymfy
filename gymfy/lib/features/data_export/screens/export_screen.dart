@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/widgets/app_card.dart';
-import '../../../shared/widgets/fade_slide_in.dart';
 import '../data/export_format.dart';
 import '../data/export_repository.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
@@ -34,60 +33,57 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
 
     return GlassScaffold(
       appBar: GlassAppBar(title: const Text('Export data')),
-      body: (context) => FadeSlideIn(
-        child: ListView(
-          padding:
-              const EdgeInsets.fromLTRB(16, 12, 16, 24) + barInsets(context),
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
-              child: Text(
-                'Save a copy of everything you have logged. The file is '
-                'written wherever you choose — nothing is uploaded anywhere.',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+      body: (context) => ListView(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24) + barInsets(context),
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+            child: Text(
+              'Save a copy of everything you have logged. The file is '
+              'written wherever you choose — nothing is uploaded anywhere.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            const AppSectionHeader(title: 'Format'),
-            _FormatCard(
-              icon: Icons.table_chart_outlined,
-              title: 'Spreadsheet',
-              badge: 'CSV',
-              subtitle:
-                  'One row per set, ready to open in Excel or Sheets and '
-                  'chart however you like.',
-              buttonLabel: 'Save CSV',
-              onPressed: _busy ? null : _exportCsv,
-            ),
-            _FormatCard(
-              icon: Icons.data_object,
-              title: 'Everything',
-              badge: 'JSON',
-              subtitle:
-                  'Your workouts with their sets kept together, plus your '
-                  'body measurements and calorie log.',
-              buttonLabel: 'Save JSON',
-              onPressed: _busy ? null : _exportJson,
-            ),
-            const SizedBox(height: 12),
-            // Said plainly rather than discovered later. Someone exporting
-            // before a phone swap needs to know this is a copy, not a backup —
-            // so it gets a panel of its own instead of being small print they
-            // scroll past.
-            AppPanel(
-              icon: Icons.info_outline,
-              title: 'This is a copy, not a backup',
-              child: Text(
-                'Gymfy cannot import these files back, and progress photos '
-                'are not included — they stay as image files on your phone.',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+          ),
+          const AppSectionHeader(title: 'Format'),
+          _FormatCard(
+            icon: Icons.table_chart_outlined,
+            title: 'Spreadsheet',
+            badge: 'CSV',
+            subtitle:
+                'One row per set, ready to open in Excel or Sheets and '
+                'chart however you like.',
+            buttonLabel: 'Save CSV',
+            onPressed: _busy ? null : _exportCsv,
+          ),
+          _FormatCard(
+            icon: Icons.data_object,
+            title: 'Everything',
+            badge: 'JSON',
+            subtitle:
+                'Your workouts with their sets kept together, plus your '
+                'body measurements and calorie log.',
+            buttonLabel: 'Save JSON',
+            onPressed: _busy ? null : _exportJson,
+          ),
+          const SizedBox(height: 12),
+          // Said plainly rather than discovered later. Someone exporting
+          // before a phone swap needs to know this is a copy, not a backup —
+          // so it gets a panel of its own instead of being small print they
+          // scroll past.
+          AppPanel(
+            icon: Icons.info_outline,
+            title: 'This is a copy, not a backup',
+            child: Text(
+              'Gymfy cannot import these files back, and progress photos '
+              'are not included — they stay as image files on your phone.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

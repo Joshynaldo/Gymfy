@@ -7,7 +7,6 @@ import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_chip.dart';
-import '../../../shared/widgets/fade_slide_in.dart';
 import '../../../shared/widgets/weight_wheel.dart';
 import '../data/plate_math.dart';
 import '../widgets/barbell_diagram.dart';
@@ -67,49 +66,42 @@ class _PlateCalculatorScreenState extends ConsumerState<PlateCalculatorScreen> {
 
     return GlassScaffold(
       appBar: GlassAppBar(title: const Text('Plate calculator')),
-      body: (context) => FadeSlideIn(
-        child: ListView(
-          padding:
-              const EdgeInsets.fromLTRB(16, 12, 16, 32) + barInsets(context),
-          children: [
-            // The two inputs share one panel: they are a single question —
-            // "what am I loading, and onto what" — and splitting them into two
-            // cards made the bar look like a separate setting you had to go
-            // and configure.
-            AppPanel(
-              icon: Icons.tune,
-              title: 'What are you loading?',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  WeightWheel(
-                    key: ValueKey(unit),
-                    initialWeight: _target,
-                    unit: unit,
-                    label: 'Target weight',
-                    onChanged: (value) => setState(() => _target = value),
-                  ),
-                  const SizedBox(height: 20),
-                  _BarPicker(unit: unit, selected: bar),
-                ],
-              ),
-            ),
-            if (_target <= 0)
-              const _Hint(
-                text: 'Dial in a target weight to see what goes on the bar.',
-              )
-            else
-              _Result(
-                load: calculatePlates(
-                  target: _target,
-                  bar: bar,
-                  plates: plates,
+      body: (context) => ListView(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32) + barInsets(context),
+        children: [
+          // The two inputs share one panel: they are a single question —
+          // "what am I loading, and onto what" — and splitting them into two
+          // cards made the bar look like a separate setting you had to go
+          // and configure.
+          AppPanel(
+            icon: Icons.tune,
+            title: 'What are you loading?',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                WeightWheel(
+                  key: ValueKey(unit),
+                  initialWeight: _target,
+                  unit: unit,
+                  label: 'Target weight',
+                  onChanged: (value) => setState(() => _target = value),
                 ),
-                unit: unit,
-                heaviest: plates.isEmpty ? 0 : plates.first,
-              ),
-          ],
-        ),
+                const SizedBox(height: 20),
+                _BarPicker(unit: unit, selected: bar),
+              ],
+            ),
+          ),
+          if (_target <= 0)
+            const _Hint(
+              text: 'Dial in a target weight to see what goes on the bar.',
+            )
+          else
+            _Result(
+              load: calculatePlates(target: _target, bar: bar, plates: plates),
+              unit: unit,
+              heaviest: plates.isEmpty ? 0 : plates.first,
+            ),
+        ],
       ),
     );
   }
