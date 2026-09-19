@@ -1,0 +1,33 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Marks this APK as the Wear OS variant. Without it Play will not offer
+         it to a watch. -->
+    <uses-feature android:name="android.hardware.type.watch" />
+
+    <application
+        android:label="Gymfy"
+        android:icon="@android:drawable/ic_menu_view"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.DeviceDefault">
+
+        <!-- Standalone=false: this companion shows what the phone is doing and
+             is not useful on its own, which is the honest declaration. Play
+             uses it to decide whether the watch app can be installed without
+             the phone app. -->
+        <meta-data
+            android:name="com.google.android.wearable.standalone"
+            android:value="false" />
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.DeviceDefault">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

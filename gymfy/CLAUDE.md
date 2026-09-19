@@ -99,6 +99,11 @@ assets/
 - Normalize to 0.0–1.0 intensity → apply as opacity on SVG path fill
 - Two views: current workout + weekly summary
 
+## Licensing constraint — Gymfy must stay free
+- The muscle-map body diagrams are derived from a purchased Envato item under a **Regular License**, which covers the end product **only while it is distributed free of charge** (clauses 5 and 7).
+- So: **no app price, no paid tier, no in-app purchase of any kind** without first buying an Extended License for that item. This is invisible in the code and nothing will warn you — see `assets/musclemap/README.md`.
+- `assets/musclemap/source/` is the unmodified purchased pack. It must never be bundled into the app (`test/muscle_map_licence_test.dart` enforces this) and must never be published — the repository is private, and that is what keeps clause 8 satisfied.
+
 ## Key conventions
 - Use `freezed` for immutable data models
 - Use `Riverpod` with code generation (`@riverpod`)

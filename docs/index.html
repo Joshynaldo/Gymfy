@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gymfy — an offline gym log</title>
+<meta name="description" content="A workout tracker that keeps your training on your phone. No account, no ads, no network code at all.">
+<link rel="icon" href="icon.png">
+
+<!-- Open Graph / link previews. Worth the six lines: the first place this
+     link gets pasted is a chat window, and a bare URL converts badly. -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gymfy — an offline gym log">
+<meta property="og:description" content="Log lifts, track progress, stay offline. No account, no ads, and no networking code — your training cannot leave your phone.">
+<meta property="og:image" content="icon.png">
+<meta name="theme-color" content="#07070F">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* Palette lifted from the app's Hyper theme (lib/app/theme/app_theme.dart),
+   not approximated. A site that is nearly the app's colours reads as a
+   different product.
+
+   Dark only, deliberately. The app has no light theme for a stated reason —
+   an inverted copy is not a design — and a light landing page for a dark app
+   is a promise the install does not keep. */
+:root {
+  --bg:        #07070F;
+  --surface:   #12121E;
+  --surface-2: #1B1B2C;
+  --text:      #F2F3FA;
+  --muted:     #9EA0BC;
+  --outline:   #2B2C45;
+  --accent:    #7C6BFF;
+  --accent-2:  #2FD8C6;
+
+  /* A fill, not a material. Glass is reserved for the navigation layer —
+     see the note above `.pane`. */
+  --fill: rgba(255,255,255,.045);
+  --fill-edge: rgba(255,255,255,.09);
+  --max: 1080px;
+
+  /* One shape language, per the skill: "Establish a shape language (all
+     capsules, or all rounded rects)." The split it actually uses —
+     CONTROLS are capsules, CONTAINERS are rounded rects, and anything
+     nested inside a container is concentric (parent radius minus padding).
+     Before this the page had six unrelated radii: 14, 12, 13, 20, 38, 999. */
+  --r-control: 999px;   /* capsule — every button, pill and nav item */
+  --r-container: 20px;  /* cards, panels */
+  --r-nested: 12px;     /* 20 − 8 of padding: concentric inside a container */
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Schibsted Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* rem, not px. A hardcoded size overrides the reader's own browser font
+     setting outright — the web's version of hardcoding a point size, and the
+     one typography rule on this page with a real accessibility cost.
+     1.0625rem is 17px at the default and scales from there. */
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ---- The backdrop -------------------------------------------------------
+   The app draws three slowly drifting colour orbs behind everything, because
+   a blur only reads as glass when there is something behind it to distort.
+   Same idea here, same two-minute loop. */
+.backdrop {
+  position: fixed;
+  inset: -20vmax;
+  z-index: -1;
+  pointer-events: none;
+  filter: blur(90px);
+  opacity: .5;
+}
+.orb { position: absolute; border-radius: 50%; }
+.orb.a { width: 46vmax; height: 46vmax; left: -4vmax;  top: -6vmax;  background: #7C6BFF; animation: driftA 120s ease-in-out infinite; }
+.orb.b { width: 38vmax; height: 38vmax; right: -6vmax; top: 18vmax;  background: #2FD8C6; animation: driftB 120s ease-in-out infinite; }
+.orb.c { width: 42vmax; height: 42vmax; left: 22vmax;  bottom: -8vmax; background: #FF5C8A; animation: driftC 120s ease-in-out infinite; opacity: .7; }
+
+@keyframes driftA { 0%,100% { transform: translate(0,0); } 50% { transform: translate(14vmax, 10vmax); } }
+@keyframes driftB { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-12vmax, 14vmax); } }
+@keyframes driftC { 0%,100% { transform: translate(0,0); } 50% { transform: translate(8vmax, -12vmax); } }
+
+/* Reduce motion means no motion, not faster motion — the same rule the app
+   settled on. The orbs stay drawn: removing them would leave every pane
+   tinting flat black, which is the state the backdrop exists to prevent. */
+@media (prefers-reduced-motion: reduce) {
+  .orb { animation: none !important; }
+}
+
+/* ---- Shell -------------------------------------------------------------- */
+.wrap { width: 100%; max-width: var(--max); margin: 0 auto; padding: 0 20px; }
+
+header {
+  position: sticky; top: 0; z-index: 50;
+  isolation: isolate;
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  background: rgba(7,7,15,.62);
+  /* No border. The glass already separates the bar from what scrolls under
+     it; a rule on top of it is decoration doing a job the material is
+     already doing. */
+}
+
+/* Soft scroll edge effect — the iOS default. A floating bar needs the
+   content to fade as it passes beneath, not to be cut off by a hard line.
+   One per edge, and only where floating UI actually sits. */
+header::after {
+  content: ''; position: absolute; left: 0; right: 0; top: 100%;
+  height: 28px; pointer-events: none;
+  background: linear-gradient(rgba(7,7,15,.55), rgba(7,7,15,0));
+}
+.nav { display: flex; align-items: center; gap: 14px; height: 62px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -.02em; font-size: 1.1rem; }
+.brand img { width: 28px; height: 28px; border-radius: 8px; } /* app icon, its own mark */
+.nav .spacer { flex: 1; }
+/* Capsules, like every other control on the page. */
+.nav a {
+  color: var(--muted); text-decoration: none; font-size: .95rem; font-weight: 500;
+  padding: 7px 14px; border-radius: var(--r-control);
+  transition: color .18s ease, background .18s ease;
+}
+.nav a:hover { color: var(--text); background: rgba(255,255,255,.07); }
+.nav .only-wide { display: none; }
+@media (min-width: 720px) { .nav .only-wide { display: inline; } }
+
+/* ---- Hero --------------------------------------------------------------- */
+.hero {
+  /* padding-top/bottom, not the shorthand: `.wrap` sets the 20px side gutter
+     and a shorthand here has the same specificity, lands later, and quietly
+     resets it to zero. The text then sits flush against the phone edge. */
+  padding-top: 76px;
+  padding-bottom: 40px;
+}
+.hero-grid { display: grid; gap: 44px; align-items: center; }
+@media (min-width: 900px) { .hero-grid { grid-template-columns: 1.15fr .85fr; gap: 56px; } }
+
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: .82rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--accent-2);
+  border: 1px solid var(--outline); border-radius: 999px;
+  padding: 6px 14px; margin-bottom: 22px;
+  background: var(--fill);
+}
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-2); }
+
+h1 {
+  font-size: clamp(2.3rem, 6.2vw, 3.7rem);
+  line-height: 1.07; letter-spacing: -.035em; font-weight: 700;
+  margin: 0 0 20px;
+}
+h1 .fade { color: var(--muted); }
+
+.lede { font-size: clamp(1.05rem, 2.2vw, 1.22rem); color: var(--muted); margin: 0 0 30px; max-width: 34em; }
+.lede strong { color: var(--text); font-weight: 600; }
+
+.cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+/* Buttons are glass. They belong to the navigation layer the skill describes
+   — "bars, toolbars, floating controls" — so unlike the content cards they
+   are allowed the material, and they get the capsule shape the glass API
+   uses by default.
+
+   `.interactive()` in the skill means "scale, bounce, and shimmer on touch
+   or hover". All three are here: a lift and scale on hover, a compression on
+   press, and a specular highlight that sweeps across on hover. Without them
+   a glass button is just a translucent rectangle. */
+.btn {
+  position: relative; overflow: hidden;
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 14px 24px;
+  border-radius: var(--r-control);
+  font-weight: 600; font-size: .98rem; text-decoration: none;
+  border: 1px solid transparent;
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  transition: transform .22s cubic-bezier(.2,.9,.3,1.2), background .2s ease,
+              border-color .2s ease, box-shadow .22s ease;
+}
+/* The shimmer. A highlight band parked off the left edge that crosses on
+   hover — the moving specular that makes a surface read as glass rather
+   than as tinted plastic. */
+.btn::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.28) 50%, transparent 65%);
+  transform: translateX(-120%);
+  transition: transform .6s ease;
+  pointer-events: none;
+}
+.btn:hover::after { transform: translateX(120%); }
+.btn:hover { transform: translateY(-2px) scale(1.02); }
+.btn:active { transform: translateY(0) scale(.975); }
+
+/* Prominent: the one tinted element on the page. "Tint only primary
+   actions — when every element is tinted, nothing stands out." */
+.btn-primary {
+  background: linear-gradient(180deg, rgba(150,136,255,.95), rgba(108,92,245,.92));
+  color: #0B0A18;
+  border-color: rgba(255,255,255,.22);
+  box-shadow: 0 6px 22px -8px rgba(124,107,255,.9), inset 0 1px 0 rgba(255,255,255,.35);
+}
+.btn-primary:hover { box-shadow: 0 12px 30px -10px rgba(124,107,255,1), inset 0 1px 0 rgba(255,255,255,.45); }
+
+/* Plain glass: no tint, so it never competes with the primary. */
+.btn-ghost {
+  background: rgba(255,255,255,.07);
+  border-color: var(--fill-edge);
+  color: var(--text);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14);
+}
+.btn-ghost:hover { border-color: rgba(255,255,255,.22); background: rgba(255,255,255,.1); }
+.btn svg { width: 18px; height: 18px; position: relative; z-index: 1; }
+
+/* Reduce motion: the lift, the scale and the shimmer all go. A faster
+   shimmer is still a shimmer. */
+@media (prefers-reduced-motion: reduce) {
+  .btn, .btn::after { transition: background .2s ease, border-color .2s ease; }
+  .btn:hover, .btn:active { transform: none; }
+  .btn:hover::after { transform: translateX(-120%); }
+}
+.cta-note { font-size: .86rem; color: var(--muted); margin: 14px 0 0; }
+
+/* ---- Phone ------------------------------------------------------------- */
+.phone {
+  position: relative;
+  width: 100%; max-width: 288px; margin: 0 auto;
+  aspect-ratio: 9 / 19.5;
+  border-radius: 38px;
+  padding: 9px;
+  background: linear-gradient(160deg, #2c2d45, #14141f 55%);
+  box-shadow: 0 32px 70px -22px rgba(0,0,0,.85), 0 0 0 1px rgba(255,255,255,.07);
+}
+.phone .screen {
+  position: relative; width: 100%; height: 100%;
+  /* Concentric with the frame: parent radius minus padding, 38 - 9. A round
+     number here leaves a hairline of uneven bezel at the corners. */
+  border-radius: 29px; overflow: hidden;
+  background: var(--surface);
+  display: flex; align-items: center; justify-content: center;
+}
+.phone img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* A screenshot that is not there yet must not leave a broken-image glyph on
+   the page. The slot explains itself until the file is dropped in, and the
+   swap needs no code change — see screenshots/README.md. */
+.phone .slot {
+  display: none;
+  padding: 24px; text-align: center;
+  font-size: .8rem; color: var(--muted); line-height: 1.5;
+}
+.phone.empty img { display: none; }
+.phone.empty .slot { display: block; }
+.phone .slot code { color: var(--accent-2); font-size: .74rem; word-break: break-all; }
+.phone .slot .k { display: block; font-weight: 600; color: var(--text); margin-bottom: 6px; font-size: .92rem; }
+
+/* ---- Claim strip -------------------------------------------------------- */
+.claims { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--outline);
+          border: 1px solid var(--outline); border-radius: var(--r-container); overflow: hidden; margin: 50px 0 10px; }
+.claim { background: rgba(18,18,30,.72); padding: 22px 18px; text-align: center; }
+.claim b { display: block; font-size: clamp(1.1rem, 3vw, 1.45rem); letter-spacing: -.02em; }
+.claim span { font-size: .84rem; color: var(--muted); }
+@media (max-width: 560px) {
+  .claims { grid-template-columns: 1fr; }
+  .claim { padding: 16px; display: flex; gap: 10px; justify-content: center; align-items: baseline; text-align: left; }
+  .claim b { font-size: 1.05rem; }
+}
+
+/* ---- Sections ----------------------------------------------------------- */
+section { padding: 72px 0; }
+.sec-head { max-width: 40em; margin-bottom: 38px; }
+h2 { font-size: clamp(1.65rem, 4vw, 2.3rem); letter-spacing: -.03em; line-height: 1.15; margin: 0 0 12px; font-weight: 700; }
+.sec-head p { color: var(--muted); margin: 0; font-size: 1.05rem; }
+
+/* Content surfaces are a FILL, not glass.
+   Glass is the material of the navigation layer — bars and floating controls
+   — never the content layer. Nine blurred cards in a scrolling grid is the
+   content layer wearing the navigation layer's material, and it costs a
+   real blur pass per card for a difference nobody can name. The header is
+   the one glass surface on this page.
+
+   The app makes the same distinction: GlassSurface is for bars and sheets. */
+.pane {
+  background: var(--fill);
+  border: 1px solid var(--fill-edge);
+  border-radius: var(--r-container);
+}
+
+.grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .grid { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 960px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+
+.card { padding: 26px 24px; }
+/* Neutral, not accent-tinted. Nine tinted squares in one grid compete with
+   the single tinted thing that should win — the primary button — and when
+   everything is tinted nothing stands out. The icons are labels here, not
+   actions. */
+.card .ico {
+  width: 40px; height: 40px; border-radius: var(--r-nested);
+  display: grid; place-items: center; margin-bottom: 16px;
+  background: rgba(255,255,255,.05); border: 1px solid var(--fill-edge);
+}
+.card .ico svg { width: 20px; height: 20px; stroke: var(--muted); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.card h3 { margin: 0 0 8px; font-size: 1.06rem; letter-spacing: -.015em; font-weight: 600; }
+.card p { margin: 0; color: var(--muted); font-size: .94rem; line-height: 1.58; }
+
+/* ---- Alternating deep dives -------------------------------------------- */
+.dive { display: grid; gap: 36px; align-items: center; padding: 30px 0; }
+@media (min-width: 900px) { .dive { grid-template-columns: 1fr 1fr; gap: 64px; } .dive.flip .copy { order: 2; } }
+.dive h3 { font-size: clamp(1.3rem, 3vw, 1.7rem); letter-spacing: -.025em; margin: 0 0 14px; font-weight: 700; }
+.dive p { color: var(--muted); margin: 0 0 14px; }
+.dive .pull { color: var(--text); font-weight: 500; border-left: 2px solid var(--accent); padding-left: 14px; }
+
+/* ---- Themes ------------------------------------------------------------- */
+.swatches { display: flex; flex-wrap: wrap; gap: 10px; }
+/* Circles. Rounded squares the size of a button read as buttons, and these
+   are colour samples — nothing happens when you press them. */
+.sw { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--fill-edge); }
+
+/* ---- Privacy ------------------------------------------------------------ */
+.privacy { padding: 40px 32px; }
+.privacy .big { font-size: clamp(1.3rem, 3.4vw, 1.8rem); letter-spacing: -.025em; font-weight: 700; margin: 0 0 14px; line-height: 1.25; }
+.privacy ul { margin: 18px 0 0; padding: 0; list-style: none; display: grid; gap: 9px; }
+.privacy li { color: var(--muted); font-size: .95rem; display: flex; gap: 10px; align-items: flex-start; }
+.privacy li svg { width: 17px; height: 17px; flex: none; margin-top: 4px; stroke: var(--accent-2); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---- Footer ------------------------------------------------------------- */
+footer { border-top: 1px solid var(--outline); padding: 44px 0 60px; margin-top: 40px; }
+.foot { display: flex; flex-wrap: wrap; gap: 20px; align-items: baseline; justify-content: space-between; }
+footer p { color: var(--muted); font-size: .9rem; margin: 0; max-width: 40em; }
+footer a { color: var(--accent); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+.foot-links { display: flex; gap: 18px; flex-wrap: wrap; font-size: .9rem; }
+</style>
+</head>
+<body>
+
+<div class="backdrop" aria-hidden="true">
+  <div class="orb a"></div><div class="orb b"></div><div class="orb c"></div>
+</div>
+
+<header>
+  <div class="wrap nav">
+    <span class="brand"><img src="icon.png" alt=""> Gymfy</span>
+    <span class="spacer"></span>
+    <a href="#features" class="only-wide">Features</a>
+    <a href="#privacy">Privacy</a>
+    <a href="https://github.com/Joshynaldo">Developer</a>
+  </div>
+</header>
+
+<main>
+
+<!-- ================= HERO ================= -->
+<div class="wrap hero">
+  <div class="hero-grid">
+    <div>
+      <span class="eyebrow"><span class="dot"></span> Android · coming soon</span>
+      <h1>Your gym log.<br>On your phone.<br><span class="fade">Only on your phone.</span></h1>
+      <!-- Outcome first, mechanism as the evidence behind it. The earlier
+           draft opened with "no networking code", which is how the app is
+           built rather than what you get from it. -->
+      <p class="lede">
+        Gymfy plans your split, logs your sets and shows you the numbers moving.
+        <strong>Your training never leaves the phone</strong> — there is no
+        account, no ads, and no networking code in the app to send it anywhere.
+      </p>
+      <div class="cta">
+        <a class="btn btn-primary" href="#features">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          See what it does
+        </a>
+        <!-- Was "View on GitHub", pointing at the developer's profile. The
+             page loads, but Gymfy is not on it — the repository is private —
+             so the button promised source code and delivered a profile with
+             two unrelated repos. A button that goes somewhere is not the same
+             as a button that works.
+
+             This replaces it with the one thing a visitor can actually do
+             today, using the same mechanism the app itself uses for
+             feedback: compose a mail. No backend, nothing to sign up to. -->
+        <a class="btn btn-ghost" href="mailto:gymfy.dev@gmail.com?subject=Tell%20me%20when%20Gymfy%20launches">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+          Tell me when it launches
+        </a>
+      </div>
+      <p class="cta-note">Free, and staying that way. No subscription, no pro tier, nothing to unlock.</p>
+    </div>
+
+    <div class="phone" data-shot="screenshots/active-workout.png">
+      <div class="screen">
+        <img src="screenshots/active-workout.png" alt="Gymfy logging a set during a workout">
+        <div class="slot">
+          <span class="k">Screenshot slot</span>
+          Drop a 9:19.5 PNG at<br><code>screenshots/active-workout.png</code>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="claims">
+    <div class="claim"><b>No account</b><span>Nothing to sign up for</span></div>
+    <div class="claim"><b>No ads</b><span>None, ever</span></div>
+    <div class="claim"><b>No network</b><span>Not one line of it</span></div>
+  </div>
+</div>
+
+<!-- ================= FEATURES ================= -->
+<section id="features">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Built for the two minutes between sets</h2>
+      <p>Everything here exists because it was needed standing in front of a rack, one-handed, with the bar already loaded.</p>
+    </div>
+
+    <div class="grid">
+
+      <div class="pane card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M3 12h2m14 0h2M7 8v8m10-8v8M7 12h10"/></svg></div>
+        <h3>Logging that keeps up</h3>
+        <p>Scroll wheels instead of a keyboard — 82.5&nbsp;kg is two flicks, not four keystrokes. Warm-ups are marked as warm-ups and kept out of your records.</p>
+      </div>
+
+      <div class="pane card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M3 17l5-6 4 4 4-7 5 5"/><path d="M3 21h18"/></svg></div>
+        <h3>Progressive overload</h3>
+        <p>Your next weight is suggested from what you actually lifted, not a formula on a poster. Hit your target reps and it goes up; miss and it holds.</p>
+      </div>
+
+      <div class="pane card">
+        <div class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+        <h3>Timed exercises</h3>
+        <p>Planks, dead hangs, loaded carries. Logged in minutes and seconds, charted by duration, with records of their own — a plank's best is a time, not a weight.</p>
+      </div>
+
+      <div class="pane card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M6 8v8M9 6v12M15 6v12M18 8v8M9 12h6"/></svg></div>
+        <h3>Plate calculator</h3>
+        <p>What to load, per side, from the plates your gym actually owns. Bar weight is set per exercise — the leg press does not have a 20&nbsp;kg bar on it.</p>
+      </div>
+
+      <div class="pane card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v2l3 3v10H6V11l3-3V6a3 3 0 0 1 3-3z"/></svg></div>
+        <h3>Muscle map</h3>
+        <p>Which muscles you actually trained this week, shaded by volume — and which ones you have been quietly avoiding.</p>
+      </div>
+
+      <div class="pane card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M8 11l4 4 4-4"/><path d="M4 19h16"/></svg></div>
+        <h3>Bring your history</h3>
+        <p>Coming from Hevy, Strong or StrengthLog? Export a CSV there, import it here. Unknown exercises get created rather than dropped, and importing twice adds nothing twice.</p>
+      </div>
+
+      <div class="pane card">
+        <div class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2.5"/></svg></div>
+        <h3>Rest timer that finds you</h3>
+        <p>A countdown ring on the workout screen, a +30s button sized for a hand you are not looking at, and a notification for when the phone is already back in your pocket.</p>
+      </div>
+
+      <div class="pane card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/></svg></div>
+        <h3>Notes per exercise</h3>
+        <p>The bench setting, the grip width, what your lower back said last time. Attached to the exercise, waiting for you next time.</p>
+      </div>
+
+      <div class="pane card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M21 15V5a2 2 0 0 0-2-2H9"/><path d="M3 9v10a2 2 0 0 0 2 2h10"/><path d="M7 13l3 3 6-6"/></svg></div>
+        <h3>A real export</h3>
+        <p>CSV or JSON, any time, no teaser version. Warm-ups included and labelled, weights in a column that says which unit it is in.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ================= DEEP DIVES ================= -->
+<section style="padding-top:20px">
+  <div class="wrap">
+
+    <div class="dive">
+      <div class="copy">
+        <h3>It suggests the next weight, and tells you why</h3>
+        <p>Most trackers are a spreadsheet you fill in. Gymfy reads your last session for an exercise and puts a number in the field before you touch it.</p>
+        <p class="pull">Hit every target rep and the weight steps up. Fall short and it holds you there — because the app that pushes you up regardless is the one you stop trusting.</p>
+        <p>The rules are yours: increment, rep target, how many sessions at a weight before it moves.</p>
+      </div>
+      <div class="phone" data-shot="screenshots/overload.png">
+        <div class="screen">
+          <img src="screenshots/overload.png" alt="Gymfy suggesting the next working weight">
+          <div class="slot"><span class="k">Screenshot slot</span>Drop a 9:19.5 PNG at<br><code>screenshots/overload.png</code></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dive flip">
+      <div class="copy">
+        <h3>See the week you actually trained</h3>
+        <p>Per-exercise charts for top set, volume and estimated 1RM, with personal records dated so you know when you set them.</p>
+        <p class="pull">And a body map shaded by the volume each muscle took — the fastest way to notice that your rear delts have not been touched since March.</p>
+        <p>Plus a bodyweight-relative strength rank, so the comparison is to people your size rather than to a number on the internet.</p>
+      </div>
+      <div class="phone" data-shot="screenshots/muscle-map.png">
+        <div class="screen">
+          <img src="screenshots/muscle-map.png" alt="Gymfy's muscle map shaded by weekly training volume">
+          <div class="slot"><span class="k">Screenshot slot</span>Drop a 9:19.5 PNG at<br><code>screenshots/muscle-map.png</code></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dive">
+      <div class="copy">
+        <h3>Seven themes, one of them glass</h3>
+        <p>AMOLED black that actually turns the pixels off. High contrast for gym lighting. And Hyper — translucent panes over a slowly drifting colour field, which is what this page is wearing.</p>
+        <p class="pull">Pick any accent colour. Every animation respects your system reduce-motion setting, and respecting it means stopping, not going faster.</p>
+        <div class="swatches" aria-label="Accent colours">
+          <span class="sw" style="background:#7C6BFF"></span>
+          <span class="sw" style="background:#4F8CFF"></span>
+          <span class="sw" style="background:#2FD8C6"></span>
+          <span class="sw" style="background:#35C56A"></span>
+          <span class="sw" style="background:#FF8A3D"></span>
+          <span class="sw" style="background:#FF5C8A"></span>
+          <span class="sw" style="background:#9B6BFF"></span>
+        </div>
+      </div>
+      <div class="phone" data-shot="screenshots/themes.png">
+        <div class="screen">
+          <img src="screenshots/themes.png" alt="Gymfy's theme picker">
+          <div class="slot"><span class="k">Screenshot slot</span>Drop a 9:19.5 PNG at<br><code>screenshots/themes.png</code></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= PRIVACY ================= -->
+<section id="privacy">
+  <div class="wrap">
+    <div class="pane privacy">
+      <p class="big">Nothing to disclose, because nothing is collected</p>
+      <p style="color:var(--muted);margin:0">
+        Gymfy contains no networking code. Not a disabled analytics SDK, not an
+        opt-out — there is nothing in the app that can open a connection. The
+        claim is checked by a test in the repository that fails if anyone adds one.
+      </p>
+      <ul>
+        <li><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg> No analytics, telemetry or crash reporting</li>
+        <li><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg> No advertising and no ad identifiers</li>
+        <li><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg> No account, no sign-in, no identifier created for you</li>
+        <li><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg> Progress photos are copied into the app's private storage and never uploaded</li>
+        <li><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg> Uninstalling deletes everything — there is no copy anywhere else</li>
+      </ul>
+      <p style="margin:22px 0 0;color:var(--muted);font-size:.93rem">
+        The flip side, said plainly: because nothing is on a server, <strong style="color:var(--text)">there is no backup</strong>.
+        Use Export before you change phones.
+      </p>
+      <p style="margin:20px 0 0">
+        <a class="btn btn-ghost" href="privacy-policy.html">Read the full privacy policy</a>
+      </p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <p>
+      Gymfy is made by one person. Feedback goes straight to a human:
+      <a href="mailto:gymfy.dev@gmail.com">gymfy.dev@gmail.com</a>
+    </p>
+    <div class="foot-links">
+      <a href="privacy-policy.html">Privacy</a>
+      <a href="https://github.com/Joshynaldo">Developer</a>
+      <a href="#features">Features</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Mark a phone whose screenshot is missing so the slot copy shows instead of
+// a broken-image icon. Runs on error and on load, because a cached 404 does
+// not always fire error in every browser.
+document.querySelectorAll('.phone').forEach(function (phone) {
+  var img = phone.querySelector('img');
+  if (!img) return;
+  function miss() { phone.classList.add('empty'); }
+  if (img.complete && img.naturalWidth === 0) miss();
+  img.addEventListener('error', miss);
+});
+</script>
+
+</body>
+</html>

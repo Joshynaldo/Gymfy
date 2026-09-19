@@ -89,11 +89,32 @@ void main() {
   });
 
   group('the privacy policy', () {
-    test('exists in both the source and the hostable form', () {
+    test('exists in both the source and the published form', () {
       // Play needs a URL, so the .html is what actually gets published; the
       // .md is what gets edited. Losing either one silently is easy.
       expect(File('store/privacy-policy.md').existsSync(), isTrue);
       expect(File('store/privacy-policy.html').existsSync(), isTrue);
+    });
+
+    test('and the copy the website serves has not drifted from it', () {
+      // The page exists twice: store/ is where it is written, docs/ is what
+      // GitHub Pages actually serves. Two copies of a legal document is
+      // exactly the arrangement that ends with the published one being a
+      // year out of date, because nothing reads the other.
+      final source = File('store/privacy-policy.html');
+      final published = File('../docs/privacy-policy.html');
+      expect(
+        published.existsSync(),
+        isTrue,
+        reason: 'the website serves docs/privacy-policy.html; copy it from '
+            'store/ rather than deleting this test',
+      );
+      expect(
+        published.readAsStringSync(),
+        source.readAsStringSync(),
+        reason: 'docs/privacy-policy.html is a copy of '
+            'store/privacy-policy.html — re-copy it after editing',
+      );
     });
 
     test('still claims nothing leaves the device', () {

@@ -148,7 +148,12 @@ class AppCard extends ConsumerWidget {
         onLongPress: onLongPress,
         splash: false,
         child: AnimatedContainer(
-          duration: AppDurations.quick,
+          // Routed through motionOf like every other animation in the app.
+          // This was the one place that never asked, and it is the one that
+          // matters most: AppCard is on every list in Gymfy, so someone who
+          // turns reduce motion on because movement makes them ill still had
+          // every card animate its selection.
+          duration: motionOf(context, AppDurations.quick),
           curve: AppCurves.settle,
           decoration: BoxDecoration(
             color: selected
@@ -373,7 +378,7 @@ class AppGlyph extends ConsumerWidget {
         : accent;
 
     return AnimatedContainer(
-      duration: AppDurations.quick,
+      duration: motionOf(context, AppDurations.quick),
       curve: AppCurves.settle,
       width: glass.enabled ? 40 : 42,
       height: glass.enabled ? 40 : 42,

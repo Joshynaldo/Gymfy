@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../app/theme/motion.dart';
 import '../../../shared/data/body_profile.dart';
 import '../../../shared/data/lifter_sex.dart';
 import '../../../shared/utils/units.dart';
@@ -55,21 +56,35 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     super.dispose();
   }
 
-  void _next() {
+  /// Both directions move the same way, from the app's own vocabulary.
+  ///
+  /// This screen had its own 250 ms easeOut, which was three departures at
+  /// once: a duration outside the four-step scale, an eased curve on a
+  /// *position* change (the rest of the app springs those — `settle` is
+  /// critically damped, so it never overshoots into a half-visible next
+  /// page), and no reduce-motion check at all. The last one is the real
+  /// fault: onboarding is the first thing anyone sees, so the very first
+  /// movement in Gymfy was the one place that ignored the setting.
+  ///
+  /// When the setting is on the page is jumped to rather than animated: it
+  /// still changes, it just does not travel.
+  void _goToPage(int Function(int) next) {
     FocusScope.of(context).unfocus();
-    _pages.nextPage(
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeOut,
+    final duration = motionOf(context, AppDurations.standard);
+    if (duration == Duration.zero) {
+      _pages.jumpToPage(next(_pages.page?.round() ?? 0));
+      return;
+    }
+    _pages.animateToPage(
+      next(_pages.page?.round() ?? 0),
+      duration: duration,
+      curve: AppCurves.settle,
     );
   }
 
-  void _back() {
-    FocusScope.of(context).unfocus();
-    _pages.previousPage(
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeOut,
-    );
-  }
+  void _next() => _goToPage((page) => page + 1);
+
+  void _back() => _goToPage((page) => page - 1);
 
   Future<void> _finish() async {
     setState(() => _saving = true);
