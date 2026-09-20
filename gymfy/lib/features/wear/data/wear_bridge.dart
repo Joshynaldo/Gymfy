@@ -42,6 +42,12 @@ typedef WearWorkout = ({
 
   /// What the rest was started with, so the watch can draw a progress ring.
   int restTotalSeconds,
+
+  /// The last working set, ready to draw, e.g. "80 kg x 8".
+  ///
+  /// Empty when there is nothing to repeat. Formatted here for the same
+  /// reason as everything else: the watch does not know what a unit is.
+  String lastSet,
 });
 
 /// No workout — what the watch shows when nothing is happening.
@@ -52,6 +58,7 @@ const idleWearWorkout = (
   sets: '',
   restEndsAtMs: 0,
   restTotalSeconds: 0,
+  lastSet: '',
 );
 
 /// Sends workout state to the Wear OS companion.
@@ -76,6 +83,40 @@ class WearBridge {
   static bool get supported =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
+  /// Commands the watch can send back.
+  ///
+  /// A closed set of strings rather than anything structured, and kept
+  /// small on purpose: every one of these is a thing the wrist can do to
+  /// the phone without looking at it, so the cost of getting one wrong is a
+  /// rest that silently ends. Both sides read the same names — pinned by
+  /// `wear_bridge_test.dart`.
+  static const commandAddThirty = 'rest.add30';
+  static const commandSkipRest = 'rest.skip';
+
+  /// Log another set identical to the last one.
+  ///
+  /// Carries a caller-generated id after a colon, and that id is the whole
+  /// safety story: a double tap on a small screen is normal, and without it
+  /// the second tap is an extra set in your history that you did not do.
+  static const commandRepeatSet = 'set.repeat';
+
+  /// Routes commands arriving from the watch to [onCommand].
+  ///
+  /// Passing null clears the handler.
+  void listen(void Function(String command)? onCommand) {
+    if (!supported) return;
+    if (onCommand == null) {
+      _channel.setMethodCallHandler(null);
+      return;
+    }
+    _channel.setMethodCallHandler((call) async {
+      if (call.method == 'watchCommand') {
+        final command = call.arguments;
+        if (command is String) onCommand(command);
+      }
+    });
+  }
+
   /// Pushes [workout] to the watch.
   ///
   /// Never throws. A watch that is unpaired, switched off or out of range is
@@ -91,6 +132,7 @@ class WearBridge {
         'sets': workout.sets,
         'restEndsAtMs': workout.restEndsAtMs,
         'restTotalSeconds': workout.restTotalSeconds,
+        'lastSet': workout.lastSet,
         // So the watch can tell how old this is and say so, rather than
         // presenting a three-hour-old rest timer as live.
         'updatedAtMs': DateTime.now().millisecondsSinceEpoch,

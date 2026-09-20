@@ -240,6 +240,39 @@ void main() {
       expect(onWatch, onPhone);
     });
 
+    test('on the command path and the command names', () {
+      // The reverse channel has the same silent-failure shape as the
+      // forward one, with a worse symptom: a mismatched command name means
+      // the button on your wrist does nothing at all, and nothing anywhere
+      // says why.
+      final kotlinPhone = read(
+        'android/app/src/main/kotlin/de/kopten/gymfy/WearBridge.kt',
+      );
+      final kotlinWatch = read(
+        'android/wear/src/main/kotlin/de/kopten/gymfy/wear/WorkoutState.kt',
+      );
+
+      final path = RegExp(r'COMMAND_PATH\s*=\s*"([^"]+)"');
+      expect(
+        path.firstMatch(kotlinWatch)?.group(1),
+        path.firstMatch(kotlinPhone)?.group(1),
+        reason: 'the watch would send commands into the void',
+      );
+
+      // Dart declares the names; the watch has to spell them identically.
+      for (final command in const [
+        WearBridge.commandAddThirty,
+        WearBridge.commandSkipRest,
+      ]) {
+        expect(
+          kotlinWatch,
+          contains('"$command"'),
+          reason: 'the watch never sends "$command", so the phone handling '
+              'it has no effect',
+        );
+      }
+    });
+
     test('on the method channel name', () {
       final kotlin = read(
         'android/app/src/main/kotlin/de/kopten/gymfy/WearBridge.kt',
@@ -263,6 +296,7 @@ void main() {
         'sets',
         'restEndsAtMs',
         'restTotalSeconds',
+        'lastSet',
         'updatedAtMs',
       ]) {
         expect(
