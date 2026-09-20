@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "docs-site",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--yes", "http-server", "docs", "-p", "5173", "-c-1"],
+      "port": 5173
+    }
+  ]
+}
