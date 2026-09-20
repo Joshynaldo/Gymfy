@@ -1,0 +1,43 @@
+Gymfy — App Store Exception
+===========================
+
+Additional permission under GNU AGPL version 3 section 7
+--------------------------------------------------------
+
+Copyright (C) 2026 Joshynaldo
+
+Gymfy is licensed under the GNU Affero General Public License, version 3
+(see the LICENSE file). Apple's App Store terms of service impose
+restrictions on distributed software that are incompatible with the AGPL.
+So that Gymfy and works based on it can nevertheless be offered on Apple
+platforms, the copyright holder grants the following additional permission
+under section 7 of the AGPL:
+
+  Notwithstanding any other provision of the AGPL, you have permission to
+  distribute Gymfy, or a work based on Gymfy, in object code form through
+  the Apple App Store (including TestFlight and any successor storefront
+  operated by Apple), and to accept the Apple terms that govern such
+  distribution, even where those terms impose restrictions that the AGPL
+  would otherwise forbid. Those Apple terms apply only to the copy obtained
+  through the App Store and do not become restrictions under the AGPL.
+
+This permission is subject to all of the following:
+
+  1. You must still make the complete Corresponding Source of the
+     distributed version available under the AGPL, as sections 6 and 13 of
+     the license require. The App Store exception waives none of the source
+     obligations; it only removes the conflict with Apple's terms.
+
+  2. This permission covers distribution through Apple's storefronts only.
+     Every other channel remains governed by the unmodified AGPL.
+
+  3. If you modify Gymfy, you may choose to remove this additional
+     permission from your version, as section 7 allows. You may not narrow
+     or remove it from the copies of Gymfy you received.
+
+  4. This permission does not extend to third-party assets bundled with
+     Gymfy that are not covered by the AGPL (see "Third-party assets" in
+     README.md). Their own licences continue to apply.
+
+This file is not part of the GNU Affero General Public License itself. It
+is an additional permission granted by the copyright holder of Gymfy.
