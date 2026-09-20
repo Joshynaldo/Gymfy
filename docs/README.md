@@ -62,6 +62,6 @@ goes stale.
 
 ## Screenshots
 
-There are none yet. Each slot renders an explanatory placeholder instead of a
-broken image, so the page is presentable now and improves the moment you drop
-files in. Names and capture notes: `screenshots/README.md`.
+All four slots are filled with real phone captures, scaled to 720 px wide and
+saved as JPEG so the page stays light. Names and capture notes:
+`screenshots/README.md`.
