@@ -8,6 +8,7 @@ import 'app/theme/hyper_backdrop.dart';
 import 'features/exercises/data/exercise_repository.dart';
 import 'features/onboarding/data/onboarding_repository.dart';
 import 'features/onboarding/screens/onboarding_screen.dart';
+import 'features/wear/data/wear_sync.dart';
 
 Future<void> main() async {
   // Required because we touch the database (a platform plugin) before runApp.
@@ -37,6 +38,15 @@ class GymfyApp extends ConsumerWidget {
     final accent = ref.watch(accentColorProvider);
     final theme = buildAppTheme(ref.watch(appThemeProvider), accent);
     final onboarded = ref.watch(onboardingCompleteProvider);
+
+    // Kept alive from the root, and watched rather than read: nothing reads
+    // this provider's *value*, it exists for the push to the watch, so if no
+    // one listened it would simply never build. At the root because the
+    // moment the watch matters most is the moment the phone goes in a pocket
+    // and every screen that could have owned this is gone.
+    //
+    // Free on every other platform — WearBridge.supported short-circuits.
+    ref.watch(wearSyncProvider);
 
     // Onboarding is gated here rather than by a router redirect. A redirect has
     // to answer synchronously, but "has onboarding finished" comes from the

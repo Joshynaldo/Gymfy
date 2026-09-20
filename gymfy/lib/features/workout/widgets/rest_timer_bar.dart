@@ -149,6 +149,12 @@ class RestTimerBar extends ConsumerWidget {
   }
 }
 
+/// The accent fill inside the rest bar.
+///
+/// Public only so a test can measure it. It was zero pixels tall for its
+/// whole life, and nothing could see that without asking for its size.
+const restProgressFillKey = Key('restProgressFill');
+
 /// How much rest is left, as a bar that empties.
 ///
 /// Along the foot rather than a ring beside the number. The number already says
@@ -172,25 +178,51 @@ class _RestBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return SizedBox(
-      height: 4,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.10),
-        ),
-        child: Align(
-          alignment: Alignment.centerLeft,
-          child: TweenAnimationBuilder<double>(
-            tween: Tween(end: progress),
-            // A shade under the tick it is following, so each second's travel
-            // finishes just before the next begins and the bar never stalls.
-            duration: motionOf(context, const Duration(milliseconds: 900)),
-            // Linear: this *is* elapsing time, and easing it would mean the bar
-            // moving at a speed the clock is not.
-            curve: Curves.linear,
-            builder: (context, value, _) => FractionallySizedBox(
-              widthFactor: value.clamp(0.0, 1.0),
-              child: ColoredBox(color: accent),
+    // Inset from the pane's edges and given pill ends, rather than a hard
+    // line welded across the bottom. Two reasons it needs the inset as well
+    // as the radius: a rounded bar flush against a rounded pane leaves a
+    // sliver of mismatched curve in each corner, and a track that stops
+    // short of the edge reads as a gauge rather than as part of the frame.
+    //
+    // Six pixels, not four. A 4px bar with 2px ends is mostly end — the
+    // radius has to be small enough to leave a straight run in the middle.
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(3),
+        child: SizedBox(
+          height: 6,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.10),
+            ),
+            child: TweenAnimationBuilder<double>(
+              // `end` only: TweenAnimationBuilder carries the current animated
+              // value forward as the next `begin` itself. Supplying one would
+              // restart each transition from the target it is heading to.
+              tween: Tween(end: progress),
+              // A shade under the tick it is following, so each second's travel
+              // finishes just before the next begins and the bar never stalls.
+              duration: motionOf(context, const Duration(milliseconds: 900)),
+              // Linear: this *is* elapsing time, and easing it would mean the bar
+              // moving at a speed the clock is not.
+              curve: Curves.linear,
+              builder: (context, value, _) => FractionallySizedBox(
+                // `heightFactor: 1` and no wrapping Align — together these are
+                // the whole reason the bar is visible at all.
+                //
+                // It was never visible. An Align hands its child *loose*
+                // constraints, a FractionallySizedBox with no heightFactor passes
+                // that looseness straight down, and a ColoredBox with no child
+                // takes the smallest size it is allowed. Measured before the fix:
+                // 150 x 0 — full width, zero height, painting nothing. Nothing
+                // about the code looks wrong, and the widget it is inside is four
+                // pixels tall, so there was never a gap where a bar should be.
+                alignment: Alignment.centerLeft,
+                widthFactor: value.clamp(0.0, 1.0),
+                heightFactor: 1,
+                child: ColoredBox(key: restProgressFillKey, color: accent),
+              ),
             ),
           ),
         ),

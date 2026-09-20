@@ -81,6 +81,11 @@ dependencies {
     // Backports java.time for API < 26. Paired with
     // isCoreLibraryDesugaringEnabled above; both are needed or neither works.
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+
+    // Phone side of the watch link. NOT Compose -- this is a plain Play
+    // Services library, which is the whole reason it can live in :app when
+    // Glance could not. Its cost to the phone build is measured in TODO.md.
+    implementation("com.google.android.gms:play-services-wearable:19.0.0")
 }
 
 flutter {
