@@ -65,4 +65,7 @@ dependencies {
     // Phone ↔ watch messaging. Present from the start because the whole point
     // of stage 1 is the phone pushing the live workout across.
     implementation("com.google.android.gms:play-services-wearable:19.0.0")
+    // `await()` on a Play Services Task, so sending a command reads as a
+    // suspend call rather than a callback pyramid.
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
 }

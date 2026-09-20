@@ -47,6 +47,8 @@ class GymfyApp extends ConsumerWidget {
     //
     // Free on every other platform — WearBridge.supported short-circuits.
     ref.watch(wearSyncProvider);
+    // The reverse channel: +30s and skip, sent from the wrist.
+    ref.watch(wearCommandsProvider);
 
     // Onboarding is gated here rather than by a router redirect. A redirect has
     // to answer synchronously, but "has onboarding finished" comes from the

@@ -13,9 +13,10 @@ import 'package:gymfy/features/wear/data/wear_bridge.dart';
 import 'package:gymfy/features/wear/data/wear_sync.dart';
 import 'package:gymfy/features/workout/data/rest_timer_controller.dart';
 import 'package:gymfy/features/workout/data/session_repository.dart';
-//  is also a Drift row class in here — the controller is the one
+// RestTimer is also a Drift row class in here — the controller is the one
 // this test means.
 import 'package:gymfy/shared/database/app_database.dart' hide RestTimer;
+import 'package:gymfy/shared/utils/units.dart';
 
 /// Records what would have gone to the watch.
 class _SpyBridge implements WearBridge {
@@ -52,6 +53,9 @@ void main() {
       inProgressSessionProvider.overrideWith((ref) => sessions.stream),
       sessionSetsProvider.overrideWith((ref, id) => Stream.value(const [])),
       restTimerProvider.overrideWith(_NoTimer.new),
+      // The payload now carries a formatted last set, which needs the
+      // display unit — and that reaches for settings in the database.
+      weightUnitProvider.overrideWithValue(WeightUnit.kg),
     ],
   );
 

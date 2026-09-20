@@ -35,9 +35,38 @@ object WearBridge {
     /** The Data Layer path the watch listens on. */
     const val WORKOUT_PATH = "/gymfy/workout"
 
+    /**
+     * The path the watch sends *commands* back on.
+     *
+     * A Message, not a DataItem, and the distinction is the point. State is
+     * a DataItem because the watch should see the latest workout even if it
+     * was asleep when it changed. A command is the opposite: "skip this
+     * rest" means *now* or not at all. Replaying it twenty minutes later
+     * when the watch reconnects would skip a rest nobody asked about.
+     *
+     * Messages are also only delivered while both ends are up, which here
+     * is exactly right — there is no rest timer to control if the phone app
+     * is not running.
+     */
+    const val COMMAND_PATH = "/gymfy/command"
+
     fun register(engine: FlutterEngine, context: android.content.Context) {
-        MethodChannel(engine.dartExecutor.binaryMessenger, CHANNEL)
-            .setMethodCallHandler { call, result ->
+        val channel = MethodChannel(engine.dartExecutor.binaryMessenger, CHANNEL)
+
+        // The watch talking back. Registered for as long as the engine is
+        // alive, which is the only window in which a rest timer exists.
+        Wearable.getMessageClient(context).addListener { message ->
+            if (message.path == COMMAND_PATH) {
+                val command = String(message.data)
+                Log.i(TAG, "command from watch: $command")
+                // onto the platform thread — this callback is not it.
+                android.os.Handler(android.os.Looper.getMainLooper()).post {
+                    channel.invokeMethod("watchCommand", command)
+                }
+            }
+        }
+
+        channel.setMethodCallHandler { call, result ->
                 when (call.method) {
                     "pushWorkout" -> {
                         @Suppress("UNCHECKED_CAST")

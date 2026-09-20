@@ -20,6 +20,8 @@ data class WorkoutState(
     val restTotalSeconds: Int = 0,
     /** Epoch millis of the push, so staleness can be shown rather than hidden. */
     val updatedAtMs: Long = 0,
+    /** The last working set, ready to draw. Empty when there is none. */
+    val lastSet: String = "",
 ) {
     val resting: Boolean get() = restEndsAtMs > 0
 
@@ -97,6 +99,7 @@ data class WorkoutState(
             // sometimes and Long other times. See WearBridge.push.
             restTotalSeconds = map.number("restTotalSeconds").toInt(),
             updatedAtMs = map.number("updatedAtMs"),
+            lastSet = map.getString("lastSet", ""),
         )
     }
 }
@@ -122,3 +125,18 @@ const val TAG = "GymfyWear"
 
 /** How long a pushed state stays believable. See [WorkoutState.isStale]. */
 const val STALE_AFTER_MS = 6L * 60 * 60 * 1000
+
+/**
+ * The path commands travel back to the phone on.
+ *
+ * Must match `WearBridge.COMMAND_PATH`. Pinned by `wear_bridge_test.dart`,
+ * which reads both files — a mismatch here is silent in both directions.
+ */
+const val COMMAND_PATH = "/gymfy/command"
+
+/** Commands the phone understands. Must match `WearBridge` in Dart. */
+const val COMMAND_ADD_THIRTY = "rest.add30"
+const val COMMAND_SKIP_REST = "rest.skip"
+
+/** Log another set the same as the last. Must match `WearBridge` in Dart. */
+const val COMMAND_REPEAT_SET = "set.repeat"

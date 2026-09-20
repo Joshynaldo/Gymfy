@@ -17,6 +17,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -24,6 +27,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +36,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material3.CircularProgressIndicator
+import androidx.wear.compose.material3.CompactButton
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ProgressIndicatorDefaults
 import androidx.wear.compose.material3.Text
@@ -40,7 +45,10 @@ import com.google.android.gms.wearable.DataEvent
 import com.google.android.gms.wearable.DataEventBuffer
 import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.Wearable
+import java.util.UUID
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 /**
  * The watch face for a workout in progress.
@@ -98,7 +106,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun WearApp(demoRestSeconds: Int = 0) {
     val context = LocalContext.current
-    var state by remember {
+    val stateHolder = remember {
         mutableStateOf(
             if (demoRestSeconds > 0) {
                 WorkoutState(
@@ -114,6 +122,8 @@ fun WearApp(demoRestSeconds: Int = 0) {
             },
         )
     }
+
+    var state by stateHolder
 
     DisposableEffect(context) {
         // The demo state is the point of the demo; letting the phone's real
@@ -164,7 +174,8 @@ fun WearApp(demoRestSeconds: Int = 0) {
         ) {
             // activeAt, not active: a state the phone stopped updating
             // hours ago is not a running workout. See WorkoutState.isStale.
-            if (!state.activeAt(System.currentTimeMillis())) Idle() else Workout(state)
+            if (!state.activeAt(System.currentTimeMillis())) Idle()
+            else Workout(state, stateHolder)
         }
     }
 }
@@ -179,7 +190,10 @@ private fun Idle() {
 }
 
 @Composable
-private fun Workout(state: WorkoutState) {
+private fun Workout(
+    state: WorkoutState,
+    stateHolder: androidx.compose.runtime.State<WorkoutState>,
+) {
     val context = LocalContext.current
 
     // Ticks locally off the deadline the phone sent. One message per rest
@@ -224,7 +238,12 @@ private fun Workout(state: WorkoutState) {
     }
 
     if (state.resting || remaining > 0) {
-        RestTimer(state = state, remaining = remaining, nowState = nowState)
+        RestTimer(
+            state = state,
+            remaining = remaining,
+            nowState = nowState,
+            stateHolder = stateHolder,
+        )
     } else {
         Summary(state)
     }
@@ -235,6 +254,7 @@ private fun RestTimer(
     state: WorkoutState,
     remaining: Int,
     nowState: androidx.compose.runtime.State<Long>,
+    stateHolder: androidx.compose.runtime.State<WorkoutState>,
 ) {
     // Falls back to the remaining time rather than to 1.
     //
@@ -272,9 +292,21 @@ private fun RestTimer(
             // was missing. Reading state here makes the draw scope observe it
             // and invalidate on every change, which is why these APIs take a
             // lambda instead of a Float in the first place.
+            // **Everything** the arc needs is read from State in here —
+            // the workout as well as the clock.
+            //
+            // The first fix only did half of this, and +30s showed the half
+            // it missed: reading `nowState` made the arc shrink, but the
+            // deadline and the total were still captured values, so the ring
+            // kept counting to the *old* deadline while the number beside it
+            // jumped forward. A captured value in a draw lambda is frozen no
+            // matter how often the composable recomposes around it, so
+            // "read it inside" has to mean all of it, not the obvious one.
             progress = {
-                (state.remainingSeconds(nowState.value).toFloat() / total)
-                    .coerceIn(0f, 1f)
+                val live = stateHolder.value
+                val left = live.remainingSeconds(nowState.value)
+                val span = live.restTotalSeconds.coerceAtLeast(left).coerceAtLeast(1)
+                (left.toFloat() / span).coerceIn(0f, 1f)
             },
             // Explicit stroke and inset rather than the defaults.
             //
@@ -316,6 +348,20 @@ private fun RestTimer(
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
+
+            Spacer(Modifier.height(10.dp))
+
+            // The two things worth doing to a rest without picking the phone
+            // up. Both only exist while the rest is running: there is nothing
+            // to extend or skip once it is over, and a dead button is worse
+            // than an absent one — the same call the phone's timer card made
+            // about its own +30s.
+            if (remaining > 0) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    CommandChip("+30s", COMMAND_ADD_THIRTY)
+                    CommandChip("Skip", COMMAND_SKIP_REST)
+                }
+            }
         }
     }
 }
@@ -336,6 +382,21 @@ private fun Summary(state: WorkoutState) {
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyMedium,
         )
+
+        // Offered only when the phone sent something repeatable. One field
+        // decides both the label and whether the button exists, so there is
+        // no second "can repeat" flag to drift out of step with it.
+        if (state.lastSet.isNotEmpty()) {
+            Spacer(Modifier.height(10.dp))
+            CommandChip(
+                label = state.lastSet,
+                // A fresh id per tap. The phone applies each id once, so a
+                // double tap on a small button mid-workout costs nothing —
+                // and a set you did not do is worse than one you have to
+                // re-tap, because later there is no way to tell.
+                command = COMMAND_REPEAT_SET + ":" + UUID.randomUUID(),
+            )
+        }
     }
 }
 
@@ -352,4 +413,47 @@ private fun buzz(context: Context) {
     vibrator?.vibrate(
         VibrationEffect.createWaveform(longArrayOf(0, 180, 120, 180), -1),
     )
+}
+
+/**
+ * A button that fires a command at the phone and forgets about it.
+ *
+ * No pending state, no confirmation, no retry. The phone answers by
+ * pushing new state a moment later, and that arriving *is* the
+ * confirmation — the ring jumps by thirty seconds or the screen returns to
+ * the summary. Inventing a local optimistic state here would mean two
+ * places deciding what the timer says, and they would disagree the first
+ * time a message was dropped.
+ */
+@Composable
+private fun CommandChip(label: String, command: String) {
+    // Takes its own context rather than receiving one. Kotlin 2.3 treats a
+    // bare `context` argument as the context-parameter keyword and refuses
+    // to parse the call.
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    CompactButton(
+        onClick = {
+            scope.launch {
+                try {
+                    // Broadcast to every connected node rather than a
+                    // remembered one: there is exactly one phone, and
+                    // caching its id is a stale-handle bug waiting for the
+                    // first reconnect.
+                    val nodes = Wearable.getNodeClient(ctx).connectedNodes.await()
+                    for (node in nodes) {
+                        Wearable.getMessageClient(ctx)
+                            .sendMessage(node.id, COMMAND_PATH, command.toByteArray())
+                            .await()
+                    }
+                } catch (e: Exception) {
+                    // The phone being out of range is ordinary, not an
+                    // error worth a dialog on a watch face.
+                    Log.w(TAG, "command $command not delivered", e)
+                }
+            }
+        },
+    ) {
+        Text(label)
+    }
 }
