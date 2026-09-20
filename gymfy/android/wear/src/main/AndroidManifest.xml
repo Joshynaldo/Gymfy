@@ -5,6 +5,11 @@
          it to a watch. -->
     <uses-feature android:name="android.hardware.type.watch" />
 
+    <!-- The rest countdown is posted as a chronometer notification so the
+         *system* renders it. Without this the countdown only runs while our
+         process is alive, and Android freezes it as soon as the wrist drops. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:label="Gymfy"
         android:icon="@android:drawable/ic_menu_view"
