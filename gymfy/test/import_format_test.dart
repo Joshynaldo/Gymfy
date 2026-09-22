@@ -11,14 +11,41 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/features/import/data/import_format.dart';
 import 'package:gymfy/shared/utils/units.dart';
 
-/// Shaped like a Hevy export: snake_case, explicit kilograms, a set type.
+/// Shaped like a Hevy export: snake_case, explicit kilograms, a set type, and
+/// — the part that mattered — dates with the month spelled out in the
+/// language of the phone that exported them.
+///
+/// This fixture used to write `2026-01-15 18:00:00`, which reads cleanly and
+/// which Hevy has never produced. Every test passed and every real Hevy export
+/// imported as zero workouts. A fixture that is easier to read than the thing
+/// it stands for is not a test of anything.
 const _hevy = '''
 title,start_time,end_time,exercise_title,set_index,set_type,weight_kg,reps
-Push,2026-01-15 18:00:00,2026-01-15 19:05:00,Bench Press,0,warmup,40,10
-Push,2026-01-15 18:00:00,2026-01-15 19:05:00,Bench Press,1,normal,80,8
-Push,2026-01-15 18:00:00,2026-01-15 19:05:00,Bench Press,2,normal,80,7
-Pull,2026-01-17 18:00:00,2026-01-17 19:00:00,Barbell Row,0,normal,70,10
+Push,"15 Jan. 2026, 18:00","15 Jan. 2026, 19:05",Bench Press,0,warmup,40,10
+Push,"15 Jan. 2026, 18:00","15 Jan. 2026, 19:05",Bench Press,1,normal,80,8
+Push,"15 Jan. 2026, 18:00","15 Jan. 2026, 19:05",Bench Press,2,normal,80,7
+Pull,"17 Jan. 2026, 18:00","17 Jan. 2026, 19:00",Barbell Row,0,normal,70,10
 ''';
+
+/// Lines copied verbatim out of a real Hevy export — full header, quoting,
+/// empty columns and German month names as the file has them.
+///
+/// Kept alongside the tidied [_hevy] because the two failures this feature has
+/// had were both things a hand-written fixture cannot show: a column shape
+/// nobody expected, and a date format nobody had looked at. The real file is
+/// the only witness to either.
+const _hevyReal =
+    '"title","start_time","end_time","description","exercise_title",'
+    '"superset_id","exercise_notes","set_index","set_type","weight_kg",'
+    '"reps","distance_km","duration_seconds","rpe"\n'
+    '"Torso 2 (Schwachstellen)","18 Sept. 2026, 16:01","18 Sept. 2026, 17:44",'
+    '"","Schrägbankdrücken (Multipresse)",,"",0,"normal",30,8,,,\n'
+    '"Torso 2 (Schwachstellen)","18 Sept. 2026, 16:01","18 Sept. 2026, 17:44",'
+    '"","Schrägbankdrücken (Multipresse)",,"",1,"normal",50,6,,,\n'
+    '"Leg/ Core","11 März 2026, 15:32","11 März 2026, 17:01",'
+    '"","Beinpresse (Maschine)",,"",0,"normal",120,10,,,\n'
+    '"Pull","1 Juni 2026, 17:18","1 Juni 2026, 18:30",'
+    '"","Latzug (Kabelzug)",,"",0,"normal",32,8,,,\n';
 
 /// Shaped like a Strong export: title case, spaces, and a bare "Weight"
 /// column that does not say what unit it is in.
@@ -90,8 +117,9 @@ void main() {
       // A weighted crunch at bodyweight 58 plus 10. Gymfy logs bodyweight
       // work as the *added* load; adding the 58 would make it a 68 kg lift
       // and put a personal record on it.
-      final crunch = parseWorkoutCsv(_strengthlog).sessions.last.sets
-          .firstWhere((s) => s.exerciseName == 'Crunch');
+      final crunch = parseWorkoutCsv(
+        _strengthlog,
+      ).sessions.last.sets.firstWhere((s) => s.exerciseName == 'Crunch');
 
       expect(crunch.weightKg, 10);
       expect(crunch.reps, 8);
@@ -273,10 +301,7 @@ Core,2026-05-01 18:00:00,Crunch,0,15,
 title,start,exercise,weight,reps,time
 Core,2026-05-01 18:00:00,Plank,0,,00:01:30
 ''';
-      expect(
-        parseWorkoutCsv(clockCsv).sessions.single.sets.single.seconds,
-        90,
-      );
+      expect(parseWorkoutCsv(clockCsv).sessions.single.sets.single.seconds, 90);
     });
 
     test('a zero-length duration is not a set', () {
@@ -399,13 +424,25 @@ Date,Exercise Name,Weight,Reps
     });
 
     test('reads ISO and the space-separated form exporters write', () {
-      expect(parseImportDate('2026-01-15T18:30:00'), DateTime(2026, 1, 15, 18, 30));
-      expect(parseImportDate('2026-01-15 18:30:00'), DateTime(2026, 1, 15, 18, 30));
+      expect(
+        parseImportDate('2026-01-15T18:30:00'),
+        DateTime(2026, 1, 15, 18, 30),
+      );
+      expect(
+        parseImportDate('2026-01-15 18:30:00'),
+        DateTime(2026, 1, 15, 18, 30),
+      );
     });
 
     test('reads a day-first European date', () {
-      expect(parseImportDate('15/01/2026 18:30'), DateTime(2026, 1, 15, 18, 30));
-      expect(parseImportDate('15.01.2026, 18:30'), DateTime(2026, 1, 15, 18, 30));
+      expect(
+        parseImportDate('15/01/2026 18:30'),
+        DateTime(2026, 1, 15, 18, 30),
+      );
+      expect(
+        parseImportDate('15.01.2026, 18:30'),
+        DateTime(2026, 1, 15, 18, 30),
+      );
     });
 
     test('a date with no time is midnight, not a failure', () {
@@ -417,6 +454,352 @@ Date,Exercise Name,Weight,Reps
       // every chart that counts by week.
       expect(parseImportDate('last Tuesday'), isNull);
       expect(parseImportDate(''), isNull);
+    });
+  });
+
+  group('a date with the month spelled out', () {
+    test('reads the German spellings a real Hevy export uses', () {
+      // Every one of these is a month token out of the file that imported as
+      // zero workouts. `Sept.` is the specific one: German abbreviates
+      // September to four letters where English uses three.
+      expect(
+        parseImportDate('18 Sept. 2026, 16:01'),
+        DateTime(2026, 9, 18, 16, 1),
+      );
+      expect(
+        parseImportDate('11 März 2026, 15:32'),
+        DateTime(2026, 3, 11, 15, 32),
+      );
+      expect(parseImportDate('1 Mai 2026, 13:06'), DateTime(2026, 5, 1, 13, 6));
+      expect(
+        parseImportDate('1 Juni 2026, 17:18'),
+        DateTime(2026, 6, 1, 17, 18),
+      );
+      expect(
+        parseImportDate('3 Juli 2026, 20:18'),
+        DateTime(2026, 7, 3, 20, 18),
+      );
+      expect(
+        parseImportDate('10 Aug. 2026, 13:52'),
+        DateTime(2026, 8, 10, 13, 52),
+      );
+      expect(
+        parseImportDate('9 Feb. 2026, 18:00'),
+        DateTime(2026, 2, 9, 18, 0),
+      );
+      expect(
+        parseImportDate('1 Apr. 2026, 13:13'),
+        DateTime(2026, 4, 1, 13, 13),
+      );
+    });
+
+    test('reads English, in both the orders it is written in', () {
+      // An English Hevy export failed exactly as the German one did — this is
+      // not a translation problem, it is a missing format.
+      expect(
+        parseImportDate('28 Mar 2025, 17:29'),
+        DateTime(2025, 3, 28, 17, 29),
+      );
+      expect(
+        parseImportDate('12 Sep 2024, 07:30'),
+        DateTime(2024, 9, 12, 7, 30),
+      );
+      expect(
+        parseImportDate('18 September 2026, 16:01'),
+        DateTime(2026, 9, 18, 16, 1),
+      );
+      // Month first, which is unambiguous *because* the month is a word. The
+      // refusal to guess at a numeric `01/02/2026` is untouched.
+      expect(
+        parseImportDate('Sep 18, 2026, 4:01 PM'),
+        DateTime(2026, 9, 18, 16, 1),
+      );
+      expect(parseImportDate('18th March 2026'), DateTime(2026, 3, 18));
+    });
+
+    test('reads the other locales Hevy ships in', () {
+      final expected = DateTime(2026, 9, 18, 16, 1);
+
+      expect(parseImportDate('18 sept. 2026 16:01'), expected, reason: 'fr');
+      expect(parseImportDate('18 sept 2026, 16:01'), expected, reason: 'es');
+      expect(parseImportDate('18 set 2026, 16:01'), expected, reason: 'it');
+      // Portuguese puts "de" between the parts; they are neither a number nor
+      // a month, so they are simply passed over.
+      expect(
+        parseImportDate('18 de set. de 2026 16:01'),
+        expected,
+        reason: 'pt',
+      );
+      expect(parseImportDate('18 sep 2026 16:01'), expected, reason: 'nl');
+      expect(
+        parseImportDate('18 mrt 2026 16:01'),
+        DateTime(2026, 3, 18, 16, 1),
+        reason: 'nl March',
+      );
+      expect(
+        parseImportDate('18 août 2026 16:01'),
+        DateTime(2026, 8, 18, 16, 1),
+        reason: 'fr August',
+      );
+      expect(
+        parseImportDate('18 março 2026 16:01'),
+        DateTime(2026, 3, 18, 16, 1),
+        reason: 'pt March',
+      );
+    });
+
+    test('moves a 12-hour clock at both ends', () {
+      expect(
+        parseImportDate('5 Jan 2026, 12:30 AM'),
+        DateTime(2026, 1, 5, 0, 30),
+      );
+      expect(
+        parseImportDate('5 Jan 2026, 12:30 PM'),
+        DateTime(2026, 1, 5, 12, 30),
+      );
+      expect(
+        parseImportDate('5 Jan 2026, 1:30 PM'),
+        DateTime(2026, 1, 5, 13, 30),
+      );
+      expect(
+        parseImportDate('5 Jan 2026, 1:30 a.m.'),
+        DateTime(2026, 1, 5, 1, 30),
+      );
+    });
+
+    test('survives the invisible space a phone puts before the time', () {
+      // ICU writes a narrow no-break space before AM/PM on newer Android and
+      // iOS. It is not `\\s` to a regex, so left alone it fails the whole
+      // pattern for a reason nothing on screen could explain.
+      expect(
+        parseImportDate('5 Jan 2026, 1:30 PM'),
+        DateTime(2026, 1, 5, 13, 30),
+      );
+      expect(
+        parseImportDate('5 Jan 2026, 13:30'),
+        DateTime(2026, 1, 5, 13, 30),
+      );
+    });
+
+    test(
+      'a day that does not exist is refused, not rolled into next month',
+      () {
+        // DateTime(2026, 2, 31) is silently 3 March. A workout moved to the
+        // wrong month is worse than one the user is told could not be read.
+        expect(parseImportDate('31 February 2026'), isNull);
+        expect(parseImportDate('31 Apr 2026'), isNull);
+        // The real end of a real month still reads.
+        expect(parseImportDate('29 Feb 2024'), DateTime(2024, 2, 29));
+      },
+    );
+
+    test('refuses what is missing a part, or is not a month at all', () {
+      expect(parseImportDate('Sept. 2026'), isNull, reason: 'no day');
+      expect(parseImportDate('18 Sept. 16:01'), isNull, reason: 'no year');
+      expect(parseImportDate('18 Smarch 2026'), isNull, reason: 'no month');
+      // A word that is not a month means this is not a date at all, whatever
+      // digits it happens to contain.
+      expect(parseImportDate('Woche 12 2026'), isNull);
+      expect(parseImportDate('Week 3 Day 2 2026'), isNull);
+      // A two-digit year has no unambiguous reading — 26 could be the year or
+      // a second day — so it is refused rather than guessed.
+      expect(parseImportDate('18 Sep 26'), isNull);
+    });
+
+    test('a clock it cannot read is refused, not quietly dropped', () {
+      // The worst possible outcome for this function is not failing — it is
+      // returning midnight. Two workouts on one day would then share a start
+      // time, and the grouping key would merge them into a single session.
+      expect(parseImportDate('18 Sept. 2026, 16:01 Uhr'), isNull);
+      expect(parseImportDate('18 Sep 2026, 16:01 GMT+2'), isNull);
+      expect(parseImportDate('18 Sep 2026, 16:01 UTC'), isNull);
+      // Split by the period, this arrives as two extra small numbers rather
+      // than as a clock — caught by the same rule from the other side.
+      expect(parseImportDate('18 Sep 2026 16.01'), isNull);
+    });
+
+    test('a Spanish day period has a space inside it', () {
+      // `4:01 p. m.` is what CLDR writes for es, and the narrow no-break
+      // space between `p.` and `m.` is already a plain one by the time this
+      // sees it.
+      expect(
+        parseImportDate('18 sept 2026, 4:01 p. m.'),
+        DateTime(2026, 9, 18, 16, 1),
+      );
+      expect(
+        parseImportDate('18 sept 2026, 4:01 p. m.'),
+        DateTime(2026, 9, 18, 16, 1),
+      );
+    });
+
+    test('a weekday that is also a month name does not win', () {
+      // `mar` is Tuesday in Spanish, French and Italian, and March in all
+      // three. Read as a month, every Tuesday workout in a file would move
+      // six months into the past without a word.
+      expect(
+        parseImportDate('mar, 18 ago 2026, 16:01'),
+        DateTime(2026, 8, 18, 16, 1),
+      );
+      expect(parseImportDate('mar., 18 août 2026'), DateTime(2026, 8, 18));
+      // But on its own it is still March — nothing else in the string can be.
+      expect(parseImportDate('18 mar 2026'), DateTime(2026, 3, 18));
+    });
+
+    test('a weekday prefix in any of the supported languages is harmless', () {
+      expect(parseImportDate('Wed, 18 Mar 2026'), DateTime(2026, 3, 18));
+      expect(parseImportDate('Mi., 18. März 2026'), DateTime(2026, 3, 18));
+      expect(parseImportDate('mié, 18 mar 2026'), DateTime(2026, 3, 18));
+      expect(parseImportDate('lun, 18 mag 2026'), DateTime(2026, 5, 18));
+    });
+
+    test('no month name means two different months', () {
+      // The table is flat across seven languages, so one spelling meaning
+      // January in one and October in another would silently move workouts by
+      // nine months. Asserted here so a language added later cannot introduce
+      // a clash quietly.
+      for (final entry in monthNumbers.entries) {
+        expect(entry.key, foldMonthName(entry.key), reason: entry.key);
+        expect(entry.value, inInclusiveRange(1, 12), reason: entry.key);
+      }
+      expect(foldMonthName('März'), 'marz');
+      expect(foldMonthName('Sept.'), 'sept');
+      expect(foldMonthName('março'), 'marco');
+      expect(foldMonthName('août'), 'aout');
+    });
+  });
+
+  group('a real Hevy export', () {
+    test('reads, where before it produced nothing at all', () {
+      final result = parseWorkoutCsv(_hevyReal);
+
+      expect(result.source, 'Hevy');
+      expect(result.skippedRows, 0);
+      expect(result.sessions, hasLength(3));
+      expect(result.setCount, 4);
+    });
+
+    test('keeps its names, umlauts and all, and its dates', () {
+      final result = parseWorkoutCsv(_hevyReal);
+      final last = result.sessions.last;
+
+      expect(last.name, 'Torso 2 (Schwachstellen)');
+      expect(last.start, DateTime(2026, 9, 18, 16, 1));
+      expect(last.end, DateTime(2026, 9, 18, 17, 44));
+      expect(last.sets.first.exerciseName, 'Schrägbankdrücken (Multipresse)');
+      expect(last.sets.first.weightKg, 30);
+    });
+  });
+
+  group('an end time the file is wrong about', () {
+    test('is dropped when it is not a workout length', () {
+      // StrengthLog's `end` is when the record was last closed, not when
+      // training stopped. In a real export one workout claimed 33 days.
+      final start = DateTime(2026, 7, 7, 22, 7);
+
+      expect(plausibleEnd(start, DateTime(2026, 8, 10, 13, 53)), isNull);
+      // Five and a half hours: short enough to look like a workout, long
+      // enough that it is not one. The six-hour ceiling this started with let
+      // five of these through, one of which still landed on the wrong day.
+      expect(
+        plausibleEnd(start, start.add(const Duration(minutes: 330))),
+        isNull,
+      );
+      expect(
+        plausibleEnd(start, start.subtract(const Duration(hours: 1))),
+        isNull,
+      );
+      expect(plausibleEnd(start, null), isNull);
+    });
+
+    test('a genuine session, including one past midnight, is kept', () {
+      // The real Hevy export has one starting 23:50 and ending 02:14. It is a
+      // workout, not an error, and clamping on "same calendar day" would have
+      // thrown it away.
+      final late = DateTime(2026, 5, 23, 23, 50);
+      expect(
+        plausibleEnd(late, DateTime(2026, 5, 24, 2, 14)),
+        DateTime(2026, 5, 24, 2, 14),
+      );
+
+      final start = DateTime(2026, 1, 15, 18);
+      expect(
+        plausibleEnd(start, DateTime(2026, 1, 15, 19, 30)),
+        DateTime(2026, 1, 15, 19, 30),
+      );
+      // Exactly at the ceiling still counts; a minute past does not.
+      expect(plausibleEnd(start, start.add(maxWorkoutDuration)), isNotNull);
+      expect(
+        plausibleEnd(
+          start,
+          start.add(maxWorkoutDuration + const Duration(minutes: 1)),
+        ),
+        isNull,
+      );
+    });
+  });
+
+  group('a file whose dates cannot be read', () {
+    test('says so, and hands back the date it could not read', () {
+      // The Hevy failure was silent: every column was present, so nothing
+      // threw, and every row was dropped, so the screen said the file held no
+      // sets. This is what turns that into a message someone can act on.
+      const unreadable = '''
+title,start_time,exercise_title,weight_kg,reps
+Push,18.09.26 16:01,Bench Press,80,8
+Push,Woche 12 2026,Bench Press,80,7
+''';
+
+      final result = parseWorkoutCsv(unreadable);
+
+      expect(result.sessions, isEmpty);
+      expect(result.skippedRows, 2);
+      expect(result.skippedNoDate, 2);
+      expect(result.unreadableDate, '18.09.26 16:01');
+    });
+
+    test('a row skipped for another reason is not blamed on its date', () {
+      final result = parseWorkoutCsv(_hevy);
+
+      expect(result.skippedNoDate, 0);
+      expect(result.unreadableDate, isNull);
+    });
+
+    test('says so on a partial import too, not only an empty one', () {
+      // The dangerous shape: most of a file reads, a stretch of it does not,
+      // and the import is silently short by however many weeks that was.
+      const partial = '''
+title,start_time,exercise_title,weight_kg,reps
+Push,"15 Jan. 2026, 18:00",Bench Press,80,8
+Push,"15 Styczeń 2026, 18:00",Bench Press,80,8
+''';
+
+      final result = parseWorkoutCsv(partial);
+
+      expect(result.sessions, hasLength(1));
+      expect(result.skippedNoDate, 1);
+      expect(result.unreadableDate, '15 Styczeń 2026, 18:00');
+    });
+  });
+
+  group('a file with a workout column but no workout names', () {
+    test('is not offered as a split', () {
+      // The column being there is not the same as it having anything in it.
+      // Without this the plan would be one day called "Imported workout"
+      // holding every lift the person has ever done.
+      const blank = '''
+title,start_time,exercise_title,weight_kg,reps
+,"15 Jan. 2026, 18:00",Bench Press,80,8
+,"17 Jan. 2026, 18:00",Barbell Row,70,10
+''';
+
+      final result = parseWorkoutCsv(blank);
+
+      expect(result.sessions, hasLength(2));
+      expect(result.namesWorkouts, isFalse);
+    });
+
+    test('a file that does name them says so', () {
+      expect(parseWorkoutCsv(_hevy).namesWorkouts, isTrue);
     });
   });
 

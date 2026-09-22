@@ -176,14 +176,17 @@ final _recapSets = <RecapSet>[
         ),
 ];
 
-final _activity = <DateTime, int>{
+final _activity = <DateTime, DayTraining>{
   for (var week = 0; week < 40; week++)
     for (final offset in [0, 2, 4])
       DateTime(
         DateTime.now().year,
         DateTime.now().month,
         DateTime.now().day,
-      ).subtract(Duration(days: week * 7 + offset)): 55 + (week % 4) * 12,
+      ).subtract(Duration(days: week * 7 + offset)): (
+        minutes: 55 + (week % 4) * 12,
+        untimed: 0,
+      ),
 };
 
 const _volume = <String, double>{

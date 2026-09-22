@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/format.dart';
+import '../../../shared/utils/session_length.dart';
 import '../../../shared/utils/units.dart';
 import '../../muscle_map/data/muscle_volume_repository.dart';
 import '../../muscle_map/widgets/muscle_map.dart';
@@ -50,6 +51,7 @@ class _Body extends ConsumerWidget {
 
     final volume = sets.fold<double>(0, (sum, s) => sum + s.weight * s.reps);
     final completedAt = session.completedAt ?? session.startedAt;
+    final length = sessionLength(session.startedAt, session.completedAt);
 
     return AppCard(
       padding: const EdgeInsets.all(16),
@@ -76,12 +78,13 @@ class _Body extends ConsumerWidget {
                   // question that is "how much of a session was it" — a
                   // twenty-minute Tuesday and a ninety-minute one are not the
                   // same entry in your week.
+                  // An imported session whose file never recorded a length
+                  // falls out here rather than reading "16 Sep · 0 min" beside
+                  // eighteen sets, which states something false about a
+                  // workout that plainly happened.
                   [
                     formatDayLabel(completedAt),
-                    if (session.completedAt != null)
-                      formatDuration(
-                        session.completedAt!.difference(session.startedAt),
-                      ),
+                    if (length != null) formatDuration(length),
                   ].join(' · '),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,

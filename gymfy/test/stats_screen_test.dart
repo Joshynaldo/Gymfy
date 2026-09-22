@@ -35,7 +35,7 @@ final _quietData = [
   ),
   recapSetsProvider.overrideWith((ref) => Stream.value(const <RecapSet>[])),
   activityMinutesProvider.overrideWith(
-    (ref) => Stream.value(const <DateTime, int>{}),
+    (ref) => Stream.value(const <DateTime, DayTraining>{}),
   ),
   workoutStreakProvider.overrideWith((ref) => Stream.value(0)),
   // Ranking one lift reaches its logged history and its tested max, so this is
@@ -88,10 +88,7 @@ void main() {
     // title repeating the tab you are already on is a line of nothing.
     expect(find.text('Volume'), findsOneWidget);
     expect(find.text('Fatigue'), findsOneWidget);
-    expect(
-      find.textContaining('more volume this week'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('more volume this week'), findsOneWidget);
   });
 
   testWidgets('switching to fatigue retitles and recaptions', (tester) async {
@@ -101,7 +98,10 @@ void main() {
     expect(find.text('Fatigue'), findsWidgets);
     // Brightness means something different here, so saying "volume" would be
     // actively wrong.
-    expect(find.textContaining('Brighter means less recovered'), findsOneWidget);
+    expect(
+      find.textContaining('Brighter means less recovered'),
+      findsOneWidget,
+    );
     expect(find.textContaining('more volume this week'), findsNothing);
   });
 
@@ -131,10 +131,7 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    expect(
-      find.textContaining('more volume this week'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('more volume this week'), findsOneWidget);
   });
 
   testWidgets('fatigue is red and volume follows the accent', (tester) async {
@@ -165,6 +162,9 @@ void main() {
     await tester.pump();
 
     // Still on fatigue — flipping the body must not silently reset the reading.
-    expect(find.textContaining('Brighter means less recovered'), findsOneWidget);
+    expect(
+      find.textContaining('Brighter means less recovered'),
+      findsOneWidget,
+    );
   });
 }

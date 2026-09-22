@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/accent_color.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/format.dart';
+import '../../../shared/utils/session_length.dart';
 import '../../../shared/widgets/animated_count.dart';
 import '../../../shared/utils/units.dart';
 import '../../exercises/data/exercise_repository.dart';
@@ -83,8 +84,7 @@ class _SummaryBody extends ConsumerWidget {
       byExercise.putIfAbsent(s.exerciseId, () => []).add(s);
     }
 
-    final completedAt = session.completedAt ?? session.startedAt;
-    final duration = completedAt.difference(session.startedAt);
+    final duration = sessionLength(session.startedAt, session.completedAt);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32) + barInsets(context),
@@ -154,7 +154,10 @@ class _StatsRow extends ConsumerWidget {
     required this.totalVolume,
   });
 
-  final Duration duration;
+  /// Null when the length was never recorded — an imported session whose file
+  /// did not say. Shown as a dash rather than as zero.
+  final Duration? duration;
+
   final int setCount;
 
   /// In kilograms, as stored.
@@ -172,7 +175,15 @@ class _StatsRow extends ConsumerWidget {
             label: 'Duration',
             // Not counted up: a clock that races from 00:00 to your session
             // length looks like the timer is still running.
-            value: Text(formatDuration(duration), style: _valueStyle(context)),
+            //
+            // An em dash where the length is not known. "0 min" next to
+            // eighteen logged sets is a confident claim about a workout that
+            // plainly took time — and it is what an imported session read as,
+            // because the file it came from recorded no usable end.
+            value: Text(
+              duration == null ? '—' : formatDuration(duration!),
+              style: _valueStyle(context),
+            ),
           ),
         ),
         const SizedBox(width: 12),

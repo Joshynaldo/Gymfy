@@ -57,7 +57,7 @@ void main() {
     LifterSex? sex = LifterSex.male,
     double? bodyweight = 82,
     List<RecapSet> sets = const [],
-    Map<DateTime, int> minutes = const {},
+    Map<DateTime, DayTraining> minutes = const {},
   }) async {
     // Taller than the default so the totals below the body map are laid out.
     tester.view.physicalSize = const Size(1200, 3000);
@@ -220,7 +220,7 @@ void main() {
       await pump(
         tester,
         sets: [_set(1, 100, 10), _set(1, 100, 8), _set(2, 60, 12)],
-        minutes: {DateTime(2026, 8, 20): 65},
+        minutes: {DateTime(2026, 8, 20): (minutes: 65, untimed: 0)},
       );
 
       expect(find.text('All time'), findsOneWidget);

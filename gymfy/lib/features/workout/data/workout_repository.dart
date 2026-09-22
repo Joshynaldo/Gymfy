@@ -359,11 +359,17 @@ class WorkoutRepository {
   }
 
   /// Adds a library exercise to a day with default set/rep targets.
+  ///
+  /// [warmupSets] is here for the importer, which reads the ramp-up sets a
+  /// file actually recorded rather than assuming none. Defaulted to zero so
+  /// every existing caller is unchanged — you don't warm up for a cable curl,
+  /// and the day editor still sets them per exercise afterwards.
   Future<void> addExerciseToDay(
     int dayId,
     String exerciseId, {
     int sets = 3,
     int reps = 10,
+    int warmupSets = 0,
   }) {
     return _db
         .into(_db.workoutExercises)
@@ -373,6 +379,9 @@ class WorkoutRepository {
             exerciseId: exerciseId,
             defaultSets: Value(sets),
             defaultReps: Value(reps),
+            // Same rule as [updatePlannedExercise]: never negative, because
+            // "Warm-up 1 of -1" is not a label anything can render.
+            warmupSets: Value(warmupSets < 0 ? 0 : warmupSets),
           ),
         );
   }

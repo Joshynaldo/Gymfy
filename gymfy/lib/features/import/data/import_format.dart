@@ -152,6 +152,9 @@ class WorkoutImport {
     required this.unit,
     required this.unitWasStated,
     required this.skippedRows,
+    required this.skippedNoDate,
+    required this.unreadableDate,
+    required this.namesWorkouts,
     required this.source,
   });
 
@@ -179,6 +182,26 @@ class WorkoutImport {
   /// bottom. Counted rather than listed: the number is reassurance, and a
   /// list of them is noise.
   final int skippedRows;
+
+  /// How many of [skippedRows] were dropped because their date could not be
+  /// read, and the first such date exactly as the file spelled it.
+  ///
+  /// These two exist because of how the Hevy bug presented. Every column was
+  /// present, so nothing threw; every row was dropped, so the screen said the
+  /// file contained no sets — which read as "your export is empty" when what
+  /// it meant was "this app cannot read `18 Sept. 2026`". A count and one
+  /// sample of the offending cell turn that into a message someone can
+  /// forward and a one-line fix here.
+  final int skippedNoDate;
+  final String? unreadableDate;
+
+  /// Whether the file had a column naming each workout.
+  ///
+  /// Without one every session is called "Imported workout", which is fine as
+  /// a label on a history and useless as a plan: a split built from it would
+  /// be a single day holding every lift the person has ever done. So the
+  /// split builder asks this before offering anything.
+  final bool namesWorkouts;
 
   int get setCount => sessions.fold(0, (n, s) => n + s.sets.length);
 
@@ -247,9 +270,22 @@ WorkoutImport parseWorkoutCsv(
   final names = <String, String>{};
   final order = <String>[];
   var skipped = 0;
+  var skippedNoDate = 0;
+  String? unreadableDate;
+  // A title *column* is not the same as a title. An export with the column
+  // present and empty on every row would otherwise offer to build a split of
+  // one day called "Imported workout" holding everything ever lifted.
+  var sawWorkoutName = false;
 
   for (final row in table.rows) {
-    final start = parseImportDate(cell(row, dateColumn));
+    final rawDate = cell(row, dateColumn);
+    final start = parseImportDate(rawDate);
+    if (start == null && rawDate.isNotEmpty) {
+      skippedNoDate++;
+      // The first one only. A thousand identical complaints say no more than
+      // one, and the screen has room for a sample, not a list.
+      unreadableDate ??= rawDate;
+    }
     final exerciseName = cell(row, exerciseColumn);
     final reps = int.tryParse(cell(row, repsColumn));
 
@@ -285,8 +321,9 @@ WorkoutImport parseWorkoutCsv(
       starts[key] = start;
       ends[key] = endColumn == null
           ? null
-          : parseImportDate(cell(row, endColumn));
+          : plausibleEnd(start, parseImportDate(cell(row, endColumn)));
       names[key] = name.isEmpty ? 'Imported workout' : name;
+      if (name.isNotEmpty) sawWorkoutName = true;
       grouped[key] = [];
     }
 
@@ -332,8 +369,49 @@ WorkoutImport parseWorkoutCsv(
     unit: unit,
     unitWasStated: unitWasStated,
     skippedRows: skipped,
+    skippedNoDate: skippedNoDate,
+    unreadableDate: unreadableDate,
+    namesWorkouts: sawWorkoutName,
     source: detectSource(table),
   );
+}
+
+/// The longest a workout is allowed to have lasted for its end time to be
+/// believed.
+///
+/// Four hours, chosen off the two real exports rather than picked as a round
+/// number. A year of Hevy workouts runs 25 to 165 minutes, and the longest is
+/// 2h 45m. The StrengthLog file's believable durations stop at 176 minutes and
+/// the record-close artefacts start at 269 — a clean gap, with the ceiling in
+/// the middle of it.
+///
+/// It was six hours first, which let five artefacts through: one of them still
+/// put its workout on the following day, which is the whole defect this is
+/// here to prevent.
+const maxWorkoutDuration = Duration(hours: 4);
+
+/// An end time, or null when the file's is not one.
+///
+/// StrengthLog's `end` column is when the workout *record* was last closed,
+/// not when training stopped — so a session left open until the next one was
+/// started exports an end days later. In the real export, ten of thirty
+/// workouts ended on a different calendar day from the one they were trained
+/// on, and one claimed 33 days of continuous training.
+///
+/// That is not a cosmetic problem. The year activity dates each square by the
+/// *end* and shades it by the duration, so those ten workouts appeared on the
+/// wrong day, and the long one would have saturated a month of the map. Nulled
+/// rather than clipped to six hours: the file has told us nothing usable about
+/// when this workout finished, and inventing a plausible-looking end would put
+/// a number on screen that no one could tell was made up.
+///
+/// A genuine session that runs past midnight is kept — the real Hevy export
+/// has one starting 23:50 and ending 02:14, and it is a workout, not an error.
+DateTime? plausibleEnd(DateTime start, DateTime? end) {
+  if (end == null) return null;
+  if (end.isBefore(start)) return null;
+  if (end.difference(start) > maxWorkoutDuration) return null;
+  return end;
 }
 
 /// Which app a file looks like it came from, or null.
@@ -390,7 +468,11 @@ bool isWarmupType(String raw) {
 /// wrong date puts a workout in the wrong week and quietly reshapes every
 /// chart that counts by week.
 DateTime? parseImportDate(String raw) {
-  final text = raw.trim();
+  // Some phones write a non-breaking or narrow space before the time rather
+  // than a plain one — ICU does it for `4:01 PM` on newer Android and iOS.
+  // It is invisible, it is not `\s` to a regex, and left in it fails every
+  // pattern below for a reason nothing on screen could explain.
+  final text = raw.replaceAll(RegExp(r'[    ]'), ' ').trim();
   if (text.isEmpty) return null;
 
   // A bare number is a Unix timestamp, which is what StrengthLog writes
@@ -421,7 +503,7 @@ DateTime? parseImportDate(String raw) {
     r'^(\d{1,2})[./-](\d{1,2})[./-](\d{4})'
     r'(?:[,\s]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$',
   ).firstMatch(text);
-  if (match == null) return null;
+  if (match == null) return _parseNamedMonthDate(text);
 
   return DateTime(
     int.parse(match.group(3)!),
@@ -480,4 +562,287 @@ double? _number(String raw) {
 String _list(List<String> items) {
   if (items.length == 1) return items.single;
   return '${items.sublist(0, items.length - 1).join(', ')} or ${items.last}';
+}
+
+/// Month names, folded to plain letters, for the dates Hevy writes.
+///
+/// Hevy exports its dates in the *device's* locale and puts nothing in the
+/// file to say which one: a German phone writes `18 Sept. 2026, 16:01`, an
+/// English one `18 Sep 2026, 16:01`, an American one `Sep 18, 2026, 4:01 PM`.
+/// None of those parse as a number or as ISO-8601, so without this table every
+/// row of a Hevy export fails its date and the screen reports a year of
+/// training as an empty file. That is exactly what it did: a real 1,466-row
+/// export read as 0 workouts.
+///
+/// The languages Hevy ships in, each with the abbreviations its locale
+/// actually produces. Looked up as whole tokens rather than by a three-letter
+/// prefix, because a prefix is not unique — French `juin` and `juillet` both
+/// start `jui`, and guessing between June and July would move a workout by a
+/// month.
+///
+/// Every key here means one month in all of them; no spelling is January in
+/// one language and October in another. `import_format_test.dart` asserts
+/// that, so a language added later cannot quietly introduce a clash.
+const monthNumbers = <String, int>{
+  // English.
+  'jan': 1, 'january': 1,
+  'feb': 2, 'february': 2,
+  'mar': 3, 'march': 3,
+  'apr': 4, 'april': 4,
+  'may': 5,
+  'jun': 6, 'june': 6,
+  'jul': 7, 'july': 7,
+  'aug': 8, 'august': 8,
+  'sep': 9, 'sept': 9, 'september': 9,
+  'oct': 10, 'october': 10,
+  'nov': 11, 'november': 11,
+  'dec': 12, 'december': 12,
+
+  // German. `Sept.` is the spelling that broke the real file — German
+  // abbreviates September to four letters where English uses three.
+  'januar': 1, 'februar': 2, 'marz': 3, 'maerz': 3, 'mai': 5,
+  'juni': 6, 'juli': 7, 'okt': 10, 'oktober': 10, 'dez': 12, 'dezember': 12,
+
+  // Spanish.
+  'ene': 1, 'enero': 1, 'febrero': 2, 'marzo': 3, 'abr': 4, 'abril': 4,
+  'mayo': 5, 'junio': 6, 'julio': 7, 'ago': 8, 'agosto': 8,
+  'setiembre': 9, 'septiembre': 9, 'octubre': 10, 'noviembre': 11,
+  'dic': 12, 'diciembre': 12,
+
+  // French. `aout` and `fevr` arrive here already stripped of their accents.
+  'janv': 1, 'janvier': 1, 'fevr': 2, 'fevrier': 2, 'mars': 3,
+  'avr': 4, 'avril': 4, 'juin': 6, 'juil': 7, 'juillet': 7, 'aout': 8,
+  'septembre': 9, 'octobre': 10, 'novembre': 11, 'decembre': 12,
+
+  // Italian.
+  'gen': 1, 'gennaio': 1, 'febbraio': 2, 'aprile': 4, 'mag': 5, 'maggio': 5,
+  'giu': 6, 'giugno': 6, 'lug': 7, 'luglio': 7, 'set': 9, 'settembre': 9,
+  'ott': 10, 'ottobre': 10, 'dicembre': 12,
+
+  // Portuguese. `marco` is `março` folded.
+  'janeiro': 1, 'fev': 2, 'fevereiro': 2, 'marco': 3, 'maio': 5,
+  'junho': 6, 'julho': 7, 'setembro': 9, 'out': 10, 'outubro': 10,
+  'novembro': 11, 'dezembro': 12,
+
+  // Dutch.
+  'januari': 1, 'februari': 2, 'mrt': 3, 'maart': 3, 'mei': 5,
+  'augustus': 8,
+};
+
+/// Weekday abbreviations, folded the same way month names are.
+///
+/// A locale that prefixes its dates with the weekday (`mar., 18 ago. 2026`)
+/// is otherwise harmless — an unrecognised short word is skipped. The one that
+/// is not harmless is `mar`, which is Tuesday in Spanish, French and Italian
+/// and March in all three: taken as a month it moves every Tuesday workout in
+/// the file six months into the past, with nothing on screen to show for it.
+///
+/// Listed in full rather than as the single colliding entry, so that adding a
+/// language to [monthNumbers] later cannot quietly create a second one.
+const weekdayNames = <String>{
+  // English, German, Dutch.
+  'mon', 'monday', 'tue', 'tues', 'tuesday', 'wed', 'wednesday',
+  'thu', 'thur', 'thurs', 'thursday', 'fri', 'friday', 'sat', 'saturday',
+  'sun', 'sunday',
+  'mo', 'di', 'mi', 'do', 'fr', 'sa', 'so',
+  'montag', 'dienstag', 'mittwoch', 'donnerstag', 'freitag', 'samstag',
+  'sonntag',
+  'ma', 'wo', 'vr', 'za', 'zo',
+  // Spanish, French, Italian, Portuguese.
+  'lun', 'mar', 'mer', 'mie', 'jue', 'jeu', 'vie', 'ven', 'sab', 'dom',
+  'gio', 'seg', 'ter', 'qua', 'qui', 'sex',
+  'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo',
+  'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche',
+  'lunedi', 'martedi', 'mercoledi', 'giovedi', 'venerdi', 'sabato',
+  'domenica',
+};
+
+/// A month token reduced to plain lowercase letters.
+///
+/// Strips the trailing period German and French abbreviations carry (`Sept.`,
+/// `janv.`) and folds the accents, so `März`, `août` and `março` arrive as
+/// `marz`, `aout` and `marco` — the spellings [monthNumbers] is keyed by.
+/// Folding rather than listing both spellings keeps one entry per month name
+/// instead of two that can drift apart.
+String foldMonthName(String token) {
+  const accents = {
+    'à': 'a',
+    'á': 'a',
+    'â': 'a',
+    'ã': 'a',
+    'ä': 'a',
+    'å': 'a',
+    'è': 'e',
+    'é': 'e',
+    'ê': 'e',
+    'ë': 'e',
+    'ì': 'i',
+    'í': 'i',
+    'î': 'i',
+    'ï': 'i',
+    'ò': 'o',
+    'ó': 'o',
+    'ô': 'o',
+    'õ': 'o',
+    'ö': 'o',
+    'ù': 'u',
+    'ú': 'u',
+    'û': 'u',
+    'ü': 'u',
+    'ç': 'c',
+    'ñ': 'n',
+  };
+
+  final folded = StringBuffer();
+  for (final character in token.toLowerCase().split('')) {
+    folded.write(accents[character] ?? character);
+  }
+  // Everything that is not a letter goes: the abbreviation's period, and the
+  // stray punctuation a locale occasionally leaves next to it.
+  return folded.toString().replaceAll(RegExp(r'[^a-z]'), '');
+}
+
+/// Parses a date written with its month spelled out, in any order.
+///
+/// `18 Sept. 2026, 16:01`, `Sep 18, 2026, 4:01 PM`, `18th March 2026`. Read by
+/// pulling the time off the end and then sorting the remaining tokens by what
+/// they are rather than by where they sit: a four-digit number is the year, a
+/// word is the month, what is left is the day. Order therefore does not
+/// matter — and unlike a numeric `01/02/2026` it cannot be ambiguous, because
+/// the month has named itself.
+///
+/// Returns null unless all three parts were found and the result is a real
+/// calendar date. `31 February 2026` is rejected rather than rolled forward
+/// into March: [DateTime] would accept it silently, and a workout moved to the
+/// wrong month is worse than one the user is told could not be read.
+DateTime? _parseNamedMonthDate(String text) {
+  var head = text;
+  var hour = 0;
+  var minute = 0;
+  var second = 0;
+
+  // The clock is last whatever order the date parts came in, so it can be
+  // taken off before anything else is worked out. Two patterns rather than one
+  // optional group: a trailing `(am|pm)?` also matches the empty string, and
+  // then the 24-hour case would fall into the meridiem branch with no
+  // meridiem.
+  // `\s*` between the two letters because Spanish writes the day period as
+  // `4:01 p. m.`, with a space in the middle. Without it that string matches
+  // neither pattern, the time is never taken off, and the date silently comes
+  // back as midnight — which is worse than failing, since two workouts on one
+  // day would then share a start time and be merged into one.
+  final meridiemTime = RegExp(
+    r'[\s,]+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([ap])\.?\s*m\.?$',
+    caseSensitive: false,
+  ).firstMatch(text);
+  final time =
+      meridiemTime ??
+      RegExp(r'[\s,]+(\d{1,2}):(\d{2})(?::(\d{2}))?$').firstMatch(text);
+
+  if (time != null) {
+    hour = int.parse(time.group(1)!);
+    minute = int.parse(time.group(2)!);
+    second = int.tryParse(time.group(3) ?? '') ?? 0;
+
+    // A 12-hour clock needs moving at both ends: 12:30 AM is 00:30, 1:30 PM is
+    // 13:30, and 12:30 PM is already right.
+    final meridiem = meridiemTime?.group(4)?.toLowerCase();
+    if (meridiem == 'p' && hour < 12) hour += 12;
+    if (meridiem == 'a' && hour == 12) hour = 0;
+
+    head = text.substring(0, time.start);
+  }
+
+  // A clock still sitting in what is left means the time was not understood —
+  // `16:01 Uhr`, `16:01 GMT+2`. Carrying on would drop it and hand back
+  // midnight, and a workout silently moved to 00:00 is the one outcome worse
+  // than an honest refusal: two sessions on the same day would then share a
+  // start time and be merged into one.
+  if (RegExp(r'\d{1,2}:\d{2}').hasMatch(head)) return null;
+
+  int? day;
+  int? month;
+  int? year;
+
+  // A month name that is *also* a weekday abbreviation, held back in case a
+  // real month turns up later in the string. See [weekdayNames].
+  int? weekdayMonth;
+
+  for (final token in head.split(RegExp(r'[\s,./-]+'))) {
+    if (token.isEmpty) continue;
+
+    final number = int.tryParse(token);
+    if (number != null) {
+      // Four digits is the year, one or two the day. A three-digit number is
+      // neither, and a two-digit year has no unambiguous reading — `18 Sep 26`
+      // could be 2026 or the 26th — so both give up rather than guess.
+      //
+      // A second number for a slot already filled means this is not a plain
+      // date either: `18 Sep 2026 16.01` splits into 18, Sep, 2026, 16, 01,
+      // and quietly ignoring the 16 and the 01 would hand back midnight for a
+      // string that plainly states a time.
+      if (token.length == 4) {
+        if (year != null) return null;
+        year = number;
+      } else if (token.length <= 2) {
+        if (day != null) return null;
+        day = number;
+      } else {
+        return null;
+      }
+      continue;
+    }
+
+    // `18th`, `1er` — an English or French ordinal day.
+    final ordinal = RegExp(
+      r'^(\d{1,2})(?:st|nd|rd|th|er|e)$',
+      caseSensitive: false,
+    ).firstMatch(token);
+    if (ordinal != null) {
+      if (day != null) return null;
+      day = int.parse(ordinal.group(1)!);
+      continue;
+    }
+
+    final word = foldMonthName(token);
+    final named = monthNumbers[word];
+    if (named != null) {
+      // `mar` is March in Spanish, French and Italian *and* the abbreviation
+      // for Tuesday in all three. Taken as a month, `mar, 18 ago 2026` reads
+      // as 18 March — every Tuesday workout in the file jumping six months
+      // into the past, silently. So a token that could be either waits: if a
+      // real month name turns up, it wins.
+      if (weekdayNames.contains(word)) {
+        weekdayMonth ??= named;
+      } else {
+        month ??= named;
+      }
+      continue;
+    }
+
+    // A word this long that is not a month means the cell is not a date, and
+    // reading a date out of whatever digits it happens to contain would be
+    // exactly the silent guess this whole function refuses to make: `Week 12
+    // 2026` would otherwise come back as the 12th of some month.
+    //
+    // Short words are let through, because the formats that need it are real:
+    // Portuguese writes `18 de set. de 2026`, Spanish `18 de septiembre de
+    // 2026`, German `18. September 2026 um 16:01`.
+    if (word.length > 3) return null;
+  }
+
+  // Only now, once nothing better has turned up.
+  month ??= weekdayMonth;
+
+  if (day == null || month == null || year == null) return null;
+  if (day < 1 || day > 31 || hour > 23 || minute > 59 || second > 59) {
+    return null;
+  }
+
+  final date = DateTime(year, month, day, hour, minute, second);
+  // DateTime rolls a day past the end of its month into the next one without
+  // complaint. Caught here, because a silently shifted date is the one kind of
+  // wrong this function exists to avoid.
+  if (date.year != year || date.month != month || date.day != day) return null;
+  return date;
 }

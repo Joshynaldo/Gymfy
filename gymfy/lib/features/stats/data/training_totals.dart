@@ -48,7 +48,9 @@ final trainingTotalsProvider = Provider<TrainingTotals?>((ref) {
     volumeKg: volume,
     // Summed from the same per-day map the year grid is drawn from, so the two
     // can never disagree about how long you have spent training.
-    minutes: minutes.values.fold(0, (sum, m) => sum + m),
+    // Known minutes only. A session whose length the file never recorded adds
+    // nothing here rather than a made-up one — see [trainingByDay].
+    minutes: minutes.values.fold(0, (sum, day) => sum + day.minutes),
   );
 });
 
