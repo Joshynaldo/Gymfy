@@ -246,7 +246,7 @@ class _HeatmapPainter extends CustomPainter {
 
   final DateTime start;
   final DateTime today;
-  final Map<DateTime, int> minutes;
+  final Map<DateTime, DayTraining> minutes;
   final List<Color> palette;
   final DateTime? selected;
   final Color labelColour;
@@ -276,7 +276,8 @@ class _HeatmapPainter extends CustomPainter {
           _cell,
           _cell,
         );
-        paint.color = palette[activityLevel(minutes[day] ?? 0)];
+        paint.color =
+            palette[activityLevel(minutes[day] ?? (minutes: 0, untimed: 0))];
         canvas.drawRRect(
           RRect.fromRectAndRadius(rect, const Radius.circular(4)),
           paint,
@@ -350,7 +351,7 @@ class _Caption extends StatelessWidget {
   /// consulted the real date instead could label that column "Mon 24 Aug" while
   /// the grid treats it as today. Two answers from one screen.
   final DateTime today;
-  final Map<DateTime, int> minutes;
+  final Map<DateTime, DayTraining> minutes;
   final List<Color> palette;
 
   @override
@@ -361,18 +362,26 @@ class _Caption extends StatelessWidget {
     );
 
     if (selected != null) {
-      final trained = minutes[selected] ?? 0;
-      return Text(
-        trained == 0
-            ? '${formatDayLabel(selected!, today: today)} — rest day'
-            : '${formatDayLabel(selected!, today: today)} — '
-                  '${formatDuration(Duration(minutes: trained))} trained',
-        style: style,
-      );
+      final day = minutes[selected];
+      final label = formatDayLabel(selected!, today: today);
+
+      return Text(switch (day) {
+        null => '$label — rest day',
+        // Trained, with nothing honest to say about how long. An imported
+        // session whose file recorded no usable end reads like this, and
+        // "1 min trained" beside eighteen sets would be a made-up number
+        // standing where the real one is missing.
+        (minutes: 0, untimed: _) => '$label — trained, length not recorded',
+        _ =>
+          '$label — ${formatDuration(Duration(minutes: day.minutes))} '
+              'trained${day.untimed > 0 ? ', and one more not recorded' : ''}',
+      }, style: style);
     }
 
     final days = minutes.length;
-    final total = minutes.values.fold(0, (sum, m) => sum + m);
+    // Known minutes only; see [trainingByDay]. A year that includes imported
+    // sessions understates rather than inventing time for them.
+    final total = minutes.values.fold(0, (sum, day) => sum + day.minutes);
 
     return Row(
       children: [
