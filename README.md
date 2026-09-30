@@ -198,6 +198,8 @@ notes and a pre-release flag; with no tag it uses the version from
 
 ## Licence
 
+Copyright (C) 2026 Joshua Mitry
+
 Gymfy is free software, released under the **GNU Affero General Public
 License v3.0** — see [`LICENSE`](LICENSE). You may use, study, modify and
 redistribute it, as long as every version you distribute, or run as a
