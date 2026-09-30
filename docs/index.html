@@ -330,6 +330,25 @@ h2 { font-size: clamp(1.65rem, 4vw, 2.3rem); letter-spacing: -.03em; line-height
    are colour samples — nothing happens when you press them. */
 .sw { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--fill-edge); }
 
+.card code { font-size: .88em; color: var(--text); }
+
+/* ---- Availability ------------------------------------------------------- */
+.avail { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .avail { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 960px) { .avail { grid-template-columns: repeat(4, 1fr); } }
+.store { padding: 24px 22px; display: flex; flex-direction: column; gap: 6px; }
+.store h3 { margin: 0; font-size: 1.06rem; font-weight: 600; letter-spacing: -.015em; }
+.store p { margin: 0 0 12px; color: var(--muted); font-size: .92rem; line-height: 1.55; flex: 1; }
+.badge {
+  align-self: flex-start;
+  font-size: .75rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+  padding: 4px 11px; border-radius: var(--r-control);
+  border: 1px solid var(--fill-edge); color: var(--muted);
+}
+.badge.live { color: var(--accent-2); border-color: rgba(47,216,198,.4); }
+.store a { color: var(--accent); text-decoration: none; font-weight: 600; font-size: .95rem; }
+.store a:hover { text-decoration: underline; }
+
 /* ---- Privacy ------------------------------------------------------------ */
 .privacy { padding: 40px 32px; }
 .privacy .big { font-size: clamp(1.3rem, 3.4vw, 1.8rem); letter-spacing: -.025em; font-weight: 700; margin: 0 0 14px; line-height: 1.25; }
@@ -357,8 +376,9 @@ footer a:hover { text-decoration: underline; }
     <span class="brand"><img src="icon.png" alt=""> Gymfy</span>
     <span class="spacer"></span>
     <a href="#features" class="only-wide">Features</a>
+    <a href="#get" class="only-wide">Download</a>
     <a href="#privacy">Privacy</a>
-    <a href="https://github.com/Joshynaldo">Developer</a>
+    <a href="https://github.com/Joshynaldo/Gymfy">Source</a>
   </div>
 </header>
 
@@ -368,7 +388,7 @@ footer a:hover { text-decoration: underline; }
 <div class="wrap hero">
   <div class="hero-grid">
     <div>
-      <span class="eyebrow"><span class="dot"></span> Android · coming soon</span>
+      <span class="eyebrow"><span class="dot"></span> Out now on Android</span>
       <h1>Your gym log.<br>On your phone.<br><span class="fade">Only on your phone.</span></h1>
       <!-- Outcome first, mechanism as the evidence behind it. The earlier
            draft opened with "no networking code", which is how the app is
@@ -379,25 +399,19 @@ footer a:hover { text-decoration: underline; }
         account, no ads, and no networking code in the app to send it anywhere.
       </p>
       <div class="cta">
-        <a class="btn btn-primary" href="#features">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <!-- The APK is attached to each GitHub release by
+             .github/workflows/release-apk.yml; /latest always resolves to the
+             newest one, so this link never needs editing per version. -->
+        <a class="btn btn-primary" href="https://github.com/Joshynaldo/Gymfy/releases/latest">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>
+          Download for Android
+        </a>
+        <a class="btn btn-ghost" href="#features">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           See what it does
         </a>
-        <!-- Was "View on GitHub", pointing at the developer's profile. The
-             page loads, but Gymfy is not on it — the repository is private —
-             so the button promised source code and delivered a profile with
-             two unrelated repos. A button that goes somewhere is not the same
-             as a button that works.
-
-             This replaces it with the one thing a visitor can actually do
-             today, using the same mechanism the app itself uses for
-             feedback: compose a mail. No backend, nothing to sign up to. -->
-        <a class="btn btn-ghost" href="mailto:gymfy.dev@gmail.com?subject=Tell%20me%20when%20Gymfy%20launches">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
-          Tell me when it launches
-        </a>
       </div>
-      <p class="cta-note">Free, and staying that way. No subscription, no pro tier, nothing to unlock.</p>
+      <p class="cta-note">Free, and staying that way. Google Play and the App Store are coming soon.</p>
     </div>
 
     <div class="phone" data-shot="screenshots/active-workout.jpg">
@@ -431,7 +445,7 @@ footer a:hover { text-decoration: underline; }
       <div class="pane card">
         <div class="ico"><svg viewBox="0 0 24 24"><path d="M3 12h2m14 0h2M7 8v8m10-8v8M7 12h10"/></svg></div>
         <h3>Logging that keeps up</h3>
-        <p>Scroll wheels instead of a keyboard — 82.5&nbsp;kg is two flicks, not four keystrokes. Warm-ups are marked as warm-ups and kept out of your records.</p>
+        <p>A big one-handed keypad instead of the system keyboard, or just tap the plates that are on the bar and the total adds itself up. Same as last time? Repeat the set with one tap.</p>
       </div>
 
       <div class="pane card">
@@ -455,13 +469,31 @@ footer a:hover { text-decoration: underline; }
       <div class="pane card">
         <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v2l3 3v10H6V11l3-3V6a3 3 0 0 1 3-3z"/></svg></div>
         <h3>Muscle map</h3>
-        <p>Which muscles you actually trained this week, shaded by volume — and which ones you have been quietly avoiding.</p>
+        <p>Which muscles you actually trained this week, shaded by volume. Switch to fatigue to see what is still recovering, and which muscles you have been quietly skipping.</p>
+      </div>
+
+      <div class="pane card">
+        <div class="ico"><svg viewBox="0 0 24 24"><rect x="7" y="6" width="10" height="12" rx="3"/><path d="M9 6l1-3h4l1 3M9 18l1 3h4l1-3"/><path d="M12 10v2.5l1.5 1"/></svg></div>
+        <h3>Wear OS companion</h3>
+        <p>Your workout, set count and rest countdown on the watch, with a double buzz when it is time to lift. Add 30&nbsp;seconds, skip the rest or repeat a set without touching the phone.</p>
+      </div>
+
+      <div class="pane card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 7l-4-4-4 4"/><path d="M12 3v12"/></svg></div>
+        <h3>Share your plan</h3>
+        <p>Send a split to a training partner as a <code>.gymfy</code> file or a printable PDF, or import theirs. Only the plan goes in the file, never your sessions, measurements or photos.</p>
+      </div>
+
+      <div class="pane card">
+        <div class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5-5-8 8"/></svg></div>
+        <h3>Body and photos</h3>
+        <p>Log bodyweight and measurements with a chart for each, and keep progress photos in private storage. Put two side by side to see what the mirror has not been telling you.</p>
       </div>
 
       <div class="pane card">
         <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M8 11l4 4 4-4"/><path d="M4 19h16"/></svg></div>
         <h3>Bring your history</h3>
-        <p>Coming from Hevy, Strong or StrengthLog? Export a CSV there, import it here. Unknown exercises get created rather than dropped, and importing twice adds nothing twice.</p>
+        <p>Coming from Hevy, Strong or StrengthLog? Export a CSV there and import it here. Gymfy even rebuilds your split from the history and puts each day on the weekday you train it.</p>
       </div>
 
       <div class="pane card">
@@ -522,8 +554,8 @@ footer a:hover { text-decoration: underline; }
 
     <div class="dive">
       <div class="copy">
-        <h3>Seven themes, one of them glass</h3>
-        <p>AMOLED black that actually turns the pixels off. High contrast for gym lighting. And Hyper — translucent panes over a slowly drifting colour field, which is what this page is wearing.</p>
+        <h3>Eight themes, one of them glass</h3>
+        <p>AMOLED black that actually turns the pixels off. High contrast for gym lighting. Tokyo Night, Dracula, Catppuccin and Gruvbox for the editor crowd. And Hyper — translucent panes over a slowly drifting colour field, which is what this page is wearing.</p>
         <p class="pull">Pick any accent colour. Every animation respects your system reduce-motion setting, and respecting it means stopping, not going faster.</p>
         <div class="swatches" aria-label="Accent colours">
           <span class="sw" style="background:#7C6BFF"></span>
@@ -543,6 +575,40 @@ footer a:hover { text-decoration: underline; }
       </div>
     </div>
 
+  </div>
+</section>
+
+<!-- ================= GET IT ================= -->
+<section id="get">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Get Gymfy</h2>
+      <p>Free on every platform, with no pro tier and nothing to unlock.</p>
+    </div>
+    <div class="avail">
+      <div class="pane store">
+        <span class="badge live">Available</span>
+        <h3>Android</h3>
+        <p>Download the APK from GitHub Releases and install it. Needs Android 7.0 or newer.</p>
+        <a href="https://github.com/Joshynaldo/Gymfy/releases/latest">Latest release →</a>
+      </div>
+      <div class="pane store">
+        <span class="badge live">Available</span>
+        <h3>Wear OS</h3>
+        <p>The watch companion that shows your workout and rest timer on your wrist.</p>
+        <a href="https://github.com/Joshynaldo/Gymfy">Build from source →</a>
+      </div>
+      <div class="pane store">
+        <span class="badge">Coming soon</span>
+        <h3>Google Play</h3>
+        <p>The same app, with automatic updates through the Play Store.</p>
+      </div>
+      <div class="pane store">
+        <span class="badge">Coming soon</span>
+        <h3>App Store</h3>
+        <p>Gymfy for iPhone, on the way.</p>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -583,9 +649,10 @@ footer a:hover { text-decoration: underline; }
       <a href="mailto:gymfy.dev@gmail.com">gymfy.dev@gmail.com</a>
     </p>
     <div class="foot-links">
-      <a href="privacy-policy.html">Privacy</a>
-      <a href="https://github.com/Joshynaldo">Developer</a>
       <a href="#features">Features</a>
+      <a href="#get">Download</a>
+      <a href="privacy-policy.html">Privacy</a>
+      <a href="https://github.com/Joshynaldo/Gymfy">Source code</a>
     </div>
   </div>
 </footer>

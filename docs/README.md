@@ -18,21 +18,19 @@ a button that works.
 
 | Element | Goes to | Real? |
 |---|---|---|
-| Nav · Features / Privacy | `#features`, `#privacy` | yes, both anchors exist |
-| Nav · Developer | the developer's GitHub profile | yes |
+| Nav · Features / Download / Privacy | `#features`, `#get`, `#privacy` | yes, all three anchors exist |
+| Nav · Source | the `Joshynaldo/Gymfy` repository | yes |
+| Hero · Download for Android | `releases/latest` on GitHub | yes, resolves to the newest release with the APK attached |
 | Hero · See what it does | `#features` | yes |
-| Hero · Tell me when it launches | `mailto:` with a subject | yes |
+| Get Gymfy · Latest release | `releases/latest` | yes |
+| Get Gymfy · Build from source | the repository | yes |
+| Get Gymfy · Google Play / App Store | nothing, marked "Coming soon" | not links until the listings exist |
 | Privacy · Read the full privacy policy | `privacy-policy.html` | yes |
-| Footer · Privacy / Developer / Features | as above | yes |
-| Accent swatches | nothing — they are colour samples | **not controls**, so they are circles now; rounded squares the size of a button read as buttons |
+| Footer · Features / Download / Privacy / Source code | as above | yes |
+| Accent swatches | nothing, they are colour samples | **not controls**, so they are circles; rounded squares the size of a button read as buttons |
 
-**"View on GitHub" became "Tell me when it launches."** The old button pointed
-at the developer's profile while the repository was still private, so it
-promised source code and delivered a profile page. Now that the repository is
-public a source link would be legitimate again; for the moment the button is
-a `mailto:` using the same mechanism the app itself uses for feedback: no
-backend, nothing to sign up to, and it does exactly what it says. The two remaining profile links say **Developer**,
-which is both accurate and the same wording the app's own Help screen uses.
+When the Play Store or App Store listing goes live, turn its card's badge into
+`badge live` and add a link to the listing.
 
 ## Hosting
 
