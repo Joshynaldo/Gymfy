@@ -716,6 +716,23 @@ Track progress here. Update after each session.
 
 ## 🟢 Done
 
+### Wettbewerbs-Lücken (Schema v26, P1–P3) ✅
+Ein Schema-Sprung (v25 → v26) für alles, danach vier Feature-Branches ohne weitere Schema-Änderung. Vertrag, Helfer und Regeln stehen in `FEATURE_PLAN.md`
+- [x] **Backup & Restore (P1)** — Details oben beim Daten-Export
+- [x] **Satztypen** — Warm-up / Working / Drop / Failure statt Warm-up-Schalter. Drop-Sätze bleiben wie Warm-ups aus 1RM, PRs, Charts und Overload raus (leichter wegen Ermüdung, nicht weil man schwächer wurde); Failure zählt. Volumen und Muscle Map zählen alles
+- [x] **RPE / RIR** — optional, Settings → Logging (`effort_rating_mode`, Standard aus). Gespeichert wird nur, was der Nutzer gewählt hat. Ein Top-Satz mit RPE ≥ 9.5 bzw. RIR 0 hält das Gewicht (`OverloadReason.atLimit`), auch wenn alle Reps da waren
+- [x] **Live-PRs** — jeder gespeicherte Arbeitssatz wird gegen die Rekorde geprüft, mit Celebration-Pane und Haptik (respektiert Reduce Motion). Die Zusammenfassung listet alle Rekorde der Session
+- [x] **Warm-up-Rechner** — Rampe vom Arbeitsgewicht über `warmup_ramp_percents`, mit dem eigenen Scheiben-Inventar, geloggt als Warm-up-Sätze
+- [x] Import liest Hevys `set_type` und `rpe`, Export schreibt Satztyp und Bewertung
+- [x] **Supersets** — Day-Builder: Drag-Handles zum Sortieren (`position` wird jetzt wirklich benutzt), Superset mit der Übung darüber/darunter. Gruppen-Nummern werden nach jeder Änderung neu durchgezählt. Rest-Timer startet erst nach dem letzten Mitglied (`restsAfter`), auch beim Wiederholen von der Uhr
+- [x] **Flexible Sessions** — die aktive Session liest ihre eigene Reihenfolge (`session_exercises`) statt den Plan. Übungen hinzufügen (3 × 10), tauschen (nur dieses Workout oder auch im Plan), sortieren, entfernen (nur ohne geloggte Sätze)
+- [x] **Freies Workout** — "Start empty workout" im Workout-Tab und auf der Home-Karte (Rest Day / kein Split). Läuft schon eins, wird es geöffnet statt ein zweites zu starten
+- [x] **Programme** — sechs mitgelieferte `.gymfy`-Pläne in `assets/programs/`, Browser über Workout-Tab und Split-Liste. Hinzufügen läuft über denselben Plan-Import wie beim Teilen
+- [x] **% vom 1RM** — Feld im Sets-&-Reps-Dialog, gerechnet vom getesteten (sonst geschätzten) 1RM, auf ladbares Gewicht gerundet. Ohne 1RM fällt es auf den normalen Overload-Vorschlag zurück
+- [x] **Trainingsblöcke** — pro Split: Trainingswochen, Deload-Last, Startdatum, Banner "Week N of M". Deload-Wochen fließen nicht in die Overload-Historie
+- [x] Plan-Dateien tragen jetzt optional `supersetGroup` und `targetPercent` (Version bleibt 1, alte Dateien importieren weiter)
+- [ ] Offen: echtes SAF für Auto-Backup (Kotlin-Channel), Blockeinstellungen in Plan-Dateien, Duplikat-Schutz bei "Swap auch im Plan speichern", Day-Builder- und Home-Start prüfen nicht auf eine laufende Session, hinzugefügte Übungen bekommen keinen Deload-/%-Vorschlag des Blocks
+
 ### Phase 7b — Calories Tracker (bereinigt) ✅
 - [x] Habit Tracker komplett entfernt — Screen, Repository, Model, Route, More-Eintrag. Schema v17 droppt `habits` + `habit_entries`. **Vorhandene Habit-Daten sind damit gelöscht** — es gibt nichts mehr, was sie liest
 - [x] Workout-Streak statt Habit-Streak — `streakEndingAt` nach `shared/utils/dates.dart` verschoben, zählt jetzt abgeschlossene Sessions. Tage, nicht Sessions: zweimal an einem Tag ist ein Tag

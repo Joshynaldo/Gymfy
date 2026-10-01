@@ -16,6 +16,8 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/features/backup/data/backup_format.dart';
 import 'package:gymfy/features/backup/data/backup_repository.dart';
+import 'package:gymfy/features/workout/data/logging_preferences.dart'
+    show effortRatingModeSetting, warmupRampSetting;
 import 'package:gymfy/shared/database/app_database.dart';
 
 /// Puts at least one row in every table, using the columns most likely to be
@@ -727,6 +729,39 @@ void main() {
       expect(valueOf('auto_backup_folder'), '/new/phone');
       // Everything else is the backup's.
       expect(valueOf('weight_unit'), 'lb');
+    });
+
+    test('logging preferences travel with the backup', () async {
+      // These are about how you train, not about this phone, so unlike the
+      // auto-backup keys they come back from the file.
+      await populate(db);
+      await db
+          .into(db.appSettings)
+          .insert(
+            AppSettingsCompanion.insert(
+              name: effortRatingModeSetting,
+              value: 'rir',
+            ),
+          );
+      await db
+          .into(db.appSettings)
+          .insert(
+            AppSettingsCompanion.insert(
+              name: warmupRampSetting,
+              value: '50,70,90',
+            ),
+          );
+      final path = '${temp.path}/b.$backupFileExtension';
+      await repo.writeArchive(path);
+
+      await wipe(db);
+      await repo.restore(path);
+
+      final rows = await db.select(db.appSettings).get();
+      String? valueOf(String key) =>
+          rows.where((r) => r.name == key).firstOrNull?.value;
+      expect(valueOf(effortRatingModeSetting), 'rir');
+      expect(valueOf(warmupRampSetting), '50,70,90');
     });
   });
 

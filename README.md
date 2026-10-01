@@ -45,9 +45,21 @@ Gymfy is free and will stay free: no subscription, no pro tier, nothing to unloc
   sets and rep ranges, then pin days to weekdays.
 - **One active split.** The Workout tab opens straight on today's day instead of a
   list you have to dig through.
+- **Ready-made programs.** Six bundled plans to start from: Beginner Full Body,
+  Full Body 5×5, Upper / Lower, Push / Pull / Legs, Percentage Strength and a
+  Body-Part Split. Adding one makes it a normal split you can edit.
+- **Reorder and superset.** Drag exercises into order and pair neighbours into
+  supersets. The rest timer only starts after the last exercise of a superset.
+- **% of 1RM targets.** Plan a lift at, say, 75 % of your max and Gymfy works out
+  the weight from your tested or estimated 1RM, rounded to what your plates can
+  make.
+- **Training blocks.** Set a number of training weeks, then a deload week at a
+  lighter load. The split shows which week you're in, and the deload week is
+  kept out of your progression.
 - **Share plans.** Send your splits as a `.gymfy` file or a printable PDF, or
-  import someone else's. Only plan data goes into the file: a test makes sure no
-  session, measurement or photo can end up in it.
+  import someone else's. Supersets and % targets come along. Only plan data goes
+  into the file: a test makes sure no session, measurement or photo can end up
+  in it.
 
 ### Log
 - **A keypad built for one hand.** Big keys where your thumb already is, and no
@@ -55,8 +67,19 @@ Gymfy is free and will stay free: no subscription, no pro tier, nothing to unloc
 - **Build the weight from plates.** Tap the plates that are on the bar and Gymfy
   adds up the total, with the bar weight set per exercise.
 - **Repeat the last set** with one tap when nothing changed.
-- **Warm-up sets** are tagged separately. They count towards volume and the
-  muscle map but stay out of your 1RM, PRs, charts and overload suggestions.
+- **Set types.** Mark a set as warm-up, working, drop or failure. Every set
+  counts towards volume and the muscle map, but warm-ups and drop sets stay out
+  of your 1RM, PRs, charts and overload suggestions.
+- **RPE or RIR**, if you want it. Switch effort rating on in Settings and rate
+  each set. A top set rated as a limit effort holds the weight instead of
+  going up.
+- **A warm-up calculator** that ramps up to your working weight using the
+  plates you have, and logs the ramp as warm-up sets.
+- **New PRs as they happen.** A set that beats a record gets a celebration
+  right away, and the summary lists every record from the session.
+- **Change the workout as you go.** Add, swap, reorder or remove exercises
+  mid-session, or start an empty workout and build it as you train. A swap can
+  also be saved to the plan.
 - **Timed exercises** like planks, dead hangs and carries are logged in minutes and
   seconds, with records measured in time.
 - **Notes on each exercise** for seat settings, grip width or what your back said
@@ -100,8 +123,12 @@ over the Wearable Data Layer, not through the internet.
 - **Import your history** from Hevy, Strong or StrengthLog CSV exports. Gymfy even
   rebuilds your split from it and puts each day on the weekday you usually
   train it.
-- **Export everything** to CSV or JSON at any time. Because there's no cloud copy,
-  export before you switch phones.
+- **Back up and restore.** One `.gymfy-backup` file holds your whole database
+  and your progress photos, and restoring it brings everything back, on this
+  phone or a new one. Automatic backups can run weekly or after each workout
+  into a folder you pick, keeping the newest 10.
+- **Export everything** to CSV or JSON at any time, for spreadsheets or other
+  apps.
 - **About 1,270 built-in exercises** covering 18 muscle groups, including
   cardio and plyometrics, each with an animated preview. Add as many of your
   own as you like.

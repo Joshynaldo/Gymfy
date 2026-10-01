@@ -1,8 +1,12 @@
-# Feature plan: schema v26 contract
+# Schema v26: what it added and the rules around it
 
-Every schema change for phases 1–3 landed in **one migration (v25 → v26)**.
-Feature branches must **not** change any Drift table or bump `schemaVersion`.
-If you truly need a new column, stop and say so in your report, don't add it.
+Every schema change for backup, logging, sessions and programs landed in **one
+migration (v25 → v26)**; the features themselves were then built without
+touching a Drift table. All of it is merged now, and this file stays as
+developer notes: what each new column means, which helpers to reuse, and the
+rules that must keep holding. Any further schema change needs its own
+migration and a `schemaVersion` bump, and the backup format follows it
+(see `lib/features/backup/data/backup_format.dart`).
 Small app-wide preferences go in the key-value `AppSettings` table, which needs
 no migration (see "Settings keys" below).
 
@@ -86,13 +90,14 @@ plan slot, **set null** when the slot is deleted).
 - Every new behaviour gets tests; `flutter analyze` clean, `flutter test` green.
 - Commit messages: no Claude mention / co-author trailer.
 
-## Settings keys (AppSettings, reserve these names)
+## Settings keys (AppSettings)
 - `effort_rating_mode`: `off` (default) | `rpe` | `rir`.
 - `auto_backup_mode`: `off` (default) | `weekly` | `after_workout`;
-  `auto_backup_folder` (path/URI); `auto_backup_last_at` (ISO-8601).
+  `auto_backup_folder` (path/URI); `auto_backup_last_at` (ISO-8601);
+  `auto_backup_last_error` (last failed automatic backup, shown on the screen).
 - Warm-up calculator ramp: `warmup_ramp_percents` (e.g. `40,60,80`).
 
-## Feature areas and the files they are expected to touch
+## Feature areas and the files they touched
 **P1 Backup & restore** — new `lib/features/backup/` (data: `backup_format.dart`,
 `backup_repository.dart`; screen in More/Settings). Back up **every** table in
 `AppDatabase.allTables` with ids, plus `schemaVersion` (26). Restore = one
