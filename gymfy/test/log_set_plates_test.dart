@@ -79,7 +79,6 @@ void main() {
                     await showLogSetSheet(
                       context: context,
                       exercise: _squat,
-                      isWarmup: false,
                       initialWeight: 60,
                       initialReps: 8,
                       unit: WeightUnit.kg,

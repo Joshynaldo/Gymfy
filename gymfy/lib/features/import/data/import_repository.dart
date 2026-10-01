@@ -316,8 +316,9 @@ class ImportRepository {
                   setNumber: number,
                   weight: Value(set.weightKg),
                   reps: Value(set.reps),
-                  isWarmup: Value(set.isWarmup),
+                  setType: Value(set.setType.name),
                   seconds: Value(set.seconds),
+                  rpe: Value(set.rpe),
                 ),
               );
           setsAdded++;

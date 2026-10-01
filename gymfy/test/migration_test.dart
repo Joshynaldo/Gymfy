@@ -13,9 +13,9 @@
 
 import 'dart:io';
 
-// `show Value` only: drift's full export includes matchers-shaped names that
+// `show` only: drift's full export includes matchers-shaped names that
 // would collide with the test package.
-import 'package:drift/drift.dart' show Value;
+import 'package:drift/drift.dart' show OrderingTerm, Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/shared/database/app_database.dart';
@@ -23,6 +23,23 @@ import 'package:gymfy/shared/database/app_database.dart';
 /// Undoes what version N's migration branch added. Keyed by N, applied in
 /// descending order by [rewindTo].
 const _undoVersion = <int, List<String>>{
+  // v26 swapped the warm-up flag for a set type. Winding back puts the flag
+  // back and fills it from the type before dropping the new columns, so a test
+  // that logs a warm-up at v26 still has one after rewinding.
+  26: [
+    'DROP TABLE session_exercises',
+    'ALTER TABLE splits DROP COLUMN block_started_at',
+    'ALTER TABLE splits DROP COLUMN deload_percent',
+    'ALTER TABLE splits DROP COLUMN block_weeks',
+    'ALTER TABLE workout_exercises DROP COLUMN target_percent',
+    'ALTER TABLE workout_exercises DROP COLUMN superset_group',
+    'ALTER TABLE logged_sets ADD COLUMN is_warmup INTEGER NOT NULL DEFAULT 0 '
+        'CHECK ("is_warmup" IN (0, 1))',
+    "UPDATE logged_sets SET is_warmup = 1 WHERE set_type = 'warmup'",
+    'ALTER TABLE logged_sets DROP COLUMN rir',
+    'ALTER TABLE logged_sets DROP COLUMN rpe',
+    'ALTER TABLE logged_sets DROP COLUMN set_type',
+  ],
   25: ['ALTER TABLE exercises DROP COLUMN equipment'],
   24: [
     'ALTER TABLE exercises DROP COLUMN is_timed',
@@ -110,13 +127,13 @@ void main() {
     final db = AppDatabase.forTesting(NativeDatabase.memory());
     addTearDown(db.close);
 
-    expect(db.schemaVersion, 25);
+    expect(db.schemaVersion, 26);
   });
 
   test('every version above the oldest test target can be wound back', () {
     // Guards the helper itself: a new migration with no undo entry would make
     // every rewind test below fail with a confusing SQL error instead of this.
-    for (var v = 10; v <= 25; v++) {
+    for (var v = 10; v <= 26; v++) {
       expect(_undoVersion.keys, contains(v), reason: 'no undo for v$v');
     }
   });
@@ -127,6 +144,7 @@ void main() {
 
     expect(await db.select(db.restTimers).get(), isEmpty);
     expect(await db.select(db.workoutDaySchedules).get(), isEmpty);
+    expect(await db.select(db.sessionExercises).get(), isEmpty);
   });
 
   test('upgrading from v9 adds the rest-timer table and keeps data', () async {
@@ -375,7 +393,7 @@ void main() {
     final set = (await upgraded.select(upgraded.loggedSets).get()).single;
     expect(set.weight, 100);
     expect(set.reps, 5);
-    expect(set.isWarmup, isFalse);
+    expect(set.setType, 'normal');
 
     // And no planned exercise suddenly grows ramp-up rows it never had.
     final planned =
@@ -456,6 +474,238 @@ void main() {
     final set = (await upgraded.select(upgraded.loggedSets).get()).single;
     expect(set.seconds, isNull);
     expect(set.reps, 12);
+  });
+
+  group('upgrading from v25', () {
+    // One migration for a whole round of features. What it must never do is
+    // change what an existing set says: a warm-up stays a warm-up, a working
+    // set stays a working set, and nothing grows a rating, a superset or a
+    // block it never had.
+    late File file;
+    late int completedId;
+    late int openId;
+    late int benchSlot;
+    late int rowSlot;
+
+    setUp(() async {
+      file = _tempDatabase('v25');
+      final old = AppDatabase.forTesting(NativeDatabase(file));
+
+      for (final (id, name) in [
+        ('barbell_bench_press', 'Barbell Bench Press'),
+        ('barbell_row', 'Barbell Row'),
+      ]) {
+        await old
+            .into(old.exercises)
+            .insert(
+              ExercisesCompanion.insert(
+                id: id,
+                name: name,
+                muscleIds: const ['chest'],
+              ),
+            );
+      }
+      final splitId = await old
+          .into(old.splits)
+          .insert(
+            SplitsCompanion.insert(name: 'PPL', isActive: const Value(true)),
+          );
+      final dayId = await old
+          .into(old.workoutDays)
+          .insert(WorkoutDaysCompanion.insert(splitId: splitId, name: 'Push'));
+      benchSlot = await old
+          .into(old.workoutExercises)
+          .insert(
+            WorkoutExercisesCompanion.insert(
+              dayId: dayId,
+              exerciseId: 'barbell_bench_press',
+              warmupSets: const Value(2),
+            ),
+          );
+      rowSlot = await old
+          .into(old.workoutExercises)
+          .insert(
+            WorkoutExercisesCompanion.insert(
+              dayId: dayId,
+              exerciseId: 'barbell_row',
+            ),
+          );
+
+      // A finished workout with a warm-up and a working set…
+      completedId = await old
+          .into(old.workoutSessions)
+          .insert(
+            WorkoutSessionsCompanion.insert(
+              dayId: Value(dayId),
+              name: 'Push',
+              completedAt: Value(DateTime(2026, 9, 1, 19)),
+            ),
+          );
+      for (final (number, weight, type) in [
+        (1, 60.0, 'warmup'),
+        (1, 100.0, 'normal'),
+      ]) {
+        await old
+            .into(old.loggedSets)
+            .insert(
+              LoggedSetsCompanion.insert(
+                sessionId: completedId,
+                exerciseId: 'barbell_bench_press',
+                setNumber: number,
+                weight: Value(weight),
+                reps: const Value(5),
+                setType: Value(type),
+              ),
+            );
+      }
+      // …and one left open across the update.
+      openId = await old
+          .into(old.workoutSessions)
+          .insert(
+            WorkoutSessionsCompanion.insert(dayId: Value(dayId), name: 'Push'),
+          );
+      await old
+          .into(old.loggedSets)
+          .insert(
+            LoggedSetsCompanion.insert(
+              sessionId: openId,
+              exerciseId: 'barbell_bench_press',
+              setNumber: 1,
+              weight: const Value(102.5),
+              reps: const Value(5),
+            ),
+          );
+
+      await rewindTo(old, 25);
+      // Guards the rewind itself: the v25 shape really has the flag, set from
+      // the warm-up, or the assertions below would prove nothing.
+      final flags = await old
+          .customSelect('SELECT weight, is_warmup FROM logged_sets ORDER BY id')
+          .get();
+      expect(flags.map((r) => (r.data['weight'], r.data['is_warmup'])), [
+        (60.0, 1),
+        (100.0, 0),
+        (102.5, 0),
+      ]);
+      await old.close();
+    });
+
+    test('turns the warm-up flag into a set type and drops it', () async {
+      final upgraded = AppDatabase.forTesting(NativeDatabase(file));
+      addTearDown(upgraded.close);
+
+      final sets = await (upgraded.select(
+        upgraded.loggedSets,
+      )..orderBy([(t) => OrderingTerm(expression: t.id)])).get();
+      expect(sets.map((s) => (s.weight, s.reps, s.setType)), [
+        (60.0, 5, 'warmup'),
+        (100.0, 5, 'normal'),
+        (102.5, 5, 'normal'),
+      ]);
+      // Nobody rated a set before ratings existed.
+      expect(sets.every((s) => s.rpe == null && s.rir == null), isTrue);
+
+      final columns = await upgraded
+          .customSelect('PRAGMA table_info(logged_sets)')
+          .get();
+      expect(columns.map((c) => c.data['name']), isNot(contains('is_warmup')));
+    });
+
+    test('leaves plans standalone, unweighted and without blocks', () async {
+      final upgraded = AppDatabase.forTesting(NativeDatabase(file));
+      addTearDown(upgraded.close);
+
+      final planned = await upgraded.select(upgraded.workoutExercises).get();
+      expect(planned, hasLength(2));
+      expect(planned.every((p) => p.supersetGroup == null), isTrue);
+      expect(planned.every((p) => p.targetPercent == null), isTrue);
+      // The rest of the row survived.
+      expect(planned.first.warmupSets, 2);
+
+      final split = (await upgraded.select(upgraded.splits).get()).single;
+      expect(split.name, 'PPL');
+      expect(split.isActive, isTrue);
+      expect(split.blockWeeks, isNull);
+      expect(split.deloadPercent, isNull);
+      expect(split.blockStartedAt, isNull);
+    });
+
+    test(
+      'gives only the open session a running order, in plan order',
+      () async {
+        final upgraded = AppDatabase.forTesting(NativeDatabase(file));
+        addTearDown(upgraded.close);
+
+        final rows = await (upgraded.select(
+          upgraded.sessionExercises,
+        )..orderBy([(t) => OrderingTerm(expression: t.position)])).get();
+        // The open workout resumes with the exercises it started with; the
+        // finished one gets nothing — today's plan isn't what it did.
+        expect(rows.every((r) => r.sessionId == openId), isTrue);
+        expect(
+          rows.map((r) => (r.exerciseId, r.position, r.workoutExerciseId)),
+          [('barbell_bench_press', 0, benchSlot), ('barbell_row', 1, rowSlot)],
+        );
+        expect(rows.where((r) => r.sessionId == completedId), isEmpty);
+
+        final sessions = await upgraded.select(upgraded.workoutSessions).get();
+        expect(sessions, hasLength(2));
+      },
+    );
+
+    test('finishes a v26 step that was killed partway through', () async {
+      // The app died on its first launch after the update, after SQLite had
+      // committed the first ALTERs but before `user_version` moved on. The
+      // next launch runs v26 again over the columns that already exist; it
+      // must finish the job, not fail on "duplicate column" forever after.
+      final upgraded = AppDatabase.forTesting(
+        NativeDatabase(
+          file,
+          setup: (raw) {
+            raw.execute(
+              'ALTER TABLE logged_sets ADD COLUMN set_type TEXT NOT NULL '
+              "DEFAULT 'normal'",
+            );
+            raw.execute('ALTER TABLE logged_sets ADD COLUMN rpe REAL');
+            raw.execute(
+              'ALTER TABLE workout_exercises ADD COLUMN superset_group INTEGER',
+            );
+          },
+        ),
+      );
+      addTearDown(upgraded.close);
+
+      final sets = await (upgraded.select(
+        upgraded.loggedSets,
+      )..orderBy([(t) => OrderingTerm(expression: t.id)])).get();
+      expect(sets.map((s) => s.setType), ['warmup', 'normal', 'normal']);
+      expect(
+        await upgraded.select(upgraded.sessionExercises).get(),
+        hasLength(2),
+      );
+      final version = await upgraded
+          .customSelect('PRAGMA user_version')
+          .getSingle();
+      expect(version.data['user_version'], 26);
+    });
+
+    test('a finished v26 step whose version was never written reruns '
+        'harmlessly', () async {
+      // The whole step ran but the app died before drift wrote the new
+      // version. Running it again must not copy the open session's plan in a
+      // second time.
+      final first = AppDatabase.forTesting(NativeDatabase(file));
+      expect(await first.select(first.sessionExercises).get(), hasLength(2));
+      await first.customStatement('PRAGMA user_version = 25');
+      await first.close();
+
+      final again = AppDatabase.forTesting(NativeDatabase(file));
+      addTearDown(again.close);
+
+      expect(await again.select(again.sessionExercises).get(), hasLength(2));
+      final sets = await again.select(again.loggedSets).get();
+      expect(sets.where((s) => s.setType == 'warmup'), hasLength(1));
+    });
   });
 
   test('a rest override is removed with the exercise it belongs to', () async {

@@ -119,7 +119,7 @@ void main() {
         weight: 0,
         reps: 0,
         seconds: 120,
-        isWarmup: true,
+        setType: SetType.warmup,
       );
       await logHold(id, 'plank', 1, 40);
 

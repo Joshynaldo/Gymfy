@@ -65,6 +65,11 @@ dependencies:
   # via flutter_test and flutter_local_notifications; pure Dart, no platform
   # code, so none of the toolchain trouble the plugins above caused.
   clock: ^1.1.2
+  # Full backups are a zip: the database as JSON plus the progress photo files.
+  # Pure Dart, no platform code, and already in the tree through `pdf` — so
+  # naming it here adds nothing to the build, it only makes the dependency
+  # honest.
+  archive: ^4.0.7
   file_picker: ^12.0.0
   # Printing a plan. `pdf` builds the document, `printing` shows the system
   # print/share sheet for it.
@@ -153,6 +158,9 @@ flutter:
     - assets/exercises/
     # Muscle-map body diagrams (front + back). Paths are tagged per muscle.
     - assets/svg/
+    # Bundled programmes: ordinary .gymfy plan files, imported through the
+    # same path as a shared plan (see features/programs/).
+    - assets/programs/
 
   # The Hyper theme's typeface. Four static weights (~380 KB in total) bundled
   # into the APK rather than pulled through the google_fonts package: that

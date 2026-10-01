@@ -4,6 +4,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/features/overload/data/overload_math.dart';
 import 'package:gymfy/shared/database/app_database.dart';
+import 'package:gymfy/shared/models/set_type.dart';
 
 void main() {
   /// A set list at one weight — `reps` per set, [count] sets.
@@ -17,7 +18,7 @@ void main() {
           setNumber: i,
           weight: weight,
           reps: reps,
-          isWarmup: false,
+          setType: SetType.normal.name,
         ),
     ];
   }

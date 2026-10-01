@@ -20,6 +20,7 @@ import 'package:gymfy/features/workout/screens/day_builder_screen.dart';
 import 'package:gymfy/shared/database/app_database.dart';
 
 import 'support/default_accent.dart';
+import 'support/session_entries.dart';
 
 const _sessionId = 1;
 const _dayId = 10;
@@ -60,6 +61,9 @@ LoggedSet _set({
   required int setNumber,
   required double weight,
   bool isWarmup = false,
+  SetType? type,
+  double? rpe,
+  int? rir,
 }) => LoggedSet(
   id: id,
   sessionId: _sessionId,
@@ -67,7 +71,9 @@ LoggedSet _set({
   setNumber: setNumber,
   weight: weight,
   reps: 5,
-  isWarmup: isWarmup,
+  setType: (type ?? (isWarmup ? SetType.warmup : SetType.normal)).name,
+  rpe: rpe,
+  rir: rir,
 );
 
 /// Records the re-tag call instead of writing it, so the tap can be asserted on
@@ -75,11 +81,11 @@ LoggedSet _set({
 class _RecordingSessionRepository extends SessionRepository {
   _RecordingSessionRepository(super.db);
 
-  ({int id, bool isWarmup})? lastSetWarmup;
+  ({int id, SetType type})? lastSetType;
 
   @override
-  Future<void> setWarmup({required int id, required bool isWarmup}) async {
-    lastSetWarmup = (id: id, isWarmup: isWarmup);
+  Future<void> setSetType({required int id, required SetType type}) async {
+    lastSetType = (id: id, type: type);
   }
 }
 
@@ -125,10 +131,12 @@ void main() {
             sessionRepositoryProvider.overrideWithValue(repository),
             sessionProvider.overrideWith((ref, id) => Stream.value(_session)),
             sessionSetsProvider.overrideWith((ref, id) => Stream.value(sets)),
-            dayExercisesProvider.overrideWith(
-              (ref, dayId) => Stream.value([
-                PlannedExercise(entry: entry, exercise: _bench),
-              ]),
+            sessionExercisesProvider.overrideWith(
+              (ref, id) => Stream.value(
+                sessionEntriesFor([
+                  PlannedExercise(entry: entry, exercise: _bench),
+                ]),
+              ),
             ),
             // No history, so no suggestion — this test is about the phases.
             overloadSuggestionProvider.overrideWith((ref, key) async => null),
@@ -222,10 +230,12 @@ void main() {
         sets: [_set(id: 7, setNumber: 1, weight: 80, isWarmup: true)],
       );
 
-      await tester.tap(find.byTooltip('Make this a working set'));
+      await tester.tap(find.byTooltip('Change set type'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Working').last);
       await tester.pumpAndSettle();
 
-      expect(repository.lastSetWarmup, (id: 7, isWarmup: false));
+      expect(repository.lastSetType, (id: 7, type: SetType.normal));
     });
 
     testWidgets('a working row offers to become a warm-up', (tester) async {
@@ -234,10 +244,91 @@ void main() {
         sets: [_set(id: 8, setNumber: 1, weight: 80)],
       );
 
-      await tester.tap(find.byTooltip('Make this a warm-up'));
+      await tester.tap(find.byTooltip('Change set type'));
+      await tester.pumpAndSettle();
+      // `.last`: the card's own warm-up button says the same word, and the
+      // sheet is the newer of the two.
+      await tester.tap(find.text('Warm-up').last);
       await tester.pumpAndSettle();
 
-      expect(repository.lastSetWarmup, (id: 8, isWarmup: true));
+      expect(repository.lastSetType, (id: 8, type: SetType.warmup));
+    });
+
+    testWidgets('a working row can become a drop set or a failure set', (
+      tester,
+    ) async {
+      final repository = await pumpWorkout(
+        tester,
+        sets: [_set(id: 9, setNumber: 1, weight: 80)],
+      );
+
+      await tester.tap(find.byTooltip('Change set type'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Drop set'));
+      await tester.pumpAndSettle();
+      expect(repository.lastSetType, (id: 9, type: SetType.drop));
+
+      await tester.tap(find.byTooltip('Change set type'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Failure'));
+      await tester.pumpAndSettle();
+      expect(repository.lastSetType, (id: 9, type: SetType.failure));
+    });
+
+    testWidgets('picking the type a set already has writes nothing', (
+      tester,
+    ) async {
+      final repository = await pumpWorkout(
+        tester,
+        sets: [_set(id: 10, setNumber: 1, weight: 80)],
+      );
+
+      await tester.tap(find.byTooltip('Change set type'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Working').last);
+      await tester.pumpAndSettle();
+
+      expect(repository.lastSetType, isNull);
+    });
+
+    testWidgets('drop and failure rows carry their own badge', (tester) async {
+      await pumpWorkout(
+        tester,
+        sets: [
+          _set(id: 1, setNumber: 1, weight: 100),
+          _set(id: 2, setNumber: 2, weight: 70, type: SetType.drop),
+          _set(id: 3, setNumber: 3, weight: 100, type: SetType.failure),
+        ],
+      );
+
+      expect(find.text('D'), findsOneWidget);
+      expect(find.text('F'), findsOneWidget);
+      // An ordinary working set is the default and needs no label.
+      expect(find.text('W'), findsNothing);
+    });
+
+    testWidgets('a rated set shows its rating on the row', (tester) async {
+      await pumpWorkout(
+        tester,
+        sets: [
+          _set(id: 1, setNumber: 1, weight: 100, rpe: 8.5),
+          _set(id: 2, setNumber: 2, weight: 100, rir: 2),
+          _set(id: 3, setNumber: 3, weight: 100, rpe: 9),
+        ],
+      );
+
+      expect(find.text('RPE 8.5'), findsOneWidget);
+      expect(find.text('RIR 2'), findsOneWidget);
+      // Whole numbers lose the ".0".
+      expect(find.text('RPE 9'), findsOneWidget);
+    });
+
+    testWidgets('the warm-up calculator sits beside the warm-up button', (
+      tester,
+    ) async {
+      await pumpWorkout(tester);
+
+      expect(find.byTooltip('Warm-up calculator'), findsOneWidget);
     });
   });
 

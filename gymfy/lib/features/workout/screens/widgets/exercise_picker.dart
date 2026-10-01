@@ -18,17 +18,48 @@ import '../../../exercises/data/exercise_repository.dart';
 /// six exercises, and re-opening the sheet for each one made the common case the
 /// slowest path. An empty list is never returned — nothing picked means the
 /// confirm button is disabled, so "null" and "nothing" stay the same answer.
-Future<List<String>?> showExercisePicker(BuildContext context) {
+///
+/// Exercises in [exclude] are left out of the list — a running workout passes
+/// the ones it already has, since adding them again would do nothing.
+Future<List<String>?> showExercisePicker(
+  BuildContext context, {
+  Set<String> exclude = const {},
+}) {
   return showModalBottomSheet<List<String>>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (context) => const _ExercisePickerSheet(),
+    builder: (context) => _ExercisePickerSheet(exclude: exclude),
   );
 }
 
+/// The same sheet in single-pick mode: tapping an exercise returns its id at
+/// once. Null if dismissed.
+///
+/// For swapping one exercise for another, where a confirm step after a single
+/// tap would only be a second tap. [exclude] works as in [showExercisePicker].
+Future<String?> showSingleExercisePicker(
+  BuildContext context, {
+  required String title,
+  Set<String> exclude = const {},
+}) async {
+  final picked = await showModalBottomSheet<List<String>>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (context) =>
+        _ExercisePickerSheet(exclude: exclude, singleTitle: title),
+  );
+  return picked?.first;
+}
+
 class _ExercisePickerSheet extends ConsumerStatefulWidget {
-  const _ExercisePickerSheet();
+  const _ExercisePickerSheet({required this.exclude, this.singleTitle});
+
+  final Set<String> exclude;
+
+  /// Set for single-pick mode, where it is also the sheet's heading.
+  final String? singleTitle;
 
   @override
   ConsumerState<_ExercisePickerSheet> createState() =>
@@ -48,6 +79,8 @@ class _ExercisePickerSheetState extends ConsumerState<_ExercisePickerSheet> {
   /// re-filtering underneath it — narrowing the search does not silently drop
   /// what you already ticked.
   final _selected = <String>{};
+
+  bool get _single => widget.singleTitle != null;
 
   @override
   Widget build(BuildContext context) {
@@ -69,11 +102,11 @@ class _ExercisePickerSheetState extends ConsumerState<_ExercisePickerSheet> {
                 children: [
                   Expanded(
                     child: Text(
-                      'Add exercises',
+                      widget.singleTitle ?? 'Add exercises',
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                   ),
-                  if (_selected.isNotEmpty)
+                  if (_selected.isNotEmpty && !_single)
                     TextButton(
                       onPressed: () => setState(_selected.clear),
                       child: const Text('Clear'),
@@ -113,7 +146,13 @@ class _ExercisePickerSheetState extends ConsumerState<_ExercisePickerSheet> {
                     ),
                   ),
                 ),
-                data: (all) {
+                data: (library) {
+                  // Excluded ones never reach the filters either, so a muscle
+                  // chip can't offer a list made only of hidden exercises.
+                  final all = [
+                    for (final e in library)
+                      if (!widget.exclude.contains(e.id)) e,
+                  ];
                   final filtered = all
                       .where(
                         (e) => matchesExerciseSearch(
@@ -171,7 +210,11 @@ class _ExercisePickerSheetState extends ConsumerState<_ExercisePickerSheet> {
                                   return _PickerTile(
                                     exercise: exercise,
                                     selected: _selected.contains(exercise.id),
-                                    onToggle: () => _toggle(exercise.id),
+                                    onToggle: _single
+                                        ? () => Navigator.of(
+                                            context,
+                                          ).pop([exercise.id])
+                                        : () => _toggle(exercise.id),
                                   );
                                 },
                               ),
@@ -181,15 +224,18 @@ class _ExercisePickerSheetState extends ConsumerState<_ExercisePickerSheet> {
                 },
               ),
             ),
-            _ConfirmBar(
-              count: _selected.length,
-              // Disabled rather than hidden while nothing is picked: a button
-              // that appears out of nowhere is easy to miss, and the sheet's
-              // height shouldn't jump on the first tap.
-              onConfirm: _selected.isEmpty
-                  ? null
-                  : () => Navigator.of(context).pop(_selected.toList()),
-            ),
+            // Single-pick mode closes on the tap itself, so it has nothing to
+            // confirm.
+            if (!_single)
+              _ConfirmBar(
+                count: _selected.length,
+                // Disabled rather than hidden while nothing is picked: a button
+                // that appears out of nowhere is easy to miss, and the sheet's
+                // height shouldn't jump on the first tap.
+                onConfirm: _selected.isEmpty
+                    ? null
+                    : () => Navigator.of(context).pop(_selected.toList()),
+              ),
           ],
         ),
       ),

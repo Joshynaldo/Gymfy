@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,11 +9,13 @@ import '../../../app/theme/accent_color.dart';
 import '../../../app/theme/glass.dart';
 import '../../../app/theme/motion.dart';
 import '../../../shared/data/notification_service.dart';
+import '../../../shared/data/settings_repository.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/app_picker.dart';
 import '../../../shared/widgets/fade_slide_in.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
@@ -19,19 +24,28 @@ import '../../exercises/screens/exercise_detail_screen.dart';
 import '../../exercises/widgets/exercise_note.dart';
 import '../../overload/data/overload_math.dart';
 import '../../overload/data/overload_repository.dart';
+import '../../overload/data/percent_target.dart' show formatPercent;
+import '../../plates/data/plate_math.dart';
 import '../../plates/screens/plate_calculator_screen.dart';
 import '../../settings/data/notification_preferences.dart';
+import '../data/logging_preferences.dart';
+import '../data/personal_records.dart';
 import '../data/rest_timer_controller.dart';
 import '../data/rest_timer_repository.dart';
 import '../data/session_repository.dart';
-import '../data/workout_repository.dart';
+import '../data/supersets.dart';
 import '../widgets/log_set_sheet.dart';
+import '../widgets/record_celebration.dart';
 import '../widgets/rest_timer_bar.dart';
+import '../widgets/session_exercise_actions.dart';
+import '../widgets/warmup_calculator_sheet.dart';
 
 /// The live workout screen: log sets exercise by exercise while you train.
 ///
-/// The exercise list comes from the session's planned day (so you see your
-/// targets), while the sets you log are saved against the session itself.
+/// The exercise list is the session's own running order — copied from the
+/// planned day when it started (so you see your targets), empty for a free
+/// workout, and editable as you go — while the sets you log are saved against
+/// the session itself.
 class ActiveWorkoutScreen extends ConsumerWidget {
   const ActiveWorkoutScreen({super.key, required this.sessionId});
 
@@ -92,18 +106,27 @@ class _ActiveWorkoutView extends ConsumerStatefulWidget {
 class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
   /// The exercise you picked by hand, if you picked one.
   ///
-  /// Held by id rather than by index: the day's plan can change underneath a
-  /// running session, and an index would then point at a different movement.
+  /// Held by id rather than by index: the running order can be added to,
+  /// swapped and reordered mid-session, and an index would then point at a
+  /// different movement. (A lift appears once per session, so the id is
+  /// enough.)
   String? _picked;
+
+  /// The record being celebrated, if a set just beat one. See [_celebrate].
+  ({String exerciseName, List<BrokenRecord> records})? _celebration;
+  Timer? _celebrationTimer;
+
+  @override
+  void dispose() {
+    _celebrationTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final session = widget.session;
-    final dayId = session.dayId;
-    final planned = dayId == null
-        ? const <PlannedExercise>[]
-        : (ref.watch(dayExercisesProvider(dayId)).value ??
-              const <PlannedExercise>[]);
+    final entriesAsync = ref.watch(sessionExercisesProvider(session.id));
+    final planned = entriesAsync.value ?? const <SessionExerciseEntry>[];
     final sets =
         ref.watch(sessionSetsProvider(session.id)).value ?? const <LoggedSet>[];
 
@@ -138,7 +161,14 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
         ],
       ),
       body: (context) => planned.isEmpty
-          ? const _EmptyState()
+          // Nothing until the list has loaded, rather than flashing the empty
+          // state at a workout that has exercises.
+          ? (entriesAsync.hasValue
+                ? _EmptyState(
+                    isFree: session.dayId == null,
+                    onAdd: () => _addExercises(context, planned),
+                  )
+                : const SizedBox.shrink())
           : Stack(
               children: [
                 ListView(
@@ -158,12 +188,32 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
                       _CurrentExerciseCard(
                         key: ValueKey(current.exercise.id),
                         planned: current,
+                        supersetPartners: _partnersOf(planned, current),
                         loggedSets:
                             setsByExercise[current.exercise.id] ?? const [],
-                        onLog: (isWarmup) =>
-                            _log(context, current, isWarmup: isWarmup),
+                        onLog: (type) => _log(context, current, type: type),
+                        onWarmupCalculator: () =>
+                            _openWarmupCalculator(context, current),
+                        onMore: () => _exerciseActions(
+                          context,
+                          current,
+                          planned,
+                          hasSets: setsByExercise.containsKey(
+                            current.exercise.id,
+                          ),
+                        ),
                       ),
                     ..._upNext(planned, current, setsByExercise),
+                    const SizedBox(height: 16),
+                    // At the foot of the list, where you look once the plan
+                    // runs out — and the only control a free workout starts
+                    // with, so it has to be findable without a menu.
+                    AppButton(
+                      label: 'Add exercise',
+                      icon: Icons.add,
+                      kind: AppButtonKind.secondary,
+                      onPressed: () => _addExercises(context, planned),
+                    ),
                   ],
                 ),
                 // Floating rather than in the flow: this is the one pane on the
@@ -175,9 +225,46 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
                   right: 14,
                   child: const RestTimerBar(),
                 ),
+                if (_celebration case final celebration?)
+                  Positioned(
+                    left: 14,
+                    right: 14,
+                    bottom: barInsets(context).bottom + 16,
+                    child: RecordCelebration(
+                      // Keyed by the records, so a second record straight
+                      // after the first springs in again instead of silently
+                      // swapping its text.
+                      key: ObjectKey(celebration),
+                      exerciseName: celebration.exerciseName,
+                      records: celebration.records,
+                      onDismiss: _dismissCelebration,
+                    ),
+                  ),
               ],
             ),
     );
+  }
+
+  /// Puts a new record on screen for a few seconds, with a heavy buzz.
+  ///
+  /// The haptic is the part that reaches you: the phone is usually propped on
+  /// a bench while you rack the bar, and a pane nobody looks at celebrates
+  /// nothing. Haptics are not motion, so they fire with reduced motion on too;
+  /// the pane itself honours the setting (see [RecordCelebration]).
+  void _celebrate(String exerciseName, List<BrokenRecord> records) {
+    HapticFeedback.heavyImpact();
+    _celebrationTimer?.cancel();
+    setState(
+      () => _celebration = (exerciseName: exerciseName, records: records),
+    );
+    _celebrationTimer = Timer(const Duration(seconds: 5), _dismissCelebration);
+  }
+
+  void _dismissCelebration() {
+    _celebrationTimer?.cancel();
+    if (mounted && _celebration != null) {
+      setState(() => _celebration = null);
+    }
   }
 
   /// The exercise the card is showing.
@@ -185,8 +272,8 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
   /// Your pick if you made one, otherwise the first exercise still short of its
   /// planned working sets — which is where you are on any day you work through
   /// the plan in order.
-  PlannedExercise? _current(
-    List<PlannedExercise> planned,
+  SessionExerciseEntry? _current(
+    List<SessionExerciseEntry> planned,
     Map<String, List<LoggedSet>> setsByExercise,
   ) {
     if (planned.isEmpty) return null;
@@ -196,42 +283,192 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
       }
     }
     for (final entry in planned) {
-      final done = (setsByExercise[entry.exercise.id] ?? const [])
-          .where((s) => !s.isWarmup)
-          .length;
-      if (done < entry.entry.defaultSets) return entry;
+      if (_shortOfTarget(entry, setsByExercise)) return entry;
     }
     return planned.last;
   }
 
-  List<Widget> _upNext(
-    List<PlannedExercise> planned,
-    PlannedExercise? current,
+  /// Whether [entry] still has planned working sets to do.
+  static bool _shortOfTarget(
+    SessionExerciseEntry entry,
     Map<String, List<LoggedSet>> setsByExercise,
   ) {
-    final rest = planned
-        .where((p) => p.exercise.id != current?.exercise.id)
-        .toList();
-    if (rest.isEmpty) return const [];
+    final done = (setsByExercise[entry.exercise.id] ?? const [])
+        .where((s) => !s.isWarmup)
+        .length;
+    return done < entry.targets.defaultSets;
+  }
+
+  /// The other exercises in [entry]'s superset, in order. Empty when it
+  /// stands alone.
+  static List<SessionExerciseEntry> _partnersOf(
+    List<SessionExerciseEntry> planned,
+    SessionExerciseEntry entry,
+  ) {
+    for (final block in supersetBlocks(planned, (e) => e.supersetGroup)) {
+      if (block.contains(entry)) {
+        return [
+          for (final e in block)
+            if (e != entry) e,
+        ];
+      }
+    }
+    return const [];
+  }
+
+  /// Everything but the card, in running order. A superset's members are
+  /// drawn as one group, so you can see what is done back to back before you
+  /// get there.
+  List<Widget> _upNext(
+    List<SessionExerciseEntry> planned,
+    SessionExerciseEntry? current,
+    Map<String, List<LoggedSet>> setsByExercise,
+  ) {
+    if (planned.length < 2) return const [];
+
+    Widget row(SessionExerciseEntry entry) => _UpNextRow(
+      planned: entry,
+      loggedSets: setsByExercise[entry.exercise.id] ?? const [],
+      onTap: () => setState(() => _picked = entry.exercise.id),
+    );
+
+    // One block's rows, minus whatever is on the card. A superset keeps its
+    // grouping even with one member showing, so it still reads as "next, and
+    // straight after the card".
+    List<Widget> rows(List<SessionExerciseEntry> block) {
+      final rest = [
+        for (final e in block)
+          if (e != current) e,
+      ];
+      if (rest.isEmpty) return const [];
+      if (block.length == 1) return [row(rest.single)];
+      return [
+        _SupersetGroup(children: [for (final e in rest) row(e)]),
+      ];
+    }
 
     return [
       const SizedBox(height: 28),
-      const _SectionLabel('UP NEXT'),
-      const SizedBox(height: 12),
-      for (final entry in rest)
-        _UpNextRow(
-          planned: entry,
-          loggedSets: setsByExercise[entry.exercise.id] ?? const [],
-          onTap: () => setState(() => _picked = entry.exercise.id),
-        ),
+      Row(
+        children: [
+          const Expanded(child: _SectionLabel('UP NEXT')),
+          // Beside the list it changes. Tucked behind a menu it would be
+          // undiscoverable; in the app bar it would crowd Finish.
+          TextButton.icon(
+            onPressed: () => reorderSessionExercises(
+              context,
+              ref,
+              sessionId: widget.session.id,
+              entries: planned,
+            ),
+            icon: const Icon(Icons.swap_vert, size: 18),
+            label: const Text('Reorder'),
+          ),
+        ],
+      ),
+      const SizedBox(height: 4),
+      for (final block in supersetBlocks(planned, (e) => e.supersetGroup))
+        ...rows(block),
     ];
+  }
+
+  /// Adds exercises from the picker, and puts the card on the first of them
+  /// when the workout had none to be on.
+  Future<void> _addExercises(
+    BuildContext context,
+    List<SessionExerciseEntry> entries,
+  ) async {
+    final added = await addExercisesToSession(
+      context,
+      ref,
+      sessionId: widget.session.id,
+      entries: entries,
+    );
+    if (added.isNotEmpty && entries.isEmpty && mounted) {
+      setState(() => _picked = added.first);
+    }
+  }
+
+  /// The menu on the card: swap the exercise, or take it out of today's list.
+  Future<void> _exerciseActions(
+    BuildContext context,
+    SessionExerciseEntry entry,
+    List<SessionExerciseEntry> entries, {
+    required bool hasSets,
+  }) async {
+    final action = await showOptionPicker<_EntryAction>(
+      context: context,
+      title: entry.exercise.name,
+      options: [
+        (
+          value: _EntryAction.swap,
+          label: 'Swap exercise',
+          subtitle: 'Do something else in its place',
+        ),
+        // Only offered while nothing is logged for it: the sets you did are
+        // removed with the delete button on each row, not by a list edit.
+        if (!hasSets)
+          (
+            value: _EntryAction.remove,
+            label: 'Remove from workout',
+            subtitle: 'Your plan stays as it is',
+          ),
+      ],
+      selected: null,
+    );
+    if (action == null || !context.mounted) return;
+
+    switch (action) {
+      case _EntryAction.swap:
+        final swapped = await swapSessionExercise(
+          context,
+          ref,
+          entry: entry,
+          entries: entries,
+        );
+        if (swapped != null && mounted) setState(() => _picked = swapped);
+      case _EntryAction.remove:
+        await ref.read(sessionRepositoryProvider).removeExercise(entry.row.id);
+        if (mounted && _picked == entry.exercise.id) {
+          setState(() => _picked = null);
+        }
+    }
+  }
+
+  /// Moves the card after a working set of [entry] in a superset, and says
+  /// whether the rest timer should start — see [supersetStepAfter] for the
+  /// rules. A standalone exercise rests and leaves the card alone.
+  ///
+  /// [workingDone] counts the working sets logged per exercise, the set just
+  /// saved included. It is passed in rather than read from the sets stream,
+  /// which may not have caught up with that set yet.
+  bool _advanceSuperset(
+    SessionExerciseEntry entry, {
+    required Map<String, int> workingDone,
+  }) {
+    final entries =
+        ref.read(sessionExercisesProvider(widget.session.id)).value ??
+        const <SessionExerciseEntry>[];
+    final step = supersetStepAfter(
+      entries,
+      // The same entry from the current list: blocks match by identity, and
+      // the list may have been re-read since the card was built.
+      entries.firstWhere((e) => e.row.id == entry.row.id, orElse: () => entry),
+      (e) => e.supersetGroup,
+      hasSetsLeft: (e) =>
+          (workingDone[e.exercise.id] ?? 0) < e.targets.defaultSets,
+    );
+    if (step == null) return true;
+    if (mounted) setState(() => _picked = step.next?.exercise.id);
+    return step.rests;
   }
 
   Future<void> _log(
     BuildContext context,
-    PlannedExercise planned, {
-    required bool isWarmup,
+    SessionExerciseEntry planned, {
+    required SetType type,
   }) async {
+    final isWarmup = type.isWarmupPhase;
     // Prefill from the last set logged *in this phase* — you are mid-ramp-up or
     // mid-working-set and almost certainly repeating that weight. Crossing the
     // divide is the one place it must not carry over: after three warm-ups,
@@ -262,38 +499,52 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
         ? null
         : await ref.read(
             overloadSuggestionProvider((
-              entry: planned.entry,
+              entry: planned.targets,
               exercise: planned.exercise,
             )).future,
           );
+    // Awaited for the same reason: read cold, the setting would answer "off"
+    // until its row loaded, and the first set would go unrated.
+    final effortMode = await _readSetting(effortRatingModeProvider);
     if (!context.mounted) return;
 
     final result = await showLogSetSheet(
       context: context,
       exercise: planned.exercise,
-      isWarmup: isWarmup,
+      setType: type,
       initialWeight: last?.weight ?? suggestion?.weight ?? 0,
-      initialReps: last?.reps ?? planned.entry.defaultReps,
+      initialReps: last?.reps ?? planned.targets.defaultReps,
       unit: ref.read(weightUnitProvider),
       suggestion: suggestion,
       phaseLabel: isWarmup
           ? 'Warm-up ${samePhase.length + 1}'
           : 'Set ${samePhase.length + 1} · working set',
       repeatable: last,
+      effortMode: effortMode,
     );
     if (result == null) return;
 
-    // The sheet owns the warm-up decision from the moment it opens — you often
-    // only know whether that was a ramp-up once the bar is in your hands — so
-    // the set is numbered against whichever phase comes back, not the one the
-    // button asked for.
+    // The sheet owns the set-type decision from the moment it opens — you
+    // often only know whether that was a ramp-up once the bar is in your
+    // hands — so the set is numbered against whichever phase comes back, not
+    // the one the button asked for.
     final phase = logged
         .where(
           (s) =>
               s.exerciseId == planned.exercise.id &&
-              s.isWarmup == result.isWarmup,
+              s.isWarmup == result.setType.isWarmupPhase,
         )
         .length;
+
+    // The bests to beat, read *before* the set is written so the new set is
+    // never measured against itself.
+    final records = ref.read(personalRecordsRepositoryProvider);
+    final before = result.setType.countsTowardStrength
+        ? await records.baselineFor(
+            planned.exercise.id,
+            sessionId: widget.session.id,
+          )
+        : null;
 
     await ref
         .read(sessionRepositoryProvider)
@@ -305,9 +556,44 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
           setNumber: phase + 1,
           weight: result.weight,
           reps: result.reps,
-          isWarmup: result.isWarmup,
+          setType: result.setType,
           seconds: result.seconds,
+          rpe: result.rpe,
+          rir: result.rir,
         );
+
+    if (before != null) {
+      final broken = recordsSetBy(
+        type: result.setType,
+        weightKg: result.weight,
+        reps: result.reps,
+        seconds: result.seconds,
+        before: before,
+      );
+      if (broken.isNotEmpty && mounted) {
+        _celebrate(planned.exercise.name, broken);
+      }
+    }
+
+    // Mid-superset there is no rest: you go straight to the next exercise of
+    // the group that still has sets to do, so the card moves there instead.
+    // The rest comes once nobody later in the group is left, and the card goes
+    // back to the top of the group for the next round.
+    //
+    // Only for working sets. A warm-up ramps one exercise up on its own before
+    // the rounds start, so it rests like any standalone set and the card stays
+    // put for the next ramp-up.
+    if (!result.setType.isWarmupPhase) {
+      // `logged` was read before the sheet opened, so it is everything but
+      // the set just saved — counted in here by hand.
+      final workingDone = <String, int>{planned.exercise.id: 1};
+      for (final set in logged) {
+        if (set.isWarmup) continue;
+        workingDone[set.exerciseId] = (workingDone[set.exerciseId] ?? 0) + 1;
+      }
+      final rests = _advanceSuperset(planned, workingDone: workingDone);
+      if (!rests) return;
+    }
 
     // Logging a set is exactly when rest starts, so the timer needs no button
     // of its own — one less thing to do between sets.
@@ -325,6 +611,100 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
           exerciseName: exercise.name,
           seconds: seconds,
         );
+  }
+
+  /// Opens the warm-up calculator and logs the ramp sets it returns.
+  ///
+  /// The working weight it starts from is the best guess available, in order:
+  /// a working set already logged today, what overload suggests, the top
+  /// weight of the last session, or nothing (the sheet then asks for one).
+  Future<void> _openWarmupCalculator(
+    BuildContext context,
+    SessionExerciseEntry planned,
+  ) async {
+    final exercise = planned.exercise;
+    final logged = ref.read(sessionSetsProvider(widget.session.id)).value ?? [];
+    final todays = logged
+        .where((s) => s.exerciseId == exercise.id && isWorkingSet(s))
+        .toList();
+
+    double working = todays.isEmpty ? 0 : topWeight(todays) ?? 0;
+    if (working <= 0) {
+      final suggestion = await ref.read(
+        overloadSuggestionProvider((
+          entry: planned.targets,
+          exercise: exercise,
+        )).future,
+      );
+      working = suggestion?.weight ?? 0;
+    }
+    if (working <= 0) {
+      final history = await ref
+          .read(overloadRepositoryProvider)
+          .recentSessions(exercise.id, limit: 1);
+      working = history.isEmpty ? 0 : topWeight(history.first) ?? 0;
+    }
+
+    // The ramp, the plates and the bar are all settings this screen may never
+    // have watched. Wait for their rows, so a customised inventory is not
+    // quietly replaced by the default one for the first warm-up of the day.
+    final unit = ref.read(weightUnitProvider);
+    final kg = unit == WeightUnit.kg;
+    final ramp = await _readSetting(warmupRampProvider);
+    await _readSetting(
+      rawSettingProvider(kg ? platesKgSetting : platesLbsSetting),
+    );
+    await _readSetting(rawSettingProvider(kg ? barKgSetting : barLbsSetting));
+    if (!context.mounted) return;
+
+    final steps = await showWarmupCalculator(
+      context: context,
+      exercise: exercise,
+      workingKg: working,
+      unit: unit,
+      ramp: ramp,
+      plates: ref.read(availablePlatesProvider),
+      bar: barForExercise(
+        exercise.barWeightKg,
+        ref.read(barWeightProvider),
+        unit,
+      ),
+    );
+    if (steps == null || steps.isEmpty) return;
+
+    // Numbered on from whatever warm-ups are already logged, in the warm-up
+    // phase, so the working sets keep reading 1, 2, 3.
+    final current =
+        ref.read(sessionSetsProvider(widget.session.id)).value ?? logged;
+    var number = current
+        .where((s) => s.exerciseId == exercise.id && s.isWarmup)
+        .length;
+    final sessions = ref.read(sessionRepositoryProvider);
+    for (final step in steps) {
+      await sessions.logSet(
+        sessionId: widget.session.id,
+        exerciseId: exercise.id,
+        setNumber: ++number,
+        weight: step.weightKg,
+        reps: step.reps,
+        setType: SetType.warmup,
+      );
+    }
+  }
+
+  /// The first value of a settings stream, listening while it waits.
+  ///
+  /// A bare `ref.read(provider.future)` is not enough for a setting nothing
+  /// on screen watches: a provider with no listener is paused, so its stream
+  /// never delivers and the read never completes. Listening for the length of
+  /// the wait keeps it running without keeping it alive afterwards.
+  Future<T> _readSetting<T>(StreamProvider<T> provider) async {
+    final subscription = ref.listenManual(provider, (_, _) {});
+    try {
+      return await ref.read(provider.future);
+    } finally {
+      subscription.close();
+    }
   }
 
   Future<void> _finish(BuildContext context) async {
@@ -345,22 +725,35 @@ class _CurrentExerciseCard extends ConsumerWidget {
   const _CurrentExerciseCard({
     super.key,
     required this.planned,
+    required this.supersetPartners,
     required this.loggedSets,
     required this.onLog,
+    required this.onWarmupCalculator,
+    required this.onMore,
   });
 
-  final PlannedExercise planned;
+  final SessionExerciseEntry planned;
+
+  /// The rest of its superset, in order; empty when it stands alone.
+  final List<SessionExerciseEntry> supersetPartners;
+
   final List<LoggedSet> loggedSets;
 
-  /// Takes whether the ramp-up button was the one pressed. The sheet can still
-  /// change its mind afterwards.
-  final void Function(bool isWarmup) onLog;
+  /// Takes the set type the pressed button starts the sheet on. The sheet can
+  /// still change its mind afterwards.
+  final void Function(SetType type) onLog;
+
+  /// Opens the ramp calculator for this exercise.
+  final VoidCallback onWarmupCalculator;
+
+  /// Opens the swap / remove menu.
+  final VoidCallback onMore;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final accent = ref.watch(accentColorProvider);
-    final entry = planned.entry;
+    final entry = planned.targets;
     final exercise = planned.exercise;
     final working = loggedSets.where((s) => !s.isWarmup).length;
 
@@ -404,8 +797,23 @@ class _CurrentExerciseCard extends ConsumerWidget {
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
+              // Swap and remove: things you do to the list, not to a set, so
+              // they sit behind one quiet button rather than beside Log set.
+              SizedBox(
+                width: 32,
+                height: 24,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  iconSize: 20,
+                  icon: const Icon(Icons.more_vert),
+                  tooltip: 'Exercise options',
+                  onPressed: onMore,
+                ),
+              ),
             ],
           ),
+          if (supersetPartners.isNotEmpty)
+            _SupersetLine(partners: supersetPartners, accent: accent),
           _SuggestionLine(planned: planned),
           // The reason the feature exists. A seat height is worth nothing in a
           // library you have to go and find — it is worth something in the
@@ -425,9 +833,18 @@ class _CurrentExerciseCard extends ConsumerWidget {
               _WarmupButton(
                 planned: planned,
                 loggedSets: loggedSets,
-                onPressed: () => onLog(true),
+                onPressed: () => onLog(SetType.warmup),
               ),
-              const SizedBox(width: 10),
+              // Next to the warm-up button it fills in for. Not offered on a
+              // hold: a ramp is weight climbing towards a working weight, and
+              // a plank has neither.
+              if (!exercise.isTimed)
+                IconButton(
+                  icon: const Icon(Icons.stairs_outlined),
+                  tooltip: 'Warm-up calculator',
+                  onPressed: onWarmupCalculator,
+                ),
+              const SizedBox(width: 6),
               Expanded(
                 child: AppButton(
                   label: 'Log set ${working + 1}',
@@ -437,7 +854,7 @@ class _CurrentExerciseCard extends ConsumerWidget {
                   // from across a gym; a second accent surface here would make
                   // you check which of the two was shouting.
                   kind: AppButtonKind.secondary,
-                  onPressed: () => onLog(false),
+                  onPressed: () => onLog(SetType.normal),
                 ),
               ),
             ],
@@ -460,14 +877,14 @@ class _UpNextRow extends StatelessWidget {
     required this.onTap,
   });
 
-  final PlannedExercise planned;
+  final SessionExerciseEntry planned;
   final List<LoggedSet> loggedSets;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final entry = planned.entry;
+    final entry = planned.targets;
     final done = loggedSets.where((s) => !s.isWarmup).length;
 
     return AppCard(
@@ -541,6 +958,93 @@ class _SetDots extends StatelessWidget {
   }
 }
 
+/// What the card's options menu can do to an exercise.
+enum _EntryAction { swap, remove }
+
+/// "Superset with …" under the card's title: what you go to straight after
+/// this set, with no rest in between.
+class _SupersetLine extends StatelessWidget {
+  const _SupersetLine({required this.partners, required this.accent});
+
+  final List<SessionExerciseEntry> partners;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 9),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.link, size: 15, color: accent),
+          const SizedBox(width: 7),
+          Expanded(
+            child: Text(
+              'Superset with '
+              '${partners.map((p) => p.exercise.name).join(' and ')}'
+              ' — rest after the last one',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Up-next rows that belong to one superset, held together by a rule down
+/// their left edge and a label.
+///
+/// A rule rather than a box around them: the rows are already panes, and a
+/// pane around panes is a heavier frame than "these go together" needs.
+class _SupersetGroup extends ConsumerWidget {
+  const _SupersetGroup({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final accent = ref.watch(accentColorProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 6, bottom: 6, top: 2),
+          child: Row(
+            children: [
+              Icon(Icons.link, size: 14, color: accent),
+              const SizedBox(width: 5),
+              Text(
+                'SUPERSET',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1.1,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.only(left: 10),
+          decoration: BoxDecoration(
+            border: Border(
+              left: BorderSide(color: accent.withValues(alpha: 0.55), width: 2),
+            ),
+          ),
+          child: Column(children: children),
+        ),
+      ],
+    );
+  }
+}
+
 /// A caps heading over a run of rows.
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel(this.text);
@@ -573,14 +1077,14 @@ class _WarmupButton extends StatelessWidget {
     required this.onPressed,
   });
 
-  final PlannedExercise planned;
+  final SessionExerciseEntry planned;
   final List<LoggedSet> loggedSets;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final expected = planned.entry.warmupSets;
+    final expected = planned.targets.warmupSets;
     final done = loggedSets.where((s) => s.isWarmup).length;
     final label = done < expected
         ? 'Warm-up ${done + 1} of $expected'
@@ -624,7 +1128,7 @@ class _WarmupButton extends StatelessWidget {
 class _SuggestionLine extends ConsumerWidget {
   const _SuggestionLine({required this.planned});
 
-  final PlannedExercise planned;
+  final SessionExerciseEntry planned;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -633,7 +1137,7 @@ class _SuggestionLine extends ConsumerWidget {
     final suggestion = ref
         .watch(
           overloadSuggestionProvider((
-            entry: planned.entry,
+            entry: planned.targets,
             exercise: planned.exercise,
           )),
         )
@@ -650,6 +1154,21 @@ class _SuggestionLine extends ConsumerWidget {
       OverloadReason.deload => (
         Icons.trending_down,
         'Several increases in a row — a lighter $weight is suggested',
+      ),
+      OverloadReason.atLimit => (
+        Icons.pause,
+        'Top set was a limit effort last time — holding at $weight',
+      ),
+      // A planned % of 1RM, and a training block's deload week — see
+      // overloadSuggestionProvider for when each applies.
+      OverloadReason.percentOfMax => (
+        Icons.percent,
+        '${formatPercent(suggestion.targetPercent ?? 0)} of your 1RM — $weight',
+      ),
+      OverloadReason.blockDeload => (
+        Icons.trending_down,
+        'Deload week at '
+            '${formatPercent(suggestion.deloadPercent ?? 0)} — $weight',
       ),
       _ => (Icons.remove, 'Same $weight as last time'),
     };
@@ -725,11 +1244,13 @@ class _LoggedSetRow extends ConsumerWidget {
     final theme = Theme.of(context);
     final unit = ref.watch(weightUnitProvider);
 
-    // Warm-ups are dimmed rather than hidden or restyled: they're still your
-    // work, just not the part the numbers are about. Muted text plus the badge
-    // makes the divide readable at arm's length without a heavy separator
-    // cutting the card in two.
+    // Warm-ups and drop sets are dimmed rather than hidden or restyled:
+    // they're still your work, just not the part the strength numbers are
+    // about. Muted text plus the badge makes the divide readable at arm's
+    // length without a heavy separator cutting the card in two.
     final muted = theme.colorScheme.onSurfaceVariant;
+    final dimmed = !isWorkingSet(set);
+    final rating = _ratingLabel(set);
 
     return SizedBox(
       height: 36,
@@ -741,7 +1262,7 @@ class _LoggedSetRow extends ConsumerWidget {
               '${set.setNumber}',
               style: theme.textTheme.labelLarge?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: set.isWarmup ? muted : accent,
+                color: dimmed ? muted : accent,
               ),
             ),
           ),
@@ -753,32 +1274,53 @@ class _LoggedSetRow extends ConsumerWidget {
                 seconds: set.seconds,
                 unit: unit,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodyLarge?.copyWith(
-                color: set.isWarmup ? muted : null,
+                color: dimmed ? muted : null,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
           ),
-          if (set.isWarmup) ...[
-            _WarmupBadge(colour: muted),
+          if (rating != null) ...[
+            Text(
+              rating,
+              style: theme.textTheme.labelSmall?.copyWith(color: muted),
+            ),
+            const SizedBox(width: 6),
+          ],
+          if (_badgeFor(set.type) case final badge?) ...[
+            _SetTypeBadge(letter: badge, colour: muted),
             const SizedBox(width: 4),
           ],
+          // Re-tagging is the common repair: you ramp up, the bar feels
+          // light, and what you called a warm-up was really your first
+          // working set — or the last set went to failure and you only
+          // decided so afterwards. Without this the only fix is deleting the
+          // row and logging it again from memory.
+          //
+          // The shared option sheet rather than a popup menu, whose rows are
+          // too tight to hit with a thumb mid-workout.
           IconButton(
-            // Re-tagging is the common repair: you ramp up, the bar feels
-            // light, and what you called a warm-up was really your first
-            // working set. Without this the only fix is deleting the row and
-            // logging it again from memory.
-            icon: Icon(
-              set.isWarmup ? Icons.arrow_upward : Icons.local_fire_department,
-            ),
+            icon: const Icon(Icons.tune),
             iconSize: 18,
             visualDensity: VisualDensity.compact,
-            tooltip: set.isWarmup
-                ? 'Make this a working set'
-                : 'Make this a warm-up',
-            onPressed: () => ref
-                .read(sessionRepositoryProvider)
-                .setWarmup(id: set.id, isWarmup: !set.isWarmup),
+            tooltip: 'Change set type',
+            onPressed: () async {
+              final type = await showOptionPicker<SetType>(
+                context: context,
+                title: 'Set type',
+                options: [
+                  for (final type in SetType.values)
+                    (value: type, label: type.label, subtitle: null),
+                ],
+                selected: set.type,
+              );
+              if (type == null || type == set.type) return;
+              await ref
+                  .read(sessionRepositoryProvider)
+                  .setSetType(id: set.id, type: type);
+            },
           ),
           IconButton(
             icon: const Icon(Icons.close),
@@ -794,10 +1336,31 @@ class _LoggedSetRow extends ConsumerWidget {
   }
 }
 
-/// The small "W" that marks a ramp-up row.
-class _WarmupBadge extends StatelessWidget {
-  const _WarmupBadge({required this.colour});
+/// The letter a row of [type] is badged with, or null for an ordinary
+/// working set — the default needs no label, and a badge on every row would
+/// stop the unusual ones standing out.
+String? _badgeFor(SetType type) => switch (type) {
+  SetType.warmup => 'W',
+  SetType.drop => 'D',
+  SetType.failure => 'F',
+  SetType.normal => null,
+};
 
+/// "RPE 8" or "RIR 2", whichever the set was rated in, or null when unrated.
+String? _ratingLabel(LoggedSet set) {
+  final rpe = set.rpe;
+  if (rpe != null) {
+    return 'RPE ${rpe == rpe.roundToDouble() ? rpe.round() : rpe}';
+  }
+  if (set.rir != null) return 'RIR ${set.rir}';
+  return null;
+}
+
+/// The small letter that marks a warm-up, drop or failure row.
+class _SetTypeBadge extends StatelessWidget {
+  const _SetTypeBadge({required this.letter, required this.colour});
+
+  final String letter;
   final Color colour;
 
   @override
@@ -809,15 +1372,22 @@ class _WarmupBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
-        'W',
+        letter,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(color: colour),
       ),
     );
   }
 }
 
+/// A workout with nothing in it yet: a free workout just started, or a day
+/// whose plan was empty. Either way the way forward is the same button.
 class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+  const _EmptyState({required this.isFree, required this.onAdd});
+
+  /// True for a free workout, which is *meant* to start empty — so it is
+  /// greeted, not apologised for.
+  final bool isFree;
+  final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -835,13 +1405,25 @@ class _EmptyState extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 16),
-            Text('Nothing to log', style: theme.textTheme.titleLarge),
+            Text(
+              isFree ? 'Free workout' : 'Nothing to log',
+              style: theme.textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
             Text(
-              'This day has no exercises. Add some to its plan first, then '
-              'start the workout again.',
+              isFree
+                  ? 'Add exercises as you go. Nothing here changes your plan.'
+                  : 'This day has no exercises. Add some for today — your '
+                        'plan stays as it is.',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 24),
+            AppButton(
+              label: 'Add exercise',
+              icon: Icons.add,
+              expand: false,
+              onPressed: onAdd,
             ),
           ],
         ),

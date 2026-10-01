@@ -1,0 +1,105 @@
+{
+  "format": "gymfy.plan",
+  "version": 1,
+  "splits": [
+    {
+      "name": "Full Body 5×5",
+      "days": [
+        {
+          "name": "Workout A",
+          "weekdays": [
+            1,
+            5
+          ],
+          "exercises": [
+            {
+              "exerciseId": "barbell_back_squat",
+              "name": "Barbell Back Squat",
+              "muscleIds": [
+                "quads",
+                "glutes",
+                "hamstrings",
+                "lower_back"
+              ],
+              "sets": 5,
+              "reps": 5,
+              "warmupSets": 2
+            },
+            {
+              "exerciseId": "barbell_bench_press",
+              "name": "Barbell Bench Press",
+              "muscleIds": [
+                "chest",
+                "front_deltoid",
+                "triceps"
+              ],
+              "sets": 5,
+              "reps": 5,
+              "warmupSets": 2
+            },
+            {
+              "exerciseId": "barbell_row",
+              "name": "Barbell Row",
+              "muscleIds": [
+                "lats",
+                "trapezius",
+                "rear_deltoid",
+                "biceps"
+              ],
+              "sets": 5,
+              "reps": 5,
+              "warmupSets": 2
+            }
+          ]
+        },
+        {
+          "name": "Workout B",
+          "weekdays": [
+            3
+          ],
+          "exercises": [
+            {
+              "exerciseId": "barbell_back_squat",
+              "name": "Barbell Back Squat",
+              "muscleIds": [
+                "quads",
+                "glutes",
+                "hamstrings",
+                "lower_back"
+              ],
+              "sets": 5,
+              "reps": 5,
+              "warmupSets": 2
+            },
+            {
+              "exerciseId": "overhead_barbell_press",
+              "name": "Overhead Barbell Press",
+              "muscleIds": [
+                "front_deltoid",
+                "triceps",
+                "trapezius"
+              ],
+              "sets": 5,
+              "reps": 5,
+              "warmupSets": 2
+            },
+            {
+              "exerciseId": "deadlift",
+              "name": "Deadlift",
+              "muscleIds": [
+                "lower_back",
+                "glutes",
+                "hamstrings",
+                "trapezius",
+                "lats"
+              ],
+              "sets": 1,
+              "reps": 5,
+              "warmupSets": 2
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

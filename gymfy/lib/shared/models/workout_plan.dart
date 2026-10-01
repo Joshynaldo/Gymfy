@@ -37,6 +37,23 @@ class Splits extends Table {
 
   /// When it was created — handy for a default "newest first" ordering.
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  // Training blocks: the split runs for [blockWeeks] weeks, then one deload
+  // week at [deloadPercent] of the working weights, then the cycle repeats.
+  // All three are null on a split that just runs week after week — every split
+  // that existed before v26. See overload/data/training_block.dart for the one
+  // function that turns these into "which week is this?".
+
+  /// Training weeks per block, before the deload week. Null means no blocks.
+  IntColumn get blockWeeks => integer().nullable()();
+
+  /// The deload week's load as a percentage of the working weights, e.g. 60
+  /// for "60 %". Same 0–100 scale as the overload percentage setting. Null
+  /// falls back to the conventional 10 % off (90) the overload deload uses.
+  RealColumn get deloadPercent => real().nullable()();
+
+  /// When week 1 of the current block began. Null until a block is set up.
+  DateTimeColumn get blockStartedAt => dateTime().nullable()();
 }
 
 /// A single day within a [Split], e.g. "Push" or "Leg Day A".
@@ -122,4 +139,20 @@ class WorkoutExercises extends Table {
   /// fixed 10 should read as "10", not "10–10", and storing them identically
   /// would leave no way to tell "no range" from "a range of one number".
   IntColumn get defaultRepsMax => integer().nullable()();
+
+  /// Superset membership. Planned exercises of the same day that share a
+  /// non-null value form one superset, done back to back with rest only after
+  /// the last of them. Members must sit next to each other in the day's order;
+  /// see `supersetBlocks` in workout/data/supersets.dart, which is how every
+  /// screen should read this. Null means a standalone exercise.
+  ///
+  /// The number itself means nothing beyond "same group" — only equality
+  /// within one day matters, so any unused small integer will do.
+  IntColumn get supersetGroup => integer().nullable()();
+
+  /// Working-set target as a percentage of the estimated 1RM, e.g. 75 for
+  /// "3 × 5 @ 75 %". Same 0–100 scale as the other percentages in the app.
+  /// Null means no percentage target — the weight comes from the overload
+  /// suggestion or the last session, as before v26.
+  RealColumn get targetPercent => real().nullable()();
 }

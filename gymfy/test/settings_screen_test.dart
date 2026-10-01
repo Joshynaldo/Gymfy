@@ -11,6 +11,7 @@ import 'package:gymfy/features/onboarding/data/onboarding_repository.dart';
 import 'package:gymfy/features/overload/data/overload_preference.dart';
 import 'package:gymfy/features/settings/data/notification_preferences.dart';
 import 'package:gymfy/features/settings/screens/settings_screen.dart';
+import 'package:gymfy/features/workout/data/logging_preferences.dart';
 import 'package:gymfy/shared/data/settings_repository.dart';
 import 'package:gymfy/shared/database/app_database.dart';
 import 'package:gymfy/shared/widgets/accent_swatch.dart';
@@ -100,6 +101,12 @@ void main() {
       // Lives in Settings rather than on the More tab: exporting is a
       // once-before-a-phone-swap job, not a tool you reach for mid-session.
       expect(find.text('Export data'), findsOneWidget);
+    });
+
+    testWidgets('backup & restore is reachable from here', (tester) async {
+      await pump(tester);
+
+      expect(find.text('Backup & restore'), findsOneWidget);
     });
 
     testWidgets('progressive overload is configured here, not per exercise', (
@@ -401,6 +408,49 @@ void main() {
       expect(container.read(restTimerVibrateProvider).value, isFalse);
       // Turning off the buzz must not turn off the alert itself.
       expect(container.read(restTimerAlertsProvider).value, isTrue);
+    });
+
+    testWidgets('effort rating starts off', (tester) async {
+      await pump(tester);
+
+      expect(
+        container.read(effortRatingModeProvider).value,
+        EffortRatingMode.off,
+      );
+      expect(find.text('Rate how hard each set was'), findsOneWidget);
+    });
+
+    testWidgets('picking RPE is stored', (tester) async {
+      await pump(tester);
+
+      await tester.tap(find.text('RPE'));
+      await settle(tester);
+      await tester.pumpAndSettle();
+
+      expect(
+        container.read(effortRatingModeProvider).value,
+        EffortRatingMode.rpe,
+      );
+      final raw = await tester.runAsync(
+        () => container
+            .read(settingsRepositoryProvider)
+            .readRaw(effortRatingModeSetting),
+      );
+      expect(raw, 'rpe');
+    });
+
+    testWidgets('the warm-up ramp can be changed', (tester) async {
+      await pump(tester);
+
+      expect(find.textContaining('40 · 60 · 80 %'), findsOneWidget);
+
+      await tester.tap(find.text('Warm-up ramp'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('50 · 70 · 90 %'));
+      await settle(tester);
+      await tester.pumpAndSettle();
+
+      expect(container.read(warmupRampProvider).value, [50, 70, 90]);
     });
   });
 }

@@ -1,6 +1,7 @@
 // Shared overrides for widget tests that render themed UI.
 
 import 'package:gymfy/app/theme/accent_color.dart';
+import 'package:gymfy/features/workout/data/logging_preferences.dart';
 import 'package:gymfy/shared/data/lifter_sex.dart';
 import 'package:gymfy/shared/utils/units.dart';
 
@@ -29,11 +30,25 @@ final defaultWeightUnitOverride = storedWeightUnitProvider.overrideWith(
   (ref) => Stream.value(null),
 );
 
-/// Both of the above — what a widget test rendering a weight usually wants.
+/// All of these — what a widget test rendering a weight usually wants.
 final defaultDisplayOverrides = [
   defaultBodyFigureOverride,
   defaultAccentOverride,
   defaultWeightUnitOverride,
+  ...defaultLoggingOverrides,
+];
+
+/// Pins the logging preferences (effort rating, warm-up ramp) to their
+/// defaults without touching the database.
+///
+/// The active workout reads both when a set is logged or the warm-up
+/// calculator opens. Same reasoning as the overrides above: a test about the
+/// workout screen should not open a real database to learn that rating is off.
+final defaultLoggingOverrides = [
+  effortRatingModeProvider.overrideWith(
+    (ref) => Stream.value(EffortRatingMode.off),
+  ),
+  warmupRampProvider.overrideWith((ref) => Stream.value(defaultWarmupRamp)),
 ];
 
 /// Pins the body diagram to the male figure without touching the database.

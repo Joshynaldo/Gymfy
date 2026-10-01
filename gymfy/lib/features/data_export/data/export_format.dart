@@ -13,17 +13,36 @@
 
 import 'dart:convert';
 
+import '../../../shared/models/set_type.dart';
+
 /// One logged set, flattened for export.
+///
+/// [rpe] and [rir] are whichever effort rating was logged, null when none.
 typedef ExportSet = ({
   DateTime performedAt,
   String sessionName,
   String exerciseName,
   List<String> muscleIds,
   int setNumber,
-  bool isWarmup,
+  SetType setType,
   double weightKg,
   int reps,
+  double? rpe,
+  int? rir,
 });
+
+/// How a set type is spelled in an export.
+///
+/// The stored slugs, except that an ordinary set stays `working` — the word
+/// the CSV used before there were four types, so a spreadsheet filtering on
+/// it keeps working. Spelled so the importer's own set-type reading (which
+/// knows `warm`, `drop` and `fail`) would take them back as the same types.
+String exportSetType(SetType type) => switch (type) {
+  SetType.warmup => 'warmup',
+  SetType.normal => 'working',
+  SetType.drop => 'drop',
+  SetType.failure => 'failure',
+};
 
 /// One body measurement, for the JSON export.
 typedef ExportMeasurement = ({
@@ -69,6 +88,8 @@ const csvColumns = [
   'muscles',
   'set',
   'type',
+  'rpe',
+  'rir',
   'weight_kg',
   'reps',
   'volume_kg',
@@ -93,7 +114,11 @@ String toCsv(List<ExportSet> sets) {
         // correctly but still trips up every naive splitter someone points at it.
         set.muscleIds.join('; '),
         '${set.setNumber}',
-        set.isWarmup ? 'warmup' : 'working',
+        exportSetType(set.setType),
+        // Blank when unrated rather than zero: RPE 0 is not a rating anyone
+        // gives, and RIR 0 is a real one.
+        set.rpe == null ? '' : _number(set.rpe!),
+        set.rir == null ? '' : '${set.rir}',
         _number(set.weightKg),
         '${set.reps}',
         _number(set.weightKg * set.reps),
@@ -154,9 +179,14 @@ String toJson(ExportData data, {DateTime? exportedAt}) {
                 'exercise': set.exerciseName,
                 'muscles': set.muscleIds,
                 'set': set.setNumber,
-                'warmup': set.isWarmup,
+                'type': exportSetType(set.setType),
+                // Kept beside `type` for anything that read the boolean
+                // before there were four kinds of set.
+                'warmup': set.setType == SetType.warmup,
                 'weightKg': set.weightKg,
                 'reps': set.reps,
+                if (set.rpe != null) 'rpe': set.rpe,
+                if (set.rir != null) 'rir': set.rir,
               },
           ],
         },

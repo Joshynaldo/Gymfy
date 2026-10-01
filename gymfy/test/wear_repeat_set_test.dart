@@ -8,6 +8,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/features/wear/data/wear_sync.dart';
 import 'package:gymfy/shared/database/app_database.dart';
+import 'package:gymfy/shared/models/set_type.dart';
 import 'package:gymfy/shared/utils/units.dart';
 
 LoggedSet _set({
@@ -16,6 +17,7 @@ LoggedSet _set({
   double weight = 80,
   int reps = 8,
   bool isWarmup = false,
+  SetType? type,
   int? seconds,
 }) => LoggedSet(
   id: id,
@@ -24,7 +26,7 @@ LoggedSet _set({
   setNumber: id,
   weight: weight,
   reps: reps,
-  isWarmup: isWarmup,
+  setType: (type ?? (isWarmup ? SetType.warmup : SetType.normal)).name,
   seconds: seconds,
 );
 
@@ -50,6 +52,26 @@ void main() {
       ]);
 
       expect(last?.weight, 80);
+    });
+
+    test('skips drop sets too', () {
+      // A drop set is stripped down on purpose. Repeating it as an ordinary
+      // set would feed overload a light set as though it counted.
+      final last = lastWorkingSet([
+        _set(id: 1, weight: 80),
+        _set(id: 2, weight: 50, type: SetType.drop),
+      ]);
+
+      expect(last?.weight, 80);
+    });
+
+    test('but a failure set is a working set', () {
+      final last = lastWorkingSet([
+        _set(id: 1, weight: 80),
+        _set(id: 2, weight: 80, reps: 10, type: SetType.failure),
+      ]);
+
+      expect(last?.id, 2);
     });
 
     test('and finds nothing when there are only warm-ups', () {

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../shared/database/app_database.dart';
+import '../../../shared/models/set_type.dart';
 
 part 'muscle_fatigue_repository.g.dart';
 
@@ -57,7 +58,7 @@ class MuscleFatigueRepository {
               // Warm-ups don't fatigue you — ramping up to your working weight is
               // the opposite of accumulating work. Counting them would make a
               // careful lifter look more beaten up than a careless one.
-              _db.loggedSets.isWarmup.equals(false),
+              _db.loggedSets.setType.isNotValue(SetType.warmup.name),
         );
 
     return query.watch().map((rows) {

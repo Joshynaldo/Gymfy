@@ -613,7 +613,13 @@ Track progress here. Update after each session.
   - Aufwärmsätze sind **drin und markiert** (`warmup`/`working`). Das sind deine Daten; ein Export, der entscheidet was du sehen darfst, ist einer dem man nicht trauen kann
   - Unfertige Sessions bleiben draußen — gleiche Regel wie Streak und Recap
   - Leerer Log → Hinweis statt Datei-Dialog mit anschließender Kopfzeile ohne Inhalt
-  - **Kein Backup, und das steht auch so auf dem Screen**: es gibt keinen Importer, Fotos sind nicht dabei
+  - **Kein Backup, und das steht auch so auf dem Screen**: es gibt keinen Importer, Fotos sind nicht dabei. Der Hinweis verlinkt jetzt auf Backup & Restore
+- [x] **Backup & Restore (P1)** — More → Settings → **Data → "Backup & restore"**. Eine `.gymfy-backup`-Datei (ein Zip): `backup.json` mit **jeder Tabelle aus `AppDatabase.allTables`**, roh wie SQLite sie hält (inkl. ids), plus die **Fortschrittsfotos** unter `photos/`
+  - Tabellen werden generisch gelesen, nicht von Hand aufgezählt. Ein Test vergleicht mit `sqlite_master`, ein zweiter verlangt, dass die Test-Fixture in **jeder** Tabelle eine Zeile hat — eine neue Tabelle ohne Backup-Abdeckung lässt den Test fehlschlagen
+  - Restore = eine Transaktion: Version prüfen (neueres Schema → abgelehnt, älter als v25 → abgelehnt), ältere Payloads migrieren (v25 `is_warmup` → `set_type`, `session_exercises` für offene Sessions nachgefüllt), alles löschen, mit ids einfügen. Foreign Keys bleiben an (deferred, am Ende `foreign_key_check`). Tabellen-/Spaltennamen werden gegen das Schema geprüft, bevor sie in SQL landen
+  - Bestätigungsdialog zeigt Datum, Workouts, Sätze, Fotos. Restore wird verweigert, solange ein Workout läuft. Die Auto-Backup-Einstellungen des Geräts überleben einen Restore
+  - **Automatisches Backup**: Off / Weekly / After workout, in einen gewählten Ordner, die letzten 10 werden behalten (nur Dateien mit unserem Namensschema werden je gelöscht). Läuft nur, wenn die App offen ist (Start/Resume, Workout beendet) — kein WorkManager
+  - **Grenze**: `file_picker` 12 kann zwar eine dauerhafte SAF-Freigabe auf einen Ordner nehmen, bietet aber keine API, *in* diesen Ordner zu schreiben. Deshalb Pfad + `dart:io`: funktioniert ab Android 11 in Documents/ und Download/, nicht für Cloud-Ordner/SD-Karten. Schreibtest beim Auswählen; scheitert er, wird der App-eigene Ordner (`Android/data/…/files/Backups`, wird bei Deinstallation gelöscht) angeboten. Echtes SAF bräuchte ~50 Zeilen Kotlin im `MainActivity`-Channel (wie `WearBridge`)
 - [x] **Feedback** — **More → Help → "Send feedback"**, öffnet die Mail-App an `gymfy.dev@gmail.com` mit fertigem Betreff und Textkörper. Entschieden für `mailto:`: ein Formular bräuchte ein Backend und würde genau den einen Satz kaputtmachen, den die Datenschutzerklärung sagen darf; ein GitHub-Issues-Link würde von jemandem, der nur einen Absturz melden will, einen Account verlangen
   - **Komponiert, nie gesendet.** Die Mail liegt im Mail-Programm des Nutzers, er liest sie, ändert sie, schickt sie selbst ab. Die App verschickt nichts
   - Angehängt sind **genau zwei Zeilen**: App-Version und Plattform + OS-Version. Dazu ein Satz, dass man sie löschen darf. Der Untertitel auf dem Screen sagt vorher, was mitgeht — ein Test prüft, dass Name, Körpergewicht und Einheiten nicht im Textkörper landen können
@@ -709,6 +715,23 @@ Track progress here. Update after each session.
 ---
 
 ## 🟢 Done
+
+### Wettbewerbs-Lücken (Schema v26, P1–P3) ✅
+Ein Schema-Sprung (v25 → v26) für alles, danach vier Feature-Branches ohne weitere Schema-Änderung. Vertrag, Helfer und Regeln stehen in `FEATURE_PLAN.md`
+- [x] **Backup & Restore (P1)** — Details oben beim Daten-Export
+- [x] **Satztypen** — Warm-up / Working / Drop / Failure statt Warm-up-Schalter. Drop-Sätze bleiben wie Warm-ups aus 1RM, PRs, Charts und Overload raus (leichter wegen Ermüdung, nicht weil man schwächer wurde); Failure zählt. Volumen und Muscle Map zählen alles
+- [x] **RPE / RIR** — optional, Settings → Logging (`effort_rating_mode`, Standard aus). Gespeichert wird nur, was der Nutzer gewählt hat. Ein Top-Satz mit RPE ≥ 9.5 bzw. RIR 0 hält das Gewicht (`OverloadReason.atLimit`), auch wenn alle Reps da waren
+- [x] **Live-PRs** — jeder gespeicherte Arbeitssatz wird gegen die Rekorde geprüft, mit Celebration-Pane und Haptik (respektiert Reduce Motion). Die Zusammenfassung listet alle Rekorde der Session
+- [x] **Warm-up-Rechner** — Rampe vom Arbeitsgewicht über `warmup_ramp_percents`, mit dem eigenen Scheiben-Inventar, geloggt als Warm-up-Sätze
+- [x] Import liest Hevys `set_type` und `rpe`, Export schreibt Satztyp und Bewertung
+- [x] **Supersets** — Day-Builder: Drag-Handles zum Sortieren (`position` wird jetzt wirklich benutzt), Superset mit der Übung darüber/darunter. Gruppen-Nummern werden nach jeder Änderung neu durchgezählt. Rest-Timer startet erst nach dem letzten Mitglied (`restsAfter`), auch beim Wiederholen von der Uhr
+- [x] **Flexible Sessions** — die aktive Session liest ihre eigene Reihenfolge (`session_exercises`) statt den Plan. Übungen hinzufügen (3 × 10), tauschen (nur dieses Workout oder auch im Plan), sortieren, entfernen (nur ohne geloggte Sätze)
+- [x] **Freies Workout** — "Start empty workout" im Workout-Tab und auf der Home-Karte (Rest Day / kein Split). Läuft schon eins, wird es geöffnet statt ein zweites zu starten
+- [x] **Programme** — sechs mitgelieferte `.gymfy`-Pläne in `assets/programs/`, Browser über Workout-Tab und Split-Liste. Hinzufügen läuft über denselben Plan-Import wie beim Teilen
+- [x] **% vom 1RM** — Feld im Sets-&-Reps-Dialog, gerechnet vom getesteten (sonst geschätzten) 1RM, auf ladbares Gewicht gerundet. Ohne 1RM fällt es auf den normalen Overload-Vorschlag zurück
+- [x] **Trainingsblöcke** — pro Split: Trainingswochen, Deload-Last, Startdatum, Banner "Week N of M". Deload-Wochen fließen nicht in die Overload-Historie
+- [x] Plan-Dateien tragen jetzt optional `supersetGroup` und `targetPercent` (Version bleibt 1, alte Dateien importieren weiter)
+- [ ] Offen: echtes SAF für Auto-Backup (Kotlin-Channel), Blockeinstellungen in Plan-Dateien, Duplikat-Schutz bei "Swap auch im Plan speichern", Day-Builder- und Home-Start prüfen nicht auf eine laufende Session, hinzugefügte Übungen bekommen keinen Deload-/%-Vorschlag des Blocks
 
 ### Phase 7b — Calories Tracker (bereinigt) ✅
 - [x] Habit Tracker komplett entfernt — Screen, Repository, Model, Route, More-Eintrag. Schema v17 droppt `habits` + `habit_entries`. **Vorhandene Habit-Daten sind damit gelöscht** — es gibt nichts mehr, was sie liest

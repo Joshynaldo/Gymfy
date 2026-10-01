@@ -27,6 +27,7 @@ part 'app_database.g.dart';
     WorkoutExercises,
     WorkoutSessions,
     LoggedSets,
+    SessionExercises,
     CalorieEntries,
     BodyMeasurements,
     ProgressPhotos,
@@ -43,7 +44,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 25;
+  int get schemaVersion => 26;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -202,8 +203,16 @@ class AppDatabase extends _$AppDatabase {
       // set, and no planned exercise suddenly grows ramp-up rows. That is the
       // safe direction — mistaking a working set for a warm-up would quietly
       // erase it from your progress charts.
+      //
+      // The set column is raw SQL now, for the same reason as v16: v26 replaced
+      // it with `set_type` and removed it from the Dart schema, but a device
+      // coming from v20 still has to pass through the v21 that had it — v26
+      // reads it to know which sets were warm-ups before dropping it.
       if (from < 21) {
-        await m.addColumn(loggedSets, loggedSets.isWarmup);
+        await customStatement(
+          'ALTER TABLE logged_sets ADD COLUMN is_warmup INTEGER NOT NULL '
+          'DEFAULT 0 CHECK ("is_warmup" IN (0, 1))',
+        );
         await m.addColumn(workoutExercises, workoutExercises.warmupSets);
       }
       // Per-exercise bar weight. Nullable and unset, so every existing row
@@ -234,6 +243,78 @@ class AppDatabase extends _$AppDatabase {
       if (from < 25) {
         await m.addColumn(exercises, exercises.equipment);
       }
+      // v26 is one migration for a whole round of features, so the parallel
+      // work on them never fights over the schema:
+      //
+      // - Set types replace the warm-up boolean. Every old warm-up becomes a
+      //   `warmup` and every other set `normal` — exactly what the boolean
+      //   said, so no chart, PR or suggestion moves. The flag is copied before
+      //   the column is dropped, in the same transaction, so there is no
+      //   moment where a warm-up has been forgotten.
+      // - RPE / RIR, superset groups, percent-of-1RM targets and the training
+      //   block fields are all nullable and start null: every existing set is
+      //   unrated, every planned exercise standalone with no percentage, and
+      //   every split runs week after week, as before.
+      // - The session running order is a new table. A session still in
+      //   progress gets its day's plan copied in, so a workout left open across
+      //   the update resumes with the same exercises. Finished sessions get
+      //   nothing — their history is their logged sets, and today's plan is not
+      //   what they did.
+      //
+      // Drift does not run `onUpgrade` in a transaction, and SQLite commits
+      // each ALTER on its own. So this step is both: one transaction, so an
+      // app killed halfway through rolls the whole step back, and every
+      // statement safe to run twice, because `user_version` is only written
+      // after `onUpgrade` returns — a kill in that gap reruns the step against
+      // a database that already has it. Without both, a phone killed during
+      // its first launch after the update would fail on "duplicate column" at
+      // every launch after, and the only way out would be wiping the log.
+      if (from < 26) {
+        await transaction(() async {
+          await _addColumnOnce(m, loggedSets, loggedSets.setType);
+          await _addColumnOnce(m, loggedSets, loggedSets.rpe);
+          await _addColumnOnce(m, loggedSets, loggedSets.rir);
+          if (await _hasColumn('logged_sets', 'is_warmup')) {
+            await customStatement(
+              "UPDATE logged_sets SET set_type = 'warmup' WHERE is_warmup = 1",
+            );
+            await customStatement(
+              'ALTER TABLE logged_sets DROP COLUMN is_warmup',
+            );
+          }
+
+          await _addColumnOnce(
+            m,
+            workoutExercises,
+            workoutExercises.supersetGroup,
+          );
+          await _addColumnOnce(
+            m,
+            workoutExercises,
+            workoutExercises.targetPercent,
+          );
+
+          await _addColumnOnce(m, splits, splits.blockWeeks);
+          await _addColumnOnce(m, splits, splits.deloadPercent);
+          await _addColumnOnce(m, splits, splits.blockStartedAt);
+
+          // Backfilled only when the table is new here: a rerun that finds it
+          // already there must not copy the open session's plan in twice.
+          if (!await _hasTable('session_exercises')) {
+            await m.createTable(sessionExercises);
+            await customStatement(
+              'INSERT INTO session_exercises '
+              '(session_id, exercise_id, position, workout_exercise_id) '
+              'SELECT s.id, we.exercise_id, '
+              'ROW_NUMBER() OVER (PARTITION BY s.id '
+              'ORDER BY we.position, we.id) - 1, we.id '
+              'FROM workout_sessions s '
+              'JOIN workout_exercises we ON we.day_id = s.day_id '
+              'WHERE s.completed_at IS NULL',
+            );
+          }
+        });
+      }
     },
     // SQLite doesn't enforce foreign keys unless we turn them on per
     // connection. We need them for the cascade deletes on the workout-plan
@@ -242,6 +323,38 @@ class AppDatabase extends _$AppDatabase {
       await customStatement('PRAGMA foreign_keys = ON');
     },
   );
+
+  /// Whether [table] currently has [column] on disk.
+  ///
+  /// A device that started before v4 created `logged_sets` from today's Dart
+  /// definition, so it may already have `set_type` and never have had
+  /// `is_warmup`; and a v26 step interrupted before `user_version` was written
+  /// runs again over columns it already added. Asking is cheaper than crashing
+  /// on a duplicate column.
+  Future<bool> _hasColumn(String table, String column) async {
+    final rows = await customSelect('PRAGMA table_info($table)').get();
+    return rows.any((row) => row.data['name'] == column);
+  }
+
+  /// Whether a table called [name] exists on disk.
+  Future<bool> _hasTable(String name) async {
+    final rows = await customSelect(
+      "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
+      variables: [Variable.withString(name)],
+    ).get();
+    return rows.isNotEmpty;
+  }
+
+  /// Adds [column] to [table] unless an interrupted earlier run of the same
+  /// migration step already did.
+  Future<void> _addColumnOnce(
+    Migrator m,
+    TableInfo table,
+    GeneratedColumn column,
+  ) async {
+    if (await _hasColumn(table.actualTableName, column.name)) return;
+    await m.addColumn(table, column);
+  }
 }
 
 /// Opens (and creates on first run) the on-device database file.

@@ -11,7 +11,9 @@ import '../../../shared/utils/units.dart';
 import '../../exercises/data/exercise_repository.dart';
 import '../../muscle_map/data/muscle_volume_repository.dart';
 import '../../muscle_map/widgets/muscle_map_view.dart';
+import '../data/personal_records.dart';
 import '../data/session_repository.dart';
+import '../widgets/record_celebration.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../app/theme/glass.dart';
@@ -86,6 +88,12 @@ class _SummaryBody extends ConsumerWidget {
 
     final duration = sessionLength(session.startedAt, session.completedAt);
 
+    // Empty until the query lands, and empty for most sessions — the list
+    // renders nothing either way, so the layout never waits on it.
+    final records =
+        ref.watch(sessionRecordsProvider(session.id)).value ??
+        const <ExerciseRecords>[];
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32) + barInsets(context),
       children: [
@@ -112,6 +120,10 @@ class _SummaryBody extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 24),
+        if (records.isNotEmpty) ...[
+          SessionRecordsList(records: records, nameById: nameById),
+          const SizedBox(height: 24),
+        ],
         if (sets.isEmpty)
           Text(
             'No sets were logged in this workout.',
@@ -271,8 +283,11 @@ class _ExerciseSummaryTile extends ConsumerWidget {
     final theme = Theme.of(context);
     final unit = ref.watch(weightUnitProvider);
     final volume = sets.fold<double>(0, (sum, s) => sum + s.weight * s.reps);
-    // The "top set" is the heaviest; ties broken by the most reps.
-    final topSet = sets.reduce((a, b) {
+    // The "top set" is the heaviest working set; ties broken by the most
+    // reps. Warm-ups and drop sets only stand in when nothing else was logged,
+    // matching the strength filter everywhere else.
+    final working = sets.where(isWorkingSet).toList();
+    final topSet = (working.isEmpty ? sets : working).reduce((a, b) {
       if (b.weight > a.weight) return b;
       if (b.weight == a.weight && b.reps > a.reps) return b;
       return a;

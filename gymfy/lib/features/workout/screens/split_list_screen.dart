@@ -28,7 +28,16 @@ class SplitListScreen extends ConsumerWidget {
     final splitsAsync = ref.watch(splitListProvider);
 
     return GlassScaffold(
-      appBar: GlassAppBar(title: const Text('Splits')),
+      appBar: GlassAppBar(
+        title: const Text('Splits'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.event_note_outlined),
+            tooltip: 'Browse programs',
+            onPressed: () => context.go('/workout/programs'),
+          ),
+        ],
+      ),
       body: (context) => splitsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(

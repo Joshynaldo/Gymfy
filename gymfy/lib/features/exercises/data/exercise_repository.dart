@@ -243,7 +243,8 @@ class ExerciseRepository {
     );
   }
 
-  /// Whether this exercise appears in any logged set or any planned split day.
+  /// Whether this exercise appears in any logged set, any planned split day or
+  /// any session's running order.
   Future<bool> hasHistory(String id) async {
     final logged =
         await (_db.select(_db.loggedSets)
@@ -257,7 +258,16 @@ class ExerciseRepository {
               ..where((t) => t.exerciseId.equals(id))
               ..limit(1))
             .get();
-    return planned.isNotEmpty;
+    if (planned.isNotEmpty) return true;
+
+    // A session's running order references the exercise too (v26), even before
+    // a set is logged for it — a free workout you added it to a minute ago.
+    final inSession =
+        await (_db.select(_db.sessionExercises)
+              ..where((t) => t.exerciseId.equals(id))
+              ..limit(1))
+            .get();
+    return inSession.isNotEmpty;
   }
 
   /// Removes a custom exercise, keeping any history it is part of.

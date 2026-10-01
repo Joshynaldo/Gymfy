@@ -1,0 +1,312 @@
+{
+  "format": "gymfy.plan",
+  "version": 1,
+  "splits": [
+    {
+      "name": "Upper / Lower",
+      "days": [
+        {
+          "name": "Upper A",
+          "weekdays": [
+            1
+          ],
+          "exercises": [
+            {
+              "exerciseId": "barbell_bench_press",
+              "name": "Barbell Bench Press",
+              "muscleIds": [
+                "chest",
+                "front_deltoid",
+                "triceps"
+              ],
+              "sets": 4,
+              "reps": 6,
+              "repsMax": 8,
+              "warmupSets": 2
+            },
+            {
+              "exerciseId": "barbell_row",
+              "name": "Barbell Row",
+              "muscleIds": [
+                "lats",
+                "trapezius",
+                "rear_deltoid",
+                "biceps"
+              ],
+              "sets": 4,
+              "reps": 6,
+              "repsMax": 8
+            },
+            {
+              "exerciseId": "overhead_barbell_press",
+              "name": "Overhead Barbell Press",
+              "muscleIds": [
+                "front_deltoid",
+                "triceps",
+                "trapezius"
+              ],
+              "sets": 3,
+              "reps": 8,
+              "repsMax": 10
+            },
+            {
+              "exerciseId": "lat_pulldown",
+              "name": "Lat Pulldown",
+              "muscleIds": [
+                "lats",
+                "biceps"
+              ],
+              "sets": 3,
+              "reps": 10,
+              "repsMax": 12
+            },
+            {
+              "exerciseId": "barbell_biceps_curl",
+              "name": "Barbell Biceps Curl",
+              "muscleIds": [
+                "biceps",
+                "forearms"
+              ],
+              "sets": 3,
+              "reps": 10,
+              "repsMax": 12,
+              "supersetGroup": 1
+            },
+            {
+              "exerciseId": "triceps_pushdown",
+              "name": "Triceps Pushdown",
+              "muscleIds": [
+                "triceps"
+              ],
+              "sets": 3,
+              "reps": 10,
+              "repsMax": 12,
+              "supersetGroup": 1
+            }
+          ]
+        },
+        {
+          "name": "Lower A",
+          "weekdays": [
+            2
+          ],
+          "exercises": [
+            {
+              "exerciseId": "barbell_back_squat",
+              "name": "Barbell Back Squat",
+              "muscleIds": [
+                "quads",
+                "glutes",
+                "hamstrings",
+                "lower_back"
+              ],
+              "sets": 4,
+              "reps": 6,
+              "repsMax": 8,
+              "warmupSets": 2
+            },
+            {
+              "exerciseId": "romanian_deadlift",
+              "name": "Romanian Deadlift",
+              "muscleIds": [
+                "hamstrings",
+                "glutes",
+                "lower_back"
+              ],
+              "sets": 3,
+              "reps": 8,
+              "repsMax": 10
+            },
+            {
+              "exerciseId": "leg_press",
+              "name": "Leg Press",
+              "muscleIds": [
+                "quads",
+                "glutes",
+                "hamstrings"
+              ],
+              "sets": 3,
+              "reps": 10,
+              "repsMax": 12
+            },
+            {
+              "exerciseId": "lying_leg_curl",
+              "name": "Lying Leg Curl",
+              "muscleIds": [
+                "hamstrings"
+              ],
+              "sets": 3,
+              "reps": 10,
+              "repsMax": 12
+            },
+            {
+              "exerciseId": "standing_calf_raise",
+              "name": "Standing Calf Raise",
+              "muscleIds": [
+                "calves"
+              ],
+              "sets": 4,
+              "reps": 12,
+              "repsMax": 15
+            }
+          ]
+        },
+        {
+          "name": "Upper B",
+          "weekdays": [
+            4
+          ],
+          "exercises": [
+            {
+              "exerciseId": "incline_dumbbell_press",
+              "name": "Incline Dumbbell Press",
+              "muscleIds": [
+                "chest",
+                "front_deltoid",
+                "triceps"
+              ],
+              "sets": 4,
+              "reps": 8,
+              "repsMax": 10
+            },
+            {
+              "exerciseId": "pull_up",
+              "name": "Pull-Up",
+              "muscleIds": [
+                "lats",
+                "biceps",
+                "rear_deltoid"
+              ],
+              "sets": 4,
+              "reps": 6,
+              "repsMax": 10
+            },
+            {
+              "exerciseId": "dumbbell_shoulder_press",
+              "name": "Dumbbell Shoulder Press",
+              "muscleIds": [
+                "front_deltoid",
+                "triceps"
+              ],
+              "sets": 3,
+              "reps": 10,
+              "repsMax": 12
+            },
+            {
+              "exerciseId": "seated_cable_row",
+              "name": "Seated Cable Row",
+              "muscleIds": [
+                "lats",
+                "trapezius",
+                "rear_deltoid",
+                "biceps"
+              ],
+              "sets": 3,
+              "reps": 10,
+              "repsMax": 12
+            },
+            {
+              "exerciseId": "dumbbell_lateral_raise",
+              "name": "Dumbbell Lateral Raise",
+              "muscleIds": [
+                "side_deltoid"
+              ],
+              "sets": 3,
+              "reps": 12,
+              "repsMax": 15,
+              "supersetGroup": 1
+            },
+            {
+              "exerciseId": "face_pull",
+              "name": "Face Pull",
+              "muscleIds": [
+                "rear_deltoid",
+                "trapezius"
+              ],
+              "sets": 3,
+              "reps": 15,
+              "supersetGroup": 1
+            }
+          ]
+        },
+        {
+          "name": "Lower B",
+          "weekdays": [
+            5
+          ],
+          "exercises": [
+            {
+              "exerciseId": "deadlift",
+              "name": "Deadlift",
+              "muscleIds": [
+                "lower_back",
+                "glutes",
+                "hamstrings",
+                "trapezius",
+                "lats"
+              ],
+              "sets": 3,
+              "reps": 5,
+              "warmupSets": 2
+            },
+            {
+              "exerciseId": "front_squat",
+              "name": "Front Squat",
+              "muscleIds": [
+                "quads",
+                "glutes",
+                "abs"
+              ],
+              "sets": 3,
+              "reps": 6,
+              "repsMax": 8
+            },
+            {
+              "exerciseId": "bulgarian_split_squat",
+              "name": "Bulgarian Split Squat",
+              "muscleIds": [
+                "quads",
+                "glutes",
+                "hamstrings"
+              ],
+              "sets": 3,
+              "reps": 8,
+              "repsMax": 10
+            },
+            {
+              "exerciseId": "seated_leg_curl",
+              "name": "Seated Leg Curl",
+              "muscleIds": [
+                "hamstrings"
+              ],
+              "sets": 3,
+              "reps": 10,
+              "repsMax": 12
+            },
+            {
+              "exerciseId": "seated_calf_raise",
+              "name": "Seated Calf Raise",
+              "muscleIds": [
+                "calves"
+              ],
+              "sets": 4,
+              "reps": 12,
+              "repsMax": 15
+            },
+            {
+              "exerciseId": "hanging_leg_raise",
+              "name": "Hanging Leg Raise",
+              "muscleIds": [
+                "abs",
+                "obliques"
+              ],
+              "sets": 3,
+              "reps": 10,
+              "repsMax": 15
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../shared/database/app_database.dart';
+import '../../../shared/models/set_type.dart';
 import '../../calculator/data/one_rm_math.dart';
 
 part 'progress_repository.g.dart';
@@ -163,15 +164,15 @@ class ProgressRepository {
   /// Every exercise that has at least one logged *working* set, sorted by name.
   /// These are the exercises worth charting.
   ///
-  /// Warm-ups don't qualify an exercise: an empty chart is a worse answer than
-  /// not offering the chart at all.
+  /// Warm-ups and drop sets don't qualify an exercise: an empty chart is a
+  /// worse answer than not offering the chart at all.
   Stream<List<Exercise>> watchExercisesWithHistory() {
     final query = _db.select(_db.loggedSets).join([
       innerJoin(
         _db.exercises,
         _db.exercises.id.equalsExp(_db.loggedSets.exerciseId),
       ),
-    ])..where(_db.loggedSets.isWarmup.equals(false));
+    ])..where(_db.loggedSets.setType.isNotIn(strengthExcludedSetTypes));
 
     return query.watch().map((rows) {
       final byId = <String, Exercise>{};
@@ -190,9 +191,9 @@ class ProgressRepository {
   ///
   /// Working sets only. This one query feeds the chart, the personal records
   /// and the estimated 1RM, so filtering here is what keeps a 60 kg ramp-up
-  /// single off your bench graph and out of your PR history. Volume on these
-  /// points is working volume for the same reason — it is what "best volume
-  /// day" is measured against.
+  /// single (or a stripped-down drop set) off your bench graph and out of your
+  /// PR history. Volume on these points is working volume for the same reason
+  /// — it is what "best volume day" is measured against.
   Stream<List<ExerciseHistoryPoint>> watchExerciseHistory(String exerciseId) {
     final query =
         _db.select(_db.loggedSets).join([
@@ -202,13 +203,16 @@ class ProgressRepository {
           ),
         ])..where(
           _db.loggedSets.exerciseId.equals(exerciseId) &
-              _db.loggedSets.isWarmup.equals(false),
+              _db.loggedSets.setType.isNotIn(strengthExcludedSetTypes),
         );
 
     return query.watch().map((rows) {
       // Group the sets by the session they belong to.
       final bySession =
-          <int, List<({DateTime date, double weight, int reps, int? seconds})>>{};
+          <
+            int,
+            List<({DateTime date, double weight, int reps, int? seconds})>
+          >{};
       for (final row in rows) {
         final set = row.readTable(_db.loggedSets);
         final session = row.readTable(_db.workoutSessions);

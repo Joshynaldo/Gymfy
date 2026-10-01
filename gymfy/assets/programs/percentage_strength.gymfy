@@ -1,0 +1,224 @@
+{
+  "format": "gymfy.plan",
+  "version": 1,
+  "splits": [
+    {
+      "name": "Percentage Strength",
+      "days": [
+        {
+          "name": "Squat",
+          "weekdays": [
+            1
+          ],
+          "exercises": [
+            {
+              "exerciseId": "barbell_back_squat",
+              "name": "Barbell Back Squat",
+              "muscleIds": [
+                "quads",
+                "glutes",
+                "hamstrings",
+                "lower_back"
+              ],
+              "sets": 5,
+              "reps": 5,
+              "warmupSets": 2,
+              "targetPercent": 75.0
+            },
+            {
+              "exerciseId": "romanian_deadlift",
+              "name": "Romanian Deadlift",
+              "muscleIds": [
+                "hamstrings",
+                "glutes",
+                "lower_back"
+              ],
+              "sets": 3,
+              "reps": 8
+            },
+            {
+              "exerciseId": "walking_lunge",
+              "name": "Walking Lunge",
+              "muscleIds": [
+                "quads",
+                "glutes",
+                "hamstrings"
+              ],
+              "sets": 3,
+              "reps": 10
+            },
+            {
+              "exerciseId": "hanging_leg_raise",
+              "name": "Hanging Leg Raise",
+              "muscleIds": [
+                "abs",
+                "obliques"
+              ],
+              "sets": 3,
+              "reps": 12
+            }
+          ]
+        },
+        {
+          "name": "Bench",
+          "weekdays": [
+            2
+          ],
+          "exercises": [
+            {
+              "exerciseId": "barbell_bench_press",
+              "name": "Barbell Bench Press",
+              "muscleIds": [
+                "chest",
+                "front_deltoid",
+                "triceps"
+              ],
+              "sets": 5,
+              "reps": 5,
+              "warmupSets": 2,
+              "targetPercent": 75.0
+            },
+            {
+              "exerciseId": "close_grip_bench_press",
+              "name": "Close-Grip Bench Press",
+              "muscleIds": [
+                "triceps",
+                "chest",
+                "front_deltoid"
+              ],
+              "sets": 3,
+              "reps": 8,
+              "targetPercent": 65.0
+            },
+            {
+              "exerciseId": "dumbbell_row",
+              "name": "Dumbbell Row",
+              "muscleIds": [
+                "lats",
+                "trapezius",
+                "biceps"
+              ],
+              "sets": 3,
+              "reps": 10
+            },
+            {
+              "exerciseId": "face_pull",
+              "name": "Face Pull",
+              "muscleIds": [
+                "rear_deltoid",
+                "trapezius"
+              ],
+              "sets": 3,
+              "reps": 15
+            }
+          ]
+        },
+        {
+          "name": "Deadlift",
+          "weekdays": [
+            4
+          ],
+          "exercises": [
+            {
+              "exerciseId": "deadlift",
+              "name": "Deadlift",
+              "muscleIds": [
+                "lower_back",
+                "glutes",
+                "hamstrings",
+                "trapezius",
+                "lats"
+              ],
+              "sets": 5,
+              "reps": 3,
+              "warmupSets": 2,
+              "targetPercent": 80.0
+            },
+            {
+              "exerciseId": "front_squat",
+              "name": "Front Squat",
+              "muscleIds": [
+                "quads",
+                "glutes",
+                "abs"
+              ],
+              "sets": 3,
+              "reps": 6,
+              "warmupSets": 1,
+              "targetPercent": 65.0
+            },
+            {
+              "exerciseId": "lying_leg_curl",
+              "name": "Lying Leg Curl",
+              "muscleIds": [
+                "hamstrings"
+              ],
+              "sets": 3,
+              "reps": 10
+            },
+            {
+              "exerciseId": "cable_crunch",
+              "name": "Cable Crunch",
+              "muscleIds": [
+                "abs"
+              ],
+              "sets": 3,
+              "reps": 12
+            }
+          ]
+        },
+        {
+          "name": "Press",
+          "weekdays": [
+            5
+          ],
+          "exercises": [
+            {
+              "exerciseId": "overhead_barbell_press",
+              "name": "Overhead Barbell Press",
+              "muscleIds": [
+                "front_deltoid",
+                "triceps",
+                "trapezius"
+              ],
+              "sets": 5,
+              "reps": 5,
+              "warmupSets": 2,
+              "targetPercent": 72.5
+            },
+            {
+              "exerciseId": "incline_dumbbell_press",
+              "name": "Incline Dumbbell Press",
+              "muscleIds": [
+                "chest",
+                "front_deltoid",
+                "triceps"
+              ],
+              "sets": 3,
+              "reps": 10
+            },
+            {
+              "exerciseId": "chin_up",
+              "name": "Chin-Up",
+              "muscleIds": [
+                "lats",
+                "biceps"
+              ],
+              "sets": 3,
+              "reps": 8
+            },
+            {
+              "exerciseId": "dumbbell_lateral_raise",
+              "name": "Dumbbell Lateral Raise",
+              "muscleIds": [
+                "side_deltoid"
+              ],
+              "sets": 3,
+              "reps": 15
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

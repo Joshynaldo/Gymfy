@@ -1,0 +1,100 @@
+{
+  "format": "gymfy.plan",
+  "version": 1,
+  "splits": [
+    {
+      "name": "Beginner Full Body",
+      "days": [
+        {
+          "name": "Full Body",
+          "weekdays": [
+            1,
+            3,
+            5
+          ],
+          "exercises": [
+            {
+              "exerciseId": "leg_press",
+              "name": "Leg Press",
+              "muscleIds": [
+                "quads",
+                "glutes",
+                "hamstrings"
+              ],
+              "sets": 3,
+              "reps": 10,
+              "repsMax": 12
+            },
+            {
+              "exerciseId": "dumbbell_bench_press",
+              "name": "Dumbbell Bench Press",
+              "muscleIds": [
+                "chest",
+                "front_deltoid",
+                "triceps"
+              ],
+              "sets": 3,
+              "reps": 8,
+              "repsMax": 12
+            },
+            {
+              "exerciseId": "lat_pulldown",
+              "name": "Lat Pulldown",
+              "muscleIds": [
+                "lats",
+                "biceps"
+              ],
+              "sets": 3,
+              "reps": 10,
+              "repsMax": 12
+            },
+            {
+              "exerciseId": "seated_cable_row",
+              "name": "Seated Cable Row",
+              "muscleIds": [
+                "lats",
+                "trapezius",
+                "rear_deltoid",
+                "biceps"
+              ],
+              "sets": 3,
+              "reps": 10,
+              "repsMax": 12
+            },
+            {
+              "exerciseId": "dumbbell_shoulder_press",
+              "name": "Dumbbell Shoulder Press",
+              "muscleIds": [
+                "front_deltoid",
+                "triceps"
+              ],
+              "sets": 3,
+              "reps": 10,
+              "repsMax": 12
+            },
+            {
+              "exerciseId": "lying_leg_curl",
+              "name": "Lying Leg Curl",
+              "muscleIds": [
+                "hamstrings"
+              ],
+              "sets": 3,
+              "reps": 10,
+              "repsMax": 12
+            },
+            {
+              "exerciseId": "cable_crunch",
+              "name": "Cable Crunch",
+              "muscleIds": [
+                "abs"
+              ],
+              "sets": 3,
+              "reps": 12,
+              "repsMax": 15
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
