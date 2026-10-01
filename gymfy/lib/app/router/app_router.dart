@@ -15,6 +15,7 @@ import '../../features/progress/screens/measurement_history_screen.dart';
 import '../../features/progress/screens/measurements_screen.dart';
 import '../../features/progress/screens/photo_comparison_screen.dart';
 import '../../features/progress/screens/progress_photos_screen.dart';
+import '../../features/backup/screens/backup_screen.dart';
 import '../../features/data_export/screens/export_screen.dart';
 import '../../features/help/screens/help_screen.dart';
 import '../../features/import/screens/import_screen.dart';
@@ -228,6 +229,10 @@ GoRouter goRouter(Ref ref) {
                       GoRoute(
                         path: 'export',
                         builder: (context, state) => const ExportScreen(),
+                      ),
+                      GoRoute(
+                        path: 'backup',
+                        builder: (context, state) => const BackupScreen(),
                       ),
                     ],
                   ),

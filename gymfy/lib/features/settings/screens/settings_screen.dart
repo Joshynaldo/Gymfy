@@ -64,9 +64,27 @@ class SettingsScreen extends ConsumerWidget {
           _RestTimerPreferences(),
           Divider(height: 1),
           _SectionHeader('Data'),
+          _BackupTile(),
           _ExportTile(),
         ],
       ),
+    );
+  }
+}
+
+/// Way in to backup & restore. Above the export because it is the one most
+/// people moving phones actually need: the export can't be imported back.
+class _BackupTile extends StatelessWidget {
+  const _BackupTile();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: const Icon(Icons.backup_outlined),
+      title: const Text('Backup & restore'),
+      subtitle: const Text('Everything in one file, plus automatic backups'),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => context.go('/more/settings/backup'),
     );
   }
 }

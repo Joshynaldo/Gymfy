@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../shared/widgets/app_card.dart';
 import '../data/export_format.dart';
@@ -75,12 +76,27 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
           AppPanel(
             icon: Icons.info_outline,
             title: 'This is a copy, not a backup',
-            child: Text(
-              'Gymfy cannot import these files back, and progress photos '
-              'are not included — they stay as image files on your phone.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Gymfy cannot import these files back, and progress photos '
+                  'are not included. To move to a new phone, or to keep a '
+                  'copy you can restore, use a backup instead.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: () => context.go('/more/settings/backup'),
+                    icon: const Icon(Icons.backup_outlined, size: 18),
+                    label: const Text('Backup & restore'),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
