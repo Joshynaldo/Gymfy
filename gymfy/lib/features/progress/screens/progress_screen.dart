@@ -11,6 +11,9 @@ import '../../../shared/widgets/fade_slide_in.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_icon_button.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
+import '../../calendar/widgets/training_calendar.dart';
+import '../../goals/widgets/goals_link.dart';
+import '../../reviews/widgets/review_links.dart';
 import '../../stats/widgets/stats_sections.dart';
 import '../data/progress_repository.dart';
 import '../widgets/activity_heatmap.dart';
@@ -114,6 +117,8 @@ class _Trends extends ConsumerWidget {
       padding: const EdgeInsets.only(top: 4, bottom: 24) + barInsets(context),
       children: [
         const RecapSection(),
+        // The recap's long form: a calendar month or year written up.
+        const ReviewLinks(),
         if (exercises.isNotEmpty) ...[
           AppSectionHeader(title: 'Per exercise', count: exercises.length),
           for (final exercise in exercises)
@@ -144,6 +149,10 @@ class _AllTime extends StatelessWidget {
       children: const [
         TotalsSection(),
         ActivityHeatmap(),
+        // Beside the year grid: the grid says how the year went, the
+        // calendar what happened on a given day.
+        TrainingCalendar(),
+        GoalsLink(),
         RankSection(),
         StreakCard(),
       ],

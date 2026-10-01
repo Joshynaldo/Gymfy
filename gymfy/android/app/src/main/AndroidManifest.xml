@@ -56,6 +56,21 @@
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
+
+        <!-- Sharing a review as a picture (ShareBridge.kt). The share sheet's
+             target app gets a one-off read grant on one file from
+             res/xml/share_paths.xml and nothing else: not exported, and no
+             permission is added. The authority must match
+             ShareBridge.AUTHORITY_SUFFIX. -->
+        <provider
+            android:name=".ShareFileProvider"
+            android:authorities="${applicationId}.shareprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/share_paths" />
+        </provider>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

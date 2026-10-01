@@ -232,34 +232,107 @@ List<ExerciseRecords> sessionRecordsFrom({
 
   final result = <ExerciseRecords>[];
   for (final exerciseId in order) {
-    final now = RecordBaseline.of(byExercise[exerciseId]!);
-    final before = RecordBaseline.of(earlierByExercise[exerciseId] ?? const []);
-
-    final broken = <BrokenRecord>[];
-    void check(RecordKind kind, num? value, num? previous) {
-      if (value == null || previous == null) return;
-      if (value > previous + _epsilon) {
-        broken.add(
-          BrokenRecord(
-            kind: kind,
-            value: value.toDouble(),
-            previous: previous.toDouble(),
-          ),
-        );
-      }
-    }
-
-    check(RecordKind.weight, now.weightKg, before.weightKg);
-    check(RecordKind.oneRm, now.oneRmKg, before.oneRmKg);
-    check(RecordKind.reps, now.bodyweightReps, before.bodyweightReps);
-    check(RecordKind.hold, now.holdSeconds, before.holdSeconds);
-    check(RecordKind.volume, now.volumeKg, before.volumeKg);
-
+    final broken = _beaten(
+      RecordBaseline.of(byExercise[exerciseId]!),
+      RecordBaseline.of(earlierByExercise[exerciseId] ?? const []),
+    );
     if (broken.isNotEmpty) {
       result.add(ExerciseRecords(exerciseId: exerciseId, records: broken));
     }
   }
   return result;
+}
+
+/// Every best in [now] that beats the same best in [before].
+List<BrokenRecord> _beaten(RecordBaseline now, RecordBaseline before) {
+  final broken = <BrokenRecord>[];
+  void check(RecordKind kind, num? value, num? previous) {
+    if (value == null || previous == null) return;
+    if (value > previous + _epsilon) {
+      broken.add(
+        BrokenRecord(
+          kind: kind,
+          value: value.toDouble(),
+          previous: previous.toDouble(),
+        ),
+      );
+    }
+  }
+
+  check(RecordKind.weight, now.weightKg, before.weightKg);
+  check(RecordKind.oneRm, now.oneRmKg, before.oneRmKg);
+  check(RecordKind.reps, now.bodyweightReps, before.bodyweightReps);
+  check(RecordKind.hold, now.holdSeconds, before.holdSeconds);
+  check(RecordKind.volume, now.volumeKg, before.volumeKg);
+  return broken;
+}
+
+/// The higher of each best in [a] and [b] — the baseline of both their sets
+/// together.
+///
+/// Exact for volume too, because that best is per *session* and a session's
+/// sets never end up split between the two.
+RecordBaseline _higher(RecordBaseline a, RecordBaseline b) {
+  T? max<T extends num>(T? x, T? y) {
+    if (x == null) return y;
+    if (y == null) return x;
+    return y > x ? y : x;
+  }
+
+  return RecordBaseline(
+    weightKg: max(a.weightKg, b.weightKg),
+    oneRmKg: max(a.oneRmKg, b.oneRmKg),
+    bodyweightReps: max(a.bodyweightReps, b.bodyweightReps),
+    holdSeconds: max(a.holdSeconds, b.holdSeconds),
+    volumeKg: max(a.volumeKg, b.volumeKg),
+  );
+}
+
+/// One finished workout's sets, for counting records across the whole log.
+typedef RecordWorkout = ({
+  int sessionId,
+  DateTime startedAt,
+  DateTime finishedAt,
+  List<LoggedSet> sets,
+});
+
+/// How many records each workout in [workouts] set, by session id.
+///
+/// The same rules and the same count as the workout summary — every
+/// [BrokenRecord] is one, so a heavier set that is also a better estimate is
+/// two — which means a month's total is exactly what its summaries added up
+/// to. "Earlier" is by start time with the id breaking ties, as there.
+///
+/// One pass with a running best per exercise rather than re-reading the
+/// history for each workout, so a year of training costs one walk.
+///
+/// Only finished workouts are in the walk. The summary also measures against
+/// a session left open from before, which is too rare a difference to cost a
+/// second query over.
+Map<int, int> recordCountsByWorkout(List<RecordWorkout> workouts) {
+  final ordered = [...workouts]
+    ..sort((a, b) {
+      final byStart = a.startedAt.compareTo(b.startedAt);
+      return byStart != 0 ? byStart : a.sessionId.compareTo(b.sessionId);
+    });
+
+  final best = <String, RecordBaseline>{};
+  final counts = <int, int>{};
+  for (final workout in ordered) {
+    final byExercise = <String, List<LoggedSet>>{};
+    for (final set in workout.sets) {
+      byExercise.putIfAbsent(set.exerciseId, () => []).add(set);
+    }
+    var count = 0;
+    for (final MapEntry(key: exerciseId, value: sets) in byExercise.entries) {
+      final now = RecordBaseline.of(sets);
+      final before = best[exerciseId] ?? const RecordBaseline();
+      count += _beaten(now, before).length;
+      best[exerciseId] = _higher(before, now);
+    }
+    if (count > 0) counts[workout.sessionId] = count;
+  }
+  return counts;
 }
 
 /// Reads the history personal records are measured against.
@@ -353,6 +426,51 @@ class PersonalRecordsRepository {
 
     return sessionRecordsFrom(sessionSets: sessionSets, earlierSets: earlier);
   }
+
+  /// How many records were set on each day, across the whole log — for the
+  /// monthly and yearly reviews.
+  ///
+  /// A day is the day the workout finished, which is how the streak, the
+  /// recap and the reviews date a workout. Working sets only, read once; see
+  /// [recordCountsByWorkout] for the walk.
+  Stream<Map<DateTime, int>> watchRecordsByDay() {
+    final query = _db.select(_db.loggedSets).join([
+      innerJoin(
+        _db.workoutSessions,
+        _db.workoutSessions.id.equalsExp(_db.loggedSets.sessionId) &
+            _db.workoutSessions.completedAt.isNotNull(),
+      ),
+    ])..where(_db.loggedSets.setType.isNotIn(strengthExcludedSetTypes));
+
+    return query.watch().map((rows) {
+      final sessions = <int, WorkoutSession>{};
+      final sets = <int, List<LoggedSet>>{};
+      for (final row in rows) {
+        final session = row.readTable(_db.workoutSessions);
+        sessions[session.id] = session;
+        sets
+            .putIfAbsent(session.id, () => [])
+            .add(row.readTable(_db.loggedSets));
+      }
+      final counts = recordCountsByWorkout([
+        for (final session in sessions.values)
+          (
+            sessionId: session.id,
+            startedAt: session.startedAt,
+            finishedAt: session.completedAt!,
+            sets: sets[session.id]!,
+          ),
+      ]);
+
+      final byDay = <DateTime, int>{};
+      counts.forEach((sessionId, count) {
+        final finished = sessions[sessionId]!.completedAt!;
+        final day = DateTime(finished.year, finished.month, finished.day);
+        byDay[day] = (byDay[day] ?? 0) + count;
+      });
+      return byDay;
+    });
+  }
 }
 
 /// App-wide access to the [PersonalRecordsRepository].
@@ -372,3 +490,8 @@ final sessionRecordsProvider =
           .watch(personalRecordsRepositoryProvider)
           .recordsForSession(sessionId);
     });
+
+/// Records set per day across the whole log, for the reviews.
+final recordsByDayProvider = StreamProvider<Map<DateTime, int>>((ref) {
+  return ref.watch(personalRecordsRepositoryProvider).watchRecordsByDay();
+});

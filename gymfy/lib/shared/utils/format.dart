@@ -80,6 +80,34 @@ String formatShortDate(DateTime dt) => '${dt.day} ${_monthAbbr[dt.month - 1]}';
 /// Just the month, like "Jul" — used along the top of the activity heatmap.
 String formatMonthAbbr(DateTime dt) => _monthAbbr[dt.month - 1];
 
+const _monthNames = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+/// The month's full name, like "September" — for headings, where there is
+/// room to spell it out.
+String formatMonthName(DateTime dt) => _monthNames[dt.month - 1];
+
+/// Month and year, like "September 2026" — the calendar's and the monthly
+/// review's heading.
+String formatMonthYear(DateTime dt) => '${formatMonthName(dt)} ${dt.year}';
+
+/// A short date with the year, like "3 Oct 2026" — for a day that may not be
+/// in this year, such as a goal's deadline.
+String formatDate(DateTime dt) =>
+    '${dt.day} ${_monthAbbr[dt.month - 1]} ${dt.year}';
+
 const _weekdayAbbr = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 /// Formats just the weekday like "Fri" — used by the weekly chart axes.

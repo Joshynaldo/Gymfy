@@ -42,15 +42,21 @@ class ActivityRepository {
   final AppDatabase _db;
 
   /// Streams every completed session that could land on the grid ending [today].
-  Stream<Map<DateTime, DayTraining>> watchMinutesByDay(DateTime today) {
-    final firstDay = activityGridStart(today);
+  Stream<Map<DateTime, DayTraining>> watchMinutesByDay(DateTime today) =>
+      _watchSince(activityGridStart(today));
 
+  /// The same per-day totals over the whole log, with no year cut-off — for
+  /// the reviews, which compare a year against the one before it.
+  Stream<Map<DateTime, DayTraining>> watchAllTrainingByDay() =>
+      _watchSince(null);
+
+  Stream<Map<DateTime, DayTraining>> _watchSince(DateTime? firstDay) {
     final query = _db.select(_db.workoutSessions)
-      ..where(
-        (t) =>
-            t.completedAt.isNotNull() &
-            t.completedAt.isBiggerOrEqualValue(firstDay),
-      );
+      ..where((t) => t.completedAt.isNotNull());
+    // A second `where` is ANDed with the first.
+    if (firstDay != null) {
+      query.where((t) => t.completedAt.isBiggerOrEqualValue(firstDay));
+    }
 
     return query.watch().map((rows) {
       return trainingByDay([
@@ -166,4 +172,12 @@ final activityMinutesProvider = StreamProvider<Map<DateTime, DayTraining>>((
   return ref
       .watch(activityRepositoryProvider)
       .watchMinutesByDay(DateTime.now());
+});
+
+/// Minutes trained per day over the whole log. The year grid needs only the
+/// last year and keeps its own, smaller query; this one is for the reviews.
+final allTrainingByDayProvider = StreamProvider<Map<DateTime, DayTraining>>((
+  ref,
+) {
+  return ref.watch(activityRepositoryProvider).watchAllTrainingByDay();
 });
