@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../shared/database/app_database.dart';
+import '../../programs/widgets/training_block_settings.dart';
 import '../data/workout_repository.dart';
 import '../widgets/free_workout.dart';
 import '../widgets/split_day_list.dart';
@@ -63,6 +64,7 @@ class WorkoutScreen extends ConsumerWidget {
         ),
         body: (context) => _NoSplitsYet(
           onCreate: () => createSplit(context, ref),
+          onBrowse: () => context.go('/workout/programs'),
           onFreeWorkout: () => startFreeWorkout(context, ref),
         ),
       );
@@ -91,10 +93,14 @@ class WorkoutScreen extends ConsumerWidget {
         title: Text(active.name),
         actions: [
           const _FreeWorkoutAction(),
+          TrainingBlockAction(split: active),
           _SwitcherAction(splits: splits, activeId: active.id),
         ],
       ),
-      body: (context) => SplitDayList(splitId: active.id),
+      body: (context) => SplitDayList(
+        splitId: active.id,
+        header: TrainingBlockBanner(split: active),
+      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: AppButton(
         label: 'Add day',
@@ -168,11 +174,13 @@ Future<void> _openSwitcher(
       // This is the screen's own context, not the sheet's, so it is still good
       // after the sheet closed — the `mounted` check above covers the rest.
       context.go('/workout/splits');
+    case _SwitcherActionKind.programs:
+      context.go('/workout/programs');
   }
 }
 
 /// What the user picked in the switcher sheet.
-enum _SwitcherActionKind { activate, create, manage }
+enum _SwitcherActionKind { activate, create, manage, programs }
 
 class _SwitcherChoice {
   const _SwitcherChoice.activate(int id)
@@ -183,6 +191,9 @@ class _SwitcherChoice {
       splitId = null;
   const _SwitcherChoice.manage()
     : action = _SwitcherActionKind.manage,
+      splitId = null;
+  const _SwitcherChoice.programs()
+    : action = _SwitcherActionKind.programs,
       splitId = null;
 
   final _SwitcherActionKind action;
@@ -247,6 +258,12 @@ class _SwitcherSheet extends ConsumerWidget {
                 Navigator.of(context).pop(const _SwitcherChoice.create()),
           ),
           ListTile(
+            leading: const Icon(Icons.event_note_outlined),
+            title: const Text('Browse programs'),
+            onTap: () =>
+                Navigator.of(context).pop(const _SwitcherChoice.programs()),
+          ),
+          ListTile(
             leading: const Icon(Icons.tune),
             title: const Text('Manage splits'),
             onTap: () =>
@@ -260,9 +277,18 @@ class _SwitcherSheet extends ConsumerWidget {
 
 /// Shown the very first time the tab is opened, before any split exists.
 class _NoSplitsYet extends StatelessWidget {
-  const _NoSplitsYet({required this.onCreate, required this.onFreeWorkout});
+  const _NoSplitsYet({
+    required this.onCreate,
+    required this.onBrowse,
+    required this.onFreeWorkout,
+  });
 
   final VoidCallback onCreate;
+
+  /// Opens the bundled programmes — the other way to a first split, for
+  /// someone who would rather start from a known plan than a blank one.
+  final VoidCallback onBrowse;
+
   final VoidCallback onFreeWorkout;
 
   @override
@@ -295,7 +321,12 @@ class _NoSplitsYet extends StatelessWidget {
               label: const Text('New split'),
             ),
             const SizedBox(height: 8),
-            // Second, and quieter: someone opening the app for the first time
+            TextButton.icon(
+              onPressed: onBrowse,
+              icon: const Icon(Icons.event_note_outlined),
+              label: const Text('Start from a program'),
+            ),
+            // Last, and quietest: someone opening the app for the first time
             // at the gym wants to log today's session before planning a week.
             TextButton(
               onPressed: onFreeWorkout,

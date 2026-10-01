@@ -79,6 +79,8 @@ class PlanShareRepository {
                   reps: entry.defaultReps,
                   repsMax: entry.defaultRepsMax,
                   warmupSets: entry.warmupSets,
+                  supersetGroup: entry.supersetGroup,
+                  targetPercent: entry.targetPercent,
                 );
               }(),
           ],
@@ -127,6 +129,10 @@ class PlanShareRepository {
               );
         }
 
+        // The file's order is the day's order. Written to `position` rather
+        // than left to insertion order, so the plan reads the same after a
+        // reorder elsewhere in the day has started using the column.
+        var position = 0;
         for (final exercise in day.exercises) {
           // Belt and braces — `SharedDay.fromJson` already drops these, but a
           // document built in code could still carry one, and a blank id would
@@ -139,10 +145,13 @@ class PlanShareRepository {
                 WorkoutExercisesCompanion.insert(
                   dayId: dayId,
                   exerciseId: exercise.exerciseId,
+                  position: Value(position++),
                   defaultSets: Value(exercise.sets),
                   defaultReps: Value(exercise.reps),
                   defaultRepsMax: Value(exercise.repsMax),
                   warmupSets: Value(exercise.warmupSets),
+                  supersetGroup: Value(exercise.supersetGroup),
+                  targetPercent: Value(exercise.targetPercent),
                 ),
               );
         }

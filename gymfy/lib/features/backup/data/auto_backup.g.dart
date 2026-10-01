@@ -108,7 +108,7 @@ final class AutoBackupWatcherProvider
   }
 }
 
-String _$autoBackupWatcherHash() => r'15f7044414539341d8844755c19f933dafc4127a';
+String _$autoBackupWatcherHash() => r'7eca92238072101ca87971c62d31c7de04e5bb31';
 
 /// Runs automatic backups when they are due.
 ///

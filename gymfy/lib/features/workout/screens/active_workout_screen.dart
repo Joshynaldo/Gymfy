@@ -24,6 +24,7 @@ import '../../exercises/screens/exercise_detail_screen.dart';
 import '../../exercises/widgets/exercise_note.dart';
 import '../../overload/data/overload_math.dart';
 import '../../overload/data/overload_repository.dart';
+import '../../overload/data/percent_target.dart' show formatPercent;
 import '../../plates/data/plate_math.dart';
 import '../../plates/screens/plate_calculator_screen.dart';
 import '../../settings/data/notification_preferences.dart';
@@ -1165,6 +1166,17 @@ class _SuggestionLine extends ConsumerWidget {
       OverloadReason.atLimit => (
         Icons.pause,
         'Top set was a limit effort last time — holding at $weight',
+      ),
+      // A planned % of 1RM, and a training block's deload week — see
+      // overloadSuggestionProvider for when each applies.
+      OverloadReason.percentOfMax => (
+        Icons.percent,
+        '${formatPercent(suggestion.targetPercent ?? 0)} of your 1RM — $weight',
+      ),
+      OverloadReason.blockDeload => (
+        Icons.trending_down,
+        'Deload week at '
+            '${formatPercent(suggestion.deloadPercent ?? 0)} — $weight',
       ),
       _ => (Icons.remove, 'Same $weight as last time'),
     };

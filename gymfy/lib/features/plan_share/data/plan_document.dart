@@ -33,6 +33,8 @@ class SharedExercise {
     required this.reps,
     this.repsMax,
     this.warmupSets = 0,
+    this.supersetGroup,
+    this.targetPercent,
   });
 
   /// The library slug. Built-in exercises share these across installs, so the
@@ -56,6 +58,18 @@ class SharedExercise {
 
   final int warmupSets;
 
+  /// Superset membership, as stored on the plan: exercises of one day sharing
+  /// a value are done back to back. Null for a standalone exercise.
+  ///
+  /// Optional in the file (added after the format shipped), so a plan written
+  /// by an older build simply has no supersets — no version bump needed.
+  final int? supersetGroup;
+
+  /// Working-set target as a percentage of the 1RM, 0–100 (75 = "@ 75 %").
+  /// Null for no percentage target. Optional in the file, like
+  /// [supersetGroup].
+  final double? targetPercent;
+
   Map<String, dynamic> toJson() => {
     'exerciseId': exerciseId,
     'name': name,
@@ -64,6 +78,8 @@ class SharedExercise {
     'reps': reps,
     if (repsMax != null) 'repsMax': repsMax,
     if (warmupSets > 0) 'warmupSets': warmupSets,
+    if (supersetGroup != null) 'supersetGroup': supersetGroup,
+    if (targetPercent != null) 'targetPercent': targetPercent,
   };
 
   factory SharedExercise.fromJson(Map<String, dynamic> json) {
@@ -75,6 +91,10 @@ class SharedExercise {
       reps: _int(json, 'reps', fallback: 10),
       repsMax: json['repsMax'] is num ? (json['repsMax'] as num).toInt() : null,
       warmupSets: _int(json, 'warmupSets', fallback: 0),
+      supersetGroup: json['supersetGroup'] is num
+          ? (json['supersetGroup'] as num).toInt()
+          : null,
+      targetPercent: _percent(json['targetPercent']),
     );
   }
 }
@@ -263,6 +283,15 @@ List<String> _stringList(Map<String, dynamic> json, String key) {
     for (final value in _list(json, key))
       if (value is String) value,
   ];
+}
+
+/// A percentage of the 1RM, or null when absent or outside (0, 100]. A value
+/// no load could mean — zero, negative, 140 % — is dropped rather than turned
+/// into a weight on the bar.
+double? _percent(Object? value) {
+  if (value is! num) return null;
+  final percent = value.toDouble();
+  return percent > 0 && percent <= 100 ? percent : null;
 }
 
 int _int(Map<String, dynamic> json, String key, {required int fallback}) {

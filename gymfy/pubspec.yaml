@@ -158,6 +158,9 @@ flutter:
     - assets/exercises/
     # Muscle-map body diagrams (front + back). Paths are tagged per muscle.
     - assets/svg/
+    # Bundled programmes: ordinary .gymfy plan files, imported through the
+    # same path as a shared plan (see features/programs/).
+    - assets/programs/
 
   # The Hyper theme's typeface. Four static weights (~380 KB in total) bundled
   # into the APK rather than pulled through the google_fonts package: that

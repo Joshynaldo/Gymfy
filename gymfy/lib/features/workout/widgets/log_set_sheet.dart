@@ -17,6 +17,7 @@ import '../../../shared/widgets/app_segmented.dart';
 import '../../../shared/widgets/glass_sheet.dart';
 import '../../../shared/widgets/pressable.dart';
 import '../../overload/data/overload_math.dart';
+import '../../overload/data/percent_target.dart' show formatPercent;
 import '../../plates/widgets/plate_stacker.dart';
 import '../data/logging_preferences.dart';
 
@@ -1054,6 +1055,16 @@ class _SuggestionNote extends StatelessWidget {
         Icons.pause,
         'You hit every set, but the top set was a limit effort — staying at '
             '${formatWeightUnit(suggestion.weight, unit)}.',
+      ),
+      OverloadReason.percentOfMax => (
+        Icons.percent,
+        'Planned at ${formatPercent(suggestion.targetPercent ?? 0)} of your '
+            '1RM — ${formatWeightUnit(suggestion.weight, unit)}.',
+      ),
+      OverloadReason.blockDeload => (
+        Icons.trending_down,
+        'Deload week: ${formatPercent(suggestion.deloadPercent ?? 0)} of your '
+            'working weight — ${formatWeightUnit(suggestion.weight, unit)}.',
       ),
       _ => (
         Icons.remove,

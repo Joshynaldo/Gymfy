@@ -3,12 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_chip.dart';
 import '../../../shared/widgets/app_picker.dart';
 import '../../../shared/widgets/exercise_thumbnail.dart';
 import '../../../shared/widgets/number_wheel.dart';
+import '../../overload/data/percent_target.dart' show formatPercent;
+import '../../programs/data/training_plan_repository.dart';
+import '../../programs/widgets/percent_target_picker.dart';
 import '../data/session_repository.dart';
 import '../data/supersets.dart';
 import '../data/workout_repository.dart';
@@ -218,6 +222,8 @@ class _PlannedExerciseTile extends ConsumerWidget {
             entry.warmupSets == 1
                 ? '1 warm-up'
                 : '${entry.warmupSets} warm-ups',
+          if (entry.targetPercent != null)
+            '@ ${formatPercent(entry.targetPercent!)} 1RM',
         ].join(' • '),
       ),
       trailing: Row(
@@ -348,9 +354,19 @@ class _PlannedExerciseTile extends ConsumerWidget {
         initialRepsMax: planned.entry.defaultRepsMax,
         initialWarmups: planned.entry.warmupSets,
         otherExercises: dayExercises - 1,
+        exercise: planned.exercise,
+        initialPercent: planned.entry.targetPercent,
       ),
     );
     if (result == null) return;
+
+    // The percentage belongs to this exercise alone, even under "Save to
+    // all": 75 % of a squat max says nothing about a cable fly.
+    if (result.percent != planned.entry.targetPercent) {
+      await ref
+          .read(trainingPlanRepositoryProvider)
+          .setTargetPercent(planned.entry.id, result.percent);
+    }
 
     final repository = ref.read(workoutRepositoryProvider);
     if (!result.applyToAll) {
@@ -392,6 +408,7 @@ typedef _SetsRepsResult = ({
   int? repsMax,
   int warmups,
   bool applyToAll,
+  double? percent,
 });
 
 /// Wheel index 0 is the value 1: these wheels count from one, because zero
@@ -417,6 +434,8 @@ class _SetsRepsDialog extends StatefulWidget {
     required this.initialRepsMax,
     required this.initialWarmups,
     required this.otherExercises,
+    this.exercise,
+    this.initialPercent,
   });
 
   final int initialSets;
@@ -434,6 +453,13 @@ class _SetsRepsDialog extends StatefulWidget {
   /// day it would be a checkbox that changes nothing, which is worse than an
   /// absent one.
   final int otherExercises;
+
+  /// The exercise being edited, for the percentage-of-1RM picker. Null hides
+  /// the picker.
+  final Exercise? exercise;
+
+  /// The stored percentage-of-1RM target, or null for none.
+  final double? initialPercent;
 
   @override
   State<_SetsRepsDialog> createState() => _SetsRepsDialogState();
@@ -460,6 +486,8 @@ class _SetsRepsDialogState extends State<_SetsRepsDialog> {
 
   late int _warmups = widget.initialWarmups.clamp(0, _maxWarmups);
 
+  late double? _percent = widget.initialPercent;
+
   @override
   void dispose() {
     _setsController.dispose();
@@ -478,6 +506,7 @@ class _SetsRepsDialogState extends State<_SetsRepsDialog> {
       repsMax: _useRange ? _repsMaxController.selectedItem + 1 : null,
       warmups: _warmups,
       applyToAll: applyToAll,
+      percent: _percent,
     ));
   }
 
@@ -556,6 +585,17 @@ class _SetsRepsDialogState extends State<_SetsRepsDialog> {
                   ),
               ],
             ),
+            // Not for timed exercises: a percentage of a one-rep max means
+            // nothing for a plank.
+            if (widget.exercise case final exercise?
+                when !exercise.isTimed) ...[
+              const SizedBox(height: 16),
+              PercentTargetPicker(
+                exercise: exercise,
+                value: _percent,
+                onChanged: (value) => setState(() => _percent = value),
+              ),
+            ],
           ],
         ),
       ),

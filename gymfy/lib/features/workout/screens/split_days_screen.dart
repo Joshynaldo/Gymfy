@@ -7,6 +7,7 @@ import '../../../app/theme/accent_color.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/name_prompt_dialog.dart';
+import '../../programs/widgets/training_block_settings.dart';
 import '../data/workout_repository.dart';
 import '../widgets/split_day_list.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
@@ -35,9 +36,17 @@ class SplitDaysScreen extends ConsumerWidget {
     return GlassScaffold(
       appBar: GlassAppBar(
         title: Text(title),
-        actions: [if (split != null) ActiveSplitAction(split: split)],
+        actions: [
+          if (split != null) ...[
+            TrainingBlockAction(split: split),
+            ActiveSplitAction(split: split),
+          ],
+        ],
       ),
-      body: (context) => SplitDayList(splitId: splitId),
+      body: (context) => SplitDayList(
+        splitId: splitId,
+        header: split == null ? null : TrainingBlockBanner(split: split),
+      ),
       // Centred, and in the shape the design gives an action: the navigation
       // pill below it is centred too, and a button tucked into the corner
       // between them read as something that had been left there.
