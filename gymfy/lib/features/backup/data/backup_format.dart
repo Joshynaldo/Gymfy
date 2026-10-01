@@ -254,7 +254,10 @@ BackupPayload migrateBackup(BackupPayload payload, {required int to}) {
 }
 
 /// Payload migrations, keyed by the version they upgrade *from*.
-final Map<int, BackupPayload Function(BackupPayload)> _steps = {25: _from25};
+final Map<int, BackupPayload Function(BackupPayload)> _steps = {
+  25: _from25,
+  26: _from26,
+};
 
 /// v25 → v26: the warm-up flag becomes a set type, and sessions gain their own
 /// running order.
@@ -317,6 +320,38 @@ BackupPayload _from25(BackupPayload old) {
 
   return BackupPayload(
     schemaVersion: 26,
+    createdAt: old.createdAt,
+    tables: tables,
+    photos: old.photos,
+    exerciseImages: old.exerciseImages,
+  );
+}
+
+/// v26 → v27: goals arrive. A backup from before them has none, so the step
+/// adds the table empty — the restore insists every table is present, and an
+/// absent one would otherwise read as a damaged file.
+BackupPayload _from26(BackupPayload old) {
+  final tables = Map<String, BackupTable>.of(old.tables);
+  tables.putIfAbsent(
+    'goals',
+    () => BackupTable(
+      columns: const [
+        'id',
+        'kind',
+        'exercise_id',
+        'target',
+        'start_value',
+        'deadline',
+        'created_at',
+        'celebrated_at',
+        'archived_at',
+      ],
+      rows: const [],
+    ),
+  );
+
+  return BackupPayload(
+    schemaVersion: 27,
     createdAt: old.createdAt,
     tables: tables,
     photos: old.photos,

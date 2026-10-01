@@ -23,10 +23,20 @@ import '../../../app/theme/glass.dart';
 ///
 /// Reachable via `/workout/summary/:sessionId`, so tapping the system back
 /// button returns to the Workout tab home rather than the live logging screen.
+///
+/// Also opened from the training calendar in Progress, at
+/// `/progress/session/:sessionId`, as [fromHistory]: an old workout looked up,
+/// not one just finished — so it has a back arrow, and "Done" goes back to the
+/// calendar instead of to the Workout tab.
 class WorkoutSummaryScreen extends ConsumerWidget {
-  const WorkoutSummaryScreen({super.key, required this.sessionId});
+  const WorkoutSummaryScreen({
+    super.key,
+    required this.sessionId,
+    this.fromHistory = false,
+  });
 
   final int sessionId;
+  final bool fromHistory;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,8 +44,8 @@ class WorkoutSummaryScreen extends ConsumerWidget {
 
     return GlassScaffold(
       appBar: GlassAppBar(
-        title: const Text('Workout complete'),
-        automaticallyImplyLeading: false,
+        title: Text(fromHistory ? 'Workout' : 'Workout complete'),
+        automaticallyImplyLeading: fromHistory,
       ),
       body: (context) => sessionAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -52,7 +62,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
           if (session == null) {
             return const Center(child: Text('Workout not found.'));
           }
-          return _SummaryBody(session: session);
+          return _SummaryBody(session: session, fromHistory: fromHistory);
         },
       ),
     );
@@ -60,9 +70,10 @@ class WorkoutSummaryScreen extends ConsumerWidget {
 }
 
 class _SummaryBody extends ConsumerWidget {
-  const _SummaryBody({required this.session});
+  const _SummaryBody({required this.session, required this.fromHistory});
 
   final WorkoutSession session;
+  final bool fromHistory;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -151,7 +162,7 @@ class _SummaryBody extends ConsumerWidget {
         ],
         const SizedBox(height: 24),
         FilledButton(
-          onPressed: () => context.go('/workout'),
+          onPressed: () => fromHistory ? context.pop() : context.go('/workout'),
           child: const Text('Done'),
         ),
       ],

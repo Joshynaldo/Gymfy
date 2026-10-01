@@ -130,3 +130,55 @@ picker that feeds the existing plan import (`plan_share`); `plan_document.dart`
 existing plate rounding; split settings UI for `block_weeks`,
 `deload_percent`, `block_started_at`; overload/active workout apply
 `deloadPercentFor` during a deload week from `trainingBlockWeekForSplit`.
+
+# Schema v27: goals
+
+One new table, nothing else changed (`if (from < 27)` in app_database.dart,
+transactional and safe to rerun like v26). Backups: `_from26` in
+backup_format.dart adds an empty `goals` table to a v26 payload, because a
+restore refuses a backup with a table missing.
+
+### New table `goals` (lib/shared/models/goal.dart)
+| column | type | meaning |
+|---|---|---|
+| `kind` | TEXT | `GoalKind` slug: `lift`, `frequency`, `bodyweight`. `GoalKind.parse` returns null for an unknown slug; such goals are skipped, never guessed. |
+| `exercise_id` | TEXT NULL → exercises, **cascade** | Lift goals only. |
+| `target` | REAL | kg for lift/bodyweight, workouts per week for frequency. |
+| `start_value` | REAL NULL | Best working weight / latest bodyweight when the goal was set. Progress runs from here; for bodyweight it also decides cut vs gain. |
+| `deadline` | DATETIME NULL | Midnight. Never set on frequency goals. |
+| `created_at` | DATETIME | Bodyweight goals only count weigh-ins from this day on. |
+| `celebrated_at` | DATETIME NULL | When the user dismissed the celebration. The only stored part of "reached". |
+| `archived_at` | DATETIME NULL | Off Home and the active list, kept for the record. |
+
+**Reached is derived, never stored** (`features/goals/data/goal_progress.dart`):
+- Lift = heaviest *working* set at any rep count, or a tested 1RM. Not the
+  estimated 1RM — "lift 100 kg" is about the bar.
+- Bodyweight = first weigh-in on/after `created_at` crossing the target; stays
+  reached if the scale bounces back.
+- Frequency = completed workouts (recap rule: finished and with sets, free
+  workouts included) in the current week, which starts on
+  `firstWeekdayProvider` (device region, `firstWeekdayFor`). Celebrated once
+  per week: `celebrate` compares `celebrated_at` with the moment this week's
+  target was met.
+- Editing a goal clears `celebrated_at`.
+
+## Helpers added with v27 (reuse them)
+- `shared/utils/dates.dart`: `startOfWeek(day, firstWeekday)`, `daysBetween`.
+- `shared/utils/weekday.dart`: `firstWeekdayFor(Locale)` (CLDR table, no
+  `intl`), `weekdaysFrom(first)`. `shared/data/week_start.dart`:
+  `firstWeekdayProvider` (device region; Gymfy's own localisations are
+  English-only and would always say Sunday).
+- `shared/utils/format.dart`: `formatMonthName`, `formatMonthYear`,
+  `formatDate` ("3 Oct 2026").
+- `features/exercises/data/exercise_names.dart`: `exerciseNamesProvider`
+  (id → name, archived included).
+- `features/workout/data/personal_records.dart`: `recordCountsByWorkout` and
+  `recordsByDayProvider` — the summary's record rules over the whole log in
+  one pass. A month's count equals the sum of its summaries.
+- `features/home/data/activity_repository.dart`: `allTrainingByDayProvider`
+  (the heatmap's per-day minutes without the 53-week window).
+- `features/reviews/data/image_share.dart`: `shareOrSaveImage` / `capturePng`;
+  Kotlin half `ShareBridge.kt` (`de.kopten.gymfy/share`, provider
+  `${applicationId}.shareprovider`, files only from `<cache>/share/`).
+- Summary from history: `WorkoutSummaryScreen(fromHistory: true)` at
+  `/progress/session/:id` (back arrow, Done pops).

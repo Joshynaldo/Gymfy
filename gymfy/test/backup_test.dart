@@ -189,6 +189,25 @@ Future<void> populate(AppDatabase db) async {
           seconds: 180,
         ),
       );
+  // v27. One goal with every nullable column filled, one with none, so a
+  // backup that drops either kind of value shows up in the round trip.
+  await db
+      .into(db.goals)
+      .insert(
+        GoalsCompanion.insert(
+          kind: 'lift',
+          exerciseId: const Value('barbell_bench_press'),
+          target: 110,
+          startValue: const Value(102.5),
+          deadline: Value(DateTime(2026, 12, 31)),
+          createdAt: Value(DateTime(2026, 9, 1, 8)),
+          celebratedAt: Value(DateTime(2026, 9, 20, 19)),
+          archivedAt: Value(DateTime(2026, 9, 21)),
+        ),
+      );
+  await db
+      .into(db.goals)
+      .insert(GoalsCompanion.insert(kind: 'frequency', target: 3));
 }
 
 /// Every row of every table, as comparable JSON.
@@ -289,7 +308,7 @@ void main() {
     test('records the schema it was taken from', () async {
       final payload = await repo.snapshot();
       expect(payload.schemaVersion, db.schemaVersion);
-      expect(payload.schemaVersion, 26);
+      expect(payload.schemaVersion, 27);
     });
   });
 
@@ -692,8 +711,20 @@ void main() {
   });
 
   group('older backups', () {
-    /// Rewrites a v26 snapshot into the shape a v25 database would have had.
-    BackupPayload asV25(BackupPayload v26) {
+    /// Rewrites a current snapshot into the shape a v26 database would have
+    /// had: everything but the goals.
+    BackupPayload asV26(BackupPayload current) {
+      return BackupPayload(
+        schemaVersion: 26,
+        createdAt: current.createdAt,
+        tables: Map.of(current.tables)..remove('goals'),
+      );
+    }
+
+    /// Rewrites a current snapshot into the shape a v25 database would have
+    /// had.
+    BackupPayload asV25(BackupPayload current) {
+      final v26 = asV26(current);
       final sets = v26.tables['logged_sets']!;
       final v25Columns = [
         for (final c in sets.columns)
@@ -755,6 +786,51 @@ void main() {
       final planned = await db.select(db.workoutExercises).getSingle();
       expect(planned.supersetGroup, isNull);
       expect(planned.targetPercent, isNull);
+      // And it passes through v27 on the way: no goals, but no complaint
+      // about the table being missing either.
+      expect(await db.select(db.goals).get(), isEmpty);
+    });
+
+    test('a v26 backup restores with no goals and everything else', () async {
+      await populate(db);
+      final everything = await repo.snapshot();
+      final v26 = asV26(everything);
+      expect(v26.tables.containsKey('goals'), isFalse);
+      await wipe(db);
+
+      await repo.restorePayload(v26);
+
+      expect(await db.select(db.goals).get(), isEmpty);
+      // Every other table came back exactly as it was.
+      final restored = await repo.snapshot();
+      for (final name in everything.tables.keys) {
+        if (name == 'goals') continue;
+        expect(
+          jsonEncode(restored.tables[name]!.toJson()),
+          jsonEncode(everything.tables[name]!.toJson()),
+          reason: name,
+        );
+      }
+    });
+
+    test('the v26 step adds the goals table with every current column', () {
+      // Built by hand in backup_format.dart, so it can fall out of step with
+      // the Dart table. A column missing here is harmless (the database fills
+      // it), but a column *named* wrong would make the restore refuse the
+      // file as damaged.
+      final migrated = migrateBackup(
+        BackupPayload(
+          schemaVersion: 26,
+          createdAt: DateTime(2026, 9, 1),
+          tables: const {},
+        ),
+        to: 27,
+      );
+      expect(migrated.schemaVersion, 27);
+      expect(migrated.tables['goals']!.rows, isEmpty);
+      expect(migrated.tables['goals']!.columns.toSet(), {
+        for (final column in db.goals.$columns) column.name,
+      });
     });
 
     test(
@@ -899,7 +975,7 @@ void main() {
       final summary = await repo.inspect(path);
 
       expect(summary.createdAt, DateTime(2026, 9, 5, 8, 30));
-      expect(summary.schemaVersion, 26);
+      expect(summary.schemaVersion, 27);
       expect(summary.workouts, 2);
       expect(summary.sets, 5);
     });

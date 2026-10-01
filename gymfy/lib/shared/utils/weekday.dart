@@ -3,6 +3,8 @@
 // ISO numbering rather than 0-based, so these line up with `DateTime.weekday`
 // and "is this today?" is a plain `==` with no off-by-one to get wrong.
 
+import 'dart:ui' show Locale;
+
 /// Every weekday in week order, for building pickers.
 const List<int> weekdays = [1, 2, 3, 4, 5, 6, 7];
 
@@ -51,3 +53,40 @@ String? weekdaySummary(List<int> days) {
   final sorted = [...days]..sort();
   return sorted.map(weekdayShort).join(', ');
 }
+
+/// The weekday a week starts on where [locale] is, as an ISO weekday.
+///
+/// Read from the country, not the language: English in the UK starts on a
+/// Monday and English in the US on a Sunday. The table is CLDR's, written out
+/// by hand rather than pulled from `intl`, which would bring a locale database
+/// into the app for one lookup — the same reason every other date and number
+/// here is formatted by hand.
+///
+/// No country, or one not listed, means Monday: the ISO week, and the one the
+/// activity heatmap's rows already follow.
+int firstWeekdayFor(Locale locale) {
+  final country = locale.countryCode?.toUpperCase();
+  if (country == null) return DateTime.monday;
+  if (_sundayFirst.contains(country)) return DateTime.sunday;
+  if (_saturdayFirst.contains(country)) return DateTime.saturday;
+  if (country == 'MV') return DateTime.friday;
+  return DateTime.monday;
+}
+
+const _sundayFirst = {
+  'AG', 'AS', 'BD', 'BR', 'BS', 'BT', 'BW', 'BZ', 'CA', 'CN', 'CO', 'DM', //
+  'DO', 'ET', 'GT', 'GU', 'HK', 'HN', 'ID', 'IL', 'IN', 'JM', 'JP', 'KE', //
+  'KH', 'KR', 'LA', 'MH', 'MM', 'MO', 'MT', 'MX', 'MZ', 'NI', 'NP', 'PA', //
+  'PE', 'PH', 'PK', 'PR', 'PT', 'PY', 'SA', 'SG', 'SV', 'TH', 'TT', 'TW', //
+  'UM', 'US', 'VE', 'VI', 'WS', 'YE', 'ZA', 'ZW', //
+};
+
+const _saturdayFirst = {
+  'AE', 'AF', 'BH', 'DJ', 'DZ', 'EG', 'IQ', 'IR', 'JO', 'KW', 'LY', 'OM', //
+  'QA', 'SD', 'SY', //
+};
+
+/// The seven weekdays in the order a week starting on [first] runs.
+List<int> weekdaysFrom(int first) => [
+  for (var i = 0; i < 7; i++) (first - 1 + i) % 7 + 1,
+];

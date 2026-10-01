@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The only files ShareFileProvider may hand to another app: the pictures
+     Dart renders into <cache>/share/ for the share sheet (see
+     lib/features/reviews/data/image_share.dart). Nothing else in the app's
+     storage is reachable through it - not the database, not the photos. -->
+<paths>
+    <cache-path name="shared_images" path="share/" />
+</paths>

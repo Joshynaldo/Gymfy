@@ -94,8 +94,16 @@ Gymfy is free and will stay free: no subscription, no pro tier, nothing to unloc
   second view for fatigue: how much is still recovering, fading on a 48-hour
   half-life. Male and female body diagrams.
 - **A year of activity** in a GitHub-style heatmap, plus your training streak.
+- **A training calendar** month by month. Tap a day to see what you did and open
+  the workout.
 - **Charts** for volume, workout frequency and muscle groups over a week, a month
   or a year.
+- **Monthly review and Year in Training.** Workouts, volume, time trained, top
+  exercises, records and most-trained muscles, compared with the month or year
+  before. Share one as an image.
+- **Goals.** Lift a weight on an exercise by a date, train a number of times a
+  week, or reach a bodyweight. Progress fills in from what you log, shows on
+  Home, and gets a small celebration when you get there.
 - **Per-exercise progress** for top set, volume and estimated 1RM, with dated
   personal records.
 - **Body measurements** with history charts, and **progress photos** with a
@@ -218,9 +226,11 @@ gymfy/
       theme/             ThemeData, the glass material, accent provider
     features/            one folder per feature: providers, widgets, screens
       calculator/          1RM estimates and strength rank
+      calendar/            the month-by-month training calendar
       calories/            calorie log (moving out into its own app)
       data_export/         export everything to a file
       exercises/           library, seed data, GIF previews
+      goals/               lift, weekly and bodyweight goals
       help/                about the app
       home/                today's workout, streak, activity heatmap
       import/              CSV import from Hevy, Strong and StrengthLog
@@ -231,6 +241,7 @@ gymfy/
       plan_share/          .gymfy and PDF export, and import
       plates/              plate calculator and plate inventory
       progress/            measurements, photos, per-exercise charts
+      reviews/             monthly and yearly reviews, shared as an image
       settings/            accent, themes, units, rest timer
       stats/               the panels Progress is assembled from
       wear/                the phone side of the Wear OS sync

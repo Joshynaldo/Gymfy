@@ -8,6 +8,7 @@ import '../../features/calories/screens/weekly_overview_screen.dart';
 import '../../features/exercises/screens/exercise_detail_screen.dart';
 import '../../features/exercises/screens/exercise_form_screen.dart';
 import '../../features/exercises/screens/exercise_library_screen.dart';
+import '../../features/goals/screens/goals_screen.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/more/screens/more_screen.dart';
 import '../../features/progress/screens/exercise_progress_screen.dart';
@@ -22,6 +23,8 @@ import '../../features/import/screens/import_screen.dart';
 import '../../features/plan_share/screens/share_plan_screen.dart';
 import '../../features/programs/screens/programs_screen.dart';
 import '../../features/progress/screens/progress_screen.dart';
+import '../../features/reviews/data/review.dart';
+import '../../features/reviews/screens/review_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
 
 import '../../features/workout/screens/active_workout_screen.dart';
@@ -58,6 +61,14 @@ GoRouter goRouter(Ref ref) {
               GoRoute(
                 path: '/home',
                 builder: (context, state) => const HomeScreen(),
+                routes: [
+                  // From the goals card. Also served under Progress, so each
+                  // tab's link stays in its own tab.
+                  GoRoute(
+                    path: 'goals',
+                    builder: (context, state) => const GoalsScreen(),
+                  ),
+                ],
               ),
             ],
           ),
@@ -159,6 +170,37 @@ GoRouter goRouter(Ref ref) {
                             const MeasurementHistoryScreen(),
                       ),
                     ],
+                  ),
+                  GoRoute(
+                    path: 'goals',
+                    builder: (context, state) => const GoalsScreen(),
+                  ),
+                  // A past workout, opened from the training calendar. The
+                  // same summary as after finishing one, kept in this tab so
+                  // back returns to the calendar.
+                  GoRoute(
+                    path: 'session/:sessionId',
+                    builder: (context, state) => WorkoutSummaryScreen(
+                      sessionId: int.parse(state.pathParameters['sessionId']!),
+                      fromHistory: true,
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'review/month/:year/:month',
+                    builder: (context, state) => ReviewScreen(
+                      initial: ReviewPeriod.month(
+                        int.parse(state.pathParameters['year']!),
+                        int.parse(state.pathParameters['month']!),
+                      ),
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'review/year/:year',
+                    builder: (context, state) => ReviewScreen(
+                      initial: ReviewPeriod.year(
+                        int.parse(state.pathParameters['year']!),
+                      ),
+                    ),
                   ),
                 ],
               ),
