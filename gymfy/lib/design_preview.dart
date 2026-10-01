@@ -269,7 +269,6 @@ class _GalleryState extends ConsumerState<_Gallery> {
           onTap: () => showLogSetSheet(
             context: context,
             exercise: _previewExercise,
-            isWarmup: false,
             initialWeight: 102.5,
             initialReps: 8,
             unit: WeightUnit.kg,

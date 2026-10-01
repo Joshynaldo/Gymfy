@@ -13,6 +13,7 @@ import '../../onboarding/data/onboarding_repository.dart';
 import '../../overload/widgets/overload_settings.dart';
 import '../../plates/widgets/plate_inventory_picker.dart';
 import '../../workout/data/rest_timer_repository.dart';
+import '../../workout/widgets/logging_settings.dart';
 import '../../workout/widgets/rest_length_picker.dart';
 import '../data/notification_preferences.dart';
 import '../widgets/theme_picker.dart';
@@ -54,6 +55,9 @@ class SettingsScreen extends ConsumerWidget {
             padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: OverloadSettingsPanel(),
           ),
+          Divider(height: 1),
+          _SectionHeader('Logging'),
+          LoggingSettingsPanel(),
           Divider(height: 1),
           _SectionHeader('You'),
           _NameTile(),

@@ -9,6 +9,7 @@ import '../../exercises/data/exercise_repository.dart';
 import '../../workout/data/rest_timer_controller.dart';
 import '../../workout/data/rest_timer_repository.dart';
 import '../../workout/data/session_repository.dart';
+import '../../workout/data/supersets.dart';
 import 'wear_bridge.dart';
 
 part 'wear_sync.g.dart';
@@ -212,6 +213,8 @@ class WearCommands extends _$WearCommands {
           setNumber: working.length + 1,
           weight: last.weight,
           reps: last.reps,
+          // The same kind of set again: another set to failure is one too.
+          setType: last.type,
         );
 
     // And start the rest, because logging a set is exactly when rest starts.
@@ -221,12 +224,39 @@ class WearCommands extends _$WearCommands {
     // you actually wanted from the wrist — not having to touch the phone
     // between sets — still needed the phone. A set logged from the watch has
     // to behave like a set logged anywhere else.
-    final exercise = await ref.read(exerciseProvider(last.exerciseId).future);
+    //
+    // Including supersets: mid-superset a set logged on the phone starts no
+    // rest, because you go straight to the next exercise of the group, so a
+    // set repeated from the wrist must not start one either. Read from the
+    // repository rather than a provider, which nothing may be listening to
+    // while the phone is in a pocket.
+    final order = await ref
+        .read(sessionRepositoryProvider)
+        .watchSessionExercises(session.id)
+        .first;
+    final entry = order
+        .where((e) => e.exercise.id == last.exerciseId)
+        .firstOrNull;
+    if (entry != null && !restsAfter(order, entry, (e) => e.supersetGroup)) {
+      return;
+    }
+
+    // The name from the running order when the exercise is in it, and from
+    // the repository otherwise — never a bare read of `exerciseProvider`,
+    // which nothing listens to with the phone in a pocket, so its stream
+    // stays paused and the read never completes (the rest never started).
+    final name =
+        entry?.exercise.name ??
+        (await ref
+                .read(exerciseRepositoryProvider)
+                .watchExercise(last.exerciseId)
+                .first)
+            ?.name;
     await ref
         .read(restTimerProvider.notifier)
         .start(
           exerciseId: last.exerciseId,
-          exerciseName: exercise?.name ?? '',
+          exerciseName: name ?? '',
           seconds: ref.read(restForExerciseProvider(last.exerciseId)),
         );
   }
@@ -234,13 +264,14 @@ class WearCommands extends _$WearCommands {
 
 /// The most recent working set in [sets], or null if there is none.
 ///
-/// Warm-ups are skipped. "Do that again" after a warm-up means the working
-/// set you are building up to, not the empty-bar one — and a warm-up logged
-/// as a working set from the wrist would quietly poison progressive
-/// overload, which reads the top set of each session.
+/// Warm-ups and drop sets are skipped ([isWorkingSet]). "Do that again" after
+/// a warm-up means the working set you are building up to, not the empty-bar
+/// one — and a warm-up or a stripped-down drop set logged as a working set
+/// from the wrist would quietly poison progressive overload, which reads the
+/// top set of each session.
 LoggedSet? lastWorkingSet(List<LoggedSet> sets) {
   for (final set in sets.reversed) {
-    if (!set.isWarmup) return set;
+    if (isWorkingSet(set)) return set;
   }
   return null;
 }

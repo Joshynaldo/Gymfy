@@ -64,7 +64,40 @@ class SessionExerciseEntry {
   /// The plan slot it came from, carrying the targets. Null for an exercise
   /// added during the session or whose slot has since been deleted.
   final WorkoutExercise? planned;
+
+  /// The targets to work to: the plan slot's, or the defaults for an exercise
+  /// the plan never had.
+  ///
+  /// Always a full row rather than a nullable one, so every screen that shows
+  /// "3 × 10" or asks overload for a suggestion reads one thing. The stand-in
+  /// is never written anywhere — its id of 0 matches no real slot.
+  ///
+  /// After a swap the slot still names the *old* exercise; only its targets
+  /// are meant to carry over, so read the exercise from [exercise], never from
+  /// `targets.exerciseId`.
+  WorkoutExercise get targets =>
+      planned ??
+      WorkoutExercise(
+        id: 0,
+        dayId: 0,
+        exerciseId: exercise.id,
+        position: 0,
+        defaultSets: addedExerciseSets,
+        warmupSets: 0,
+        defaultReps: addedExerciseReps,
+      );
+
+  /// The superset it belongs to in the plan, or null when it stands alone.
+  /// Pass this to `supersetBlocks` / `restsAfter` (supersets.dart).
+  int? get supersetGroup => planned?.supersetGroup;
 }
+
+/// Working sets suggested for an exercise added mid-workout, which has no plan
+/// targets of its own. The same 3 × 10 a new plan slot starts with.
+const addedExerciseSets = 3;
+
+/// Reps suggested for an exercise added mid-workout. See [addedExerciseSets].
+const addedExerciseReps = 10;
 
 /// Database access for *performed* workouts — sessions and their logged sets.
 /// (Planning lives in workout_repository.dart; this is the logging side.)
@@ -151,6 +184,174 @@ class SessionRepository {
           ),
       ],
     );
+  }
+
+  // --- Running order ------------------------------------------------------
+  //
+  // Everything below edits the session's own list and nothing else. The plan
+  // is the plan; what you did today because the rack was taken is not a
+  // reason to rewrite it. ("Save swap to plan" is the one deliberate
+  // exception, and lives in workout_repository.dart.)
+  //
+  // An exercise appears at most once in a running order. Logged sets are
+  // keyed by exercise, not by entry, so two entries for the same lift would
+  // share one set list and each claim the other's sets.
+
+  /// Appends exercises to the end of a session's running order, skipping any
+  /// already in it, and returns how many were actually added.
+  ///
+  /// Added exercises have no plan slot: they work to the defaults (see
+  /// [SessionExerciseEntry.targets]).
+  Future<int> addExercises(int sessionId, List<String> exerciseIds) {
+    return _db.transaction(() async {
+      final existing = await _orderOf(sessionId);
+      final present = {for (final row in existing) row.exerciseId};
+      final toAdd = [
+        for (final id in exerciseIds)
+          if (present.add(id)) id,
+      ];
+      if (toAdd.isEmpty) return 0;
+
+      final start = existing.isEmpty ? 0 : existing.last.position + 1;
+      await _db.batch((batch) {
+        batch.insertAll(_db.sessionExercises, [
+          for (final (index, id) in toAdd.indexed)
+            SessionExercisesCompanion.insert(
+              sessionId: sessionId,
+              exerciseId: id,
+              position: Value(start + index),
+            ),
+        ]);
+      });
+      return toAdd.length;
+    });
+  }
+
+  /// Replaces the exercise of one entry with [exerciseId], keeping its plan
+  /// slot so the targets carry over.
+  ///
+  /// Returns false, changing nothing, when [exerciseId] is already in the
+  /// workout — see the note above on why a lift appears only once.
+  ///
+  /// If sets were already logged for the outgoing exercise, it stays in the
+  /// running order just before the replacement, as an entry of its own with no
+  /// plan slot. Those sets happened; swapping the exercise away should not
+  /// make them vanish from the screen while they still sit in the session.
+  Future<bool> swapExercise({
+    required int sessionExerciseId,
+    required String exerciseId,
+  }) {
+    return _db.transaction(() async {
+      final row = await (_db.select(
+        _db.sessionExercises,
+      )..where((t) => t.id.equals(sessionExerciseId))).getSingleOrNull();
+      if (row == null) return false;
+      if (row.exerciseId == exerciseId) return true;
+
+      final order = await _orderOf(row.sessionId);
+      if (order.any((r) => r.exerciseId == exerciseId)) return false;
+
+      final logged =
+          await (_db.select(_db.loggedSets)
+                ..where(
+                  (t) =>
+                      t.sessionId.equals(row.sessionId) &
+                      t.exerciseId.equals(row.exerciseId),
+                )
+                ..limit(1))
+              .get();
+
+      await (_db.update(_db.sessionExercises)
+            ..where((t) => t.id.equals(row.id)))
+          .write(SessionExercisesCompanion(exerciseId: Value(exerciseId)));
+
+      if (logged.isNotEmpty) {
+        final keptId = await _db
+            .into(_db.sessionExercises)
+            .insert(
+              SessionExercisesCompanion.insert(
+                sessionId: row.sessionId,
+                exerciseId: row.exerciseId,
+              ),
+            );
+        final ids = [for (final r in order) r.id];
+        ids.insert(ids.indexOf(row.id), keptId);
+        await _writeOrder(ids);
+      }
+      return true;
+    });
+  }
+
+  /// Rewrites a session's running order to [orderedIds] (session_exercises
+  /// ids, first to last). Ids from another session are ignored, and entries
+  /// left out keep their place after the ones given.
+  Future<void> reorderExercises(int sessionId, List<int> orderedIds) {
+    return _db.transaction(() async {
+      final order = await _orderOf(sessionId);
+      final known = {for (final r in order) r.id};
+      final ids = [
+        for (final id in orderedIds)
+          if (known.remove(id)) id,
+        for (final r in order)
+          if (known.contains(r.id)) r.id,
+      ];
+      await _writeOrder(ids);
+    });
+  }
+
+  /// Takes an entry out of the running order. Returns false, changing nothing,
+  /// when sets have already been logged for its exercise in this session.
+  ///
+  /// Refused rather than deleting the sets with it: "remove from today's list"
+  /// and "delete what I did" are different requests, and the second one
+  /// already has its own button on every logged row.
+  Future<bool> removeExercise(int sessionExerciseId) {
+    return _db.transaction(() async {
+      final row = await (_db.select(
+        _db.sessionExercises,
+      )..where((t) => t.id.equals(sessionExerciseId))).getSingleOrNull();
+      if (row == null) return false;
+
+      final logged =
+          await (_db.select(_db.loggedSets)
+                ..where(
+                  (t) =>
+                      t.sessionId.equals(row.sessionId) &
+                      t.exerciseId.equals(row.exerciseId),
+                )
+                ..limit(1))
+              .get();
+      if (logged.isNotEmpty) return false;
+
+      await (_db.delete(
+        _db.sessionExercises,
+      )..where((t) => t.id.equals(row.id))).go();
+      return true;
+    });
+  }
+
+  /// A session's running order, first to last.
+  Future<List<SessionExercise>> _orderOf(int sessionId) {
+    return (_db.select(_db.sessionExercises)
+          ..where((t) => t.sessionId.equals(sessionId))
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.position),
+            (t) => OrderingTerm(expression: t.id),
+          ]))
+        .get();
+  }
+
+  /// Writes positions 0..n-1 to the given session_exercises ids, in order.
+  Future<void> _writeOrder(List<int> ids) {
+    return _db.batch((batch) {
+      for (final (index, id) in ids.indexed) {
+        batch.update(
+          _db.sessionExercises,
+          SessionExercisesCompanion(position: Value(index)),
+          where: (t) => t.id.equals(id),
+        );
+      }
+    });
   }
 
   /// Streams a single session by id (null if it doesn't exist).
@@ -423,6 +624,14 @@ final workoutStreaksProvider = StreamProvider<({int current, int best})>((ref) {
 final inProgressSessionProvider = StreamProvider<WorkoutSession?>((ref) {
   return ref.watch(sessionRepositoryProvider).watchInProgressSession();
 });
+
+/// A session's running order, each entry with its exercise and plan targets.
+final sessionExercisesProvider =
+    StreamProvider.family<List<SessionExerciseEntry>, int>((ref, sessionId) {
+      return ref
+          .watch(sessionRepositoryProvider)
+          .watchSessionExercises(sessionId);
+    });
 
 /// The live list of sets logged in a session.
 final sessionSetsProvider = StreamProvider.family<List<LoggedSet>, int>((

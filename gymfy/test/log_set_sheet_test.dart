@@ -47,6 +47,7 @@ Future<List<LoggedSetInput?>> _open(
   int initialReps = 8,
   WeightUnit unit = WeightUnit.kg,
   bool isWarmup = false,
+  SetType? setType,
   OverloadSuggestion? suggestion,
   LoggedSet? repeatable,
 }) async {
@@ -75,7 +76,9 @@ Future<List<LoggedSetInput?>> _open(
                     await showLogSetSheet(
                       context: context,
                       exercise: _bench,
-                      isWarmup: isWarmup,
+                      setType:
+                          setType ??
+                          (isWarmup ? SetType.warmup : SetType.normal),
                       initialWeight: initialWeight,
                       initialReps: initialReps,
                       unit: unit,
@@ -236,7 +239,7 @@ void main() {
     await tester.tap(find.text('Save set'));
     await tester.pumpAndSettle();
 
-    expect(results.single?.isWarmup, isTrue);
+    expect(results.single?.setType, SetType.warmup);
   });
 
   testWidgets('repeating the last set skips both steps', (tester) async {
@@ -281,5 +284,100 @@ void main() {
     );
 
     expect(find.textContaining('hit every set last time'), findsNothing);
+  });
+
+  group('set types', () {
+    Future<void> saveEight(WidgetTester tester) async {
+      await tester.tap(find.text('Next: reps'));
+      await tester.pumpAndSettle();
+      await _tapKey(tester, '8');
+      await tester.tap(find.text('Save set'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('offers all four kinds of set', (tester) async {
+      await _open(tester);
+
+      for (final type in SetType.values) {
+        expect(find.text(type.label), findsOneWidget, reason: type.name);
+      }
+    });
+
+    testWidgets('a working set comes back as one by default', (tester) async {
+      final results = await _open(tester);
+      await saveEight(tester);
+
+      expect(results.single?.setType, SetType.normal);
+    });
+
+    testWidgets('a drop set can be picked', (tester) async {
+      final results = await _open(tester);
+
+      await tester.tap(find.text('Drop set'));
+      await tester.pump();
+      expect(find.text('Drop set · lighter, straight after'), findsOneWidget);
+      await saveEight(tester);
+
+      expect(results.single?.setType, SetType.drop);
+    });
+
+    testWidgets('a failure set can be picked', (tester) async {
+      final results = await _open(tester);
+
+      await tester.tap(find.text('Failure'));
+      await tester.pump();
+      await saveEight(tester);
+
+      expect(results.single?.setType, SetType.failure);
+    });
+
+    testWidgets('repeating keeps the type picked in the sheet', (tester) async {
+      final results = await _open(tester, repeatable: _set());
+
+      await tester.tap(find.text('Drop set'));
+      await tester.pump();
+      await tester.tap(find.text('Repeat last set'));
+      await tester.pumpAndSettle();
+
+      expect(results.single?.setType, SetType.drop);
+    });
+
+    testWidgets('a drop set is not told what to lift either', (tester) async {
+      await _open(
+        tester,
+        setType: SetType.drop,
+        suggestion: const OverloadSuggestion(
+          weight: 102.5,
+          reason: OverloadReason.earned,
+        ),
+      );
+
+      expect(find.textContaining('hit every set last time'), findsNothing);
+    });
+
+    testWidgets('a failure set still is', (tester) async {
+      await _open(
+        tester,
+        setType: SetType.failure,
+        suggestion: const OverloadSuggestion(
+          weight: 102.5,
+          reason: OverloadReason.earned,
+        ),
+      );
+
+      expect(find.textContaining('hit every set last time'), findsOneWidget);
+    });
+
+    testWidgets('a held weight says why', (tester) async {
+      await _open(
+        tester,
+        suggestion: const OverloadSuggestion(
+          weight: 100,
+          reason: OverloadReason.atLimit,
+        ),
+      );
+
+      expect(find.textContaining('limit effort'), findsOneWidget);
+    });
   });
 }

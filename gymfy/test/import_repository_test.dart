@@ -5,7 +5,7 @@
 // — and the naive version of this turns a year of training into two years,
 // with no way back short of wiping the app.
 
-import 'package:drift/drift.dart' show Value;
+import 'package:drift/drift.dart' show OrderingTerm, Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/features/exercises/data/exercise_repository.dart';
@@ -211,6 +211,23 @@ Push,2026-02-03 18:00:00,Weird Machine,60,8
         db.loggedSets,
       )..where((t) => t.setType.equals(SetType.warmup.name))).get();
       expect(warmups.single.setNumber, 1);
+    });
+
+    test('stores drop and failure sets, and RPE, as they were', () async {
+      await importCsv('''
+title,start_time,end_time,exercise_title,set_type,weight_kg,reps,rpe
+Push,2026-01-15 18:00:00,2026-01-15 19:05:00,Barbell Bench Press,normal,80,8,8
+Push,2026-01-15 18:00:00,2026-01-15 19:05:00,Barbell Bench Press,failure,80,9,10
+Push,2026-01-15 18:00:00,2026-01-15 19:05:00,Barbell Bench Press,dropset,60,10,
+''');
+
+      final sets = await (db.select(
+        db.loggedSets,
+      )..orderBy([(t) => OrderingTerm(expression: t.id)])).get();
+      expect(sets.map((s) => s.setType), ['normal', 'failure', 'drop']);
+      expect(sets.map((s) => s.rpe), [8, 10, null]);
+      // Drop and failure sets share the working phase's numbering.
+      expect(sets.map((s) => s.setNumber), [1, 2, 3]);
     });
   });
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../shared/database/app_database.dart';
+import 'supersets.dart';
 
 part 'workout_repository.g.dart';
 
@@ -375,13 +376,15 @@ class WorkoutRepository {
     int sets = 3,
     int reps = 10,
     int warmupSets = 0,
-  }) {
-    return _db
+  }) async {
+    final position = await _nextPosition(dayId);
+    await _db
         .into(_db.workoutExercises)
         .insert(
           WorkoutExercisesCompanion.insert(
             dayId: dayId,
             exerciseId: exerciseId,
+            position: Value(position),
             defaultSets: Value(sets),
             defaultReps: Value(reps),
             // Same rule as [updatePlannedExercise]: never negative, because
@@ -409,12 +412,14 @@ class WorkoutRepository {
         .toList();
     if (toAdd.isEmpty) return 0;
 
+    final start = await _nextPosition(dayId);
     await _db.batch((batch) {
       batch.insertAll(_db.workoutExercises, [
-        for (final exerciseId in toAdd)
+        for (final (index, exerciseId) in toAdd.indexed)
           WorkoutExercisesCompanion.insert(
             dayId: dayId,
             exerciseId: exerciseId,
+            position: Value(start + index),
           ),
       ]);
     });
@@ -485,10 +490,162 @@ class WorkoutRepository {
   }
 
   /// Removes a planned exercise from its day.
+  ///
+  /// A superset partner left on its own goes back to being a plain exercise
+  /// (see [_tidySupersets]).
   Future<void> removePlannedExercise(int id) {
-    return (_db.delete(
-      _db.workoutExercises,
-    )..where((t) => t.id.equals(id))).go();
+    return _db.transaction(() async {
+      final row = await (_db.select(
+        _db.workoutExercises,
+      )..where((t) => t.id.equals(id))).getSingleOrNull();
+      if (row == null) return;
+      await (_db.delete(
+        _db.workoutExercises,
+      )..where((t) => t.id.equals(id))).go();
+      await _tidySupersets(row.dayId);
+    });
+  }
+
+  /// Points a planned exercise at a different library exercise, keeping its
+  /// targets, position and superset — "save swap to plan" from a running
+  /// workout.
+  Future<void> replacePlannedExercise(int id, String exerciseId) {
+    return (_db.update(_db.workoutExercises)..where((t) => t.id.equals(id)))
+        .write(WorkoutExercisesCompanion(exerciseId: Value(exerciseId)));
+  }
+
+  // --- Order and supersets -------------------------------------------------
+
+  /// Rewrites a day's order to [orderedIds] (workout_exercises ids, first to
+  /// last). Ids from another day are ignored, and exercises left out keep
+  /// their place after the ones given.
+  ///
+  /// Moving an exercise can break a superset apart or slot something into
+  /// the middle of one; [_tidySupersets] runs afterwards so the stored groups
+  /// always describe what the list now shows.
+  Future<void> reorderDayExercises(int dayId, List<int> orderedIds) {
+    return _db.transaction(() async {
+      final rows = await _orderedRows(dayId);
+      final known = {for (final row in rows) row.id};
+      final ids = [
+        for (final id in orderedIds)
+          if (known.remove(id)) id,
+        for (final row in rows)
+          if (known.contains(row.id)) row.id,
+      ];
+      await _db.batch((batch) {
+        for (final (index, id) in ids.indexed) {
+          batch.update(
+            _db.workoutExercises,
+            WorkoutExercisesCompanion(position: Value(index)),
+            where: (t) => t.id.equals(id),
+          );
+        }
+      });
+      await _tidySupersets(dayId);
+    });
+  }
+
+  /// Joins the planned exercise [id] and the one after it into one superset.
+  ///
+  /// Either side may already be in a superset; the two merge into one. Does
+  /// nothing for the last exercise of the day, which has no next.
+  Future<void> supersetWithNext(int id) => _joinNeighbour(id, 1);
+
+  /// Joins the planned exercise [id] and the one before it into one superset.
+  Future<void> supersetWithPrevious(int id) => _joinNeighbour(id, -1);
+
+  Future<void> _joinNeighbour(int id, int step) {
+    return _db.transaction(() async {
+      final row = await (_db.select(
+        _db.workoutExercises,
+      )..where((t) => t.id.equals(id))).getSingleOrNull();
+      if (row == null) return;
+
+      final rows = await _orderedRows(row.dayId);
+      final index = rows.indexWhere((r) => r.id == id);
+      final other = index + step;
+      if (other < 0 || other >= rows.length) return;
+
+      // Both whole blocks join, so linking onto an existing pair makes a
+      // tri-set rather than stealing one member from it.
+      final joined = [
+        for (final block in supersetBlocks(rows, (r) => r.supersetGroup))
+          if (block.contains(rows[index]) || block.contains(rows[other]))
+            ...block,
+      ];
+      final unused =
+          rows
+              .map((r) => r.supersetGroup ?? 0)
+              .fold(0, (top, g) => g > top ? g : top) +
+          1;
+      await (_db.update(_db.workoutExercises)
+            ..where((t) => t.id.isIn([for (final r in joined) r.id])))
+          .write(WorkoutExercisesCompanion(supersetGroup: Value(unused)));
+      await _tidySupersets(row.dayId);
+    });
+  }
+
+  /// Takes the planned exercise [id] out of its superset.
+  ///
+  /// A partner left alone becomes a plain exercise again. Taking the middle
+  /// one out of a tri-set leaves two neighbours that no longer touch, so they
+  /// stop being a superset too — a superset is exercises done back to back,
+  /// and those two no longer are.
+  Future<void> leaveSuperset(int id) {
+    return _db.transaction(() async {
+      final row = await (_db.select(
+        _db.workoutExercises,
+      )..where((t) => t.id.equals(id))).getSingleOrNull();
+      if (row == null) return;
+      await (_db.update(_db.workoutExercises)..where((t) => t.id.equals(id)))
+          .write(const WorkoutExercisesCompanion(supersetGroup: Value(null)));
+      await _tidySupersets(row.dayId);
+    });
+  }
+
+  /// Rewrites a day's superset numbers to match its blocks: each block of two
+  /// or more gets its own number, and anything standing alone gets none.
+  ///
+  /// `supersetBlocks` would already read a stale group correctly, so this is
+  /// about the *next* edit: a survivor still carrying its old number would
+  /// silently rejoin a group the moment it was dragged next to one.
+  Future<void> _tidySupersets(int dayId) async {
+    final rows = await _orderedRows(dayId);
+    var next = 1;
+    await _db.batch((batch) {
+      for (final block in supersetBlocks(rows, (r) => r.supersetGroup)) {
+        final group = block.length > 1 ? next++ : null;
+        for (final row in block) {
+          if (row.supersetGroup == group) continue;
+          batch.update(
+            _db.workoutExercises,
+            WorkoutExercisesCompanion(supersetGroup: Value(group)),
+            where: (t) => t.id.equals(row.id),
+          );
+        }
+      }
+    });
+  }
+
+  /// A day's planned exercises in plan order, without their library rows.
+  Future<List<WorkoutExercise>> _orderedRows(int dayId) {
+    return (_db.select(_db.workoutExercises)
+          ..where((t) => t.dayId.equals(dayId))
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.position),
+            (t) => OrderingTerm(expression: t.id),
+          ]))
+        .get();
+  }
+
+  /// The position that puts a new exercise at the end of [dayId].
+  ///
+  /// Needed since v26 made position real: a new row left at the default 0
+  /// would sort above everything a reorder had numbered 1, 2, 3.
+  Future<int> _nextPosition(int dayId) async {
+    final rows = await _orderedRows(dayId);
+    return rows.isEmpty ? 0 : rows.last.position + 1;
   }
 }
 

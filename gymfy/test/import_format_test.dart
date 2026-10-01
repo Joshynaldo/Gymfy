@@ -9,6 +9,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/features/import/data/import_format.dart';
+import 'package:gymfy/shared/models/set_type.dart';
 import 'package:gymfy/shared/utils/units.dart';
 
 /// Shaped like a Hevy export: snake_case, explicit kilograms, a set type, and
@@ -816,6 +817,85 @@ title,start_time,exercise_title,weight_kg,reps
       for (final raw in ['normal', 'failure', 'drop set', '', 'top set']) {
         expect(isWarmupType(raw), isFalse, reason: raw);
       }
+    });
+  });
+
+  group('set types', () {
+    test("Hevy's four types map onto the app's", () {
+      expect(parseSetTypeCell('warmup'), SetType.warmup);
+      expect(parseSetTypeCell('normal'), SetType.normal);
+      expect(parseSetTypeCell('dropset'), SetType.drop);
+      expect(parseSetTypeCell('failure'), SetType.failure);
+    });
+
+    test('other spellings of the same words too', () {
+      expect(parseSetTypeCell('Warm-up'), SetType.warmup);
+      expect(parseSetTypeCell('Drop set'), SetType.drop);
+      expect(parseSetTypeCell('To Failure'), SetType.failure);
+    });
+
+    test('anything unrecognised is a working set', () {
+      for (final raw in ['', 'top set', 'cluster', 'amrap']) {
+        expect(parseSetTypeCell(raw), SetType.normal, reason: raw);
+      }
+    });
+
+    test('a Hevy file keeps its drop and failure sets', () {
+      const csv = '''
+title,start_time,end_time,exercise_title,set_index,set_type,weight_kg,reps,rpe
+Push,"15 Jan. 2026, 18:00","15 Jan. 2026, 19:05",Bench Press,0,warmup,40,10,
+Push,"15 Jan. 2026, 18:00","15 Jan. 2026, 19:05",Bench Press,1,normal,80,8,8
+Push,"15 Jan. 2026, 18:00","15 Jan. 2026, 19:05",Bench Press,2,failure,80,9,10
+Push,"15 Jan. 2026, 18:00","15 Jan. 2026, 19:05",Bench Press,3,dropset,60,10,
+''';
+
+      final sets = parseWorkoutCsv(csv).sessions.single.sets;
+
+      expect(sets.map((s) => s.setType), [
+        SetType.warmup,
+        SetType.normal,
+        SetType.failure,
+        SetType.drop,
+      ]);
+      expect(sets.map((s) => s.rpe), [null, 8, 10, null]);
+      // Numbered as a ramp-up only for the warm-up.
+      expect(sets.map((s) => s.isWarmup), [true, false, false, false]);
+    });
+
+    test('a boolean warm-up column still wins', () {
+      const csv = '''
+date,exercise,weight,reps,warmup,type
+2026-01-15 18:00:00,Bench Press,40,10,true,dropset
+''';
+
+      expect(
+        parseWorkoutCsv(csv).sessions.single.sets.single.setType,
+        SetType.warmup,
+      );
+    });
+  });
+
+  group('RPE', () {
+    test('is read and snapped to half steps', () {
+      expect(parseRpeCell('8'), 8);
+      expect(parseRpeCell('8.5'), 8.5);
+      expect(parseRpeCell('7,5'), 7.5);
+      expect(parseRpeCell('8.3'), 8.5);
+    });
+
+    test('blank, zero and nonsense are unrated', () {
+      for (final raw in ['', '0', '11', 'hard']) {
+        expect(parseRpeCell(raw), isNull, reason: raw);
+      }
+    });
+
+    test("Strong's RPE column is found", () {
+      const csv = '''
+Date,Workout Name,Exercise Name,Set Order,Weight,Reps,RPE
+2026-01-15 18:00:00,Push,Bench Press,1,80,8,9
+''';
+
+      expect(parseWorkoutCsv(csv).sessions.single.sets.single.rpe, 9);
     });
   });
 }

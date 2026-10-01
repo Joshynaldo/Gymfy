@@ -11,6 +11,7 @@
 // Weights are converted to kilograms here, once, because that is how the rest
 // of the app stores them.
 
+import '../../../shared/models/set_type.dart';
 import '../../../shared/utils/units.dart';
 import 'csv_reader.dart';
 
@@ -78,6 +79,9 @@ class ImportColumns {
   /// overload the lightest set of each exercise as though it counted.
   static const warmupFlag = ['warmup', 'is_warmup', 'iswarmup'];
 
+  /// Rate of perceived exertion, as Hevy (`rpe`) and Strong (`RPE`) write it.
+  static const rpe = ['rpe'];
+
   /// Weight, in the order that tells us the unit for free. A bare "weight"
   /// is last because it says nothing about what it is measured in.
   static const weightKg = ['weight_kg', 'weightkg', 'kg'];
@@ -106,8 +110,9 @@ class ImportedSet {
     required this.exerciseName,
     required this.weightKg,
     required this.reps,
-    required this.isWarmup,
+    this.setType = SetType.normal,
     required this.seconds,
+    this.rpe,
   });
 
   final String exerciseName;
@@ -120,10 +125,18 @@ class ImportedSet {
   /// Seconds held, for a set logged by time. Null for a counted set.
   final int? seconds;
 
-  /// Exporters that distinguish a ramp-up say so in a "set type" column.
-  /// Where they don't, everything is a working set — the safe direction,
-  /// since mislabelling a working set as a warm-up hides it from progress.
-  final bool isWarmup;
+  /// Exporters that distinguish a ramp-up, a drop set or a set to failure say
+  /// so in a "set type" column (see [parseSetTypeCell]). Where they don't,
+  /// everything is a working set — the safe direction, since mislabelling a
+  /// working set as a warm-up hides it from progress.
+  final SetType setType;
+
+  /// The RPE the exporter recorded, if it records one (Hevy and Strong both
+  /// have an `rpe` column). Null when blank or not a rating.
+  final double? rpe;
+
+  /// Whether this set is numbered with the ramp-up sets.
+  bool get isWarmup => setType.isWarmupPhase;
 }
 
 /// One workout read out of a file.
@@ -259,6 +272,7 @@ WorkoutImport parseWorkoutCsv(
   final typeColumn = table.columnFor(ImportColumns.setType);
   final secondsColumn = table.columnFor(ImportColumns.seconds);
   final warmupColumn = table.columnFor(ImportColumns.warmupFlag);
+  final rpeColumn = table.columnFor(ImportColumns.rpe);
   final extraColumn = table.columnFor(ImportColumns.extraWeight);
 
   // Grouped by start time *and* name: two workouts can begin in the same
@@ -346,10 +360,13 @@ WorkoutImport parseWorkoutCsv(
         // same set, not a second one.
         reps: counted ? reps : 0,
         seconds: counted ? null : seconds,
-        // Either spelling: a set-type string, or a boolean column of its own.
-        isWarmup:
-            isWarmupType(cell(row, typeColumn)) ||
-            isTrueish(cell(row, warmupColumn)),
+        // Either spelling: a set-type string, or a boolean warm-up column of
+        // its own. The boolean only ever says "warm-up"; it cannot make a
+        // drop set out of anything.
+        setType: isTrueish(cell(row, warmupColumn))
+            ? SetType.warmup
+            : parseSetTypeCell(cell(row, typeColumn)),
+        rpe: parseRpeCell(cell(row, rpeColumn)),
       ),
     );
   }
@@ -458,6 +475,31 @@ bool isWarmupType(String raw) {
   // warm-up would quietly drop it out of every chart and personal record,
   // which is the more damaging mistake of the two.
   return raw.toLowerCase().contains('warm');
+}
+
+/// Reads a "set type" cell into a [SetType].
+///
+/// Hevy writes `warmup`, `normal`, `dropset` and `failure`; other exporters
+/// spell the same four `Warm-up`, `Drop set`, `Failure` and so on, so this
+/// matches on the distinctive word rather than the exact string. Anything
+/// unrecognised — including blank — is an ordinary working set, for the same
+/// reason as [isWarmupType]: hiding a real set from the charts is the worse
+/// mistake.
+SetType parseSetTypeCell(String raw) {
+  final value = raw.toLowerCase();
+  if (isWarmupType(value)) return SetType.warmup;
+  if (value.contains('drop')) return SetType.drop;
+  if (value.contains('fail')) return SetType.failure;
+  return SetType.normal;
+}
+
+/// Reads an RPE cell: a number from 1 to 10, snapped to the half steps the app
+/// stores. Null for a blank, a zero (what some exporters write for "not
+/// rated") or anything out of range.
+double? parseRpeCell(String raw) {
+  final value = double.tryParse(raw.trim().replaceAll(',', '.'));
+  if (value == null || value < 1 || value > 10) return null;
+  return (value * 2).round() / 2;
 }
 
 /// Parses the date formats these exports actually use.
