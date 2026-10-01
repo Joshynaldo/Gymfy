@@ -1311,7 +1311,10 @@ class _LoggedSetRow extends ConsumerWidget {
                 context: context,
                 title: 'Set type',
                 options: [
-                  for (final type in SetType.values)
+                  // Only a held set stores seconds.
+                  for (final type in SetType.optionsFor(
+                    timed: set.seconds != null,
+                  ))
                     (value: type, label: type.label, subtitle: null),
                 ],
                 selected: set.type,

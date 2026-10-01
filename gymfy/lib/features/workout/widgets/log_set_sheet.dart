@@ -138,7 +138,13 @@ class _LogSetSheet extends ConsumerStatefulWidget {
 
 class _LogSetSheetState extends ConsumerState<_LogSetSheet> {
   _Step _step = _Step.weight;
-  late SetType _type = widget.setType;
+  late SetType _type = _typeOptions.contains(widget.setType)
+      ? widget.setType
+      : SetType.normal;
+
+  late final List<SetType> _typeOptions = SetType.optionsFor(
+    timed: widget.exercise.isTimed,
+  );
 
   /// The effort rating, if one was picked. Only the one matching the mode is
   /// ever set, and both stay null until a chip is tapped — an unrated set is
@@ -149,8 +155,13 @@ class _LogSetSheetState extends ConsumerState<_LogSetSheet> {
   bool get _warmup => _type == SetType.warmup;
 
   /// Ratings are for sets that test you. A warm-up is easy on purpose, and
-  /// rating one would only teach the overload maths something untrue.
-  bool get _asksEffort => widget.effortMode != EffortRatingMode.off && !_warmup;
+  /// rating one would only teach the overload maths something untrue. A held
+  /// exercise isn't rated either: RPE and RIR are about reps left in the tank,
+  /// and a plank has no reps.
+  bool get _asksEffort =>
+      widget.effortMode != EffortRatingMode.off &&
+      !_warmup &&
+      !widget.exercise.isTimed;
 
   double? get _rpeToSave =>
       _asksEffort && widget.effortMode == EffortRatingMode.rpe ? _rpe : null;
@@ -411,7 +422,7 @@ class _LogSetSheetState extends ConsumerState<_LogSetSheet> {
             // became your first working set, the last set you took to failure.
             AppSegmented<SetType>(
               segments: [
-                for (final type in SetType.values)
+                for (final type in _typeOptions)
                   (value: type, label: type.label, leading: null),
               ],
               selected: _type,

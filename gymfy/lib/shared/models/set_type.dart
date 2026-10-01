@@ -36,6 +36,14 @@ enum SetType {
   /// working set and is counted after it.
   bool get isWarmupPhase => this == SetType.warmup;
 
+  /// The types worth offering for an exercise.
+  ///
+  /// A held exercise — a plank, a hang, a carry — is either a warm-up or the
+  /// real thing. There is no lighter weight to drop to, and "to failure" or a
+  /// rep in reserve describes counting reps, which a hold doesn't do.
+  static List<SetType> optionsFor({required bool timed}) =>
+      timed ? const [SetType.warmup, SetType.normal] : SetType.values;
+
   /// Reads a stored slug, falling back to [SetType.normal].
   ///
   /// Never throws: an unknown value was written by a newer build or by hand,
