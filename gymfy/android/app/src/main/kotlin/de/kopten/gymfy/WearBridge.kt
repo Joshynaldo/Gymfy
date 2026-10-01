@@ -1,6 +1,9 @@
 package de.kopten.gymfy
 
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
 import io.flutter.embedding.engine.FlutterEngine
@@ -27,6 +30,11 @@ import io.flutter.plugin.common.MethodChannel
  * state when it comes back. A Message needs both ends connected at the
  * instant it is sent, and the moment you look at your wrist is exactly the
  * moment the phone might be in a locker.
+ *
+ * The same channel also carries the ongoing workout notification (see
+ * [WorkoutNotification]): Dart shows and clears it through here, and its
+ * buttons come back in through [deliver], exactly like a command from the
+ * watch.
  */
 object WearBridge {
     private const val TAG = "GymfyWear"
@@ -50,21 +58,53 @@ object WearBridge {
      */
     const val COMMAND_PATH = "/gymfy/command"
 
+    /** The Dart method a command is delivered to. Must match `WearBridge.commandMethod`. */
+    const val COMMAND_METHOD = "watchCommand"
+
+    /**
+     * The channel into the engine that is running right now, or null when
+     * there is none.
+     *
+     * Null is a real state, not an edge case: the activity can be destroyed
+     * with the process kept around, and a notification button can be tapped
+     * after Android killed the process outright. Whoever holds a command has
+     * to be able to ask "is anyone there?" — see [deliver].
+     */
+    @Volatile
+    private var live: MethodChannel? = null
+
+    private val main = Handler(Looper.getMainLooper())
+
     fun register(engine: FlutterEngine, context: android.content.Context) {
         val channel = MethodChannel(engine.dartExecutor.binaryMessenger, CHANNEL)
+        live = channel
 
         // The watch talking back. Registered for as long as the engine is
         // alive, which is the only window in which a rest timer exists.
-        Wearable.getMessageClient(context).addListener { message ->
+        val listener = MessageClient.OnMessageReceivedListener { message ->
             if (message.path == COMMAND_PATH) {
                 val command = String(message.data)
                 Log.i(TAG, "command from watch: $command")
-                // onto the platform thread — this callback is not it.
-                android.os.Handler(android.os.Looper.getMainLooper()).post {
-                    channel.invokeMethod("watchCommand", command)
-                }
+                deliver(command) {}
             }
         }
+        Wearable.getMessageClient(context).addListener(listener)
+
+        engine.addEngineLifecycleListener(
+            object : FlutterEngine.EngineLifecycleListener {
+                override fun onPreEngineRestart() {}
+
+                override fun onEngineWillDestroy() {
+                    // Without this a second engine would add a second
+                    // listener, and the first would keep invoking a channel
+                    // into an engine that no longer exists.
+                    Wearable.getMessageClient(context).removeListener(listener)
+                    if (live === channel) live = null
+                    // Its buttons would now be talking to nobody.
+                    WorkoutNotification.detach(context)
+                }
+            },
+        )
 
         channel.setMethodCallHandler { call, result ->
                 when (call.method) {
@@ -77,9 +117,58 @@ object WearBridge {
                             push(context, fields, result)
                         }
                     }
+                    WorkoutNotification.SHOW_METHOD -> {
+                        @Suppress("UNCHECKED_CAST")
+                        val fields = call.arguments as? Map<String, Any?>
+                        if (fields == null) {
+                            result.error("bad_args", "expected a map", null)
+                        } else {
+                            result.success(WorkoutNotification.show(context, fields))
+                        }
+                    }
+                    WorkoutNotification.CLEAR_METHOD -> {
+                        WorkoutNotification.clear(context)
+                        result.success(null)
+                    }
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    /**
+     * Hands [command] to the running engine, the way a command from the watch
+     * arrives, and calls [done] once Dart has finished applying it — or
+     * failed to.
+     *
+     * Returns false, without calling [done], when there is no engine to hand
+     * it to. The caller decides what that means: the watch's commands are
+     * simply dropped (there is no rest to control), a notification button
+     * opens the app instead.
+     */
+    fun deliver(command: String, done: () -> Unit): Boolean {
+        val channel = live ?: return false
+        // onto the platform thread — neither caller is on it.
+        main.post {
+            channel.invokeMethod(
+                COMMAND_METHOD,
+                command,
+                object : MethodChannel.Result {
+                    override fun success(result: Any?) = done()
+
+                    override fun error(
+                        errorCode: String,
+                        errorMessage: String?,
+                        errorDetails: Any?,
+                    ) {
+                        Log.w(TAG, "command $command failed: $errorMessage")
+                        done()
+                    }
+
+                    override fun notImplemented() = done()
+                },
+            )
+        }
+        return true
     }
 
     private fun push(
@@ -108,6 +197,9 @@ object WearBridge {
                     // on the watch. Keeps the bridge free of schema knowledge.
                     is Int -> dataMap.putLong(key, value.toLong())
                     is Long -> dataMap.putLong(key, value)
+                    // A Dart double always crosses as a Double, whole or not,
+                    // so unlike the integers there is only one width to store.
+                    is Double -> dataMap.putDouble(key, value)
                     is Boolean -> dataMap.putBoolean(key, value)
                     // Anything else is a Dart type nobody agreed on. Failing
                     // loudly here beats a watch that silently shows a stale

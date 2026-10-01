@@ -10,6 +10,7 @@ import 'features/exercises/data/exercise_repository.dart';
 import 'features/onboarding/data/onboarding_repository.dart';
 import 'features/onboarding/screens/onboarding_screen.dart';
 import 'features/wear/data/wear_sync.dart';
+import 'features/workout_notification/data/workout_notification.dart';
 
 Future<void> main() async {
   // Required because we touch the database (a platform plugin) before runApp.
@@ -48,8 +49,12 @@ class GymfyApp extends ConsumerWidget {
     //
     // Free on every other platform — WearBridge.supported short-circuits.
     ref.watch(wearSyncProvider);
-    // The reverse channel: +30s and skip, sent from the wrist.
+    // The reverse channel: logging a set, +30s and skip, sent from the wrist
+    // or from the buttons on the workout notification.
     ref.watch(wearCommandsProvider);
+    // The ongoing workout notification. Here for the same reason as the
+    // watch: it matters once the phone is locked and every screen is gone.
+    ref.watch(workoutNotificationSyncProvider);
     // Automatic backups. Here for the same reason: the moments they run on —
     // opening the app, finishing a workout — belong to other screens.
     ref.watch(autoBackupWatcherProvider);

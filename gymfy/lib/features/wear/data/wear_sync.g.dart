@@ -70,7 +70,7 @@ final class WearSyncProvider extends $NotifierProvider<WearSync, WearWorkout> {
   }
 }
 
-String _$wearSyncHash() => r'd238b5855e281d6a9ac715f7a78570be9ed620da';
+String _$wearSyncHash() => r'e53d06db576c67d3ebcfba680d3b8ee74cb7cf8e';
 
 /// Keeps the watch in step with the phone.
 ///
@@ -101,41 +101,29 @@ abstract class _$WearSync extends $Notifier<WearWorkout> {
   }
 }
 
-/// Acts on the commands the watch sends back.
+/// Acts on the commands the watch sends back — and the buttons on the
+/// ongoing workout notification, which arrive through the same door.
 ///
 /// Kept apart from [WearSync], which is one-way. This is the reverse
 /// channel, and separating them keeps the rule visible: the phone owns the
 /// state, the watch asks it to change.
-///
-/// Deliberately limited to the rest timer for now. The rest timer lives in
-/// memory on the phone, so a command here can never write to the database,
-/// duplicate a set, or need a queue — none of the problems that make
-/// logging *from* the watch the hard half. This proves the channel first.
 
 @ProviderFor(WearCommands)
 final wearCommandsProvider = WearCommandsProvider._();
 
-/// Acts on the commands the watch sends back.
+/// Acts on the commands the watch sends back — and the buttons on the
+/// ongoing workout notification, which arrive through the same door.
 ///
 /// Kept apart from [WearSync], which is one-way. This is the reverse
 /// channel, and separating them keeps the rule visible: the phone owns the
 /// state, the watch asks it to change.
-///
-/// Deliberately limited to the rest timer for now. The rest timer lives in
-/// memory on the phone, so a command here can never write to the database,
-/// duplicate a set, or need a queue — none of the problems that make
-/// logging *from* the watch the hard half. This proves the channel first.
 final class WearCommandsProvider extends $NotifierProvider<WearCommands, void> {
-  /// Acts on the commands the watch sends back.
+  /// Acts on the commands the watch sends back — and the buttons on the
+  /// ongoing workout notification, which arrive through the same door.
   ///
   /// Kept apart from [WearSync], which is one-way. This is the reverse
   /// channel, and separating them keeps the rule visible: the phone owns the
   /// state, the watch asks it to change.
-  ///
-  /// Deliberately limited to the rest timer for now. The rest timer lives in
-  /// memory on the phone, so a command here can never write to the database,
-  /// duplicate a set, or need a queue — none of the problems that make
-  /// logging *from* the watch the hard half. This proves the channel first.
   WearCommandsProvider._()
     : super(
         from: null,
@@ -163,18 +151,14 @@ final class WearCommandsProvider extends $NotifierProvider<WearCommands, void> {
   }
 }
 
-String _$wearCommandsHash() => r'f439b8cd01400d0f52c978d544827a7cff88cc7b';
+String _$wearCommandsHash() => r'adec32445adbf6ff96f03583b23770d8f33d667c';
 
-/// Acts on the commands the watch sends back.
+/// Acts on the commands the watch sends back — and the buttons on the
+/// ongoing workout notification, which arrive through the same door.
 ///
 /// Kept apart from [WearSync], which is one-way. This is the reverse
 /// channel, and separating them keeps the rule visible: the phone owns the
 /// state, the watch asks it to change.
-///
-/// Deliberately limited to the rest timer for now. The rest timer lives in
-/// memory on the phone, so a command here can never write to the database,
-/// duplicate a set, or need a queue — none of the problems that make
-/// logging *from* the watch the hard half. This proves the channel first.
 
 abstract class _$WearCommands extends $Notifier<void> {
   void build();

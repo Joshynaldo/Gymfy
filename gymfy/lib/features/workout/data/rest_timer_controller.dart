@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../shared/data/notification_service.dart';
 import '../../settings/data/notification_preferences.dart';
+import '../../workout_notification/data/workout_notification.dart';
 import 'rest_timer_repository.dart';
 
 part 'rest_timer_controller.g.dart';
@@ -55,6 +56,16 @@ class RestTimer extends _$RestTimer {
 
   bool get _vibrate => ref.read(restTimerVibrateProvider).value ?? true;
 
+  /// Whether the ongoing workout notification is on screen.
+  ///
+  /// While it is, it carries the countdown itself, and a second ongoing
+  /// notification counting down the same rest would only be clutter in the
+  /// shade. Only the countdown moves there: the "rest over" alert still comes
+  /// from here, because it has to interrupt and the workout notification is
+  /// silent.
+  bool get _countdownShownElsewhere =>
+      ref.read(workoutNotificationSyncProvider.notifier).posted;
+
   /// Puts the live countdown in the shade and arms the backstop alarm.
   ///
   /// Both, because they cover different failures: the countdown is drawn by
@@ -71,15 +82,18 @@ class RestTimer extends _$RestTimer {
     final notifications = ref.read(notificationServiceProvider);
     final wanted = _notificationsOn;
     final vibrate = _vibrate;
+    final elsewhere = _countdownShownElsewhere;
 
     // Clear whatever was there first: without this, stopping one timer and
     // starting another could leave the old alarm to fire.
     await notifications.cancelRestOver();
     if (!wanted) return;
-    await notifications.showRestRunning(
-      seconds: seconds,
-      exerciseName: exerciseName,
-    );
+    if (!elsewhere) {
+      await notifications.showRestRunning(
+        seconds: seconds,
+        exerciseName: exerciseName,
+      );
+    }
     await notifications.scheduleRestOver(
       seconds: seconds,
       exerciseName: exerciseName,
