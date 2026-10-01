@@ -58,7 +58,7 @@ final class HealthConnectSyncProvider
   }
 }
 
-String _$healthConnectSyncHash() => r'5f13681e3d1ee4317c50489954c1a2b7584c3c11';
+String _$healthConnectSyncHash() => r'a3f53b4821f695d5f1f7b8f19a9c18263c83bba3';
 
 /// Runs Health Connect syncs at the moments that matter.
 ///
