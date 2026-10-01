@@ -15,6 +15,7 @@ import '../../plates/widgets/plate_inventory_picker.dart';
 import '../../workout/data/rest_timer_repository.dart';
 import '../../workout/widgets/logging_settings.dart';
 import '../../workout/widgets/rest_length_picker.dart';
+import '../../workout_notification/data/workout_notification.dart';
 import '../data/notification_preferences.dart';
 import '../widgets/theme_picker.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
@@ -342,7 +343,7 @@ class _DefaultRestTile extends ConsumerWidget {
   }
 }
 
-/// Rest timer alert preferences.
+/// Rest timer alert preferences, and the ongoing workout notification.
 ///
 /// Stored here and read by the rest timer itself, which is the next thing built.
 /// Vibration is nested under alerts because it has no meaning on its own — with
@@ -355,6 +356,7 @@ class _RestTimerPreferences extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final alerts = ref.watch(restTimerAlertsProvider).value ?? true;
     final vibrate = ref.watch(restTimerVibrateProvider).value ?? true;
+    final workout = ref.watch(workoutNotificationProvider).value ?? true;
 
     return Column(
       children: [
@@ -378,6 +380,23 @@ class _RestTimerPreferences extends ConsumerWidget {
               ? (value) => setFlag(ref, restTimerVibrateSetting, value)
               : null,
         ),
+        // Beside the rest switches because it takes over part of their job:
+        // while it is up, the rest countdown is drawn inside it, and the
+        // first switch above only decides the alert at the end. Independent
+        // of them otherwise — it is about the workout, not the rest. Android
+        // only, so nowhere else offers a switch that does nothing.
+        if (WorkoutNotificationBridge.supported)
+          SwitchListTile(
+            secondary: const Icon(Icons.fitness_center),
+            title: const Text('Workout notification'),
+            subtitle: const Text(
+              'Keep the current set and rest in the notification shade, with '
+              'buttons to log a set and control the rest',
+            ),
+            value: workout,
+            onChanged: (value) =>
+                setFlag(ref, workoutNotificationSetting, value),
+          ),
       ],
     );
   }

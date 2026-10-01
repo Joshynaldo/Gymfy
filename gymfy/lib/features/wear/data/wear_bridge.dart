@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../../../shared/utils/units.dart';
 
 part 'wear_bridge.g.dart';
 
@@ -48,6 +52,44 @@ typedef WearWorkout = ({
   /// Empty when there is nothing to repeat. Formatted here for the same
   /// reason as everything else: the watch does not know what a unit is.
   String lastSet,
+
+  // The next set, for logging from the wrist. The numbers below are the one
+  // place the payload carries numbers rather than words, because the watch
+  // has to *change* them with + and -; everything about what they mean —
+  // which unit, how big a step, whether it counts reps or seconds — is still
+  // decided here and sent along with them.
+
+  /// The exercise the next set belongs to — the one the phone's card is on.
+  ///
+  /// Empty when there is nothing to log, which is also how the watch decides
+  /// whether to offer logging at all. A phone on an older build never sends
+  /// it, and the watch falls back to the repeat button.
+  String nextExercise,
+
+  /// Its id, opaque to the watch and sent back with a log, so the set lands
+  /// on the exercise that was on the wrist even if the phone has moved on.
+  String nextExerciseId,
+
+  /// Ready to draw: "Set 3 of 4".
+  String nextSet,
+
+  /// The suggested weight, already in [weightUnit] and already rounded to
+  /// something loadable — the watch never converts anything.
+  double nextWeight,
+
+  /// The suggested reps, or the hold in seconds when [nextTimed].
+  int nextReps,
+
+  /// Whether [nextReps] is a hold in seconds rather than a rep count.
+  bool nextTimed,
+
+  /// "kg" or "lbs": the label beside the weight, and echoed back with a log
+  /// so the phone knows which unit the number is in.
+  String weightUnit,
+
+  /// How far one press of + or - (or one crown step) moves the weight, in
+  /// [weightUnit].
+  double weightStep,
 });
 
 /// No workout — what the watch shows when nothing is happening.
@@ -59,7 +101,31 @@ const idleWearWorkout = (
   restEndsAtMs: 0,
   restTotalSeconds: 0,
   lastSet: '',
+  nextExercise: '',
+  nextExerciseId: '',
+  nextSet: '',
+  nextWeight: 0.0,
+  nextReps: 0,
+  nextTimed: false,
+  weightUnit: '',
+  weightStep: 0.0,
 );
+
+/// One "log this set" request, as it arrived — not yet checked against the
+/// workout. See [WearBridge.parseLogSet].
+typedef RemoteSetRequest = ({
+  /// Caller-generated, applied at most once. See [WearBridge.commandLogSet].
+  String id,
+  String exerciseId,
+
+  /// In [unit], as shown where the button was pressed.
+  double weight,
+  WeightUnit unit,
+
+  /// Exactly one of these is set: reps for a counted set, seconds for a hold.
+  int? reps,
+  int? seconds,
+});
 
 /// Sends workout state to the Wear OS companion.
 ///
@@ -83,6 +149,10 @@ class WearBridge {
   static bool get supported =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
+  /// The method commands arrive on, from the watch and from the buttons on
+  /// the ongoing workout notification alike — one door, one handler.
+  static const commandMethod = 'watchCommand';
+
   /// Commands the watch can send back.
   ///
   /// A closed set of strings rather than anything structured, and kept
@@ -100,19 +170,105 @@ class WearBridge {
   /// the second tap is an extra set in your history that you did not do.
   static const commandRepeatSet = 'set.repeat';
 
-  /// Routes commands arriving from the watch to [onCommand].
+  /// Log one set with the numbers given.
+  ///
+  /// `set.log:` followed by a JSON object with the keys below: an id, the
+  /// exercise, the weight and its unit, and exactly one of reps or seconds.
+  /// JSON rather than more colons because an exercise id is the user's own
+  /// text for a custom exercise, and a separator inside it would be read as
+  /// a field boundary.
+  ///
+  /// The id does what it does for [commandRepeatSet]: it is applied at most
+  /// once, so a double tap is one set.
+  static const commandLogSet = 'set.log';
+
+  static const logFieldId = 'id';
+  static const logFieldExercise = 'exerciseId';
+  static const logFieldWeight = 'weight';
+  static const logFieldUnit = 'unit';
+  static const logFieldReps = 'reps';
+  static const logFieldSeconds = 'seconds';
+
+  /// The [commandLogSet] command for one set. The watch builds the same
+  /// string in Kotlin; the notification's "Log set" button carries this one.
+  static String logSetCommand({
+    required String id,
+    required String exerciseId,
+    required double weight,
+    required WeightUnit unit,
+    int? reps,
+    int? seconds,
+  }) {
+    return '$commandLogSet:${jsonEncode({logFieldId: id, logFieldExercise: exerciseId, logFieldWeight: weight, logFieldUnit: unit.name, if (seconds != null) logFieldSeconds: seconds else logFieldReps: reps})}';
+  }
+
+  /// Reads the part of a [commandLogSet] command after the colon.
+  ///
+  /// Null for anything malformed — not JSON, a key missing or of the wrong
+  /// type, an unknown unit, both or neither of reps and seconds. Malformed
+  /// means a watch on a build that disagrees with this one, and the answer
+  /// to that is to do nothing: a guessed set is worse than a missing one.
+  ///
+  /// Only the shape is checked here. Whether the numbers make sense for the
+  /// exercise is the receiver's call, because only it knows the exercise.
+  static RemoteSetRequest? parseLogSet(String argument) {
+    final Object? decoded;
+    try {
+      decoded = jsonDecode(argument);
+    } on FormatException {
+      return null;
+    }
+    if (decoded is! Map<String, Object?>) return null;
+
+    final id = decoded[logFieldId];
+    final exerciseId = decoded[logFieldExercise];
+    final weight = decoded[logFieldWeight];
+    final unitName = decoded[logFieldUnit];
+    final reps = decoded[logFieldReps];
+    final seconds = decoded[logFieldSeconds];
+
+    if (id is! String || id.isEmpty) return null;
+    if (exerciseId is! String || exerciseId.isEmpty) return null;
+    if (weight is! num) return null;
+    // Looked up by name rather than through WeightUnit.parse, which falls
+    // back to kilograms: a unit nobody recognises read as kg would store a
+    // pound weight 2.2 times too heavy.
+    final unit = WeightUnit.values.where((u) => u.name == unitName).firstOrNull;
+    if (unit == null) return null;
+    if (reps != null && reps is! int) return null;
+    if (seconds != null && seconds is! int) return null;
+    if ((reps == null) == (seconds == null)) return null;
+
+    return (
+      id: id,
+      exerciseId: exerciseId,
+      weight: weight.toDouble(),
+      unit: unit,
+      reps: reps as int?,
+      seconds: seconds as int?,
+    );
+  }
+
+  /// Routes commands arriving from the watch (and the notification) to
+  /// [onCommand].
+  ///
+  /// The returned future is awaited before the call is answered, and the
+  /// Kotlin side holds the notification button's broadcast open until then:
+  /// a tap that arrives while the app is frozen in the background only has
+  /// the process for as long as that broadcast lasts, so it must not end
+  /// before the set is written.
   ///
   /// Passing null clears the handler.
-  void listen(void Function(String command)? onCommand) {
+  void listen(Future<void> Function(String command)? onCommand) {
     if (!supported) return;
     if (onCommand == null) {
       _channel.setMethodCallHandler(null);
       return;
     }
     _channel.setMethodCallHandler((call) async {
-      if (call.method == 'watchCommand') {
+      if (call.method == commandMethod) {
         final command = call.arguments;
-        if (command is String) onCommand(command);
+        if (command is String) await onCommand(command);
       }
     });
   }
@@ -133,6 +289,14 @@ class WearBridge {
         'restEndsAtMs': workout.restEndsAtMs,
         'restTotalSeconds': workout.restTotalSeconds,
         'lastSet': workout.lastSet,
+        'nextExercise': workout.nextExercise,
+        'nextExerciseId': workout.nextExerciseId,
+        'nextSet': workout.nextSet,
+        'nextWeight': workout.nextWeight,
+        'nextReps': workout.nextReps,
+        'nextTimed': workout.nextTimed,
+        'weightUnit': workout.weightUnit,
+        'weightStep': workout.weightStep,
         // So the watch can tell how old this is and say so, rather than
         // presenting a three-hour-old rest timer as live.
         'updatedAtMs': DateTime.now().millisecondsSinceEpoch,

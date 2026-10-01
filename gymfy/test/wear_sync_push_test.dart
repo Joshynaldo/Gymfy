@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/features/wear/data/wear_bridge.dart';
 import 'package:gymfy/features/wear/data/wear_sync.dart';
+import 'package:gymfy/features/workout/data/next_set.dart';
 import 'package:gymfy/features/workout/data/rest_timer_controller.dart';
 import 'package:gymfy/features/workout/data/session_repository.dart';
 // RestTimer is also a Drift row class in here — the controller is the one
@@ -56,6 +57,9 @@ void main() {
       // The payload now carries a formatted last set, which needs the
       // display unit — and that reaches for settings in the database.
       weightUnitProvider.overrideWithValue(WeightUnit.kg),
+      // And the next set to log, which reads the running order. Not what
+      // these tests are about; wear_log_set_test.dart covers it.
+      nextSetProvider.overrideWith((ref, id) async => null),
     ],
   );
 

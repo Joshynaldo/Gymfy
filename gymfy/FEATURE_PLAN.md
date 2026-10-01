@@ -96,6 +96,8 @@ plan slot, **set null** when the slot is deleted).
   `auto_backup_folder` (path/URI); `auto_backup_last_at` (ISO-8601);
   `auto_backup_last_error` (last failed automatic backup, shown on the screen).
 - Warm-up calculator ramp: `warmup_ramp_percents` (e.g. `40,60,80`).
+- `workout_notification`: `true` (default) | `false` — the ongoing workout
+  notification (Android only, `lib/features/workout_notification/`).
 
 ## Feature areas and the files they touched
 **P1 Backup & restore** — new `lib/features/backup/` (data: `backup_format.dart`,

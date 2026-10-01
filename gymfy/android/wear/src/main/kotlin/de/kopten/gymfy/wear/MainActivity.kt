@@ -13,28 +13,38 @@ import androidx.activity.ComponentActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.rotary.onRotaryScrollEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.CircularProgressIndicator
 import androidx.wear.compose.material3.CompactButton
 import androidx.wear.compose.material3.MaterialTheme
@@ -46,6 +56,7 @@ import com.google.android.gms.wearable.DataEventBuffer
 import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.Wearable
 import java.util.UUID
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -53,9 +64,11 @@ import kotlinx.coroutines.tasks.await
 /**
  * The watch face for a workout in progress.
  *
- * Stage 1 is read-only on purpose. The phone is the only writer, so there is
- * no sync conflict to resolve and no queue to replay — the hard half of a
- * watch companion is logging *from* the wrist, and that is stage 2.
+ * Stage 1 was read-only on purpose. Stage 2 logs sets from the wrist, and
+ * keeps the property that made stage 1 safe: the phone is still the only
+ * thing that writes. The watch sends a request carrying an id, the phone
+ * checks it, writes it once, and answers by pushing new state — so there is
+ * still no sync conflict to resolve and no queue to replay.
  */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -329,7 +342,7 @@ private fun RestTimer(
             // cannot tell a third left from a third used. Same reasoning as
             // the phone bar's track.
             colors = ProgressIndicatorDefaults.colors(
-                indicatorColor = Color(0xFF7C6BFF),
+                indicatorColor = WatchAccent,
                 trackColor = Color(0x33FFFFFF),
             ),
         )
@@ -368,6 +381,12 @@ private fun RestTimer(
 
 @Composable
 private fun Summary(state: WorkoutState) {
+    // Logging when the phone sent a next set; the repeat button when it is
+    // on a build from before logging and only sent the last one.
+    if (state.canLog) {
+        LogSet(state)
+        return
+    }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -399,6 +418,160 @@ private fun Summary(state: WorkoutState) {
         }
     }
 }
+
+/** Which number the crown is turning. */
+private enum class Dial { WEIGHT, REPS }
+
+/**
+ * The next set, with the phone's suggestion already filled in: + and - (or
+ * the crown) to change it, Log to send it.
+ *
+ * The numbers here are input, not state. Nothing on the wrist claims a set
+ * was logged; the phone answers by pushing new state — the rest starts, the
+ * set number moves on — and that arriving is the confirmation, as for every
+ * other command.
+ */
+@Composable
+private fun LogSet(state: WorkoutState) {
+    // A new suggestion from the phone (a set landed, the exercise changed)
+    // replaces whatever was being edited, and gets a new id. Within one
+    // suggestion the id stays put, so a double tap on Log sends the same id
+    // twice and the phone logs one set.
+    val suggestion = listOf(state.nextExerciseId, state.nextSet, state.nextWeight, state.nextReps)
+    var weight by remember(suggestion) { mutableStateOf(state.nextWeight) }
+    var value by remember(suggestion) { mutableStateOf(state.nextReps) }
+    val id = remember(suggestion) { UUID.randomUUID().toString() }
+
+    val step = state.weightStep.takeIf { it > 0 } ?: 1.0
+    val valueStep = if (state.nextTimed) HOLD_STEP_SECONDS else 1
+    val valueMin = if (state.nextTimed) MIN_HOLD_SECONDS else 1
+    val valueMax = if (state.nextTimed) MAX_HOLD_SECONDS else MAX_REPS
+
+    fun changeWeight(by: Int) {
+        weight = (weight + by * step).coerceIn(0.0, MAX_WEIGHT)
+    }
+    fun changeValue(by: Int) {
+        value = (value + by * valueStep).coerceIn(valueMin, valueMax)
+    }
+
+    // A hold is mostly about the seconds, a lift about the weight, so the
+    // crown starts on the one more likely to need turning. Tapping either
+    // number moves it.
+    var dial by remember(state.nextExerciseId) {
+        mutableStateOf(if (state.nextTimed) Dial.REPS else Dial.WEIGHT)
+    }
+    val focus = remember { FocusRequester() }
+    var turned by remember { mutableFloatStateOf(0f) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            // One step per notch's worth of scrolling rather than per event:
+            // a crown sends many small events per detent, and stepping on
+            // each would race through ten kilos in a flick.
+            .onRotaryScrollEvent { event ->
+                turned += event.verticalScrollPixels
+                while (turned >= CROWN_PIXELS_PER_STEP) {
+                    turned -= CROWN_PIXELS_PER_STEP
+                    if (dial == Dial.WEIGHT) changeWeight(1) else changeValue(1)
+                }
+                while (turned <= -CROWN_PIXELS_PER_STEP) {
+                    turned += CROWN_PIXELS_PER_STEP
+                    if (dial == Dial.WEIGHT) changeWeight(-1) else changeValue(-1)
+                }
+                true
+            }
+            .focusRequester(focus)
+            .focusable(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            text = state.nextExercise,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.padding(horizontal = 24.dp),
+        )
+        Text(
+            text = state.nextSet,
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodySmall,
+        )
+
+        Spacer(Modifier.height(6.dp))
+
+        Stepper(
+            label = "${formatWeight(weight)} ${state.weightUnit}",
+            selected = dial == Dial.WEIGHT,
+            onSelect = { dial = Dial.WEIGHT },
+            onMinus = { changeWeight(-1) },
+            onPlus = { changeWeight(1) },
+        )
+        Stepper(
+            label = if (state.nextTimed) formatRest(value) else "$value reps",
+            selected = dial == Dial.REPS,
+            onSelect = { dial = Dial.REPS },
+            onMinus = { changeValue(-1) },
+            onPlus = { changeValue(1) },
+        )
+
+        Spacer(Modifier.height(6.dp))
+
+        val ctx = LocalContext.current
+        val scope = rememberCoroutineScope()
+        Button(
+            onClick = { send(ctx, scope, logSetCommand(id, state, weight, value)) },
+            modifier = Modifier.width(110.dp),
+        ) {
+            Text(
+                text = "Log",
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+
+    // The crown only reaches a focused element, and nothing else on this
+    // screen wants focus.
+    LaunchedEffect(Unit) { focus.requestFocus() }
+}
+
+/** `[-]  80 kg  [+]`, with the number tappable to put the crown on it. */
+@Composable
+private fun Stepper(
+    label: String,
+    selected: Boolean,
+    onSelect: () -> Unit,
+    onMinus: () -> Unit,
+    onPlus: () -> Unit,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        CompactButton(onClick = onMinus) { Text("−") }
+        Text(
+            text = label,
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.titleMedium,
+            // The accent marks the number the crown turns — the same colour
+            // as the rest ring, the only other accent on the watch.
+            color = if (selected) WatchAccent else Color.Unspecified,
+            modifier = Modifier
+                .width(84.dp)
+                .clickable(onClick = onSelect),
+        )
+        CompactButton(onClick = onPlus) { Text("+") }
+    }
+}
+
+/**
+ * Scrolling that makes one step on the crown. Rotary hardware differs in how
+ * many pixels a detent reports, so this is a feel number to tune on a wrist.
+ */
+private const val CROWN_PIXELS_PER_STEP = 40f
 
 /** A double tap, distinct from a notification's single buzz. */
 private fun buzz(context: Context) {
@@ -432,28 +605,35 @@ private fun CommandChip(label: String, command: String) {
     // to parse the call.
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
-    CompactButton(
-        onClick = {
-            scope.launch {
-                try {
-                    // Broadcast to every connected node rather than a
-                    // remembered one: there is exactly one phone, and
-                    // caching its id is a stale-handle bug waiting for the
-                    // first reconnect.
-                    val nodes = Wearable.getNodeClient(ctx).connectedNodes.await()
-                    for (node in nodes) {
-                        Wearable.getMessageClient(ctx)
-                            .sendMessage(node.id, COMMAND_PATH, command.toByteArray())
-                            .await()
-                    }
-                } catch (e: Exception) {
-                    // The phone being out of range is ordinary, not an
-                    // error worth a dialog on a watch face.
-                    Log.w(TAG, "command $command not delivered", e)
-                }
-            }
-        },
-    ) {
+    CompactButton(onClick = { send(ctx, scope, command) }) {
         Text(label)
     }
 }
+
+/** Fires [command] at the phone and forgets about it. See [CommandChip]. */
+private fun send(ctx: Context, scope: CoroutineScope, command: String) {
+    scope.launch {
+        try {
+            // Broadcast to every connected node rather than a remembered
+            // one: there is exactly one phone, and caching its id is a
+            // stale-handle bug waiting for the first reconnect.
+            val nodes = Wearable.getNodeClient(ctx).connectedNodes.await()
+            for (node in nodes) {
+                Wearable.getMessageClient(ctx)
+                    .sendMessage(node.id, COMMAND_PATH, command.toByteArray())
+                    .await()
+            }
+        } catch (e: Exception) {
+            // The phone being out of range is ordinary, not an error worth
+            // a dialog on a watch face.
+            Log.w(TAG, "command $command not delivered", e)
+        }
+    }
+}
+
+/**
+ * The one accent on the watch: the rest ring, and the number the crown is
+ * on. The phone's default accent, fixed here because the watch has no
+ * settings of its own to read a chosen one from.
+ */
+private val WatchAccent = Color(0xFF7C6BFF)

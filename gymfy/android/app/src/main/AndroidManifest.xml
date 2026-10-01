@@ -71,6 +71,13 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/share_paths" />
         </provider>
+
+        <!-- The ongoing workout notification's buttons (Log set, +30 s, Skip
+             rest). Not exported: only this app's own PendingIntents reach it.
+             Delete this and the buttons silently do nothing. -->
+        <receiver
+            android:exported="false"
+            android:name=".WorkoutActionReceiver" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

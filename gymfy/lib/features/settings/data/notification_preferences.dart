@@ -8,6 +8,10 @@ const restTimerAlertsSetting = 'rest_timer_alerts';
 /// Setting key: vibrate as well as alerting.
 const restTimerVibrateSetting = 'rest_timer_vibrate';
 
+/// Setting key: keep the running workout in an ongoing notification, with
+/// buttons to log the next set and control the rest.
+const workoutNotificationSetting = 'workout_notification';
+
 /// Reads a stored on/off setting.
 ///
 /// Only the exact strings `true` and `false` count. Anything else — unset, or a
@@ -24,8 +28,8 @@ bool parseFlag(String? raw, {required bool orElse}) {
 
 /// Builds a provider for one on/off setting.
 ///
-/// Both notification preferences are the same shape, so they share one factory
-/// rather than two near-identical stream providers.
+/// The notification preferences are all the same shape, so they share one
+/// factory rather than near-identical stream providers.
 StreamProvider<bool> _flagProvider(String name, {required bool orElse}) {
   return StreamProvider<bool>((ref) {
     return ref
@@ -46,6 +50,14 @@ final restTimerAlertsProvider = _flagProvider(
 /// a pocket is the normal case.
 final restTimerVibrateProvider = _flagProvider(
   restTimerVibrateSetting,
+  orElse: true,
+);
+
+/// Whether a running workout shows its ongoing notification. On by default:
+/// it is silent, it goes away with the workout, and it is the one way to log
+/// a set with the phone locked.
+final workoutNotificationProvider = _flagProvider(
+  workoutNotificationSetting,
   orElse: true,
 );
 

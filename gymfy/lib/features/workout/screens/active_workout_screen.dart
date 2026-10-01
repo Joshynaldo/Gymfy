@@ -28,7 +28,9 @@ import '../../overload/data/percent_target.dart' show formatPercent;
 import '../../plates/data/plate_math.dart';
 import '../../plates/screens/plate_calculator_screen.dart';
 import '../../settings/data/notification_preferences.dart';
+import '../../workout_notification/data/workout_notification.dart';
 import '../data/logging_preferences.dart';
+import '../data/next_set.dart';
 import '../data/personal_records.dart';
 import '../data/rest_timer_controller.dart';
 import '../data/rest_timer_repository.dart';
@@ -104,22 +106,61 @@ class _ActiveWorkoutView extends ConsumerStatefulWidget {
 }
 
 class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
-  /// The exercise you picked by hand, if you picked one.
-  ///
-  /// Held by id rather than by index: the running order can be added to,
-  /// swapped and reordered mid-session, and an index would then point at a
-  /// different movement. (A lift appears once per session, so the id is
-  /// enough.)
-  String? _picked;
-
   /// The record being celebrated, if a set just beat one. See [_celebrate].
   ({String exerciseName, List<BrokenRecord> records})? _celebration;
   Timer? _celebrationTimer;
 
   @override
+  void initState() {
+    super.initState();
+    // After the first frame, so the system dialog does not open over a
+    // screen that has not drawn yet.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _askForNotifications());
+  }
+
+  @override
   void dispose() {
     _celebrationTimer?.cancel();
     super.dispose();
+  }
+
+  /// Asks for notification permission for the ongoing workout notification.
+  ///
+  /// Here, when a workout starts or is resumed, because that is the moment
+  /// the notification is for — the same reasoning that has the rest timer
+  /// ask when the first rest starts rather than at launch. Android asks at
+  /// most twice and then stops showing the dialog by itself, and on older
+  /// versions this answers yes without asking.
+  Future<void> _askForNotifications() async {
+    // Not on iOS, which has no workout notification to ask for: it would
+    // be a permission dialog for nothing.
+    if (!WorkoutNotificationBridge.supported) return;
+    final bool wanted;
+    try {
+      wanted = await _readSetting(workoutNotificationProvider);
+    } on StateError {
+      // The screen closed before the setting loaded. Nothing to ask for.
+      return;
+    }
+    if (!wanted || !mounted) return;
+    final granted = await ref
+        .read(notificationServiceProvider)
+        .requestPermission();
+    // Everything posted before the answer was dropped for want of
+    // permission, and nothing has changed since to post it again.
+    if (granted && mounted) {
+      ref.read(workoutNotificationSyncProvider.notifier).resend();
+    }
+  }
+
+  /// Puts the card on [exerciseId], or back on the plan's own choice for
+  /// null. Shared with the notification and the watch — see
+  /// [PickedExercise].
+  void _pick(String? exerciseId) {
+    if (!mounted) return;
+    ref
+        .read(pickedExerciseProvider(widget.session.id).notifier)
+        .pick(exerciseId);
   }
 
   @override
@@ -141,7 +182,11 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
     // the cost RestTimerBar exists to keep to itself.
     final resting = ref.watch(restTimerProvider.select((t) => t != null));
 
-    final current = _current(planned, setsByExercise);
+    final current = currentSessionEntry(
+      planned,
+      sets,
+      picked: ref.watch(pickedExerciseProvider(session.id)),
+    );
 
     return GlassScaffold(
       appBar: GlassAppBar(
@@ -267,38 +312,6 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
     }
   }
 
-  /// The exercise the card is showing.
-  ///
-  /// Your pick if you made one, otherwise the first exercise still short of its
-  /// planned working sets — which is where you are on any day you work through
-  /// the plan in order.
-  SessionExerciseEntry? _current(
-    List<SessionExerciseEntry> planned,
-    Map<String, List<LoggedSet>> setsByExercise,
-  ) {
-    if (planned.isEmpty) return null;
-    if (_picked != null) {
-      for (final entry in planned) {
-        if (entry.exercise.id == _picked) return entry;
-      }
-    }
-    for (final entry in planned) {
-      if (_shortOfTarget(entry, setsByExercise)) return entry;
-    }
-    return planned.last;
-  }
-
-  /// Whether [entry] still has planned working sets to do.
-  static bool _shortOfTarget(
-    SessionExerciseEntry entry,
-    Map<String, List<LoggedSet>> setsByExercise,
-  ) {
-    final done = (setsByExercise[entry.exercise.id] ?? const [])
-        .where((s) => !s.isWarmup)
-        .length;
-    return done < entry.targets.defaultSets;
-  }
-
   /// The other exercises in [entry]'s superset, in order. Empty when it
   /// stands alone.
   static List<SessionExerciseEntry> _partnersOf(
@@ -329,7 +342,7 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
     Widget row(SessionExerciseEntry entry) => _UpNextRow(
       planned: entry,
       loggedSets: setsByExercise[entry.exercise.id] ?? const [],
-      onTap: () => setState(() => _picked = entry.exercise.id),
+      onTap: () => _pick(entry.exercise.id),
     );
 
     // One block's rows, minus whatever is on the card. A superset keeps its
@@ -384,9 +397,7 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
       sessionId: widget.session.id,
       entries: entries,
     );
-    if (added.isNotEmpty && entries.isEmpty && mounted) {
-      setState(() => _picked = added.first);
-    }
+    if (added.isNotEmpty && entries.isEmpty) _pick(added.first);
   }
 
   /// The menu on the card: swap the exercise, or take it out of today's list.
@@ -426,11 +437,13 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
           entry: entry,
           entries: entries,
         );
-        if (swapped != null && mounted) setState(() => _picked = swapped);
+        if (swapped != null) _pick(swapped);
       case _EntryAction.remove:
         await ref.read(sessionRepositoryProvider).removeExercise(entry.row.id);
-        if (mounted && _picked == entry.exercise.id) {
-          setState(() => _picked = null);
+        if (mounted &&
+            ref.read(pickedExerciseProvider(widget.session.id)) ==
+                entry.exercise.id) {
+          _pick(null);
         }
     }
   }
@@ -459,7 +472,7 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
           (workingDone[e.exercise.id] ?? 0) < e.targets.defaultSets,
     );
     if (step == null) return true;
-    if (mounted) setState(() => _picked = step.next?.exercise.id);
+    _pick(step.next?.exercise.id);
     return step.rests;
   }
 
