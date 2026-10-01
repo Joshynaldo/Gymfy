@@ -1,6 +1,8 @@
 // The Health Connect section of Settings: what it says about availability,
 // what each switch asks for, and what happens when Health Connect says no.
 
+import 'dart:async';
+
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -96,6 +98,23 @@ void main() {
     expect(find.text('Install'), findsNothing);
     expect(switchTile(tester, 'Write workouts').onChanged, isNull);
     expect(find.text('Manage in Health Connect'), findsNothing);
+  });
+
+  testWidgets('while it is still asking, it says so and offers nothing', (
+    tester,
+  ) async {
+    final answer = Completer<void>();
+    health.availabilityGate = answer.future;
+    await pump(tester);
+
+    expect(find.text('Checking…'), findsOneWidget);
+    expect(find.text('Not available on this phone'), findsNothing);
+    expect(switchTile(tester, 'Write workouts').onChanged, isNull);
+
+    answer.complete();
+    await settle(tester);
+    expect(find.text('Available'), findsOneWidget);
+    expect(switchTile(tester, 'Write workouts').onChanged, isNotNull);
   });
 
   testWidgets('both switches start off', (tester) async {

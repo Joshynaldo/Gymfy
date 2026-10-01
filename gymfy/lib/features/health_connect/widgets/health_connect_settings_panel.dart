@@ -166,9 +166,10 @@ class _HealthConnectSettingsPanelState
       color: theme.colorScheme.onSurfaceVariant,
     );
 
-    final availability =
-        ref.watch(healthConnectAvailabilityProvider).value ??
-        HealthConnectAvailability.unsupported;
+    final asked = ref.watch(healthConnectAvailabilityProvider);
+    // Until the answer is in, the switches stay disabled and the line says
+    // "Checking…" — "not available" would be wrong for a moment on every visit.
+    final availability = asked.value ?? HealthConnectAvailability.unsupported;
     final available = availability == HealthConnectAvailability.available;
     final granted = ref.watch(healthConnectGrantedProvider).value ?? const {};
     final write = ref.watch(healthConnectWriteProvider).value ?? false;
@@ -205,7 +206,7 @@ class _HealthConnectSettingsPanelState
             color: available ? accent : null,
           ),
           title: const Text('Health Connect'),
-          subtitle: Text(availability.label),
+          subtitle: Text(asked.hasValue ? availability.label : 'Checking…'),
           trailing: switch (availability) {
             HealthConnectAvailability.notInstalled ||
             HealthConnectAvailability.needsUpdate => TextButton(

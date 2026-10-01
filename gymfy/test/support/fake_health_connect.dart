@@ -38,9 +38,13 @@ class FakeHealthConnect implements HealthConnectBridge {
   /// switches are off is the promise.
   int queries = 0;
 
+  /// When set, availability waits for it — the moment before the answer.
+  Future<void>? availabilityGate;
+
   @override
   Future<HealthConnectAvailability> availability() async {
     queries++;
+    await availabilityGate;
     return status;
   }
 
