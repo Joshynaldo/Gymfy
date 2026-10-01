@@ -87,6 +87,11 @@ Gymfy is free and will stay free: no subscription, no pro tier, nothing to unloc
 - **A rest timer** that shows a countdown ring, adds 30 seconds on a tap, and
   sends a notification with optional vibration once the phone is back in your
   pocket.
+- **A workout notification** on Android that stays up while you train: the
+  exercise, which set you're on and the rest countdown, with buttons to log the
+  suggested set, add 30 seconds or skip the rest. "Log set" only appears when
+  Gymfy has real numbers to log, never a made-up first set. It can be switched
+  off in Settings.
 - **A workout summary** when you finish.
 
 ### See your progress
@@ -120,14 +125,23 @@ Gymfy is free and will stay free: no subscription, no pro tier, nothing to unloc
 ### On your wrist
 The **Wear OS companion** shows the workout that's running, your set count, the
 current exercise and the rest countdown, with a double buzz when rest is over.
-From the watch you can add 30 seconds, skip the rest or repeat your last set.
-The phone stays in charge of all the data, and the watch talks to it directly
-over the Wearable Data Layer, not through the internet.
+From the watch you can add 30 seconds, skip the rest or repeat your last set,
+or log the next set: the watch shows the suggested weight and reps (seconds
+for a hold), you adjust them with − / + or the rotating crown, and the phone
+checks the set before saving it. The phone stays in charge of all the data,
+and the watch talks to it directly over the Wearable Data Layer, not through
+the internet.
 
 ### Your data stays yours
 - **Everything stays on the phone.** Your data lives in a SQLite database on the
-  device. There's no account, backend or sync, and the app doesn't even ask
-  for the internet permission.
+  device. There's no account, backend or cloud sync, and the app doesn't even
+  ask for the internet permission.
+- **Health Connect, if you want it** (Android). Off until you switch it on in
+  Settings, one switch per direction: finished workouts are written to Health
+  Connect as strength-training sessions, so they show up next to your other
+  fitness data, and weigh-ins saved there fill in your bodyweight on days you
+  haven't entered one. Health Connect is a store on the phone itself, so this
+  still needs no internet permission.
 - **Import your history** from Hevy, Strong or StrengthLog CSV exports. Gymfy even
   rebuilds your split from it and puts each day on the weekday you usually
   train it.
@@ -196,7 +210,7 @@ running while you work.
 flutter test
 ```
 
-Around 1,270 tests across 116 files. They're the main reason the app can be
+Around 1,970 tests across 158 files. They're the main reason the app can be
 refactored at all: as well as the usual unit coverage, there are widget tests
 for every screen, layout tests that fail on a pixel of overflow, and a couple
 that rasterise a widget and read the pixels back — because "the card looks
@@ -231,6 +245,7 @@ gymfy/
       data_export/         export everything to a file
       exercises/           library, seed data, GIF previews
       goals/               lift, weekly and bodyweight goals
+      health_connect/      workouts out to, weigh-ins in from Health Connect
       help/                about the app
       home/                today's workout, streak, activity heatmap
       import/              CSV import from Hevy, Strong and StrengthLog
@@ -246,6 +261,7 @@ gymfy/
       stats/               the panels Progress is assembled from
       wear/                the phone side of the Wear OS sync
       workout/             splits, days, sessions, set logging
+      workout_notification/ the ongoing notification while a workout runs
     shared/
       data/                cross-feature providers
       database/            the Drift database
@@ -275,7 +291,7 @@ navigation stack, so switching tabs never loses where you were in another one.
 - Widgets never hardcode a hex value. Colours come from the theme or the accent
   provider. `app/theme/` is the one place raw hex is allowed, because that file
   *is* the theme.
-- The database schema is versioned (currently v25) and every change ships a
+- The database schema is versioned (currently v27) and every change ships a
   migration. Existing logs are never dropped.
 
 ---

@@ -751,6 +751,14 @@ Track progress here. Update after each session.
 
 ## 🟢 Done
 
+### Phase 4/5 — Notification, Loggen von der Uhr, Health Connect, Insights (zusammengeführt) ✅
+Drei Feature-Branches nach `feature/phase-4-5` gemergt, normale Merge-Commits: `feat/insights` → `feat/remote-controls` → `feat/health-connect`. Was jeder gebaut hat, steht an seiner Stelle: Notification und Uhr-Loggen unter Phase 12, Health Connect oben bei den kommenden Features, Insights direkt hier drunter
+- [x] **Konflikte nur, wo zwei Branches dieselbe Zeile wollten**, jeweils beide Seiten behalten: `AndroidManifest.xml` (Share-Provider *und* `WorkoutActionReceiver`), `MainActivity.kt` (`ShareBridge` *und* `HealthConnectBridge` samt `onActivityResult`), `FEATURE_PLAN.md` (beide Settings-Schlüssel)
+- [x] **Zusammen geprüft:** `flutter analyze` sauber, `flutter test` 1970/1970, `flutter build apk --debug` und `:wear:assembleDebug` bauen, im Release-Manifest weiter kein `INTERNET`. Phone-Build up-to-date im A/B gegen den Stand vor den Merges (warmer Daemon, 5 Läufe abwechselnd): Median 11,3 s vorher / 11,1 s nachher — Rauschen. Die Maschine war dabei langsamer als bei den Einzelmessungen oben; es zählt nur der Abstand
+- [x] README und Website (`docs/index.html`): Notification, Uhr-Loggen, Health Connect, Reviews und Ziele. Der Datenschutz-Abschnitt der Website nennt Health Connect und sagt nicht mehr „kein Backup"
+- [ ] **Datenschutzerklärung nachziehen** (`store/privacy-policy.md`, `.html`, `docs/`-Kopie): sie sagt noch „Gymfy has no backup" (falsch seit Backup & Restore) und zählt drei Wege, auf denen Daten das Gerät verlassen — ein Review als Bild teilen ist der vierte. Rechtstext, deshalb nicht ungefragt geändert
+- [ ] Sätze von der Notification oder der Uhr lösen keine PR-Feier in der App aus (die Rekorde selbst zählen). Hält der Prozess beim Pausenende still, zählt der Countdown der Notification ins Negative, bis die App wieder läuft — dafür bräuchte es einen Alarm, der sie zum Ende neu postet
+
 ### Insights: Reviews, Ziele, Kalender (Schema v27) ✅
 Eine neue Tabelle (`goals`), sonst keine Schema-Änderung. Spalten, Regeln und Helfer stehen in `FEATURE_PLAN.md` unter „Schema v27"
 - [x] **Monats-Review und „Year in Training"** — Progress → Trends, unter dem Recap. Workouts, Volumen, Trainingszeit (nur bekannte Minuten; Importe ohne Länge werden gezählt, nicht getimt), Top-Übungen, Rekorde, meisttrainierte Muskeln, Trainingstage, längster Streak, jeweils gegen den Vormonat bzw. das Vorjahr. Keine eigene Abfrage: Recap-Sätze, Heatmap-Minuten (jetzt auch über das ganze Log) und neu Rekorde pro Tag — mit den Regeln der Workout-Zusammenfassung, also ergibt ein Monat genau die Summe seiner Zusammenfassungen. Öffnet am 1. auf dem gerade beendeten Monat
