@@ -38,7 +38,10 @@ English strings verbatim, so English widget tests keep finding them) and
   `englishLocalizations` for something that must stay English.
 - Language: `app_language` setting, Settings → Language. `system` follows the
   phone (German phone → German, any unsupported language → English).
-  `appLocaleProvider` feeds every `MaterialApp` in `main.dart`.
+  `appLocaleProvider` feeds every `MaterialApp` in `main.dart`. On `system`,
+  `appLocalizationsProvider` resolves `systemLocalesProvider`, which
+  `systemLocalesWatcherProvider` (watched in `main.dart`) keeps current when
+  the phone's language changes — Android does not restart the app for it.
 - Formatting: the helpers in `shared/utils/format.dart`, `units.dart`
   (`formatWeightUnit`, `formatWeightIn`, `formatLoggedSet`), `weekday.dart`
   and `home/data/recap.dart` (`bucketLabel`) take an optional `l10n:` — pass
@@ -288,9 +291,13 @@ plan slot, **set null** when the slot is deleted).
   `health_connect_weight_imports` (JSON `{"yyyy-mm-dd": {id, kg}}`, how a
   typed or edited bodyweight is told apart from an import);
   `health_connect_weight_checked_at` (ISO-8601); `health_connect_last_error`.
-  These live in `app_settings`, so a backup restore brings back the ledgers
-  of that moment: records written after the backup are not deleted from
-  Health Connect by the restore.
+  These live in `app_settings` but are device-local, like the `auto_backup_*`
+  keys (`deviceLocalSettingKeys` in `backup_repository.dart`): a restore keeps
+  this phone's values and never brings back the file's. So a restore never
+  switches Health Connect on, and a new phone starts with both switches off
+  and an empty ledger, so "Write past workouts" writes everything. On the
+  same phone, with writing on, the next sync deletes from Health Connect the
+  workouts the restored backup does not contain — as deleting them would.
 
 ## Feature areas and the files they touched
 **P1 Backup & restore** — new `lib/features/backup/` (data: `backup_format.dart`,
@@ -363,6 +370,10 @@ restore refuses a backup with a table missing.
   hand), `weekdaysFrom(first)`. `shared/data/week_start.dart`:
   `firstWeekdayProvider` (device region, not the app language: English on a
   German phone still starts on Monday).
+- `shared/data/current_day.dart`: `currentDayProvider` (today at midnight),
+  moved on by `currentDayWatcherProvider` (watched in `main.dart`) when the
+  app resumes on a new day. Watch it in a long-lived provider whose answer
+  depends on the date and not only on the data — `goalStatusesProvider` does.
 - `shared/utils/format.dart`: `formatMonthName`, `formatMonthYear`,
   `formatDate` ("3 Oct 2026"; pass `l10n:` for "3. Okt. 2026", see
   Localisation above).

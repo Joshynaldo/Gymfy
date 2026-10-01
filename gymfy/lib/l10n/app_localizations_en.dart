@@ -4049,7 +4049,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String importNothingUnreadableDates(int count, String sample) {
-    return 'That file was read, but $count of its rows have a date this app could not make sense of — the first one is \"$sample\".\n\nSend that line on and it can be taught to read it.';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'That file was read, but $count of its rows have a date this app could not make sense of — the first one is \"$sample\".\n\nSend that line on and it can be taught to read it.',
+      one:
+          'That file was read, but one of its rows has a date this app could not make sense of: \"$sample\".\n\nSend that line on and it can be taught to read it.',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -4092,7 +4100,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String importPreviewDatesSkipped(int count, String sample) {
-    return '$count rows were left out because their date could not be read — the first is \"$sample\". Send that line on and it can be taught to read it.';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count rows were left out because their date could not be read — the first is \"$sample\". Send that line on and it can be taught to read it.',
+      one:
+          '1 row was left out because its date could not be read: \"$sample\". Send that line on and it can be taught to read it.',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -4112,7 +4128,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String importPreviewNearDuplicates(int count) {
-    return '$count of them start within an hour of a workout you already have. If you have imported the same training from another app, those will be added a second time.';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count of them start within an hour of a workout you already have. If you have imported the same training from another app, those will be added a second time.',
+      one:
+          '1 of them starts within an hour of a workout you already have. If you have imported the same training from another app, it will be added a second time.',
+    );
+    return '$_temp0';
   }
 
   @override

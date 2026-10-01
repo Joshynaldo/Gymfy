@@ -4069,7 +4069,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String importNothingUnreadableDates(int count, String sample) {
-    return 'Die Datei wurde gelesen, aber $count ihrer Zeilen haben ein Datum, mit dem diese App nichts anfangen kann – das erste ist „$sample“.\n\nSchick diese Zeile weiter, dann kann die App lernen, sie zu lesen.';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Die Datei wurde gelesen, aber $count ihrer Zeilen haben ein Datum, mit dem diese App nichts anfangen kann – das erste ist „$sample“.\n\nSchick diese Zeile weiter, dann kann die App lernen, sie zu lesen.',
+      one:
+          'Die Datei wurde gelesen, aber eine ihrer Zeilen hat ein Datum, mit dem diese App nichts anfangen kann: „$sample“.\n\nSchick diese Zeile weiter, dann kann die App lernen, sie zu lesen.',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -4104,7 +4112,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String importPreviewWillSkip(int count) {
-    return '$count – werden übersprungen';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count – werden übersprungen',
+      one: '1 – wird übersprungen',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -4112,7 +4126,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String importPreviewDatesSkipped(int count, String sample) {
-    return '$count Zeilen wurden ausgelassen, weil ihr Datum nicht lesbar war – das erste ist „$sample“. Schick diese Zeile weiter, dann kann die App lernen, sie zu lesen.';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count Zeilen wurden ausgelassen, weil ihr Datum nicht lesbar war – das erste ist „$sample“. Schick diese Zeile weiter, dann kann die App lernen, sie zu lesen.',
+      one:
+          '1 Zeile wurde ausgelassen, weil ihr Datum nicht lesbar war: „$sample“. Schick diese Zeile weiter, dann kann die App lernen, sie zu lesen.',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -4132,7 +4154,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String importPreviewNearDuplicates(int count) {
-    return '$count davon beginnen weniger als eine Stunde vor oder nach einem Training, das du schon hast. Wenn du dasselbe Training schon aus einer anderen App importiert hast, kommen diese ein zweites Mal dazu.';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count davon beginnen weniger als eine Stunde vor oder nach einem Training, das du schon hast. Wenn du dasselbe Training schon aus einer anderen App importiert hast, kommen diese ein zweites Mal dazu.',
+      one:
+          '1 davon beginnt weniger als eine Stunde vor oder nach einem Training, das du schon hast. Wenn du dasselbe Training schon aus einer anderen App importiert hast, kommt es ein zweites Mal dazu.',
+    );
+    return '$_temp0';
   }
 
   @override

@@ -5,6 +5,7 @@
 // progress screens use — and that a free workout, which has no planned day
 // behind it, counts towards a weekly goal like any other.
 
+import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +14,7 @@ import 'package:gymfy/features/goals/data/goal_progress.dart';
 import 'package:gymfy/features/goals/data/goal_repository.dart';
 import 'package:gymfy/features/progress/data/measurements_repository.dart';
 import 'package:gymfy/features/workout/data/session_repository.dart';
+import 'package:gymfy/shared/data/current_day.dart';
 import 'package:gymfy/shared/data/week_start.dart';
 import 'package:gymfy/shared/database/app_database.dart';
 import 'package:gymfy/shared/models/body_measurement.dart';
@@ -235,6 +237,79 @@ void main() {
       final status = (await statuses()).single;
       expect(status.current, 82);
       expect(status.fraction, closeTo(0.5, 1e-9));
+    });
+
+    test('a new week starts on Monday without restarting the app', () {
+      // Sunday evening, the weekly goal met. The app stays alive overnight,
+      // and on Monday morning nothing has been logged or edited — so nothing
+      // the provider watches has changed. Only the calendar has.
+      return withClock(Clock.fixed(DateTime(2026, 9, 27, 20)), () async {
+        await goals.add(const GoalDraft(kind: GoalKind.frequency, target: 1));
+        // Dated by hand: completeSession stamps the wall clock, not this one.
+        final id = await db
+            .into(db.workoutSessions)
+            .insert(
+              WorkoutSessionsCompanion.insert(
+                name: 'Push',
+                startedAt: Value(DateTime(2026, 9, 27, 19)),
+                completedAt: Value(DateTime(2026, 9, 27, 20)),
+              ),
+            );
+        await sessions.logSet(
+          sessionId: id,
+          exerciseId: 'barbell_bench_press',
+          setNumber: 1,
+          weight: 100,
+          reps: 5,
+        );
+        expect((await statuses()).single.reached, isTrue);
+
+        withClock(Clock.fixed(DateTime(2026, 9, 28, 9)), () {
+          // Monday, before the app has come back: last week's answer, which
+          // is what the Home card used to go on saying until a set was
+          // logged.
+          expect(container.read(goalStatusesProvider)!.single.reached, isTrue);
+
+          // The resume that brings Gymfy back checks the date.
+          container.read(currentDayProvider.notifier).check();
+          final monday = container.read(goalStatusesProvider)!.single;
+          expect(monday.reached, isFalse);
+          expect(monday.current, 0);
+        });
+      });
+    });
+
+    test('a deadline passing turns a goal overdue the next day', () {
+      return withClock(Clock.fixed(DateTime(2026, 9, 27, 20)), () async {
+        await goals.add(
+          GoalDraft(
+            kind: GoalKind.lift,
+            exerciseId: 'barbell_bench_press',
+            target: 120,
+            startValue: 100,
+            deadline: DateTime(2026, 9, 28),
+          ),
+        );
+        final sunday = (await statuses()).single;
+        expect(sunday.daysLeft, 1);
+        expect(sunday.overdue, isFalse);
+
+        withClock(Clock.fixed(DateTime(2026, 9, 29, 7)), () {
+          container.read(currentDayProvider.notifier).check();
+          final tuesday = container.read(goalStatusesProvider)!.single;
+          expect(tuesday.daysLeft, -1);
+          expect(tuesday.overdue, isTrue);
+        });
+      });
+    });
+
+    test('a resume on the same day rebuilds nothing', () async {
+      await goals.add(const GoalDraft(kind: GoalKind.frequency, target: 3));
+      final before = await statuses();
+
+      container.read(currentDayProvider.notifier).check();
+
+      expect(identical(container.read(goalStatusesProvider), before), isTrue);
     });
 
     test('a goal of a kind this build does not know is left out', () async {

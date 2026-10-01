@@ -2484,7 +2484,7 @@
   "importExplainerTitle": "Bring your history with you",
   "importExplainerMessage": "Export your workouts from the other app as a CSV file, then pick it here. Hevy and Strong both do this from their settings.\n\nColumns are matched by name, so most exports work without anything being configured. Nothing is overwritten — importing only adds, and importing the same file twice adds nothing the second time.",
   "importNothingTitle": "Nothing to import",
-  "importNothingUnreadableDates": "That file was read, but {count} of its rows have a date this app could not make sense of — the first one is \"{sample}\".\n\nSend that line on and it can be taught to read it.",
+  "importNothingUnreadableDates": "{count, plural, =1{That file was read, but one of its rows has a date this app could not make sense of: \"{sample}\".\n\nSend that line on and it can be taught to read it.} other{That file was read, but {count} of its rows have a date this app could not make sense of — the first one is \"{sample}\".\n\nSend that line on and it can be taught to read it.}}",
   "@importNothingUnreadableDates": {
     "description": "sample is the first unreadable date, exactly as the file has it.",
     "placeholders": {
@@ -2514,7 +2514,7 @@
     }
   },
   "importPreviewNotSets": "Rows that were not sets",
-  "importPreviewDatesSkipped": "{count} rows were left out because their date could not be read — the first is \"{sample}\". Send that line on and it can be taught to read it.",
+  "importPreviewDatesSkipped": "{count, plural, =1{1 row was left out because its date could not be read: \"{sample}\". Send that line on and it can be taught to read it.} other{{count} rows were left out because their date could not be read — the first is \"{sample}\". Send that line on and it can be taught to read it.}}",
   "@importPreviewDatesSkipped": {
     "placeholders": {
       "count": { "type": "int" },
@@ -2528,7 +2528,7 @@
       "count": { "type": "int" }
     }
   },
-  "importPreviewNearDuplicates": "{count} of them start within an hour of a workout you already have. If you have imported the same training from another app, those will be added a second time.",
+  "importPreviewNearDuplicates": "{count, plural, =1{1 of them starts within an hour of a workout you already have. If you have imported the same training from another app, it will be added a second time.} other{{count} of them start within an hour of a workout you already have. If you have imported the same training from another app, those will be added a second time.}}",
   "@importPreviewNearDuplicates": {
     "placeholders": {
       "count": { "type": "int" }

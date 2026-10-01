@@ -118,6 +118,30 @@ void main() {
         expect(container.read(appLocalizationsProvider).localeName, 'de');
       },
     );
+
+    test('the phone changing language moves the strings with it', () async {
+      container.listen(appLocalizationsProvider, (_, _) {});
+      await container.read(storedAppLanguageProvider.future);
+      final phone = container.read(systemLocalesProvider.notifier);
+
+      phone.changed(const [Locale('de', 'AT')]);
+      expect(container.read(appLocalizationsProvider).localeName, 'de');
+      phone.changed(const [Locale('fr'), Locale('en', 'GB')]);
+      expect(container.read(appLocalizationsProvider).localeName, 'en');
+    });
+
+    test('but not past a language picked in Settings', () async {
+      container.listen(appLocalizationsProvider, (_, _) {});
+      await container
+          .read(settingsRepositoryProvider)
+          .write(appLanguageSetting, AppLanguage.german.storedValue);
+      await pumpEventQueue();
+
+      container.read(systemLocalesProvider.notifier).changed(const [
+        Locale('en', 'US'),
+      ]);
+      expect(container.read(appLocalizationsProvider).localeName, 'de');
+    });
   });
 
   group('the app', () {
@@ -156,6 +180,37 @@ void main() {
 
       expect(_tabLabels(tester), ['Home', 'Workout', 'Progress', 'More']);
     });
+
+    testWidgets(
+      'on the system default, the words outside the app follow the phone too',
+      (tester) async {
+        // The notification and the watch are worded from
+        // appLocalizationsProvider, not from a widget. Android does not
+        // restart Gymfy for a language change, so that provider has to hear
+        // about it — the screens already do, through MaterialApp.
+        await boot(tester, Stream.value(null));
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(NavigationBar)),
+        );
+        container.listen(appLocalizationsProvider, (_, _) {});
+        addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+
+        tester.platformDispatcher.localesTestValue = const [Locale('de', 'DE')];
+        await tester.pumpAndSettle();
+        expect(_tabLabels(tester), [
+          'Start',
+          'Training',
+          'Fortschritt',
+          'Mehr',
+        ]);
+        expect(container.read(appLocalizationsProvider).localeName, 'de');
+
+        tester.platformDispatcher.localesTestValue = const [Locale('en', 'US')];
+        await tester.pumpAndSettle();
+        expect(_tabLabels(tester), ['Home', 'Workout', 'Progress', 'More']);
+        expect(container.read(appLocalizationsProvider).localeName, 'en');
+      },
+    );
 
     testWidgets('a picked language beats the phone, and applies live', (
       tester,

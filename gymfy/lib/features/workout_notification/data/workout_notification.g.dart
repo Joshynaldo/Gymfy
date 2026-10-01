@@ -122,7 +122,7 @@ final class WorkoutNotificationSyncProvider
 }
 
 String _$workoutNotificationSyncHash() =>
-    r'f6977eaa549991916819f89bba6df8fe5ed4e384';
+    r'c5bddb0ab3fd44329d116074d5eaa2c07c3e52da';
 
 /// Keeps the notification in step with the workout.
 ///

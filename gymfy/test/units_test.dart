@@ -74,6 +74,44 @@ void main() {
     });
   });
 
+  group('loadableWeightIn', () {
+    test('is the loadable number in the display unit, exactly', () {
+      // closeTo would hide the bug: the round trip through kilograms is
+      // close, and the watch prints every digit of it.
+      expect(loadableWeightIn(62.5, WeightUnit.lbs), 138);
+      expect(loadableWeightIn(62.4, WeightUnit.kg), 62.5);
+      expect(
+        loadableWeightIn(
+          weightToKilograms(150, WeightUnit.lbs),
+          WeightUnit.lbs,
+        ),
+        150,
+      );
+      expect(
+        weightIn(
+          roundToLoadable(
+            weightToKilograms(150, WeightUnit.lbs),
+            WeightUnit.lbs,
+          ),
+          WeightUnit.lbs,
+        ),
+        isNot(150),
+        reason: 'if this ever comes back exact, the helper is no longer needed',
+      );
+    });
+
+    test('agrees with roundToLoadable', () {
+      for (final kg in [0.0, 20, 61.2, 102.5, 140.6]) {
+        for (final unit in WeightUnit.values) {
+          expect(
+            weightToKilograms(loadableWeightIn(kg.toDouble(), unit), unit),
+            roundToLoadable(kg.toDouble(), unit),
+          );
+        }
+      }
+    });
+  });
+
   group('formatting', () {
     test('kilograms read as before', () {
       expect(formatWeightUnit(62.5, WeightUnit.kg), '62.5 kg');

@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../shared/data/current_day.dart';
 import '../../../shared/data/week_start.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/models/body_measurement.dart';
@@ -128,9 +129,16 @@ final workoutFinishTimesProvider = Provider<List<DateTime>?>((ref) {
 /// the progress screens use, so a goal and the chart beside it can never
 /// disagree about your best.
 final goalStatusesProvider = Provider<List<GoalStatus>?>((ref) {
+  // The calendar moves these too: a new week starts a weekly goal from
+  // nothing, and a deadline passing turns "due today" into overdue — at
+  // midnight, when nothing else watched here changes. This provider lives as
+  // long as the app, which Android often keeps in the background overnight,
+  // so without this Monday would still say "this week done" about last week.
+  ref.watch(currentDayProvider);
+  final today = clock.now();
+
   final goals = ref.watch(goalsProvider).value;
   if (goals == null) return null;
-  final today = clock.now();
 
   final statuses = <GoalStatus>[];
   for (final goal in goals) {

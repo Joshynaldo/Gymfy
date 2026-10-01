@@ -6,6 +6,9 @@
 // everything, writes through the same repository call as the log sheet, and
 // applies each request id once.
 
+import 'dart:ui' show Locale;
+
+import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,7 +22,9 @@ import 'package:gymfy/features/workout/data/session_repository.dart';
 import 'package:gymfy/features/workout/data/workout_repository.dart';
 // RestTimer is also a Drift row class in here — the controller is the one
 // this test means.
+import 'package:gymfy/l10n/l10n.dart';
 import 'package:gymfy/shared/database/app_database.dart' hide RestTimer;
+import 'package:gymfy/shared/utils/format.dart' show formatWeight;
 import 'package:gymfy/shared/utils/units.dart';
 
 /// Keeps the command handler so the test can play the watch.
@@ -266,6 +271,56 @@ void main() {
       expect(payload.weightStep, 5);
     });
 
+    test('sends a whole number of steps, with no conversion noise', () {
+      // The watch prints the number as it arrives. Going to kilograms and
+      // back turned a 150 lb set into "149.99999999999997 lbs" on the wrist,
+      // and 102.5 kg into 226.00000000000003.
+      double sent(double kg, WeightUnit unit) => wearWorkoutFrom(
+        session: session,
+        rest: null,
+        loggedSets: 1,
+        now: now,
+        next: (
+          exerciseId: 'bench',
+          exerciseName: 'Bench Press',
+          setNumber: 2,
+          plannedSets: 3,
+          weightKg: kg,
+          reps: 8,
+          seconds: null,
+          confident: true,
+        ),
+        unit: unit,
+      ).nextWeight;
+
+      expect(sent(weightToKilograms(150, WeightUnit.lbs), WeightUnit.lbs), 150);
+      expect(sent(102.5, WeightUnit.lbs), 226);
+      for (var lb = 1; lb <= 600; lb++) {
+        final kg = weightToKilograms(lb.toDouble(), WeightUnit.lbs);
+        expect(sent(kg, WeightUnit.lbs), lb.toDouble(), reason: '$lb lb');
+      }
+      for (var halves = 1; halves <= 600; halves++) {
+        expect(sent(halves / 2, WeightUnit.kg), halves / 2);
+      }
+    });
+
+    test('and the separator the phone writes weights with', () {
+      final german = lookupAppLocalizations(const Locale('de'));
+      WearWorkout payload({AppLocalizations? l10n}) => wearWorkoutFrom(
+        session: session,
+        rest: null,
+        loggedSets: 1,
+        now: now,
+        next: next,
+        l10n: l10n,
+      );
+
+      expect(payload().decimalSeparator, '.');
+      expect(payload(l10n: german).decimalSeparator, ',');
+      // The phone's own line beside it, for comparison.
+      expect(formatWeight(82.5, l10n: german), '82,5');
+    });
+
     test('says when the number is a hold', () {
       final payload = wearWorkoutFrom(
         session: session,
@@ -440,6 +495,42 @@ void main() {
       await bridge.handler!(command);
 
       expect(await logged(), hasLength(1));
+    });
+
+    test('a second set from the shade right after one is the same tap', () {
+      // A fresh id, because the notification was re-posted in between.
+      final start = DateTime(2026, 10, 1, 18, 30);
+      var offset = Duration.zero;
+      return withClock(Clock(() => start.add(offset)), () async {
+        await bridge.handler!(
+          _log(id: '${shadeLogIdPrefix}1', exerciseId: 'curl'),
+        );
+        offset = const Duration(milliseconds: 1500);
+        await bridge.handler!(
+          _log(id: '${shadeLogIdPrefix}2', exerciseId: 'curl'),
+        );
+        expect(await logged(), hasLength(1));
+
+        // Past the window it is a set again — the same id included, since
+        // the one turned away was never applied.
+        offset = const Duration(seconds: 4);
+        await bridge.handler!(
+          _log(id: '${shadeLogIdPrefix}2', exerciseId: 'curl'),
+        );
+        expect(await logged(), hasLength(2));
+      });
+    });
+
+    test('the shade\'s window never holds back the wrist', () {
+      final start = DateTime(2026, 10, 1, 18, 30);
+      return withClock(Clock.fixed(start), () async {
+        await bridge.handler!(
+          _log(id: '${shadeLogIdPrefix}1', exerciseId: 'curl'),
+        );
+        await bridge.handler!(_log(id: 'b9f0c3e2-wrist', exerciseId: 'curl'));
+
+        expect((await logged()).map((s) => s.setNumber), [1, 2]);
+      });
     });
 
     test('repeat and log share one memory of applied ids', () async {

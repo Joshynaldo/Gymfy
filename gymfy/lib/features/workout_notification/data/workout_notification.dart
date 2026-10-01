@@ -277,11 +277,13 @@ class WorkoutNotificationSync extends _$WorkoutNotificationSync {
     // PendingIntent keeps its id until the notification is replaced, so two
     // taps on one notification send one id twice — and WearCommands applies
     // it once. Once the set lands the content changes and the next tap
-    // carries a fresh id.
+    // carries a fresh id; a second tap that lands just after that re-post is
+    // caught by WearCommands too, by the prefix (see shadeDoubleTapWindow).
     final basis = contentWith('');
     if (basis != _basis) {
       _basis = basis;
-      _logId = 'n${clock.now().microsecondsSinceEpoch}-${_minted++}';
+      _logId =
+          '$shadeLogIdPrefix${clock.now().microsecondsSinceEpoch}-${_minted++}';
     }
 
     final content = contentWith(_logId)!;

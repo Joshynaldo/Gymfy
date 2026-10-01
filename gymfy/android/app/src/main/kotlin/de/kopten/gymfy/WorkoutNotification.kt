@@ -79,7 +79,7 @@ object WorkoutNotification {
         if (!manager.areNotificationsEnabled()) return false
         ensureChannel(
             manager,
-            name = fields["channelName"] as? String ?: "Workout in progress",
+            name = channelName(fields),
             description = fields["channelDescription"] as? String
                 ?: "The current set and rest, with buttons to log and skip",
         )
@@ -113,9 +113,14 @@ object WorkoutNotification {
             .setOngoing(true)
             // Updated after every set and every rest: none of that may buzz.
             .setOnlyAlertOnce(true)
-            // On the lock screen in full, because that is where the buttons
-            // are worth most — the phone on the bench, locked, between sets.
-            .setVisibility(Notification.VISIBILITY_PUBLIC)
+            // Private, not public: on the lock screen in full — buttons and
+            // all, where they are worth most, the phone on the bench between
+            // sets — unless the user has asked Android to hide sensitive
+            // content there. Then anyone picking the phone up sees only the
+            // public version below, not the workout, the exercise and the
+            // weight. PUBLIC would override that choice.
+            .setVisibility(Notification.VISIBILITY_PRIVATE)
+            .setPublicVersion(publicVersion(context, fields, restEndsAtMs))
             .setShowWhen(false)
             .addExtras(Bundle().apply { putString(EXTRA_TAP_TO_OPEN, tapToOpenLabel) })
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -154,6 +159,36 @@ object WorkoutNotification {
         manager.notify(NOTIFICATION_ID, builder.build())
         return true
     }
+
+    /**
+     * What a locked phone shows when the user hides sensitive content: that a
+     * workout is running, and the rest countdown — nothing that says what is
+     * being trained or with what, and no buttons, so a passer-by cannot log a
+     * set or end a rest either.
+     */
+    private fun publicVersion(
+        context: Context,
+        fields: Map<String, Any?>,
+        restEndsAtMs: Long,
+    ): Notification {
+        val builder = newBuilder(context)
+            .setSmallIcon(R.drawable.ic_launcher_monochrome)
+            // The channel's name is already the generic line, in the app's
+            // language: "Workout in progress".
+            .setContentTitle(channelName(fields))
+            .setShowWhen(false)
+        if (restEndsAtMs > 0) {
+            builder
+                .setWhen(restEndsAtMs)
+                .setShowWhen(true)
+                .setUsesChronometer(true)
+                .setChronometerCountDown(true)
+        }
+        return builder.build()
+    }
+
+    private fun channelName(fields: Map<String, Any?>): String =
+        fields["channelName"] as? String ?: "Workout in progress"
 
     /** Removes the notification — the workout finished or was discarded. */
     fun clear(context: Context) {

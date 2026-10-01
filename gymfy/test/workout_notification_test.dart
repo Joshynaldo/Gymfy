@@ -8,6 +8,7 @@
 import 'dart:async';
 import 'dart:ui' show Locale;
 
+import 'package:clock/clock.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -588,6 +589,43 @@ void main() {
         expect(_request(after)!.id, isNot(_request(before)!.id));
       },
     );
+
+    test('a second tap that arrives after the re-post is still one set', () {
+      // Two taps 200 ms apart. The first lands, the notification is re-posted
+      // with a fresh id, and the second tap — sent after that — carries the
+      // new id. The id alone would let it through as a set nobody did.
+      final start = DateTime.now();
+      var offset = Duration.zero;
+      return withClock(Clock(() => start.add(offset)), () async {
+        await sessions.logSet(
+          sessionId: sessionId,
+          exerciseId: 'bench',
+          setNumber: 1,
+          weight: 80,
+          reps: 8,
+        );
+        final before = await shows('Bench · Set 2 of 3');
+        expect(_request(before)!.id, startsWith(shadeLogIdPrefix));
+        await wear.handler!(before.logCommand);
+
+        final after = await shows('Bench · Set 3 of 3');
+        expect(_request(after)!.id, isNot(_request(before)!.id));
+        offset = const Duration(milliseconds: 200);
+        await wear.handler!(after.logCommand);
+
+        Future<List<LoggedSet>> logged() =>
+            sessions.watchSessionSets(sessionId).first;
+        expect(await logged(), hasLength(2), reason: 'a double tap is one set');
+
+        // The next real set, a rest later, from the same notification: the
+        // tap that was turned away must not have used its id up.
+        offset = const Duration(seconds: 90);
+        await wear.handler!(after.logCommand);
+        final sets = await logged();
+        expect(sets, hasLength(3));
+        expect(sets.last.setNumber, 3);
+      });
+    });
 
     test('the rest buttons reach the same timer as the watch\'s', () async {
       final timer = container.read(restTimerProvider.notifier) as _SpyRestTimer;

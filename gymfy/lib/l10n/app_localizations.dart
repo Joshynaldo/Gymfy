@@ -6052,7 +6052,7 @@ abstract class AppLocalizations {
   /// sample is the first unreadable date, exactly as the file has it.
   ///
   /// In en, this message translates to:
-  /// **'That file was read, but {count} of its rows have a date this app could not make sense of — the first one is \"{sample}\".\n\nSend that line on and it can be taught to read it.'**
+  /// **'{count, plural, =1{That file was read, but one of its rows has a date this app could not make sense of: \"{sample}\".\n\nSend that line on and it can be taught to read it.} other{That file was read, but {count} of its rows have a date this app could not make sense of — the first one is \"{sample}\".\n\nSend that line on and it can be taught to read it.}}'**
   String importNothingUnreadableDates(int count, String sample);
 
   /// No description provided for @importNothingNoSets.
@@ -6124,7 +6124,7 @@ abstract class AppLocalizations {
   /// No description provided for @importPreviewDatesSkipped.
   ///
   /// In en, this message translates to:
-  /// **'{count} rows were left out because their date could not be read — the first is \"{sample}\". Send that line on and it can be taught to read it.'**
+  /// **'{count, plural, =1{1 row was left out because its date could not be read: \"{sample}\". Send that line on and it can be taught to read it.} other{{count} rows were left out because their date could not be read — the first is \"{sample}\". Send that line on and it can be taught to read it.}}'**
   String importPreviewDatesSkipped(int count, String sample);
 
   /// No description provided for @importPreviewAllHere.
@@ -6142,7 +6142,7 @@ abstract class AppLocalizations {
   /// No description provided for @importPreviewNearDuplicates.
   ///
   /// In en, this message translates to:
-  /// **'{count} of them start within an hour of a workout you already have. If you have imported the same training from another app, those will be added a second time.'**
+  /// **'{count, plural, =1{1 of them starts within an hour of a workout you already have. If you have imported the same training from another app, it will be added a second time.} other{{count} of them start within an hour of a workout you already have. If you have imported the same training from another app, those will be added a second time.}}'**
   String importPreviewNearDuplicates(int count);
 
   /// No description provided for @importPlanTitle.

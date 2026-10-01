@@ -5,6 +5,7 @@ import '../../../l10n/app_language.dart';
 import '../../../l10n/l10n.dart';
 import '../../../shared/data/settings_repository.dart';
 import '../../../shared/database/app_database.dart';
+import '../../../shared/utils/format.dart' show decimalSeparator;
 import '../../../shared/utils/units.dart';
 import '../../exercises/data/exercise_repository.dart';
 import '../../workout/data/next_set.dart';
@@ -69,13 +70,17 @@ WearWorkout wearWorkoutFrom({
     nextSet: next == null ? '' : describeSetPosition(next, l10n: l10n),
     // In the display unit and on a loadable step, so an untouched value sent
     // back converts to exactly what the phone would have logged itself.
-    nextWeight: next == null
-        ? 0.0
-        : weightIn(roundToLoadable(next.weightKg, unit), unit),
+    // Rounded in that unit and never converted back: the watch prints the
+    // number as it arrives, and a pound value taken to kilograms and back
+    // arrived as "149.99999999999997 lbs".
+    nextWeight: next == null ? 0.0 : loadableWeightIn(next.weightKg, unit),
     nextReps: next == null ? 0 : (next.seconds ?? next.reps),
     nextTimed: next?.seconds != null,
     weightUnit: next == null ? '' : unit.name,
     weightStep: next == null ? 0.0 : wearWeightStep(unit),
+    // The watch steps the weight itself, so it writes the number itself —
+    // with the phone app's separator, as every other line on it is worded.
+    decimalSeparator: decimalSeparator(l10n: l10n),
   );
 }
 
@@ -168,6 +173,24 @@ const maxRemoteWeight = 9999.0;
 const maxRemoteReps = 99;
 const maxRemoteSeconds = 99 * 60 + 59;
 
+/// What the ongoing notification's "Log set" ids start with, so a tap in the
+/// shade can be told from one on the wrist. See [shadeDoubleTapWindow].
+const shadeLogIdPrefix = 'shade-';
+
+/// How long after a set from the shade another one from the shade is taken
+/// for the same tap again.
+///
+/// The id alone does not cover the shade. A set landing changes the
+/// notification, which is re-posted with a fresh id, and Android sends a tap
+/// with the button's intent as it is at that moment — so a second tap sent
+/// just after the re-post carries the new id and would be a second set. Two
+/// seconds is far longer than that race and far shorter than any real set:
+/// nobody finishes one and is back in the shade for the next inside it.
+///
+/// Only the shade's. The wrist keeps one id per suggestion, and a set from
+/// the wrist and one from the shade at the same moment are two sets.
+const shadeDoubleTapWindow = Duration(seconds: 2);
+
 /// What a valid remote log writes: kilograms, and reps or seconds.
 typedef RemoteSet = ({double weightKg, int reps, int? seconds});
 
@@ -236,6 +259,21 @@ class WearCommands extends _$WearCommands {
     return true;
   }
 
+  /// When the last set from the shade was taken. See [shadeDoubleTapWindow].
+  DateTime? _lastShadeLog;
+
+  /// Whether [id] is a "Log set" from the shade arriving within
+  /// [shadeDoubleTapWindow] of the last one — the same tap again.
+  ///
+  /// Asked before the id is remembered: the notification goes on offering
+  /// this id, and the tap that comes for the next real set must still pass.
+  bool _shadeEcho(String id) {
+    final last = _lastShadeLog;
+    return id.startsWith(shadeLogIdPrefix) &&
+        last != null &&
+        clock.now().difference(last) < shadeDoubleTapWindow;
+  }
+
   /// The set writes still in flight, chained.
   ///
   /// A set is numbered from the sets already there, so two writes that
@@ -273,8 +311,17 @@ class WearCommands extends _$WearCommands {
         await _oneAtATime(_repeatLastSet);
       case WearBridge.commandLogSet:
         final request = WearBridge.parseLogSet(argument);
-        if (request == null || !_firstTime(request.id)) return;
+        if (request == null ||
+            _shadeEcho(request.id) ||
+            !_firstTime(request.id)) {
+          return;
+        }
+        final fromShade = request.id.startsWith(shadeLogIdPrefix);
+        if (fromShade) _lastShadeLog = clock.now();
         await _oneAtATime(() => _logRequested(request));
+        // And again once it has landed: the re-post that hands the button a
+        // fresh id only comes after that.
+        if (fromShade) _lastShadeLog = clock.now();
       // An unknown command means the watch is on a newer build than the
       // phone. Ignoring it is right: the alternative is guessing.
       default:

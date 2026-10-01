@@ -151,7 +151,7 @@ final class WearCommandsProvider extends $NotifierProvider<WearCommands, void> {
   }
 }
 
-String _$wearCommandsHash() => r'adec32445adbf6ff96f03583b23770d8f33d667c';
+String _$wearCommandsHash() => r'e3ce53dbd2614802cfcf3f9b741904fccf72cfcc';
 
 /// Acts on the commands the watch sends back — and the buttons on the
 /// ongoing workout notification, which arrive through the same door.

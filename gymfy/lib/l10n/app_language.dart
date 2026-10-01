@@ -85,15 +85,64 @@ Locale resolveSystemLocale(List<Locale> phoneLocales) {
   );
 }
 
+/// The phone's own list of languages, most preferred first.
+///
+/// Read once at the start and then kept current by
+/// [systemLocalesWatcherProvider]: Gymfy handles a language change itself
+/// (`configChanges` includes `locale`), so Android does not restart it, and a
+/// value read once would leave the workout notification and the watch in the
+/// old language while every screen had already switched.
+final systemLocalesProvider = NotifierProvider<SystemLocales, List<Locale>>(
+  SystemLocales.new,
+);
+
+/// Holds [systemLocalesProvider]'s list.
+class SystemLocales extends Notifier<List<Locale>> {
+  @override
+  List<Locale> build() => PlatformDispatcher.instance.locales;
+
+  /// The phone's languages have changed to [locales].
+  void changed(List<Locale> locales) => state = locales;
+}
+
+/// Tells [systemLocalesProvider] when the phone's languages change.
+///
+/// Watched from the app root, like the other providers that exist for what
+/// they do rather than what they hold — and kept apart from the list itself
+/// because listening needs the widgets binding, which the code reading the
+/// list (and its tests) has no need of.
+final systemLocalesWatcherProvider = Provider<void>((ref) {
+  final binding = WidgetsBinding.instance;
+  final observer = _LocaleObserver(
+    (locales) => ref.read(systemLocalesProvider.notifier).changed(locales),
+  );
+  binding.addObserver(observer);
+  ref.onDispose(() => binding.removeObserver(observer));
+});
+
+class _LocaleObserver with WidgetsBindingObserver {
+  _LocaleObserver(this._onChanged);
+
+  final void Function(List<Locale> locales) _onChanged;
+
+  @override
+  void didChangeLocales(List<Locale>? locales) {
+    if (locales != null) _onChanged(locales);
+  }
+}
+
 /// The strings in the language the app is currently shown in, for code with
 /// no [BuildContext] — notifications, mostly.
 ///
 /// Widgets use `context.l10n` instead: it rebuilds them when the language
-/// changes, which a value read from here once does not.
+/// changes, which a value read from here once does not. Code that keeps
+/// words on screen outside the app watches this, and is re-worded when the
+/// language is picked in Settings or, on the phone's language, when the phone
+/// switches.
 final appLocalizationsProvider = Provider<AppLocalizations>((ref) {
   final locale =
       ref.watch(appLocaleProvider) ??
-      resolveSystemLocale(PlatformDispatcher.instance.locales);
+      resolveSystemLocale(ref.watch(systemLocalesProvider));
   return lookupAppLocalizations(locale);
 });
 

@@ -195,6 +195,64 @@ void main() {
       expect(de.homeLastWorkoutSets(12, '4.200 kg'), '12 Sätze • 4.200 kg');
     });
 
+    test('the import preview agrees with a count of one', () {
+      // "1 Zeilen wurden ausgelassen" was what a file with one bad date got.
+      expect(
+        de.importPreviewDatesSkipped(1, '31/02/2026'),
+        startsWith('1 Zeile wurde ausgelassen, weil ihr Datum'),
+      );
+      expect(
+        de.importPreviewDatesSkipped(3, '31/02/2026'),
+        startsWith('3 Zeilen wurden ausgelassen, weil ihr Datum'),
+      );
+      expect(
+        en.importPreviewDatesSkipped(1, '31/02/2026'),
+        startsWith('1 row was left out because its date'),
+      );
+      expect(
+        en.importPreviewDatesSkipped(3, '31/02/2026'),
+        startsWith('3 rows were left out because their date'),
+      );
+
+      expect(
+        de.importNothingUnreadableDates(1, 'x'),
+        contains('eine ihrer Zeilen hat ein Datum'),
+      );
+      expect(
+        de.importNothingUnreadableDates(4, 'x'),
+        contains('4 ihrer Zeilen haben ein Datum'),
+      );
+      expect(
+        en.importNothingUnreadableDates(1, 'x'),
+        contains('one of its rows has a date'),
+      );
+      expect(
+        en.importNothingUnreadableDates(4, 'x'),
+        contains('4 of its rows have a date'),
+      );
+
+      expect(de.importPreviewWillSkip(1), '1 – wird übersprungen');
+      expect(de.importPreviewWillSkip(2), '2 – werden übersprungen');
+
+      expect(
+        de.importPreviewNearDuplicates(1),
+        startsWith('1 davon beginnt weniger'),
+      );
+      expect(de.importPreviewNearDuplicates(1), contains('kommt es'));
+      expect(
+        de.importPreviewNearDuplicates(2),
+        startsWith('2 davon beginnen weniger'),
+      );
+      expect(
+        en.importPreviewNearDuplicates(1),
+        startsWith('1 of them starts within'),
+      );
+      expect(
+        en.importPreviewNearDuplicates(2),
+        startsWith('2 of them start within'),
+      );
+    });
+
     test('the body diagram sentence declines with the sex', () {
       expect(
         en.settingsBodyDiagramSubtitle('female'),

@@ -504,7 +504,7 @@ private fun LogSet(state: WorkoutState) {
         Spacer(Modifier.height(6.dp))
 
         Stepper(
-            label = "${formatWeight(weight)} ${state.weightUnit}",
+            label = "${formatWeight(weight, state.decimalSeparator)} ${state.weightUnit}",
             selected = dial == Dial.WEIGHT,
             onSelect = { dial = Dial.WEIGHT },
             onMinus = { changeWeight(-1) },

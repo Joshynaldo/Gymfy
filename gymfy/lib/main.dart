@@ -14,6 +14,7 @@ import 'features/wear/data/wear_sync.dart';
 import 'features/workout_notification/data/workout_notification.dart';
 import 'l10n/app_language.dart';
 import 'l10n/l10n.dart';
+import 'shared/data/current_day.dart';
 
 Future<void> main() async {
   // Required because we touch the database (a platform plugin) before runApp.
@@ -71,6 +72,13 @@ class GymfyApp extends ConsumerWidget {
     // settings read per trigger while both switches are off, which they are
     // until someone turns one on.
     ref.watch(healthConnectWatcherProvider);
+    // A new day, noticed when the app comes back — goals count weeks and
+    // deadlines, and nothing in the data changes at midnight to tell them.
+    ref.watch(currentDayWatcherProvider);
+    // The phone's language, for everything above that words things outside
+    // the app: on "system default", switching the phone's language re-words
+    // the notification and the watch along with the screens.
+    ref.watch(systemLocalesWatcherProvider);
 
     // Onboarding is gated here rather than by a router redirect. A redirect has
     // to answer synchronously, but "has onboarding finished" comes from the

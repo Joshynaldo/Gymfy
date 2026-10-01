@@ -90,6 +90,13 @@ typedef WearWorkout = ({
   /// How far one press of + or - (or one crown step) moves the weight, in
   /// [weightUnit].
   double weightStep,
+
+  /// What the watch writes between the whole and the fraction of
+  /// [nextWeight]: "." in English, "," in German — the phone app's language,
+  /// like every line the phone words, so "82,5 kg" on the phone is not
+  /// "82.5 kg" on the wrist. A watch paired with a phone on an older build
+  /// never gets it and writes a dot.
+  String decimalSeparator,
 });
 
 /// No workout — what the watch shows when nothing is happening.
@@ -109,6 +116,7 @@ const idleWearWorkout = (
   nextTimed: false,
   weightUnit: '',
   weightStep: 0.0,
+  decimalSeparator: '.',
 );
 
 /// One "log this set" request, as it arrived — not yet checked against the
@@ -297,6 +305,7 @@ class WearBridge {
         'nextTimed': workout.nextTimed,
         'weightUnit': workout.weightUnit,
         'weightStep': workout.weightStep,
+        'decimalSeparator': workout.decimalSeparator,
         // So the watch can tell how old this is and say so, rather than
         // presenting a three-hour-old rest timer as live.
         'updatedAtMs': DateTime.now().millisecondsSinceEpoch,

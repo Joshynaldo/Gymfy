@@ -125,10 +125,10 @@ Gymfy is free and will stay free: no subscription, no pro tier, nothing to unloc
 ### On your wrist
 The **Wear OS companion** shows the workout that's running, your set count, the
 current exercise and the rest countdown, with a double buzz when rest is over.
-From the watch you can add 30 seconds, skip the rest or repeat your last set,
-or log the next set: the watch shows the suggested weight and reps (seconds
-for a hold), you adjust them with − / + or the rotating crown, and the phone
-checks the set before saving it. The phone stays in charge of all the data,
+From the watch you can add 30 seconds, skip the rest, or log the next set: the
+watch shows the suggested weight and reps (seconds for a hold), you adjust
+them with − / + or the rotating crown, and the phone checks the set before
+saving it. The phone stays in charge of all the data,
 and the watch talks to it directly over the Wearable Data Layer, not through
 the internet.
 

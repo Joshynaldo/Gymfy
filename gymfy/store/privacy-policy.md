@@ -1,6 +1,6 @@
 # Privacy Policy — Gymfy
 
-**Last updated: 1 October 2026**
+**Last updated: 2 October 2026**
 
 Gymfy is a workout tracker for Android. It has no account, no server and no
 internet connection.
@@ -16,9 +16,10 @@ talk to anything.
 Everything you log or import — workouts, sets, weights, exercises, notes, body
 measurements, progress photos, calorie entries, your name, bodyweight, height
 and birth year — is written to a database inside the app's own private storage
-on your device. Other apps cannot read it. It is never transmitted. The one
-thing other apps can see is what you choose to share through Health Connect,
-described below.
+on your device. Other apps cannot read it. It is never transmitted. Other apps
+see only what you choose to hand them: what you share through Health Connect,
+and the files and pictures described under "When data leaves the app", both
+below.
 
 There is no user account, no sign-in, and no identifier of any kind is created
 for you.
@@ -35,8 +36,16 @@ for you.
 ## Permissions, and why each one exists
 
 **Notifications** — so the rest timer can alert you when a set's rest is over
-while you are in another app or the screen is off. The app asks the first time
-you start a timer. If you decline, the app still works; you just get the
+while you are in another app or the screen is off, and for the workout
+notification. While a workout is running, that notification shows the
+workout's name, the exercise, which set you are on, the next set's weight and
+reps and the rest countdown, with buttons to log that set, add 30 seconds or
+skip the rest. It shows on the lock screen too — unless you have set Android
+to hide sensitive notification content there, in which case the locked
+screen shows only "Workout in progress" and the countdown, with no buttons.
+You can switch the workout notification off under Settings → Rest timer. The
+app asks for the permission when you start a workout, or the first time you
+start a timer. If you decline, the app still works; you just get the
 on-screen countdown only.
 
 **Run at startup (`RECEIVE_BOOT_COMPLETED`)** — so a rest alert that is already
@@ -54,15 +63,35 @@ Connect below.
 
 ## When data leaves the app — always because you asked
 
-Three features can move data off the device. Each one is started by you, shows
-you what it will do, and hands the result to another app of your choosing.
+These features can move data off the device. Each one is started by you —
+automatic backups by you switching them on — and the result goes only where
+you send it: a file you save, a folder you pick or an app you choose.
 
 **Export** (Settings → Data → Export data) writes your logged data to a CSV or
 JSON file at a location you pick. Where the file goes afterwards is up to you.
 
+**Backup** (Settings → Data → Backup & restore) writes everything in Gymfy —
+every logged entry, your settings, your progress photos and the pictures of
+your own exercises — into one backup file. "Save a backup" writes it to a
+location you pick. Automatic backup, off until you turn it on, writes one
+weekly or after each workout into a folder you pick and keeps the ten most
+recent there. Backup files are not encrypted: anyone, and any app, that can
+open the folder they are in can read them, and where they go afterwards is up
+to you — if you keep them in a folder another app syncs to the cloud, that
+app uploads them. Restoring reads a backup file you choose; the Health
+Connect switches are this phone's and are never taken from a backup.
+
 **Share a plan** exports a training plan as a file or PDF through the system
 share sheet. It contains the plan only — no logged sets, measurements or
 photos.
+
+**Share a review** (the share button on a monthly review or the Year in
+Training) turns that review into a picture and hands it to the app you pick
+in the system share sheet. The picture shows what the review shows: the
+number of workouts, volume lifted, time trained, days trained and longest
+streak, top exercises, records and most-trained muscles, set against the
+period before. Nothing else is attached. Where sharing is not available,
+Gymfy offers to save the picture to a location you pick instead.
 
 **Send feedback** (Help → Send feedback) opens *your* mail app with a draft
 message. Gymfy does not send it; you read it, edit it and send it yourself. The
@@ -109,20 +138,26 @@ them is covered by their own privacy policies.
 To revoke its permissions or delete what it wrote, tap "Manage in Health
 Connect" in Gymfy's settings, or open Health Connect yourself (from Android
 14, it is in Android's settings) and choose Gymfy. Workouts already written
-stay in Health Connect when you switch writing off, restore an older backup
-or uninstall Gymfy, until you delete them there. Weigh-ins already imported
-are part of your measurements in Gymfy and can be deleted there.
+stay in Health Connect when you switch writing off or uninstall Gymfy, until
+you delete them there. Restoring a backup never switches either one on: both
+switches keep the setting they have on this phone. Workouts Gymfy wrote there
+that the restored backup does not contain are deleted from Health Connect the
+next time Gymfy writes to it, as if you had deleted them in Gymfy. Weigh-ins
+already imported are part
+of your measurements in Gymfy and can be deleted there.
 
 ## Deleting your data
 
-Uninstalling Gymfy deletes the database and every photo it holds. There is no
-copy anywhere else — except workouts you chose to write to Health Connect,
-which stay there until you delete them (see Health Connect above) — so there
-is nothing to request and nobody to request it from. Individual entries can
-be deleted inside the app at any time.
+Uninstalling Gymfy deletes the database and every photo it holds. The only
+copies left are the ones you made yourself — exports, backup files, and plans
+or reviews you shared — and workouts you chose to write to Health Connect,
+which stay there until you delete them (see Health Connect above). Gymfy has
+no copy anywhere, so there is nothing to request and nobody to request it
+from. Individual entries can be deleted inside the app at any time.
 
-Because the data lives only on your phone, **Gymfy has no backup**. If you
-want a copy, use Export before changing devices.
+Because there is no server, **nothing is backed up for you**. To keep a copy,
+or to move to a new phone, make a backup file (see Backup above) and restore
+it there.
 
 ## Children
 

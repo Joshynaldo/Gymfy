@@ -72,10 +72,20 @@ double weightToKilograms(double value, WeightUnit unit) {
 /// half a kilo and then converting would land on values like 137.8 lbs, which
 /// is not a weight anyone can put on a bar.
 double roundToLoadable(double kilograms, WeightUnit unit) {
-  final display = weightIn(kilograms, unit);
+  return weightToKilograms(loadableWeightIn(kilograms, unit), unit);
+}
+
+/// [kilograms] in [unit], on the nearest step loadable in it: the number
+/// [formatWeightUnit] shows, as a number.
+///
+/// For a number that leaves the app unformatted, like the watch's stepper.
+/// `weightIn(roundToLoadable(...))` would go to kilograms and back, and a
+/// pound value does not always survive that: 150 lb returns as
+/// 149.99999999999997. This never converts back, so it is a whole number of
+/// steps exactly.
+double loadableWeightIn(double kilograms, WeightUnit unit) {
   final step = unit.increment;
-  final rounded = (display / step).round() * step;
-  return weightToKilograms(rounded, unit);
+  return (weightIn(kilograms, unit) / step).round() * step;
 }
 
 /// Formats a stored weight in [unit], without the unit label — for places that

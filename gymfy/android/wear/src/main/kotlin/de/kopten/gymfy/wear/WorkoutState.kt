@@ -2,6 +2,7 @@ package de.kopten.gymfy.wear
 
 import com.google.android.gms.wearable.DataMap
 import java.math.BigDecimal
+import java.math.RoundingMode
 import org.json.JSONObject
 
 /**
@@ -45,6 +46,12 @@ data class WorkoutState(
     val weightUnit: String = "",
     /** One press of + or -, in [weightUnit]. */
     val weightStep: Double = 0.0,
+    /**
+     * What [formatWeight] writes between the whole and the fraction: the
+     * phone app's, so its "82,5 kg" is "82,5 kg" here too. A dot from a
+     * phone on a build that does not send it.
+     */
+    val decimalSeparator: String = ".",
 ) {
     val resting: Boolean get() = restEndsAtMs > 0
 
@@ -138,6 +145,8 @@ data class WorkoutState(
             nextTimed = map.getBoolean("nextTimed", false),
             weightUnit = map.getString("weightUnit", ""),
             weightStep = map.getDouble("weightStep", 0.0),
+            decimalSeparator = map.getString("decimalSeparator", ".")
+                .takeIf { it.isNotEmpty() } ?: ".",
         )
     }
 }
@@ -164,11 +173,20 @@ fun logSetCommand(id: String, state: WorkoutState, weight: Double, value: Int): 
 }
 
 /**
- * A weight as the phone writes one: "80", "82.5" — never "80.0", and a dot
- * whatever the watch's locale, so the two screens show the same number.
+ * A weight as the phone writes one: "80", "82.5" — never "80.0" — with the
+ * phone app's [separator] whatever the watch's locale, so the two screens
+ * show the same number: "82,5" beside a German phone.
+ *
+ * Rounded to two places first. The phone sends a whole number of steps, but
+ * one on an older build sent pounds that had been to kilograms and back —
+ * 149.99999999999997 — and this would have printed every digit of it.
  */
-fun formatWeight(value: Double): String =
-    BigDecimal.valueOf(value).stripTrailingZeros().toPlainString()
+fun formatWeight(value: Double, separator: String = "."): String =
+    BigDecimal.valueOf(value)
+        .setScale(2, RoundingMode.HALF_UP)
+        .stripTrailingZeros()
+        .toPlainString()
+        .replace(".", separator)
 
 /** Formats seconds as m:ss, the way the phone app shows a rest. */
 fun formatRest(seconds: Int): String {

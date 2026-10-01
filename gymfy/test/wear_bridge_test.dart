@@ -306,6 +306,36 @@ void main() {
       );
     });
 
+    test('on how a weight is written', () {
+      // The watch steps the weight with + and -, so it formats the number
+      // itself. With a dot always, a German phone's "82,5 kg" read
+      // "82.5 kg" on the wrist; and printed raw, a converted pound value
+      // read "149.99999999999997".
+      final state = read(
+        'android/wear/src/main/kotlin/de/kopten/gymfy/wear/WorkoutState.kt',
+      );
+      final activity = read(
+        'android/wear/src/main/kotlin/de/kopten/gymfy/wear/MainActivity.kt',
+      );
+
+      expect(
+        state,
+        contains('fun formatWeight(value: Double, separator: String'),
+      );
+      expect(state, contains('.replace(".", separator)'));
+      expect(state, contains('.setScale(2, RoundingMode.HALF_UP)'));
+      expect(
+        activity,
+        contains('formatWeight(weight, state.decimalSeparator)'),
+        reason: 'the stepper must use the separator the phone sent',
+      );
+      expect(
+        RegExp(r'formatWeight\(weight\)').hasMatch(activity),
+        isFalse,
+        reason: 'a weight written with the default dot',
+      );
+    });
+
     test('on the method a command is delivered to', () {
       // The watch's commands and the notification's buttons both arrive
       // through this one method.
@@ -368,6 +398,7 @@ void main() {
           'nextTimed',
           'weightUnit',
           'weightStep',
+          'decimalSeparator',
         ]),
         reason: 'the push map could not be read out of wear_bridge.dart',
       );
@@ -448,6 +479,42 @@ void main() {
         contains('COMMAND_SKIP_REST = "${WearBridge.commandSkipRest}"'),
       );
     });
+
+    test(
+      'hides the workout on a lock screen set to hide sensitive content',
+      () {
+        // PUBLIC with no public version would show the workout, the exercise
+        // and "Next: 80 kg × 8 reps" — and working buttons — to anyone holding
+        // the locked phone, whatever the user chose in Android's settings.
+        expect(kotlin, isNot(contains('VISIBILITY_PUBLIC')));
+        expect(
+          kotlin,
+          contains('.setVisibility(Notification.VISIBILITY_PRIVATE)'),
+        );
+        expect(kotlin, contains('.setPublicVersion(publicVersion('));
+
+        // The public version: a generic title and the countdown, nothing
+        // else. Read out of its own function so a field or button added to it
+        // later shows up here.
+        final start = kotlin.indexOf('private fun publicVersion(');
+        expect(start, isNot(-1));
+        final end = kotlin.indexOf('return builder.build()', start);
+        final body = kotlin.substring(start, end);
+        for (final leak in const [
+          '"title"',
+          '"text"',
+          '"bigText"',
+          '"subText"',
+          '"logCommand"',
+          'addAction',
+          'setContentText',
+          'setStyle',
+        ]) {
+          expect(body, isNot(contains(leak)), reason: leak);
+        }
+        expect(body, contains('setContentTitle(channelName(fields))'));
+      },
+    );
 
     test('has a receiver for its buttons', () {
       // Without the manifest entry the broadcast goes nowhere and the

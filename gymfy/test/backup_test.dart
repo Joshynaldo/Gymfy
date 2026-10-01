@@ -16,6 +16,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/features/backup/data/backup_format.dart';
 import 'package:gymfy/features/backup/data/backup_repository.dart';
+import 'package:gymfy/features/health_connect/data/health_connect_sync.dart';
 import 'package:gymfy/features/workout/data/logging_preferences.dart'
     show effortRatingModeSetting, warmupRampSetting;
 import 'package:gymfy/shared/database/app_database.dart';
@@ -931,6 +932,98 @@ void main() {
       }
       expect(names, contains('weight_unit'));
     });
+
+    test('a restore does not switch Health Connect back on', () async {
+      // Backed up while both switches were on. Switching off revokes no
+      // permission, so the file's "true" coming back would start writing
+      // workouts and reading weigh-ins with nobody touching a switch.
+      await populate(db);
+      Future<void> put(String name, String value) => db
+          .into(db.appSettings)
+          .insertOnConflictUpdate(
+            AppSettingsCompanion.insert(name: name, value: value),
+          );
+      await put(healthConnectWriteKey, 'true');
+      await put(healthConnectReadKey, 'true');
+      await put(healthConnectWriteSinceKey, '2026-09-01T08:00:00.000');
+      await put(healthConnectWrittenKey, '{"1":"gymfy-session-1-1"}');
+      final path = '${temp.path}/b.$backupFileExtension';
+      await repo.writeArchive(path);
+
+      // Then both switched off, and this phone's ledger moved on.
+      await put(healthConnectWriteKey, 'false');
+      await put(healthConnectReadKey, 'false');
+      await put(healthConnectWrittenKey, '{"2":"gymfy-session-2-2"}');
+      await repo.restore(path);
+
+      final rows = await db.select(db.appSettings).get();
+      String? valueOf(String key) =>
+          rows.where((r) => r.name == key).firstOrNull?.value;
+      expect(valueOf(healthConnectWriteKey), 'false');
+      expect(valueOf(healthConnectReadKey), 'false');
+      expect(valueOf(healthConnectWrittenKey), '{"2":"gymfy-session-2-2"}');
+      // Kept from this phone, where it was set when writing was switched on.
+      expect(valueOf(healthConnectWriteSinceKey), '2026-09-01T08:00:00.000');
+      expect(valueOf('weight_unit'), 'lb');
+    });
+
+    test(
+      "a new phone starts with Health Connect off and nothing written",
+      () async {
+        // The old phone's ledger says which workouts are in *its* Health
+        // Connect. Brought to a new phone it would make every past workout
+        // look written already, and "Write past workouts" would write none.
+        await populate(db);
+        for (final key in [healthConnectWriteKey, healthConnectReadKey]) {
+          await db
+              .into(db.appSettings)
+              .insert(AppSettingsCompanion.insert(name: key, value: 'true'));
+        }
+        final sessions = await db.select(db.workoutSessions).get();
+        await db
+            .into(db.appSettings)
+            .insert(
+              AppSettingsCompanion.insert(
+                name: healthConnectWrittenKey,
+                value: encodeWrittenSessions({
+                  for (final s in sessions) s.id: clientRecordIdFor(s),
+                }),
+              ),
+            );
+        final path = '${temp.path}/b.$backupFileExtension';
+        await repo.writeArchive(path);
+
+        await wipe(db);
+        await repo.restore(path);
+
+        final rows = await db.select(db.appSettings).get();
+        final names = {for (final row in rows) row.name};
+        for (final key in [
+          healthConnectWriteKey,
+          healthConnectReadKey,
+          healthConnectWrittenKey,
+          healthConnectWriteSinceKey,
+          healthConnectWeightImportsKey,
+          healthConnectWeightCheckedKey,
+          healthConnectLastErrorKey,
+        ]) {
+          expect(names, isNot(contains(key)), reason: key);
+        }
+        // So the backfill, once writing is switched on here, writes them all.
+        final restored = await db.select(db.workoutSessions).get();
+        final plan = planWorkoutSync(
+          sessions: restored,
+          written: decodeWrittenSessions(null),
+          writeSince: null,
+          backfill: true,
+        );
+        expect(
+          plan.write.length + plan.untimed,
+          restored.where((s) => s.completedAt != null).length,
+        );
+        expect(plan.write, isNotEmpty);
+      },
+    );
 
     test('logging preferences travel with the backup', () async {
       // These are about how you train, not about this phone, so unlike the
