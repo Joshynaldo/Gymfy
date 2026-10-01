@@ -1,10 +1,29 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- Health Connect's client library declares minSdk 26; the app runs from
+         24. Overriding is safe here, and only here, because nothing reaches
+         the library below Android 8: HealthConnectBridge checks the version
+         before every call and answers "unsupported" instead, and the library
+         sits behind HealthConnectOps so its classes are never even loaded on
+         an older phone. The one component it adds to the manifest, a service
+         that Health Connect binds to, has nothing to bind it below Android 9,
+         where Health Connect cannot be installed. Raising minSdk instead would
+         drop Android 7 phones from the app entirely for an optional feature. -->
+    <uses-sdk tools:overrideLibrary="androidx.health.connect.client" />
     <!-- Rest timer notifications. Android 13+ also requires the user to grant
          this at runtime; the app asks the first time a timer is started, and
          works without it (the on-screen countdown is the real timer). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Lets a pending rest notification survive a reboot mid-workout. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Health Connect, both off until switched on in Settings, and these two
+         only: finished workouts are written as exercise sessions, weigh-ins
+         are read as bodyweight. Each one needs its own Play Console
+         declaration, so do not add a third without one. Must match
+         HealthConnectOps.PERMISSIONS and the Dart constants — pinned by
+         test/health_connect_test.dart. -->
+    <uses-permission android:name="android.permission.health.WRITE_EXERCISE" />
+    <uses-permission android:name="android.permission.health.READ_WEIGHT" />
     <application
         android:label="Gymfy"
         android:name="${applicationName}"
@@ -31,6 +50,30 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Health Connect will not offer Gymfy's permissions without a screen
+             explaining them. This is it: a short native page with the Health
+             Connect part of the privacy policy, readable offline. -->
+        <activity
+            android:name=".HealthPermissionsRationaleActivity"
+            android:exported="true"
+            android:theme="@style/HealthRationaleTheme">
+            <!-- Android 13 and below, where Health Connect is an app. -->
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+            </intent-filter>
+        </activity>
+        <!-- Android 14 and up, where Health Connect is part of the system. The
+             permission means only the system can open it. -->
+        <activity-alias
+            android:name="ViewPermissionUsageActivity"
+            android:exported="true"
+            android:targetActivity=".HealthPermissionsRationaleActivity"
+            android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+                <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+            </intent-filter>
+        </activity-alias>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
@@ -109,5 +152,10 @@
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="https"/>
         </intent>
+        <!-- The Health Connect app on Android 9-13. Without this the client
+             library cannot see it is installed and reports it missing on
+             every phone. Like the entries above, a declaration, not a
+             permission. -->
+        <package android:name="com.google.android.apps.healthdata" />
     </queries>
 </manifest>
