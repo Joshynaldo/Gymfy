@@ -205,7 +205,7 @@ void main() {
           setNumber: i + 1,
           weight: 40,
           reps: 5,
-          isWarmup: true,
+          setType: SetType.warmup,
         );
       }
       for (var i = 0; i < working; i++) {

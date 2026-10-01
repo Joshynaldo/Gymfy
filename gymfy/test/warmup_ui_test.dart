@@ -67,7 +67,7 @@ LoggedSet _set({
   setNumber: setNumber,
   weight: weight,
   reps: 5,
-  isWarmup: isWarmup,
+  setType: (isWarmup ? SetType.warmup : SetType.normal).name,
 );
 
 /// Records the re-tag call instead of writing it, so the tap can be asserted on

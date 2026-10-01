@@ -13,6 +13,7 @@ import 'package:gymfy/app/theme/accent_color.dart';
 import 'package:gymfy/features/overload/data/overload_math.dart';
 import 'package:gymfy/features/workout/widgets/log_set_sheet.dart';
 import 'package:gymfy/shared/database/app_database.dart';
+import 'package:gymfy/shared/models/set_type.dart';
 import 'package:gymfy/shared/utils/units.dart';
 
 import 'support/default_accent.dart';
@@ -36,7 +37,7 @@ LoggedSet _set({double weight = 100, int reps = 8, bool isWarmup = false}) =>
       setNumber: 1,
       weight: weight,
       reps: reps,
-      isWarmup: isWarmup,
+      setType: (isWarmup ? SetType.warmup : SetType.normal).name,
     );
 
 /// Opens the sheet and hands back a holder for whatever it returns.

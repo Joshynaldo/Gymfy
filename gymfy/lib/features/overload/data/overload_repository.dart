@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../shared/database/app_database.dart';
+import '../../../shared/models/set_type.dart';
 import '../../../shared/utils/units.dart';
 import '../../plates/data/plate_math.dart';
 import 'overload_math.dart';
@@ -42,8 +43,9 @@ class OverloadRepository {
               // Working sets only. Double progression asks "did every planned set
               // hit the top of the rep range?" — counting ramp-up sets would answer
               // that with the wrong rows, and a light warm-up would drag the top
-              // weight down and quietly suggest a *decrease*.
-              _db.loggedSets.isWarmup.equals(false),
+              // weight down and quietly suggest a *decrease*. Drop sets are out for
+              // the same reason (see SetType.countsTowardStrength).
+              _db.loggedSets.setType.isNotIn(strengthExcludedSetTypes),
         );
     query.orderBy([
       OrderingTerm(

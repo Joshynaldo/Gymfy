@@ -14,6 +14,7 @@ import 'package:gymfy/features/import/data/import_plan.dart';
 import 'package:gymfy/features/import/data/import_repository.dart';
 import 'package:gymfy/features/workout/data/workout_repository.dart';
 import 'package:gymfy/shared/database/app_database.dart';
+import 'package:gymfy/shared/models/set_type.dart';
 
 const _twoSessions = '''
 title,start_time,end_time,exercise_title,set_type,weight_kg,reps
@@ -202,13 +203,13 @@ Push,2026-02-03 18:00:00,Weird Machine,60,8
 
       final sets = await (db.select(
         db.loggedSets,
-      )..where((t) => t.isWarmup.equals(false))).get();
+      )..where((t) => t.setType.equals(SetType.normal.name))).get();
       final bench = sets.where((s) => s.exerciseId == 'barbell_bench_press');
       expect(bench.map((s) => s.setNumber), [1, 2]);
 
       final warmups = await (db.select(
         db.loggedSets,
-      )..where((t) => t.isWarmup.equals(true))).get();
+      )..where((t) => t.setType.equals(SetType.warmup.name))).get();
       expect(warmups.single.setNumber, 1);
     });
   });

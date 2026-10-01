@@ -67,7 +67,7 @@ void main() {
         setNumber: ++n,
         weight: weight,
         reps: reps,
-        isWarmup: true,
+        setType: SetType.warmup,
       );
     }
     n = 0;

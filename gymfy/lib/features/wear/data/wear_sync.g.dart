@@ -70,7 +70,7 @@ final class WearSyncProvider extends $NotifierProvider<WearSync, WearWorkout> {
   }
 }
 
-String _$wearSyncHash() => r'6271508c94957f368bbce2fc18b41a4de4fc0390';
+String _$wearSyncHash() => r'd238b5855e281d6a9ac715f7a78570be9ed620da';
 
 /// Keeps the watch in step with the phone.
 ///
@@ -163,7 +163,7 @@ final class WearCommandsProvider extends $NotifierProvider<WearCommands, void> {
   }
 }
 
-String _$wearCommandsHash() => r'38f448e75f2cfb76251d9c4e9a40ab50a06828e7';
+String _$wearCommandsHash() => r'569dc04c3121a97aa680adfeee17783a544cc818';
 
 /// Acts on the commands the watch sends back.
 ///

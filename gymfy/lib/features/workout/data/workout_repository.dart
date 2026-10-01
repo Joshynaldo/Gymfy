@@ -336,7 +336,7 @@ class WorkoutRepository {
   // --- Planned exercises --------------------------------------------------
 
   /// Streams the exercises planned for a day, each joined with its library
-  /// entry, in the order they were added.
+  /// entry, in plan order.
   Stream<List<PlannedExercise>> watchDayExercises(int dayId) {
     final query = _db.select(_db.workoutExercises).join([
       innerJoin(
@@ -344,7 +344,12 @@ class WorkoutRepository {
         _db.exercises.id.equalsExp(_db.workoutExercises.exerciseId),
       ),
     ])..where(_db.workoutExercises.dayId.equals(dayId));
-    query.orderBy([OrderingTerm(expression: _db.workoutExercises.id)]);
+    // Position first (v26 reordering and supersets set it), then the order
+    // they were added — which is the whole order while every position is 0.
+    query.orderBy([
+      OrderingTerm(expression: _db.workoutExercises.position),
+      OrderingTerm(expression: _db.workoutExercises.id),
+    ]);
 
     return query.watch().map(
       (rows) => rows

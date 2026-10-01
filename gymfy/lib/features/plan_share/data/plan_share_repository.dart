@@ -56,7 +56,10 @@ class PlanShareRepository {
                   ),
                 ])
                 ..where(_db.workoutExercises.dayId.equals(day.id))
-                ..orderBy([OrderingTerm(expression: _db.workoutExercises.id)]))
+                ..orderBy([
+                  OrderingTerm(expression: _db.workoutExercises.position),
+                  OrderingTerm(expression: _db.workoutExercises.id),
+                ]))
               .get();
 
       result.add(

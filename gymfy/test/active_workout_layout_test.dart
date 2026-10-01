@@ -70,7 +70,7 @@ LoggedSet _set(Exercise exercise, int number) => LoggedSet(
   setNumber: number,
   weight: 100,
   reps: 8,
-  isWarmup: false,
+  setType: SetType.normal.name,
 );
 
 void main() {

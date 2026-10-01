@@ -305,7 +305,7 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
           setNumber: phase + 1,
           weight: result.weight,
           reps: result.reps,
-          isWarmup: result.isWarmup,
+          setType: result.isWarmup ? SetType.warmup : SetType.normal,
           seconds: result.seconds,
         );
 

@@ -156,7 +156,7 @@ final _lastSets = [
       setNumber: (i % 4) + 1,
       weight: 80 + (i % 4) * 5,
       reps: 8,
-      isWarmup: false,
+      setType: SetType.normal.name,
     ),
 ];
 

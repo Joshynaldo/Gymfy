@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../shared/database/app_database.dart';
+import '../../workout/data/session_repository.dart' show LoggedSetType;
 import 'export_format.dart';
 
 part 'export_repository.g.dart';

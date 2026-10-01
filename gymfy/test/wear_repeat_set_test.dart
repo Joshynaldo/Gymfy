@@ -8,6 +8,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/features/wear/data/wear_sync.dart';
 import 'package:gymfy/shared/database/app_database.dart';
+import 'package:gymfy/shared/models/set_type.dart';
 import 'package:gymfy/shared/utils/units.dart';
 
 LoggedSet _set({
@@ -24,7 +25,7 @@ LoggedSet _set({
   setNumber: id,
   weight: weight,
   reps: reps,
-  isWarmup: isWarmup,
+  setType: (isWarmup ? SetType.warmup : SetType.normal).name,
   seconds: seconds,
 );
 
