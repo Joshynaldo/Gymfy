@@ -90,7 +90,10 @@ CalendarRepository calendarRepository(Ref ref) {
 }
 
 /// The workouts finished in one month, keyed by the month's first day.
-final calendarMonthProvider =
-    StreamProvider.family<List<CalendarSession>, DateTime>((ref, month) {
+///
+/// Auto-disposed: paging back through a year would otherwise leave twelve
+/// month queries open, each re-running on every set logged.
+final calendarMonthProvider = StreamProvider.autoDispose
+    .family<List<CalendarSession>, DateTime>((ref, month) {
       return ref.watch(calendarRepositoryProvider).watchMonth(month);
     });

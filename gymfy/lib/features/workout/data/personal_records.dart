@@ -492,6 +492,12 @@ final sessionRecordsProvider =
     });
 
 /// Records set per day across the whole log, for the reviews.
-final recordsByDayProvider = StreamProvider<Map<DateTime, int>>((ref) {
+///
+/// Auto-disposed, unlike most providers here: it walks every working set ever
+/// logged, and kept alive after a review was opened it would walk them all
+/// again on every set saved mid-workout, for a screen nobody is looking at.
+final recordsByDayProvider = StreamProvider.autoDispose<Map<DateTime, int>>((
+  ref,
+) {
   return ref.watch(personalRecordsRepositoryProvider).watchRecordsByDay();
 });

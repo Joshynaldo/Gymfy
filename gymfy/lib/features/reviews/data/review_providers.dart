@@ -8,21 +8,21 @@ import 'review.dart';
 /// The review of one period, against the one before. Null while any of its
 /// three sources is still loading.
 ///
-/// No query of its own: the recap's sets, the per-day minutes and the per-day
-/// record counts are streams the app already has, and this only re-adds them
-/// over a different window.
-final reviewProvider = Provider.family<TrainingReview?, ReviewPeriod>((
-  ref,
-  period,
-) {
-  final sets = ref.watch(recapSetsProvider).value;
-  final days = ref.watch(allTrainingByDayProvider).value;
-  final records = ref.watch(recordsByDayProvider).value;
-  if (sets == null || days == null || records == null) return null;
-  return buildReview(
-    period: period,
-    allSets: sets,
-    trainingDays: days,
-    recordsByDay: records,
-  );
-});
+/// No query of its own: it re-adds the recap's sets, the heatmap's per-day
+/// minutes (over the whole log rather than the grid's year) and the workout
+/// summary's records, counted per day, over a calendar window. Auto-disposed
+/// with the two whole-log streams, so closing the review stops them
+/// recounting on every logged set.
+final reviewProvider = Provider.autoDispose
+    .family<TrainingReview?, ReviewPeriod>((ref, period) {
+      final sets = ref.watch(recapSetsProvider).value;
+      final days = ref.watch(allTrainingByDayProvider).value;
+      final records = ref.watch(recordsByDayProvider).value;
+      if (sets == null || days == null || records == null) return null;
+      return buildReview(
+        period: period,
+        allSets: sets,
+        trainingDays: days,
+        recordsByDay: records,
+      );
+    });

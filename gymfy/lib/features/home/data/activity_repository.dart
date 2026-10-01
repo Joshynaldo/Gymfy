@@ -175,9 +175,9 @@ final activityMinutesProvider = StreamProvider<Map<DateTime, DayTraining>>((
 });
 
 /// Minutes trained per day over the whole log. The year grid needs only the
-/// last year and keeps its own, smaller query; this one is for the reviews.
-final allTrainingByDayProvider = StreamProvider<Map<DateTime, DayTraining>>((
-  ref,
-) {
-  return ref.watch(activityRepositoryProvider).watchAllTrainingByDay();
-});
+/// last year and keeps its own, smaller query; this one is for the reviews,
+/// and is let go when no review is open.
+final allTrainingByDayProvider =
+    StreamProvider.autoDispose<Map<DateTime, DayTraining>>((ref) {
+      return ref.watch(activityRepositoryProvider).watchAllTrainingByDay();
+    });
