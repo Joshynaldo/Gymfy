@@ -8,6 +8,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../shared/database/app_database.dart';
+import '../../../shared/models/exercise.dart' show isBundledAsset;
+import '../../exercises/data/exercise_repository.dart' show exerciseImageDir;
 import '../../progress/data/photo_repository.dart';
 import 'backup_format.dart';
 
@@ -16,7 +18,8 @@ part 'backup_repository.g.dart';
 /// Settings that describe *this phone*, not your training: where its automatic
 /// backups go and when the last one ran.
 ///
-/// A restore keeps the device's own values for these when it has them. Moving
+/// A restore keeps the device's own values for these, and leaves them unset
+/// when the device has none — the file's values never come back. Moving
 /// to a new phone would otherwise point its automatic backup at the old
 /// phone's folder, which may not exist here, and stamp "last backup" with a
 /// date that was never true on this device.
@@ -44,17 +47,25 @@ typedef BackupSummary = ({
 /// without anyone remembering to come back here.
 ///
 /// The file is a zip: `backup.json` with every row, plus the progress photo
-/// files the rows point at, so a backup moved to a new phone brings the photos
-/// with it rather than leaving a grid of broken tiles.
+/// files and custom-exercise pictures the rows point at, so a backup moved to
+/// a new phone brings them with it rather than leaving a grid of broken tiles.
 class BackupRepository {
-  BackupRepository(this._db, {PhotosDirResolver? photosDir})
-    : _photos = PhotoRepository(_db, photosDir: photosDir);
+  BackupRepository(
+    this._db, {
+    PhotosDirResolver? photosDir,
+    PhotosDirResolver? exerciseImagesDir,
+  }) : _photos = PhotoRepository(_db, photosDir: photosDir),
+       _exerciseImagesDir = exerciseImagesDir ?? exerciseImageDir;
 
   final AppDatabase _db;
 
   /// Borrowed for its photos-folder resolution only, so this and the photo
   /// screen can never disagree about where the files live.
   final PhotoRepository _photos;
+
+  /// Where custom-exercise pictures are restored to — the same folder
+  /// `ExerciseRepository.saveImage` copies them into.
+  final PhotosDirResolver _exerciseImagesDir;
 
   /// Every row of every table, as SQLite stores it.
   ///
@@ -112,6 +123,7 @@ class BackupRepository {
       for (final name in payload.photos)
         if (File('${dir.path}/$name').existsSync()) name,
     ];
+    final images = _exerciseImageFiles(payload);
 
     final partial = '$path.part';
     final encoder = ZipFileEncoder()..create(partial);
@@ -124,6 +136,7 @@ class BackupRepository {
             createdAt: payload.createdAt,
             tables: payload.tables,
             photos: present,
+            exerciseImages: images.keys.toList(),
           ).encode(),
         ),
       );
@@ -132,6 +145,9 @@ class BackupRepository {
           File('${dir.path}/$name'),
           '$backupPhotosPrefix$name',
         );
+      }
+      for (final MapEntry(key: name, value: file) in images.entries) {
+        await encoder.addFile(file, '$backupExerciseImagesPrefix$name');
       }
     } finally {
       await encoder.close();
@@ -177,24 +193,113 @@ class BackupRepository {
   /// a few unused image files, never a half-restored log.
   Future<void> restore(String path) {
     return _withArchive(path, (archive) async {
-      final payload = _prepare(_payloadOf(archive));
+      var payload = _prepare(_payloadOf(archive));
 
       final dir = await _photos.ensureDir();
-      for (final name in payload.photos) {
-        if (!isSafePhotoName(name)) continue;
-        final entry = archive.find('$backupPhotosPrefix$name');
-        if (entry == null || !entry.isFile) continue;
-        final output = OutputFileStream('${dir.path}/$name');
-        try {
-          entry.writeContent(output);
-        } finally {
-          await output.close();
-        }
+      await _unpack(archive, backupPhotosPrefix, payload.photos, dir);
+
+      // Asked for only when the backup has pictures, so restoring one without
+      // any never touches the documents folder.
+      if (payload.exerciseImages.isNotEmpty) {
+        final imageDir = await _exerciseImagesDir();
+        if (!imageDir.existsSync()) await imageDir.create(recursive: true);
+        final restored = await _unpack(
+          archive,
+          backupExerciseImagesPrefix,
+          payload.exerciseImages,
+          imageDir,
+        );
+        payload = _relinkExerciseImages(payload, imageDir, restored);
       }
 
       await _replaceAll(payload);
     });
   }
+
+  /// Writes each of [names] stored under [prefix] in [archive] into [dir],
+  /// and returns the names actually written.
+  ///
+  /// A name with a path in it is skipped: a crafted backup naming
+  /// `../../something` must not be able to write outside [dir].
+  Future<Set<String>> _unpack(
+    Archive archive,
+    String prefix,
+    List<String> names,
+    Directory dir,
+  ) async {
+    final written = <String>{};
+    for (final name in names) {
+      if (!isSafePhotoName(name)) continue;
+      final entry = archive.find('$prefix$name');
+      if (entry == null || !entry.isFile) continue;
+      final output = OutputFileStream('${dir.path}/$name');
+      try {
+        entry.writeContent(output);
+      } finally {
+        await output.close();
+      }
+      written.add(name);
+    }
+    return written;
+  }
+
+  /// The picture files custom exercises point at that exist on this phone,
+  /// keyed by the bare file name they are stored under in the archive.
+  ///
+  /// A built-in exercise's GIF ships with the app and is never packed.
+  Map<String, File> _exerciseImageFiles(BackupPayload payload) {
+    final files = <String, File>{};
+    final exercises = payload.tables['exercises'];
+    if (exercises == null) return files;
+    for (final row in exercises.rowMaps) {
+      final path = row['gif_path'];
+      if (path is! String || isBundledAsset(path)) continue;
+      final name = _fileNameOf(path);
+      final file = File(path);
+      if (!isSafePhotoName(name) || !file.existsSync()) continue;
+      files[name] = file;
+    }
+    return files;
+  }
+
+  /// Points every custom exercise whose picture was just unpacked at its new
+  /// home in [dir].
+  ///
+  /// The stored path is absolute, and the documents folder it names is not
+  /// the same on every phone (on iOS it changes with every install), so the
+  /// old path would point nowhere even with the file back in place.
+  BackupPayload _relinkExerciseImages(
+    BackupPayload payload,
+    Directory dir,
+    Set<String> restored,
+  ) {
+    final exercises = payload.tables['exercises'];
+    final column = exercises?.columns.indexOf('gif_path') ?? -1;
+    if (exercises == null || column == -1 || restored.isEmpty) return payload;
+
+    final rows = [
+      for (final row in exercises.rows)
+        if (row[column] case final String path
+            when !isBundledAsset(path) && restored.contains(_fileNameOf(path)))
+          [...row]..[column] = '${dir.path}/${_fileNameOf(path)}'
+        else
+          row,
+    ];
+    return BackupPayload(
+      schemaVersion: payload.schemaVersion,
+      createdAt: payload.createdAt,
+      tables: {
+        ...payload.tables,
+        'exercises': BackupTable(columns: exercises.columns, rows: rows),
+      },
+      photos: payload.photos,
+      exerciseImages: payload.exerciseImages,
+    );
+  }
+
+  /// The last segment of [path], whichever separator the phone that wrote it
+  /// used.
+  static String _fileNameOf(String path) => path.split(RegExp(r'[/\\]')).last;
 
   /// Restores [payload] into the database. The photo files are the caller's
   /// business; this is only the rows.
@@ -278,6 +383,15 @@ class BackupRepository {
         });
       }
 
+      // This phone's values, or none at all. A key this phone never had must
+      // not come back from the file either: on a new phone that would point
+      // its automatic backup at the old phone's folder and claim a "last
+      // backup" that never happened here, so no backup would be due for days.
+      await _db.customStatement(
+        'DELETE FROM "app_settings" WHERE "name" IN '
+        '(${deviceLocalSettingKeys.map((_) => '?').join(', ')})',
+        deviceLocalSettingKeys,
+      );
       for (final row in keep) {
         final columns = row.data.keys.toList();
         await _db.customStatement(

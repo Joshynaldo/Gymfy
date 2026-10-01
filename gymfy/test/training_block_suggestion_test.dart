@@ -4,6 +4,8 @@
 // The block used throughout: three training weeks from Monday 7 September
 // 2026, then a deload week (28 Sep – 4 Oct), then the next block from 5 Oct.
 
+import 'dart:async';
+
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
@@ -356,6 +358,65 @@ void main() {
         expect(result.weight, 57.5);
         expect(result.targetPercent, 80);
         expect(result.deloadPercent, 60);
+      });
+
+      test('a new tested max moves it without restarting the app', () async {
+        // One key for every read, as the workout card has: the same rows
+        // until the running order changes. (A fresh read of the exercise is a
+        // different key — its muscle list compares by identity — and would
+        // hide the staleness this is about.)
+        await settingsLoaded();
+        final key = (entry: await entry(), exercise: await exercise());
+        Future<double?> weight() async => (await container.read(
+          overloadSuggestionProvider(key).future,
+        ))?.weight;
+        expect(await weight(), 96);
+
+        // Retested in the calculator while the app stays open.
+        await TestedOneRmRepository(db).setForExercise(
+          exerciseId: _bench,
+          weightKg: 130,
+          testedOn: DateTime(2026, 9, 15),
+        );
+        await pumpEventQueue();
+
+        expect(await weight(), 104);
+      });
+    });
+
+    test('the deload week starts at midnight without restarting the app', () {
+      // Sunday evening of training week three; the deload week starts on
+      // Monday. The app stays open across midnight.
+      return withClock(Clock.fixed(DateTime(2026, 9, 27, 20)), () async {
+        await startBlock();
+        await trained(DateTime(2026, 9, 22), 100);
+        await settingsLoaded();
+        final key = (entry: await entry(), exercise: await exercise());
+
+        // Every timer the provider starts, so the one at midnight can be
+        // fired by hand instead of waited for.
+        final timers = <(Duration, void Function())>[];
+        final week3 = await runZoned(
+          () => container.read(overloadSuggestionProvider(key).future),
+          zoneSpecification: ZoneSpecification(
+            createTimer: (self, parent, zone, duration, callback) {
+              timers.add((duration, callback));
+              return parent.createTimer(zone, duration, callback);
+            },
+          ),
+        );
+        expect(week3!.reason, OverloadReason.earned);
+
+        final rollover = timers.where((t) => t.$1 > const Duration(minutes: 1));
+        expect(rollover.map((t) => t.$1), [const Duration(hours: 4)]);
+        rollover.single.$2();
+
+        final monday = await withClock(
+          Clock.fixed(DateTime(2026, 9, 28, 9)),
+          () => container.read(overloadSuggestionProvider(key).future),
+        );
+        expect(monday!.reason, OverloadReason.blockDeload);
+        expect(monday.weight, 60);
       });
     });
 

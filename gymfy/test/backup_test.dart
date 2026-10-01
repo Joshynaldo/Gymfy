@@ -474,6 +474,101 @@ void main() {
     });
   });
 
+  group('custom exercise pictures', () {
+    final image = Uint8List.fromList(List.generate(2048, (i) => i % 241));
+
+    /// Gives the fixture's custom exercise a picture at [dir], the way
+    /// `ExerciseRepository.saveImage` does: an absolute path in `gif_path`.
+    Future<String> pictureIn(Directory dir) async {
+      await dir.create(recursive: true);
+      final file = File('${dir.path}/custom_landmine_press.jpg');
+      await file.writeAsBytes(image);
+      await (db.update(db.exercises)
+            ..where((t) => t.id.equals('custom_landmine_press')))
+          .write(ExercisesCompanion(gifPath: Value(file.path)));
+      return file.path;
+    }
+
+    test('ride along and come back on a new phone, relinked', () async {
+      await populate(db);
+      final oldImages = Directory('${temp.path}/old_phone/exercise_images');
+      await pictureIn(oldImages);
+      final path = '${temp.path}/b.$backupFileExtension';
+      await repo.writeArchive(path);
+      // The old phone is gone, and its documents folder with it.
+      await oldImages.delete(recursive: true);
+
+      driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+      addTearDown(
+        () => driftRuntimeOptions.dontWarnAboutMultipleDatabases = false,
+      );
+      final other = await openDb();
+      addTearDown(other.close);
+      final newImages = Directory('${temp.path}/new_phone/exercise_images');
+      await BackupRepository(
+        other,
+        photosDir: () async => Directory('${temp.path}/new_phone/photos'),
+        exerciseImagesDir: () async => newImages,
+      ).restore(path);
+
+      final custom = await (other.select(
+        other.exercises,
+      )..where((t) => t.id.equals('custom_landmine_press'))).getSingle();
+      expect(custom.gifPath, '${newImages.path}/custom_landmine_press.jpg');
+      expect(await File(custom.gifPath!).readAsBytes(), image);
+    });
+
+    test('a built-in GIF and a missing file are not packed', () async {
+      await populate(db);
+      await (db.update(
+        db.exercises,
+      )..where((t) => t.id.equals('barbell_bench_press'))).write(
+        const ExercisesCompanion(
+          gifPath: Value('assets/exercises/barbell_bench_press.gif'),
+        ),
+      );
+      await (db.update(
+        db.exercises,
+      )..where((t) => t.id.equals('custom_landmine_press'))).write(
+        ExercisesCompanion(
+          gifPath: Value('${temp.path}/gone/custom_landmine_press.jpg'),
+        ),
+      );
+      final path = '${temp.path}/b.$backupFileExtension';
+      await repo.writeArchive(path);
+
+      final archive = ZipDecoder().decodeBytes(await File(path).readAsBytes());
+      expect(
+        archive.files.where(
+          (f) => f.name.startsWith(backupExerciseImagesPrefix),
+        ),
+        isEmpty,
+      );
+      // The rows are untouched by a restore that brings no pictures.
+      await wipe(db);
+      await repo.restore(path);
+      final bench = await (db.select(
+        db.exercises,
+      )..where((t) => t.id.equals('barbell_bench_press'))).getSingle();
+      expect(bench.gifPath, 'assets/exercises/barbell_bench_press.gif');
+    });
+
+    test('a backup written before pictures were packed still reads', () {
+      final json =
+          jsonDecode(
+                  BackupPayload(
+                    schemaVersion: 26,
+                    createdAt: DateTime(2026, 9, 1),
+                    tables: const {},
+                  ).encode(),
+                )
+                as Map<String, Object?>
+            ..remove('exerciseImages');
+
+      expect(BackupPayload.decode(jsonEncode(json)).exerciseImages, isEmpty);
+    });
+  });
+
   group('refusing', () {
     test(
       'a backup from a newer schema, leaving everything as it was',
@@ -729,6 +824,36 @@ void main() {
       expect(valueOf('auto_backup_folder'), '/new/phone');
       // Everything else is the backup's.
       expect(valueOf('weight_unit'), 'lb');
+    });
+
+    test("a new phone does not inherit the old phone's", () async {
+      // Automatic backup was set up on the old phone and never on this one.
+      // Restoring must leave it unset here, not pointing at a folder on the
+      // old phone with a "last backup" that makes the next one look days away.
+      await populate(db);
+      for (final (name, value) in [
+        ('auto_backup_mode', 'weekly'),
+        ('auto_backup_folder', '/old/phone'),
+        ('auto_backup_last_at', '2026-09-28T10:00:00.000'),
+        ('auto_backup_last_error', 'Folder is full'),
+      ]) {
+        await db
+            .into(db.appSettings)
+            .insert(AppSettingsCompanion.insert(name: name, value: value));
+      }
+      final path = '${temp.path}/b.$backupFileExtension';
+      await repo.writeArchive(path);
+
+      await wipe(db);
+      await repo.restore(path);
+
+      final names = {
+        for (final row in await db.select(db.appSettings).get()) row.name,
+      };
+      for (final key in deviceLocalSettingKeys) {
+        expect(names, isNot(contains(key)), reason: key);
+      }
+      expect(names, contains('weight_unit'));
     });
 
     test('logging preferences travel with the backup', () async {

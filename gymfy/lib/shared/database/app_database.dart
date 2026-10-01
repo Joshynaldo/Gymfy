@@ -249,8 +249,8 @@ class AppDatabase extends _$AppDatabase {
       // - Set types replace the warm-up boolean. Every old warm-up becomes a
       //   `warmup` and every other set `normal` — exactly what the boolean
       //   said, so no chart, PR or suggestion moves. The flag is copied before
-      //   the column is dropped, inside this same migration transaction, so
-      //   there is no moment where a warm-up has been forgotten.
+      //   the column is dropped, in the same transaction, so there is no
+      //   moment where a warm-up has been forgotten.
       // - RPE / RIR, superset groups, percent-of-1RM targets and the training
       //   block fields are all nullable and start null: every existing set is
       //   unrated, every planned exercise standalone with no percentage, and
@@ -260,39 +260,60 @@ class AppDatabase extends _$AppDatabase {
       //   the update resumes with the same exercises. Finished sessions get
       //   nothing — their history is their logged sets, and today's plan is not
       //   what they did.
+      //
+      // Drift does not run `onUpgrade` in a transaction, and SQLite commits
+      // each ALTER on its own. So this step is both: one transaction, so an
+      // app killed halfway through rolls the whole step back, and every
+      // statement safe to run twice, because `user_version` is only written
+      // after `onUpgrade` returns — a kill in that gap reruns the step against
+      // a database that already has it. Without both, a phone killed during
+      // its first launch after the update would fail on "duplicate column" at
+      // every launch after, and the only way out would be wiping the log.
       if (from < 26) {
-        if (!await _hasColumn('logged_sets', 'set_type')) {
-          await m.addColumn(loggedSets, loggedSets.setType);
-        }
-        await m.addColumn(loggedSets, loggedSets.rpe);
-        await m.addColumn(loggedSets, loggedSets.rir);
-        if (await _hasColumn('logged_sets', 'is_warmup')) {
-          await customStatement(
-            "UPDATE logged_sets SET set_type = 'warmup' WHERE is_warmup = 1",
+        await transaction(() async {
+          await _addColumnOnce(m, loggedSets, loggedSets.setType);
+          await _addColumnOnce(m, loggedSets, loggedSets.rpe);
+          await _addColumnOnce(m, loggedSets, loggedSets.rir);
+          if (await _hasColumn('logged_sets', 'is_warmup')) {
+            await customStatement(
+              "UPDATE logged_sets SET set_type = 'warmup' WHERE is_warmup = 1",
+            );
+            await customStatement(
+              'ALTER TABLE logged_sets DROP COLUMN is_warmup',
+            );
+          }
+
+          await _addColumnOnce(
+            m,
+            workoutExercises,
+            workoutExercises.supersetGroup,
           );
-          await customStatement(
-            'ALTER TABLE logged_sets DROP COLUMN is_warmup',
+          await _addColumnOnce(
+            m,
+            workoutExercises,
+            workoutExercises.targetPercent,
           );
-        }
 
-        await m.addColumn(workoutExercises, workoutExercises.supersetGroup);
-        await m.addColumn(workoutExercises, workoutExercises.targetPercent);
+          await _addColumnOnce(m, splits, splits.blockWeeks);
+          await _addColumnOnce(m, splits, splits.deloadPercent);
+          await _addColumnOnce(m, splits, splits.blockStartedAt);
 
-        await m.addColumn(splits, splits.blockWeeks);
-        await m.addColumn(splits, splits.deloadPercent);
-        await m.addColumn(splits, splits.blockStartedAt);
-
-        await m.createTable(sessionExercises);
-        await customStatement(
-          'INSERT INTO session_exercises '
-          '(session_id, exercise_id, position, workout_exercise_id) '
-          'SELECT s.id, we.exercise_id, '
-          'ROW_NUMBER() OVER (PARTITION BY s.id ORDER BY we.position, we.id) '
-          '- 1, we.id '
-          'FROM workout_sessions s '
-          'JOIN workout_exercises we ON we.day_id = s.day_id '
-          'WHERE s.completed_at IS NULL',
-        );
+          // Backfilled only when the table is new here: a rerun that finds it
+          // already there must not copy the open session's plan in twice.
+          if (!await _hasTable('session_exercises')) {
+            await m.createTable(sessionExercises);
+            await customStatement(
+              'INSERT INTO session_exercises '
+              '(session_id, exercise_id, position, workout_exercise_id) '
+              'SELECT s.id, we.exercise_id, '
+              'ROW_NUMBER() OVER (PARTITION BY s.id '
+              'ORDER BY we.position, we.id) - 1, we.id '
+              'FROM workout_sessions s '
+              'JOIN workout_exercises we ON we.day_id = s.day_id '
+              'WHERE s.completed_at IS NULL',
+            );
+          }
+        });
       }
     },
     // SQLite doesn't enforce foreign keys unless we turn them on per
@@ -305,13 +326,34 @@ class AppDatabase extends _$AppDatabase {
 
   /// Whether [table] currently has [column] on disk.
   ///
-  /// For the one step that moves data between columns: a device that started
-  /// before v4 created `logged_sets` from today's Dart definition, so it may
-  /// already have `set_type` and never have had `is_warmup`. Asking is cheaper
-  /// than crashing on a duplicate column.
+  /// A device that started before v4 created `logged_sets` from today's Dart
+  /// definition, so it may already have `set_type` and never have had
+  /// `is_warmup`; and a v26 step interrupted before `user_version` was written
+  /// runs again over columns it already added. Asking is cheaper than crashing
+  /// on a duplicate column.
   Future<bool> _hasColumn(String table, String column) async {
     final rows = await customSelect('PRAGMA table_info($table)').get();
     return rows.any((row) => row.data['name'] == column);
+  }
+
+  /// Whether a table called [name] exists on disk.
+  Future<bool> _hasTable(String name) async {
+    final rows = await customSelect(
+      "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
+      variables: [Variable.withString(name)],
+    ).get();
+    return rows.isNotEmpty;
+  }
+
+  /// Adds [column] to [table] unless an interrupted earlier run of the same
+  /// migration step already did.
+  Future<void> _addColumnOnce(
+    Migrator m,
+    TableInfo table,
+    GeneratedColumn column,
+  ) async {
+    if (await _hasColumn(table.actualTableName, column.name)) return;
+    await m.addColumn(table, column);
   }
 }
 

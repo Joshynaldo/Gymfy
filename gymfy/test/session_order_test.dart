@@ -140,6 +140,37 @@ void main() {
       expect(plan.entry.defaultSets, 4, reason: 'targets are kept');
     });
 
+    test('saving to the plan never plans one exercise twice', () async {
+      // Plan: bench, row. Today row was swapped for curl (this workout only),
+      // which frees row in the session's picker; then bench is swapped for
+      // row and saved to the plan. The plan must not become row, row.
+      await plans.addExerciseToDay(dayId, 'bench');
+      await plans.addExerciseToDay(dayId, 'row');
+      final id = await sessions.startSession(dayId: dayId, name: 'Push');
+      final [bench, row] = await sessions.watchSessionExercises(id).first;
+      await sessions.swapExercise(
+        sessionExerciseId: row.row.id,
+        exerciseId: 'curl',
+      );
+      await sessions.swapExercise(
+        sessionExerciseId: bench.row.id,
+        exerciseId: 'row',
+      );
+
+      final saved = await plans.replacePlannedExercise(
+        bench.planned!.id,
+        'row',
+      );
+
+      expect(saved, isFalse);
+      final plan = await plans.watchDayExercises(dayId).first;
+      expect(plan.map((p) => p.exercise.id), ['bench', 'row']);
+      // And the next workout of the day gets one of each.
+      await sessions.completeSession(id);
+      final next = await sessions.startSession(dayId: dayId, name: 'Push');
+      expect(await order(next), ['bench', 'row']);
+    });
+
     test('refuses an exercise already in the workout', () async {
       final id = await sessions.startFreeSession(name: 'Free');
       await sessions.addExercises(id, ['bench', 'row']);

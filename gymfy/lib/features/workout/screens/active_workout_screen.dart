@@ -435,43 +435,32 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
     }
   }
 
-  /// Where the card goes after a set of [entry] that does *not* start the rest
-  /// timer, or after one that does — see the superset branch in [_log].
+  /// Moves the card after a working set of [entry] in a superset, and says
+  /// whether the rest timer should start — see [supersetStepAfter] for the
+  /// rules. A standalone exercise rests and leaves the card alone.
   ///
-  /// Mid-superset that is the next member, because you go straight to it.
-  /// After the last member it is back to the first, if that one still has sets
-  /// to do; otherwise wherever the default rule lands.
-  void _advanceSuperset(SessionExerciseEntry entry, {required bool rests}) {
+  /// [workingDone] counts the working sets logged per exercise, the set just
+  /// saved included. It is passed in rather than read from the sets stream,
+  /// which may not have caught up with that set yet.
+  bool _advanceSuperset(
+    SessionExerciseEntry entry, {
+    required Map<String, int> workingDone,
+  }) {
     final entries =
         ref.read(sessionExercisesProvider(widget.session.id)).value ??
         const <SessionExerciseEntry>[];
-    final sets =
-        ref.read(sessionSetsProvider(widget.session.id)).value ??
-        const <LoggedSet>[];
-    final index = entries.indexWhere((e) => e.row.id == entry.row.id);
-    if (index == -1 || !mounted) return;
-
-    if (!rests && index + 1 < entries.length) {
-      setState(() => _picked = entries[index + 1].exercise.id);
-      return;
-    }
-
-    final block = supersetBlocks(
+    final step = supersetStepAfter(
       entries,
+      // The same entry from the current list: blocks match by identity, and
+      // the list may have been re-read since the card was built.
+      entries.firstWhere((e) => e.row.id == entry.row.id, orElse: () => entry),
       (e) => e.supersetGroup,
-    ).firstWhere((b) => b.contains(entries[index]));
-    if (block.length < 2) return;
-
-    final setsByExercise = <String, List<LoggedSet>>{};
-    for (final set in sets) {
-      setsByExercise.putIfAbsent(set.exerciseId, () => []).add(set);
-    }
-    final first = block.first;
-    setState(
-      () => _picked = _shortOfTarget(first, setsByExercise)
-          ? first.exercise.id
-          : null,
+      hasSetsLeft: (e) =>
+          (workingDone[e.exercise.id] ?? 0) < e.targets.defaultSets,
     );
+    if (step == null) return true;
+    if (mounted) setState(() => _picked = step.next?.exercise.id);
+    return step.rests;
   }
 
   Future<void> _log(
@@ -551,7 +540,10 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
     // never measured against itself.
     final records = ref.read(personalRecordsRepositoryProvider);
     final before = result.setType.countsTowardStrength
-        ? await records.baselineFor(planned.exercise.id)
+        ? await records.baselineFor(
+            planned.exercise.id,
+            sessionId: widget.session.id,
+          )
         : null;
 
     await ref
@@ -584,24 +576,24 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
     }
 
     // Mid-superset there is no rest: you go straight to the next exercise of
-    // the group, so the card moves there instead. The rest comes after the
-    // last one, and the card goes back to the top of the group for the next
-    // round.
-    final entries =
-        ref.read(sessionExercisesProvider(widget.session.id)).value ??
-        const <SessionExerciseEntry>[];
-    final rests = restsAfter(
-      entries,
-      // The same entry from the current list: restsAfter matches by identity,
-      // and the list may have been re-read since the card was built.
-      entries.firstWhere(
-        (e) => e.row.id == planned.row.id,
-        orElse: () => planned,
-      ),
-      (e) => e.supersetGroup,
-    );
-    _advanceSuperset(planned, rests: rests);
-    if (!rests) return;
+    // the group that still has sets to do, so the card moves there instead.
+    // The rest comes once nobody later in the group is left, and the card goes
+    // back to the top of the group for the next round.
+    //
+    // Only for working sets. A warm-up ramps one exercise up on its own before
+    // the rounds start, so it rests like any standalone set and the card stays
+    // put for the next ramp-up.
+    if (!result.setType.isWarmupPhase) {
+      // `logged` was read before the sheet opened, so it is everything but
+      // the set just saved — counted in here by hand.
+      final workingDone = <String, int>{planned.exercise.id: 1};
+      for (final set in logged) {
+        if (set.isWarmup) continue;
+        workingDone[set.exerciseId] = (workingDone[set.exerciseId] ?? 0) + 1;
+      }
+      final rests = _advanceSuperset(planned, workingDone: workingDone);
+      if (!rests) return;
+    }
 
     // Logging a set is exactly when rest starts, so the timer needs no button
     // of its own — one less thing to do between sets.

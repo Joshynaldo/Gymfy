@@ -35,6 +35,7 @@
 // Everything here is kilograms, like the rest of the stored data.
 
 import '../../../shared/database/app_database.dart';
+import '../../../shared/models/set_type.dart';
 import '../../workout/data/session_repository.dart' show LoggedSetType;
 
 /// Per-muscle weekly increments, in kilograms added to the bar.
@@ -174,17 +175,20 @@ bool earnedIncrease({
 /// derives to this (10 − 9.5, rounded down), as do RPE 10 and a logged RIR 0.
 const limitEffortRir = 0;
 
-/// Whether a set at the top weight of [sets] was rated a limit effort —
-/// RPE 9.5 or higher, or RIR 0.
+/// Whether a set at the top weight of [sets] was a limit effort — rated
+/// RPE 9.5 or higher or RIR 0, or tagged as a set taken to failure.
 ///
 /// Any set at the top weight, not just the last one: on a straight-sets day
 /// the grinder may be the second of three, and it is still the evidence that
-/// the weight is at its ceiling. Unrated sets say nothing either way.
+/// the weight is at its ceiling. A failure set is RIR 0 by definition, so the
+/// two ways of recording the same effort hold the weight alike, rating mode on
+/// or off. Unrated, untagged sets say nothing either way.
 bool topSetAtLimit(List<LoggedSet> sets) {
   final top = topWeight(sets);
   if (top == null) return false;
   return sets.any((set) {
     if ((set.weight - top).abs() > 0.001) return false;
+    if (set.type == SetType.failure) return true;
     final rir = set.effectiveRir;
     return rir != null && rir <= limitEffortRir;
   });

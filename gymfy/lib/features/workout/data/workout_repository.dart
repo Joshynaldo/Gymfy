@@ -509,9 +509,34 @@ class WorkoutRepository {
   /// Points a planned exercise at a different library exercise, keeping its
   /// targets, position and superset — "save swap to plan" from a running
   /// workout.
-  Future<void> replacePlannedExercise(int id, String exerciseId) {
-    return (_db.update(_db.workoutExercises)..where((t) => t.id.equals(id)))
-        .write(WorkoutExercisesCompanion(exerciseId: Value(exerciseId)));
+  ///
+  /// Refused (returns false) when [exerciseId] is already planned elsewhere in
+  /// the same day. The session's swap picker only leaves out what is in
+  /// today's workout, so an exercise swapped out of it earlier can come back
+  /// this way — and a day planning one exercise twice would hand every later
+  /// session two cards claiming the same logged sets.
+  Future<bool> replacePlannedExercise(int id, String exerciseId) {
+    return _db.transaction(() async {
+      final row = await (_db.select(
+        _db.workoutExercises,
+      )..where((t) => t.id.equals(id))).getSingleOrNull();
+      if (row == null) return false;
+      if (row.exerciseId == exerciseId) return true;
+
+      final clash =
+          await (_db.select(_db.workoutExercises)..where(
+                (t) =>
+                    t.dayId.equals(row.dayId) &
+                    t.exerciseId.equals(exerciseId) &
+                    t.id.equals(id).not(),
+              ))
+              .get();
+      if (clash.isNotEmpty) return false;
+
+      await (_db.update(_db.workoutExercises)..where((t) => t.id.equals(id)))
+          .write(WorkoutExercisesCompanion(exerciseId: Value(exerciseId)));
+      return true;
+    });
   }
 
   // --- Order and supersets -------------------------------------------------

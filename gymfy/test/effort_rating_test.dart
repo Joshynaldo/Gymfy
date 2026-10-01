@@ -25,6 +25,7 @@ LoggedSet _set({
   int reps = 8,
   double? rpe,
   int? rir,
+  SetType type = SetType.normal,
 }) => LoggedSet(
   id: id,
   sessionId: 1,
@@ -32,7 +33,7 @@ LoggedSet _set({
   setNumber: id,
   weight: weight,
   reps: reps,
-  setType: SetType.normal.name,
+  setType: type.name,
   rpe: rpe,
   rir: rir,
 );
@@ -125,6 +126,31 @@ void main() {
       );
 
       expect(suggestion.reason, OverloadReason.earned);
+    });
+
+    test('an unrated set tagged Failure holds the weight like RIR 0', () {
+      // Rating mode off: the only way to say "that was everything" is the
+      // set type. Taken to failure is RIR 0 by definition, so it must not
+      // earn the increase the same set rated RIR 0 would hold back.
+      final sets = _earnedSession();
+      sets[2] = _set(id: 3, type: SetType.failure);
+
+      final suggestion = _suggest(sets);
+
+      expect(topSetAtLimit(sets), isTrue);
+      expect(suggestion.reason, OverloadReason.atLimit);
+      expect(suggestion.weight, 100);
+    });
+
+    test('a failure set below the top weight does not count', () {
+      final sets = [
+        _set(id: 1, weight: 100),
+        _set(id: 2, weight: 100),
+        _set(id: 3, weight: 100),
+        _set(id: 4, weight: 90, type: SetType.failure),
+      ];
+
+      expect(topSetAtLimit(sets), isFalse);
     });
 
     test('a limit effort below the top weight does not count', () {

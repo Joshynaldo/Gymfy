@@ -15,6 +15,9 @@ const backupJsonEntry = 'backup.json';
 /// Folder inside the archive that holds the progress photo files.
 const backupPhotosPrefix = 'photos/';
 
+/// Folder inside the archive that holds the pictures of custom exercises.
+const backupExerciseImagesPrefix = 'exercise_images/';
+
 /// Written into every backup so the restore can refuse a file that merely
 /// happens to be JSON — a plan export, a data export, someone else's app.
 const backupFormatId = 'gymfy-backup';
@@ -112,6 +115,7 @@ class BackupPayload {
     required this.createdAt,
     required this.tables,
     this.photos = const [],
+    this.exerciseImages = const [],
   });
 
   /// The database schema the rows were read from.
@@ -125,6 +129,13 @@ class BackupPayload {
   /// File names of the progress photos stored under [backupPhotosPrefix].
   final List<String> photos;
 
+  /// File names of the custom-exercise pictures stored under
+  /// [backupExerciseImagesPrefix].
+  ///
+  /// Optional in the JSON, so a backup written before these were packed still
+  /// reads — it simply brings no pictures back.
+  final List<String> exerciseImages;
+
   /// How many rows [table] holds, or 0 if it is not in the backup.
   int rowCount(String table) => tables[table]?.rows.length ?? 0;
 
@@ -137,6 +148,7 @@ class BackupPayload {
       for (final entry in tables.entries) entry.key: entry.value.toJson(),
     },
     'photos': photos,
+    'exerciseImages': exerciseImages,
   };
 
   String encode() => jsonEncode(toJson());
@@ -179,6 +191,10 @@ class BackupPayload {
     if (photos is! List || photos.any((p) => p is! String)) {
       throw _corrupt('its photo list is unreadable');
     }
+    final exerciseImages = json['exerciseImages'] ?? const [];
+    if (exerciseImages is! List || exerciseImages.any((p) => p is! String)) {
+      throw _corrupt('its exercise picture list is unreadable');
+    }
 
     return BackupPayload(
       schemaVersion: schemaVersion,
@@ -188,6 +204,7 @@ class BackupPayload {
           '${entry.key}': BackupTable.fromJson(entry.value, '${entry.key}'),
       },
       photos: photos.cast<String>().toList(),
+      exerciseImages: exerciseImages.cast<String>().toList(),
     );
   }
 }
@@ -303,6 +320,7 @@ BackupPayload _from25(BackupPayload old) {
     createdAt: old.createdAt,
     tables: tables,
     photos: old.photos,
+    exerciseImages: old.exerciseImages,
   );
 }
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -317,6 +319,32 @@ final overloadSuggestionProvider =
     >((ref, key) async {
       final entry = key.entry;
       final exercise = key.exercise;
+
+      // Nothing below is watched in Riverpod's sense, and this provider is
+      // kept alive for the app's lifetime, so without these it would answer
+      // once per process: a deload week starting, a new tested 1RM, or a
+      // finished workout would all leave yesterday's suggestion on screen
+      // until the app restarted. Everything that can move it re-runs it.
+      //
+      // The database: sets logged and sessions finished (the history and the
+      // estimated max), a tested max saved, a split's block changed.
+      final db = ref.watch(appDatabaseProvider);
+      final changes = db
+          .tableUpdates(
+            TableUpdateQuery.onAllTables([
+              db.loggedSets,
+              db.workoutSessions,
+              db.testedOneRms,
+              db.splits,
+            ]),
+          )
+          .listen((_) => ref.invalidateSelf());
+      ref.onDispose(changes.cancel);
+      // The calendar: a training block moves into its next week at midnight.
+      final now = clock.now();
+      final midnight = DateTime(now.year, now.month, now.day + 1);
+      final rollover = Timer(midnight.difference(now), ref.invalidateSelf);
+      ref.onDispose(rollover.cancel);
 
       // One-shot reads below rather than watched streams, like the history
       // the suggestion is built from: the log sheet awaits this provider with

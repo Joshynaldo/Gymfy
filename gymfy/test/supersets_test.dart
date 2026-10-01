@@ -73,4 +73,49 @@ void main() {
       expect(restsAfter(day, ('squat', 1), _group), isTrue);
     });
   });
+
+  group('supersetStepAfter', () {
+    const _Item a = ('a', 1);
+    const _Item b = ('b', 1);
+    const _Item c = ('c', 1);
+    const _Item fly = ('fly', null);
+
+    ({bool rests, _Item? next})? step(
+      List<_Item> day,
+      _Item item, {
+      Set<String> finished = const {},
+    }) => supersetStepAfter(
+      day,
+      item,
+      _group,
+      hasSetsLeft: (i) => !finished.contains(i.$1),
+    );
+
+    test('goes straight on to the next member, without rest', () {
+      expect(step([a, b, fly], a), (rests: false, next: b));
+    });
+
+    test('rests after the last member, back to the top', () {
+      expect(step([a, b, fly], b), (rests: true, next: a));
+    });
+
+    test('skips a member that is already finished', () {
+      // A has four planned sets and B three. Round three is over, so A's
+      // fourth set has no partner to go to: it rests, and stays on A only if
+      // A itself still has sets left.
+      expect(step([a, b], a, finished: {'b'}), (rests: true, next: a));
+      expect(step([a, b], a, finished: {'a', 'b'}), (rests: true, next: null));
+      // Three members, the middle one done: A goes straight to C.
+      expect(step([a, b, c], a, finished: {'b'}), (rests: false, next: c));
+    });
+
+    test('a later member still to do comes before resting', () {
+      expect(step([a, b, c], b, finished: {'a', 'b'}), (rests: false, next: c));
+    });
+
+    test('a standalone exercise is not a superset step', () {
+      expect(step([a, b, fly], fly), isNull);
+      expect(step([a, b], ('squat', 1)), isNull);
+    });
+  });
 }

@@ -652,6 +652,60 @@ void main() {
         expect(sessions, hasLength(2));
       },
     );
+
+    test('finishes a v26 step that was killed partway through', () async {
+      // The app died on its first launch after the update, after SQLite had
+      // committed the first ALTERs but before `user_version` moved on. The
+      // next launch runs v26 again over the columns that already exist; it
+      // must finish the job, not fail on "duplicate column" forever after.
+      final upgraded = AppDatabase.forTesting(
+        NativeDatabase(
+          file,
+          setup: (raw) {
+            raw.execute(
+              'ALTER TABLE logged_sets ADD COLUMN set_type TEXT NOT NULL '
+              "DEFAULT 'normal'",
+            );
+            raw.execute('ALTER TABLE logged_sets ADD COLUMN rpe REAL');
+            raw.execute(
+              'ALTER TABLE workout_exercises ADD COLUMN superset_group INTEGER',
+            );
+          },
+        ),
+      );
+      addTearDown(upgraded.close);
+
+      final sets = await (upgraded.select(
+        upgraded.loggedSets,
+      )..orderBy([(t) => OrderingTerm(expression: t.id)])).get();
+      expect(sets.map((s) => s.setType), ['warmup', 'normal', 'normal']);
+      expect(
+        await upgraded.select(upgraded.sessionExercises).get(),
+        hasLength(2),
+      );
+      final version = await upgraded
+          .customSelect('PRAGMA user_version')
+          .getSingle();
+      expect(version.data['user_version'], 26);
+    });
+
+    test('a finished v26 step whose version was never written reruns '
+        'harmlessly', () async {
+      // The whole step ran but the app died before drift wrote the new
+      // version. Running it again must not copy the open session's plan in a
+      // second time.
+      final first = AppDatabase.forTesting(NativeDatabase(file));
+      expect(await first.select(first.sessionExercises).get(), hasLength(2));
+      await first.customStatement('PRAGMA user_version = 25');
+      await first.close();
+
+      final again = AppDatabase.forTesting(NativeDatabase(file));
+      addTearDown(again.close);
+
+      expect(await again.select(again.sessionExercises).get(), hasLength(2));
+      final sets = await again.select(again.loggedSets).get();
+      expect(sets.where((s) => s.setType == 'warmup'), hasLength(1));
+    });
   });
 
   test('a rest override is removed with the exercise it belongs to', () async {

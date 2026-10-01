@@ -50,6 +50,8 @@ Future<String?> swapSessionExercise(
   required SessionExerciseEntry entry,
   required List<SessionExerciseEntry> entries,
 }) async {
+  // Taken before any await, which the context may not outlive.
+  final messenger = ScaffoldMessenger.maybeOf(context);
   final exerciseId = await showSingleExercisePicker(
     context,
     title: 'Swap ${entry.exercise.name}',
@@ -87,9 +89,22 @@ Future<String?> swapSessionExercise(
   if (!swapped) return null;
 
   if (scope == SwapScope.plan && planned != null) {
-    await ref
+    final saved = await ref
         .read(workoutRepositoryProvider)
         .replacePlannedExercise(planned.id, exerciseId);
+    // The plan already has it elsewhere — saving would plan it twice. Today's
+    // swap stands; say why the plan didn't change rather than let it look
+    // saved.
+    if (!saved) {
+      messenger?.showSnackBar(
+        const SnackBar(
+          content: Text(
+            "That exercise is already in this day's plan, so the swap is "
+            'for this workout only.',
+          ),
+        ),
+      );
+    }
   }
   return exerciseId;
 }

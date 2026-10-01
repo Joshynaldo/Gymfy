@@ -94,7 +94,10 @@ class _FixedBests extends PersonalRecordsRepository {
   final loggedWhenAsked = <int>[];
 
   @override
-  Future<RecordBaseline> baselineFor(String exerciseId) async {
+  Future<RecordBaseline> baselineFor(
+    String exerciseId, {
+    required int sessionId,
+  }) async {
     loggedWhenAsked.add(sessions.logged.length);
     return RecordBaseline(
       weightKg: 100,

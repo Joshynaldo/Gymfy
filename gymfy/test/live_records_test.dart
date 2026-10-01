@@ -248,10 +248,42 @@ void main() {
       await log(id, 100);
       await log(id, 130, type: SetType.warmup);
       await log(id, 120, type: SetType.drop);
+      final today = await session(DateTime(2026, 9, 8));
 
-      final baseline = await records.baselineFor('bench');
+      final baseline = await records.baselineFor('bench', sessionId: today);
 
       expect(baseline.weightKg, 100);
+    });
+
+    test('the first session of an exercise sets no live record', () async {
+      // A first bench session ramping 50, 55, 60 kg. Nothing earlier to beat,
+      // so nothing is celebrated mid-workout — and the summary, which compares
+      // only with earlier sessions, agrees by listing nothing.
+      final first = await session(DateTime(2026, 9, 1));
+      final heard = <List<BrokenRecord>>[];
+      for (final weight in [50.0, 55.0, 60.0]) {
+        final before = await records.baselineFor('bench', sessionId: first);
+        heard.add(_check(before, weight: weight, reps: 8));
+        await log(first, weight);
+      }
+
+      expect(heard.expand((r) => r), isEmpty);
+      expect(await records.recordsForSession(first), isEmpty);
+    });
+
+    test('once a best exists, earlier sets today raise the bar', () async {
+      final older = await session(DateTime(2026, 9, 1));
+      await log(older, 100);
+      final today = await session(DateTime(2026, 9, 8));
+
+      final first = await records.baselineFor('bench', sessionId: today);
+      expect(_check(first, weight: 105), isNotEmpty);
+      await log(today, 105);
+
+      // A second set at the new top weight is not a second record.
+      final second = await records.baselineFor('bench', sessionId: today);
+      expect(second.weightKg, 105);
+      expect(_check(second, weight: 105), isEmpty);
     });
 
     test(

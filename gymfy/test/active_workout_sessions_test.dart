@@ -46,17 +46,22 @@ final _row = _exercise('row', 'Cable row');
 final _fly = _exercise('fly', 'Cable fly');
 final _dip = _exercise('dip', 'Dip');
 
-WorkoutExercise _slot(Exercise exercise, int position, {int? group}) =>
-    WorkoutExercise(
-      id: position + 100,
-      dayId: _dayId,
-      exerciseId: exercise.id,
-      position: position,
-      defaultSets: 3,
-      defaultReps: 8,
-      warmupSets: 0,
-      supersetGroup: group,
-    );
+WorkoutExercise _slot(
+  Exercise exercise,
+  int position, {
+  int? group,
+  int sets = 3,
+  int warmups = 0,
+}) => WorkoutExercise(
+  id: position + 100,
+  dayId: _dayId,
+  exerciseId: exercise.id,
+  position: position,
+  defaultSets: sets,
+  defaultReps: 8,
+  warmupSets: warmups,
+  supersetGroup: group,
+);
 
 /// A running-order entry; [planned] null for one added mid-session.
 SessionExerciseEntry _entry(
@@ -75,11 +80,11 @@ SessionExerciseEntry _entry(
   planned: planned,
 );
 
-LoggedSet _set(Exercise exercise) => LoggedSet(
-  id: exercise.id.hashCode,
+LoggedSet _set(Exercise exercise, {int number = 1}) => LoggedSet(
+  id: exercise.id.hashCode + number,
   sessionId: _sessionId,
   exerciseId: exercise.id,
-  setNumber: 1,
+  setNumber: number,
   weight: 60,
   reps: 8,
   setType: SetType.normal.name,
@@ -140,9 +145,16 @@ class _RecordingPlans extends WorkoutRepository {
 
   final replaced = <({int id, String exerciseId})>[];
 
+  /// Answers like the real repository does when the exercise is already
+  /// planned elsewhere in the day.
+  bool refuse = false;
+
   @override
-  Future<void> replacePlannedExercise(int id, String exerciseId) async =>
-      replaced.add((id: id, exerciseId: exerciseId));
+  Future<bool> replacePlannedExercise(int id, String exerciseId) async {
+    if (refuse) return false;
+    replaced.add((id: id, exerciseId: exerciseId));
+    return true;
+  }
 }
 
 /// No bests yet, so no set is ever a record and nothing pops up.
@@ -150,8 +162,10 @@ class _NoBests extends PersonalRecordsRepository {
   _NoBests(super.db);
 
   @override
-  Future<RecordBaseline> baselineFor(String exerciseId) async =>
-      const RecordBaseline();
+  Future<RecordBaseline> baselineFor(
+    String exerciseId, {
+    required int sessionId,
+  }) async => const RecordBaseline();
 }
 
 /// Which exercises started a rest, in order.
@@ -306,6 +320,63 @@ void main() {
       expect(onCard('Bench press'), findsOneWidget);
     });
 
+    testWidgets('a warm-up stays on its exercise and rests like any set', (
+      tester,
+    ) async {
+      // Ramping the bench up happens before the rounds start; bouncing to
+      // the row after every ramp-up set would mean tapping back each time.
+      await pump(
+        tester,
+        entries: [
+          _entry(_bench, 0, planned: _slot(_bench, 0, group: 1, warmups: 2)),
+          _entry(_row, 1, planned: _slot(_row, 1, group: 1)),
+        ],
+      );
+
+      await tester.tap(find.text('Warm-up 1 of 2'));
+      await tester.pumpAndSettle();
+      for (final key in ['4', '0']) {
+        await tester.tap(find.widgetWithText(Center, key).last);
+        await tester.pump();
+      }
+      await tester.tap(find.text('Next: reps'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(Center, '5').last);
+      await tester.pump();
+      await tester.tap(find.text('Save set'));
+      await tester.pumpAndSettle();
+
+      expect(sessions.logged, ['bench']);
+      expect(onCard('Bench press'), findsOneWidget);
+      expect(_restStarts, ['bench']);
+    });
+
+    testWidgets('an extra set whose partner is finished rests', (tester) async {
+      // Four sets of bench against three of row: after round three, the
+      // bench's fourth set has no partner left to go to, so it is the end of
+      // a round and gets its rest.
+      await pump(
+        tester,
+        entries: [
+          _entry(_bench, 0, planned: _slot(_bench, 0, group: 1, sets: 4)),
+          _entry(_row, 1, planned: _slot(_row, 1, group: 1)),
+        ],
+        sets: [
+          for (var n = 1; n <= 3; n++) ...[
+            _set(_bench, number: n),
+            _set(_row, number: n),
+          ],
+        ],
+      );
+      expect(onCard('Bench press'), findsOneWidget);
+
+      await logSet(tester);
+
+      expect(sessions.logged, ['bench']);
+      expect(_restStarts, ['bench']);
+      expect(onCard('Cable row'), findsNothing);
+    });
+
     testWidgets('a standalone exercise rests after every set', (tester) async {
       await pump(tester, entries: superset());
       await tester.tap(find.text('Cable fly'));
@@ -413,6 +484,28 @@ void main() {
 
       expect(sessions.swaps, [(id: 1, exerciseId: 'dip')]);
       expect(plans.replaced, [(id: 100, exerciseId: 'dip')]);
+    });
+
+    testWidgets('a plan that already has it keeps the swap to today, and says '
+        'so', (tester) async {
+      plans.refuse = true;
+      await pump(
+        tester,
+        entries: [_entry(_bench, 0, planned: _slot(_bench, 0))],
+      );
+
+      await tester.tap(find.byTooltip('Exercise options'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Swap exercise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Dip'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('This workout and the plan'));
+      await tester.pumpAndSettle();
+
+      expect(sessions.swaps, [(id: 1, exerciseId: 'dip')]);
+      expect(plans.replaced, isEmpty);
+      expect(find.textContaining("already in this day's plan"), findsOneWidget);
     });
 
     testWidgets('an added exercise swaps without asking about the plan', (

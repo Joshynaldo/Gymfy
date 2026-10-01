@@ -268,18 +268,48 @@ class PersonalRecordsRepository {
 
   final AppDatabase _db;
 
-  /// The bests a new set of [exerciseId] has to beat: every working set of it
-  /// logged so far, in any session — including earlier sets of the workout in
+  /// The bests a new set of [exerciseId], logged in session [sessionId], has
+  /// to beat.
+  ///
+  /// A kind of best exists only if some *other* session set it — "Never the
+  /// first time" above. Your first ever bench session ramping 50, 55, 60 kg is
+  /// not three records, and the summary, which compares only with earlier
+  /// sessions, would list none of them.
+  ///
+  /// Once it exists, the bar also includes earlier sets of the workout in
   /// progress, so a second set at the same new top weight is not a second
   /// record.
-  Future<RecordBaseline> baselineFor(String exerciseId) async {
+  Future<RecordBaseline> baselineFor(
+    String exerciseId, {
+    required int sessionId,
+  }) async {
     final query = _db.select(_db.loggedSets)
       ..where(
         (t) =>
             t.exerciseId.equals(exerciseId) &
             t.setType.isNotIn(strengthExcludedSetTypes),
       );
-    return RecordBaseline.of(await query.get());
+    final sets = await query.get();
+    final before = RecordBaseline.of(
+      sets.where((s) => s.sessionId != sessionId),
+    );
+    final today = RecordBaseline.of(
+      sets.where((s) => s.sessionId == sessionId),
+    );
+
+    T? raised<T extends num>(T? earlier, T? sameSession) {
+      if (earlier == null) return null;
+      if (sameSession == null || sameSession <= earlier) return earlier;
+      return sameSession;
+    }
+
+    return RecordBaseline(
+      weightKg: raised(before.weightKg, today.weightKg),
+      oneRmKg: raised(before.oneRmKg, today.oneRmKg),
+      bodyweightReps: raised(before.bodyweightReps, today.bodyweightReps),
+      holdSeconds: raised(before.holdSeconds, today.holdSeconds),
+      volumeKg: before.volumeKg,
+    );
   }
 
   /// The records session [sessionId] set.
