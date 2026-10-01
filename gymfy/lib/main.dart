@@ -5,6 +5,7 @@ import 'app/router/app_router.dart';
 import 'app/theme/accent_color.dart';
 import 'app/theme/app_theme.dart';
 import 'app/theme/hyper_backdrop.dart';
+import 'features/backup/data/auto_backup.dart';
 import 'features/exercises/data/exercise_repository.dart';
 import 'features/onboarding/data/onboarding_repository.dart';
 import 'features/onboarding/screens/onboarding_screen.dart';
@@ -49,6 +50,9 @@ class GymfyApp extends ConsumerWidget {
     ref.watch(wearSyncProvider);
     // The reverse channel: +30s and skip, sent from the wrist.
     ref.watch(wearCommandsProvider);
+    // Automatic backups. Here for the same reason: the moments they run on —
+    // opening the app, finishing a workout — belong to other screens.
+    ref.watch(autoBackupWatcherProvider);
 
     // Onboarding is gated here rather than by a router redirect. A redirect has
     // to answer synchronously, but "has onboarding finished" comes from the

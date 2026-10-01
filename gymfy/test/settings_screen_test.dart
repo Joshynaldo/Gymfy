@@ -102,6 +102,12 @@ void main() {
       expect(find.text('Export data'), findsOneWidget);
     });
 
+    testWidgets('backup & restore is reachable from here', (tester) async {
+      await pump(tester);
+
+      expect(find.text('Backup & restore'), findsOneWidget);
+    });
+
     testWidgets('progressive overload is configured here, not per exercise', (
       tester,
     ) async {
