@@ -59,9 +59,11 @@ class ExportRepository {
             exerciseName: exercise.name,
             muscleIds: exercise.muscleIds,
             setNumber: set.setNumber,
-            isWarmup: set.isWarmup,
+            setType: set.type,
             weightKg: set.weight,
             reps: set.reps,
+            rpe: set.rpe,
+            rir: set.rir,
           );
         }(),
     ];

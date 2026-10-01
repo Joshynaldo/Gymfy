@@ -9,6 +9,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/features/import/data/import_format.dart';
 import 'package:gymfy/features/import/data/import_plan.dart';
+import 'package:gymfy/shared/models/set_type.dart';
 
 /// A session, written the short way so a test can say what it is about.
 ImportedSession _session(
@@ -27,7 +28,7 @@ ImportedSession _session(
           exerciseName: exercise,
           weightKg: 60,
           reps: reps,
-          isWarmup: warmups.contains(exercise),
+          setType: warmups.contains(exercise) ? SetType.warmup : SetType.normal,
           seconds: null,
         ),
     ],
@@ -255,7 +256,6 @@ void main() {
               exerciseName: 'Plank',
               weightKg: 0,
               reps: 0,
-              isWarmup: false,
               seconds: 45,
             ),
           ],

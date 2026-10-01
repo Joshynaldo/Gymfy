@@ -10,22 +10,30 @@ import '../../../app/theme/accent_color.dart';
 import '../../../app/theme/glass.dart';
 import '../../../app/theme/motion.dart';
 import '../../../shared/database/app_database.dart';
+import '../../../shared/models/set_type.dart';
 import '../../../shared/utils/units.dart';
 import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_segmented.dart';
 import '../../../shared/widgets/glass_sheet.dart';
 import '../../../shared/widgets/pressable.dart';
 import '../../overload/data/overload_math.dart';
 import '../../plates/widgets/plate_stacker.dart';
+import '../data/logging_preferences.dart';
 
 /// What a finished trip through the sheet produces.
 ///
 /// [seconds] is non-null only for a set held rather than counted, and then
 /// [reps] is zero. A set is one or the other, never both.
+///
+/// At most one of [rpe] and [rir] is set — whichever scale the user rates in.
+/// The other is never derived and stored alongside it (see FEATURE_PLAN.md).
 typedef LoggedSetInput = ({
   double weight,
   int reps,
-  bool isWarmup,
+  SetType setType,
   int? seconds,
+  double? rpe,
+  int? rir,
 });
 
 /// Asks for the weight and reps of one set.
@@ -39,29 +47,35 @@ typedef LoggedSetInput = ({
 ///
 /// Weights are spoken in [unit] throughout and returned in kilograms, so the
 /// screen behind never has to think about which unit is on.
+///
+/// [setType] is where the sheet starts; the user can change it inside.
+/// [effortMode] is passed in rather than read here, so the sheet stays a pure
+/// input and the caller decides what the settings say.
 Future<LoggedSetInput?> showLogSetSheet({
   required BuildContext context,
   required Exercise exercise,
-  required bool isWarmup,
+  SetType setType = SetType.normal,
   required double initialWeight,
   required int initialReps,
   required WeightUnit unit,
   OverloadSuggestion? suggestion,
   String? phaseLabel,
   LoggedSet? repeatable,
+  EffortRatingMode effortMode = EffortRatingMode.off,
 }) {
   return showGlassSheet<LoggedSetInput>(
     context: context,
     handle: true,
     child: _LogSetSheet(
       exercise: exercise,
-      isWarmup: isWarmup,
+      setType: setType,
       initialWeight: initialWeight,
       initialReps: initialReps,
       unit: unit,
       suggestion: suggestion,
       phaseLabel: phaseLabel,
       repeatable: repeatable,
+      effortMode: effortMode,
     ),
   );
 }
@@ -85,17 +99,21 @@ enum _TimeField { minutes, seconds }
 class _LogSetSheet extends ConsumerStatefulWidget {
   const _LogSetSheet({
     required this.exercise,
-    required this.isWarmup,
+    required this.setType,
     required this.initialWeight,
     required this.initialReps,
     required this.unit,
     required this.suggestion,
     required this.phaseLabel,
     required this.repeatable,
+    required this.effortMode,
   });
 
   final Exercise exercise;
-  final bool isWarmup;
+  final SetType setType;
+
+  /// Whether to ask how hard the set was, and on which scale.
+  final EffortRatingMode effortMode;
 
   /// In kilograms, as stored.
   final double initialWeight;
@@ -119,7 +137,24 @@ class _LogSetSheet extends ConsumerStatefulWidget {
 
 class _LogSetSheetState extends ConsumerState<_LogSetSheet> {
   _Step _step = _Step.weight;
-  late bool _warmup = widget.isWarmup;
+  late SetType _type = widget.setType;
+
+  /// The effort rating, if one was picked. Only the one matching the mode is
+  /// ever set, and both stay null until a chip is tapped — an unrated set is
+  /// the default, not a missing answer.
+  double? _rpe;
+  int? _rir;
+
+  bool get _warmup => _type == SetType.warmup;
+
+  /// Ratings are for sets that test you. A warm-up is easy on purpose, and
+  /// rating one would only teach the overload maths something untrue.
+  bool get _asksEffort => widget.effortMode != EffortRatingMode.off && !_warmup;
+
+  double? get _rpeToSave =>
+      _asksEffort && widget.effortMode == EffortRatingMode.rpe ? _rpe : null;
+  int? get _rirToSave =>
+      _asksEffort && widget.effortMode == EffortRatingMode.rir ? _rir : null;
 
   /// Both values are held as the text on the display rather than as numbers.
   ///
@@ -302,8 +337,10 @@ class _LogSetSheetState extends ConsumerState<_LogSetSheet> {
       weight: weightToKilograms(_weightValue, widget.unit),
       // One or the other, never both.
       reps: timed ? 0 : _repsValue,
-      isWarmup: _warmup,
+      setType: _type,
       seconds: timed ? held : null,
+      rpe: _rpeToSave,
+      rir: _rirToSave,
     ));
   }
 
@@ -312,8 +349,12 @@ class _LogSetSheetState extends ConsumerState<_LogSetSheet> {
     Navigator.of(context).pop((
       weight: last.weight,
       reps: last.reps,
-      isWarmup: _warmup,
+      setType: _type,
       seconds: last.seconds,
+      // Whatever was picked on this trip, not the last set's rating: "the
+      // same again" is about the load, and how it felt is this set's answer.
+      rpe: _rpeToSave,
+      rir: _rirToSave,
     ));
   }
 
@@ -346,9 +387,13 @@ class _LogSetSheetState extends ConsumerState<_LogSetSheet> {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        _warmup
-                            ? 'Warm-up · ramping up'
-                            : (widget.phaseLabel ?? 'Working set'),
+                        switch (_type) {
+                          SetType.warmup => 'Warm-up · ramping up',
+                          SetType.drop => 'Drop set · lighter, straight after',
+                          SetType.failure =>
+                            '${widget.phaseLabel ?? 'Working set'} · to failure',
+                          SetType.normal => widget.phaseLabel ?? 'Working set',
+                        },
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -356,21 +401,26 @@ class _LogSetSheetState extends ConsumerState<_LogSetSheet> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                // A toggle here rather than two different buttons on the card
-                // behind: whether a set was a ramp-up is something you often
-                // only decide once the bar is in your hands.
-                _WarmupToggle(
-                  on: _warmup,
-                  onChanged: (value) => setState(() => _warmup = value),
-                ),
               ],
             ),
+            const SizedBox(height: 12),
+            // In the sheet rather than as four buttons on the card behind:
+            // what kind of set this was is something you often only decide
+            // once the bar is in your hands — the ramp-up that felt light and
+            // became your first working set, the last set you took to failure.
+            AppSegmented<SetType>(
+              segments: [
+                for (final type in SetType.values)
+                  (value: type, label: type.label, leading: null),
+              ],
+              selected: _type,
+              onChanged: (type) => setState(() => _type = type),
+            ),
 
-            // Not for warm-ups: the suggestion is a target for the working
-            // sets, and putting it on the bar for a ramp-up makes the ramp-up
-            // pointless.
-            if (widget.suggestion != null && !_warmup) ...[
+            // Only for sets that count: the suggestion is a target for the
+            // working sets, and putting it on the bar for a ramp-up (or a
+            // stripped-down drop set) makes that set pointless.
+            if (widget.suggestion != null && _type.countsTowardStrength) ...[
               const SizedBox(height: 14),
               _SuggestionNote(
                 suggestion: widget.suggestion!,
@@ -467,6 +517,20 @@ class _LogSetSheetState extends ConsumerState<_LogSetSheet> {
                   ),
                   label: Text(_plates ? 'Type a weight' : 'Stack plates'),
                 ),
+              ),
+            ],
+
+            // On the second step only, beside the button that saves. Asking
+            // before the reps are in would be asking how hard a set was before
+            // it is over.
+            if (_asksEffort && !onWeight) ...[
+              const SizedBox(height: 14),
+              _EffortPicker(
+                mode: widget.effortMode,
+                rpe: _rpe,
+                rir: _rir,
+                onRpe: (value) => setState(() => _rpe = value),
+                onRir: (value) => setState(() => _rir = value),
               ),
             ],
 
@@ -821,42 +885,138 @@ class _Key extends StatelessWidget {
   }
 }
 
-/// The chip that marks this set as a ramp-up.
-class _WarmupToggle extends StatelessWidget {
-  const _WarmupToggle({required this.on, required this.onChanged});
+/// How hard the set was, on whichever scale the user picked in Settings.
+///
+/// A row of chips rather than another keypad step: rating is optional, so it
+/// must cost nothing when skipped — no extra tap, no step to get past. Tapping
+/// the picked chip again clears it, because "I'm not sure" is a fair answer
+/// and the only honest way to record it is to record nothing.
+class _EffortPicker extends StatelessWidget {
+  const _EffortPicker({
+    required this.mode,
+    required this.rpe,
+    required this.rir,
+    required this.onRpe,
+    required this.onRir,
+  });
 
-  final bool on;
-  final ValueChanged<bool> onChanged;
+  final EffortRatingMode mode;
+  final double? rpe;
+  final int? rir;
+  final ValueChanged<double?> onRpe;
+  final ValueChanged<int?> onRir;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final radius = BorderRadius.circular(13);
+    final isRpe = mode == EffortRatingMode.rpe;
+
+    final chips = isRpe
+        ? [
+            for (final value in rpeOptions)
+              _EffortChip(
+                key: ValueKey('effort-${_rpeLabel(value)}'),
+                label: _rpeLabel(value),
+                selected: rpe == value,
+                onTap: () => onRpe(rpe == value ? null : value),
+              ),
+          ]
+        : [
+            for (final value in rirOptions)
+              _EffortChip(
+                key: ValueKey('effort-$value'),
+                // The last option is a floor, not a count.
+                label: value == rirOptions.last ? '$value+' : '$value',
+                selected: rir == value,
+                onTap: () => onRir(rir == value ? null : value),
+              ),
+          ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          isRpe ? 'HOW HARD · RPE' : 'REPS LEFT · RIR',
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 1.2,
+          ),
+        ),
+        const SizedBox(height: 8),
+        // One row of equal cells, neither wrapping nor scrolling: two rows
+        // would push the save button down on exactly the step where it is
+        // reached for, and a scrolling row hides RPE 10 — the one rating that
+        // changes what overload suggests — off the edge of the sheet.
+        Row(
+          children: [
+            for (final (index, chip) in chips.indexed) ...[
+              if (index > 0) const SizedBox(width: 4),
+              Expanded(child: chip),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  static String _rpeLabel(double value) =>
+      value == value.roundToDouble() ? '${value.round()}' : '$value';
+}
+
+/// One rating in the [_EffortPicker] row: a quiet pane that brightens when
+/// picked, like `AppChip`, but sized to share a row nine ways.
+class _EffortChip extends StatelessWidget {
+  const _EffortChip({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final radius = BorderRadius.circular(12);
 
     return Pressable(
       borderRadius: radius,
-      onTap: () => onChanged(!on),
       splash: false,
-      child: AnimatedContainer(
-        duration: motionOf(context, AppDurations.quick),
-        curve: AppCurves.settle,
-        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.onSurface.withValues(
-            alpha: on ? 0.16 : 0.05,
-          ),
-          borderRadius: radius,
-          border: Border.all(
-            color: theme.colorScheme.onSurface.withValues(
-              alpha: on ? 0.24 : 0.10,
+      haptic: false,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
+      child: GlassSurface(
+        borderRadius: radius,
+        tier: GlassTier.quiet,
+        selected: selected,
+        fallbackColor: selected
+            ? theme.colorScheme.onSurface.withValues(alpha: 0.18)
+            : theme.colorScheme.surfaceContainerHighest,
+        child: SizedBox(
+          height: 44,
+          // Align rather than Center, so a test finding the keypad's keys by
+          // their Center never lands on a rating with the same digit.
+          child: Align(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                maxLines: 1,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  fontSize: 13,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  color: selected
+                      ? theme.colorScheme.onSurface
+                      : theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
             ),
-          ),
-        ),
-        child: Text(
-          'Warm-up',
-          style: theme.textTheme.labelLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: on ? null : theme.colorScheme.onSurfaceVariant,
           ),
         ),
       ),
@@ -889,6 +1049,11 @@ class _SuggestionNote extends StatelessWidget {
         Icons.trending_down,
         'Several increases in a row. A lighter week at '
             '${formatWeightUnit(suggestion.weight, unit)} is suggested.',
+      ),
+      OverloadReason.atLimit => (
+        Icons.pause,
+        'You hit every set, but the top set was a limit effort — staying at '
+            '${formatWeightUnit(suggestion.weight, unit)}.',
       ),
       _ => (
         Icons.remove,

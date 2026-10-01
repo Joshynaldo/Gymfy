@@ -17,7 +17,6 @@ import 'package:drift/drift.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../shared/database/app_database.dart';
-import '../../../shared/models/set_type.dart';
 import '../../exercises/data/exercise_repository.dart';
 import '../../workout/data/workout_repository.dart';
 import 'import_format.dart';
@@ -317,10 +316,9 @@ class ImportRepository {
                   setNumber: number,
                   weight: Value(set.weightKg),
                   reps: Value(set.reps),
-                  setType: Value(
-                    (set.isWarmup ? SetType.warmup : SetType.normal).name,
-                  ),
+                  setType: Value(set.setType.name),
                   seconds: Value(set.seconds),
+                  rpe: Value(set.rpe),
                 ),
               );
           setsAdded++;

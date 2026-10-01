@@ -163,7 +163,7 @@ final class WearCommandsProvider extends $NotifierProvider<WearCommands, void> {
   }
 }
 
-String _$wearCommandsHash() => r'569dc04c3121a97aa680adfeee17783a544cc818';
+String _$wearCommandsHash() => r'3cd54ee77973436808eb0c016f3b0688fd354f2e';
 
 /// Acts on the commands the watch sends back.
 ///

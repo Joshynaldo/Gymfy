@@ -212,6 +212,8 @@ class WearCommands extends _$WearCommands {
           setNumber: working.length + 1,
           weight: last.weight,
           reps: last.reps,
+          // The same kind of set again: another set to failure is one too.
+          setType: last.type,
         );
 
     // And start the rest, because logging a set is exactly when rest starts.
@@ -234,13 +236,14 @@ class WearCommands extends _$WearCommands {
 
 /// The most recent working set in [sets], or null if there is none.
 ///
-/// Warm-ups are skipped. "Do that again" after a warm-up means the working
-/// set you are building up to, not the empty-bar one — and a warm-up logged
-/// as a working set from the wrist would quietly poison progressive
-/// overload, which reads the top set of each session.
+/// Warm-ups and drop sets are skipped ([isWorkingSet]). "Do that again" after
+/// a warm-up means the working set you are building up to, not the empty-bar
+/// one — and a warm-up or a stripped-down drop set logged as a working set
+/// from the wrist would quietly poison progressive overload, which reads the
+/// top set of each session.
 LoggedSet? lastWorkingSet(List<LoggedSet> sets) {
   for (final set in sets.reversed) {
-    if (!set.isWarmup) return set;
+    if (isWorkingSet(set)) return set;
   }
   return null;
 }

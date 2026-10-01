@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,11 +9,13 @@ import '../../../app/theme/accent_color.dart';
 import '../../../app/theme/glass.dart';
 import '../../../app/theme/motion.dart';
 import '../../../shared/data/notification_service.dart';
+import '../../../shared/data/settings_repository.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/app_picker.dart';
 import '../../../shared/widgets/fade_slide_in.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
@@ -19,14 +24,19 @@ import '../../exercises/screens/exercise_detail_screen.dart';
 import '../../exercises/widgets/exercise_note.dart';
 import '../../overload/data/overload_math.dart';
 import '../../overload/data/overload_repository.dart';
+import '../../plates/data/plate_math.dart';
 import '../../plates/screens/plate_calculator_screen.dart';
 import '../../settings/data/notification_preferences.dart';
+import '../data/logging_preferences.dart';
+import '../data/personal_records.dart';
 import '../data/rest_timer_controller.dart';
 import '../data/rest_timer_repository.dart';
 import '../data/session_repository.dart';
 import '../data/workout_repository.dart';
 import '../widgets/log_set_sheet.dart';
+import '../widgets/record_celebration.dart';
 import '../widgets/rest_timer_bar.dart';
+import '../widgets/warmup_calculator_sheet.dart';
 
 /// The live workout screen: log sets exercise by exercise while you train.
 ///
@@ -96,6 +106,16 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
   /// running session, and an index would then point at a different movement.
   String? _picked;
 
+  /// The record being celebrated, if a set just beat one. See [_celebrate].
+  ({String exerciseName, List<BrokenRecord> records})? _celebration;
+  Timer? _celebrationTimer;
+
+  @override
+  void dispose() {
+    _celebrationTimer?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final session = widget.session;
@@ -160,8 +180,9 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
                         planned: current,
                         loggedSets:
                             setsByExercise[current.exercise.id] ?? const [],
-                        onLog: (isWarmup) =>
-                            _log(context, current, isWarmup: isWarmup),
+                        onLog: (type) => _log(context, current, type: type),
+                        onWarmupCalculator: () =>
+                            _openWarmupCalculator(context, current),
                       ),
                     ..._upNext(planned, current, setsByExercise),
                   ],
@@ -175,9 +196,46 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
                   right: 14,
                   child: const RestTimerBar(),
                 ),
+                if (_celebration case final celebration?)
+                  Positioned(
+                    left: 14,
+                    right: 14,
+                    bottom: barInsets(context).bottom + 16,
+                    child: RecordCelebration(
+                      // Keyed by the records, so a second record straight
+                      // after the first springs in again instead of silently
+                      // swapping its text.
+                      key: ObjectKey(celebration),
+                      exerciseName: celebration.exerciseName,
+                      records: celebration.records,
+                      onDismiss: _dismissCelebration,
+                    ),
+                  ),
               ],
             ),
     );
+  }
+
+  /// Puts a new record on screen for a few seconds, with a heavy buzz.
+  ///
+  /// The haptic is the part that reaches you: the phone is usually propped on
+  /// a bench while you rack the bar, and a pane nobody looks at celebrates
+  /// nothing. Haptics are not motion, so they fire with reduced motion on too;
+  /// the pane itself honours the setting (see [RecordCelebration]).
+  void _celebrate(String exerciseName, List<BrokenRecord> records) {
+    HapticFeedback.heavyImpact();
+    _celebrationTimer?.cancel();
+    setState(
+      () => _celebration = (exerciseName: exerciseName, records: records),
+    );
+    _celebrationTimer = Timer(const Duration(seconds: 5), _dismissCelebration);
+  }
+
+  void _dismissCelebration() {
+    _celebrationTimer?.cancel();
+    if (mounted && _celebration != null) {
+      setState(() => _celebration = null);
+    }
   }
 
   /// The exercise the card is showing.
@@ -230,8 +288,9 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
   Future<void> _log(
     BuildContext context,
     PlannedExercise planned, {
-    required bool isWarmup,
+    required SetType type,
   }) async {
+    final isWarmup = type.isWarmupPhase;
     // Prefill from the last set logged *in this phase* — you are mid-ramp-up or
     // mid-working-set and almost certainly repeating that weight. Crossing the
     // divide is the one place it must not carry over: after three warm-ups,
@@ -266,12 +325,15 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
               exercise: planned.exercise,
             )).future,
           );
+    // Awaited for the same reason: read cold, the setting would answer "off"
+    // until its row loaded, and the first set would go unrated.
+    final effortMode = await _readSetting(effortRatingModeProvider);
     if (!context.mounted) return;
 
     final result = await showLogSetSheet(
       context: context,
       exercise: planned.exercise,
-      isWarmup: isWarmup,
+      setType: type,
       initialWeight: last?.weight ?? suggestion?.weight ?? 0,
       initialReps: last?.reps ?? planned.entry.defaultReps,
       unit: ref.read(weightUnitProvider),
@@ -280,20 +342,28 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
           ? 'Warm-up ${samePhase.length + 1}'
           : 'Set ${samePhase.length + 1} · working set',
       repeatable: last,
+      effortMode: effortMode,
     );
     if (result == null) return;
 
-    // The sheet owns the warm-up decision from the moment it opens — you often
-    // only know whether that was a ramp-up once the bar is in your hands — so
-    // the set is numbered against whichever phase comes back, not the one the
-    // button asked for.
+    // The sheet owns the set-type decision from the moment it opens — you
+    // often only know whether that was a ramp-up once the bar is in your
+    // hands — so the set is numbered against whichever phase comes back, not
+    // the one the button asked for.
     final phase = logged
         .where(
           (s) =>
               s.exerciseId == planned.exercise.id &&
-              s.isWarmup == result.isWarmup,
+              s.isWarmup == result.setType.isWarmupPhase,
         )
         .length;
+
+    // The bests to beat, read *before* the set is written so the new set is
+    // never measured against itself.
+    final records = ref.read(personalRecordsRepositoryProvider);
+    final before = result.setType.countsTowardStrength
+        ? await records.baselineFor(planned.exercise.id)
+        : null;
 
     await ref
         .read(sessionRepositoryProvider)
@@ -305,9 +375,24 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
           setNumber: phase + 1,
           weight: result.weight,
           reps: result.reps,
-          setType: result.isWarmup ? SetType.warmup : SetType.normal,
+          setType: result.setType,
           seconds: result.seconds,
+          rpe: result.rpe,
+          rir: result.rir,
         );
+
+    if (before != null) {
+      final broken = recordsSetBy(
+        type: result.setType,
+        weightKg: result.weight,
+        reps: result.reps,
+        seconds: result.seconds,
+        before: before,
+      );
+      if (broken.isNotEmpty && mounted) {
+        _celebrate(planned.exercise.name, broken);
+      }
+    }
 
     // Logging a set is exactly when rest starts, so the timer needs no button
     // of its own — one less thing to do between sets.
@@ -325,6 +410,100 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
           exerciseName: exercise.name,
           seconds: seconds,
         );
+  }
+
+  /// Opens the warm-up calculator and logs the ramp sets it returns.
+  ///
+  /// The working weight it starts from is the best guess available, in order:
+  /// a working set already logged today, what overload suggests, the top
+  /// weight of the last session, or nothing (the sheet then asks for one).
+  Future<void> _openWarmupCalculator(
+    BuildContext context,
+    PlannedExercise planned,
+  ) async {
+    final exercise = planned.exercise;
+    final logged = ref.read(sessionSetsProvider(widget.session.id)).value ?? [];
+    final todays = logged
+        .where((s) => s.exerciseId == exercise.id && isWorkingSet(s))
+        .toList();
+
+    double working = todays.isEmpty ? 0 : topWeight(todays) ?? 0;
+    if (working <= 0) {
+      final suggestion = await ref.read(
+        overloadSuggestionProvider((
+          entry: planned.entry,
+          exercise: exercise,
+        )).future,
+      );
+      working = suggestion?.weight ?? 0;
+    }
+    if (working <= 0) {
+      final history = await ref
+          .read(overloadRepositoryProvider)
+          .recentSessions(exercise.id, limit: 1);
+      working = history.isEmpty ? 0 : topWeight(history.first) ?? 0;
+    }
+
+    // The ramp, the plates and the bar are all settings this screen may never
+    // have watched. Wait for their rows, so a customised inventory is not
+    // quietly replaced by the default one for the first warm-up of the day.
+    final unit = ref.read(weightUnitProvider);
+    final kg = unit == WeightUnit.kg;
+    final ramp = await _readSetting(warmupRampProvider);
+    await _readSetting(
+      rawSettingProvider(kg ? platesKgSetting : platesLbsSetting),
+    );
+    await _readSetting(rawSettingProvider(kg ? barKgSetting : barLbsSetting));
+    if (!context.mounted) return;
+
+    final steps = await showWarmupCalculator(
+      context: context,
+      exercise: exercise,
+      workingKg: working,
+      unit: unit,
+      ramp: ramp,
+      plates: ref.read(availablePlatesProvider),
+      bar: barForExercise(
+        exercise.barWeightKg,
+        ref.read(barWeightProvider),
+        unit,
+      ),
+    );
+    if (steps == null || steps.isEmpty) return;
+
+    // Numbered on from whatever warm-ups are already logged, in the warm-up
+    // phase, so the working sets keep reading 1, 2, 3.
+    final current =
+        ref.read(sessionSetsProvider(widget.session.id)).value ?? logged;
+    var number = current
+        .where((s) => s.exerciseId == exercise.id && s.isWarmup)
+        .length;
+    final sessions = ref.read(sessionRepositoryProvider);
+    for (final step in steps) {
+      await sessions.logSet(
+        sessionId: widget.session.id,
+        exerciseId: exercise.id,
+        setNumber: ++number,
+        weight: step.weightKg,
+        reps: step.reps,
+        setType: SetType.warmup,
+      );
+    }
+  }
+
+  /// The first value of a settings stream, listening while it waits.
+  ///
+  /// A bare `ref.read(provider.future)` is not enough for a setting nothing
+  /// on screen watches: a provider with no listener is paused, so its stream
+  /// never delivers and the read never completes. Listening for the length of
+  /// the wait keeps it running without keeping it alive afterwards.
+  Future<T> _readSetting<T>(StreamProvider<T> provider) async {
+    final subscription = ref.listenManual(provider, (_, _) {});
+    try {
+      return await ref.read(provider.future);
+    } finally {
+      subscription.close();
+    }
   }
 
   Future<void> _finish(BuildContext context) async {
@@ -347,14 +526,18 @@ class _CurrentExerciseCard extends ConsumerWidget {
     required this.planned,
     required this.loggedSets,
     required this.onLog,
+    required this.onWarmupCalculator,
   });
 
   final PlannedExercise planned;
   final List<LoggedSet> loggedSets;
 
-  /// Takes whether the ramp-up button was the one pressed. The sheet can still
-  /// change its mind afterwards.
-  final void Function(bool isWarmup) onLog;
+  /// Takes the set type the pressed button starts the sheet on. The sheet can
+  /// still change its mind afterwards.
+  final void Function(SetType type) onLog;
+
+  /// Opens the ramp calculator for this exercise.
+  final VoidCallback onWarmupCalculator;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -425,9 +608,18 @@ class _CurrentExerciseCard extends ConsumerWidget {
               _WarmupButton(
                 planned: planned,
                 loggedSets: loggedSets,
-                onPressed: () => onLog(true),
+                onPressed: () => onLog(SetType.warmup),
               ),
-              const SizedBox(width: 10),
+              // Next to the warm-up button it fills in for. Not offered on a
+              // hold: a ramp is weight climbing towards a working weight, and
+              // a plank has neither.
+              if (!exercise.isTimed)
+                IconButton(
+                  icon: const Icon(Icons.stairs_outlined),
+                  tooltip: 'Warm-up calculator',
+                  onPressed: onWarmupCalculator,
+                ),
+              const SizedBox(width: 6),
               Expanded(
                 child: AppButton(
                   label: 'Log set ${working + 1}',
@@ -437,7 +629,7 @@ class _CurrentExerciseCard extends ConsumerWidget {
                   // from across a gym; a second accent surface here would make
                   // you check which of the two was shouting.
                   kind: AppButtonKind.secondary,
-                  onPressed: () => onLog(false),
+                  onPressed: () => onLog(SetType.normal),
                 ),
               ),
             ],
@@ -651,6 +843,10 @@ class _SuggestionLine extends ConsumerWidget {
         Icons.trending_down,
         'Several increases in a row — a lighter $weight is suggested',
       ),
+      OverloadReason.atLimit => (
+        Icons.pause,
+        'Top set was a limit effort last time — holding at $weight',
+      ),
       _ => (Icons.remove, 'Same $weight as last time'),
     };
 
@@ -725,11 +921,13 @@ class _LoggedSetRow extends ConsumerWidget {
     final theme = Theme.of(context);
     final unit = ref.watch(weightUnitProvider);
 
-    // Warm-ups are dimmed rather than hidden or restyled: they're still your
-    // work, just not the part the numbers are about. Muted text plus the badge
-    // makes the divide readable at arm's length without a heavy separator
-    // cutting the card in two.
+    // Warm-ups and drop sets are dimmed rather than hidden or restyled:
+    // they're still your work, just not the part the strength numbers are
+    // about. Muted text plus the badge makes the divide readable at arm's
+    // length without a heavy separator cutting the card in two.
     final muted = theme.colorScheme.onSurfaceVariant;
+    final dimmed = !isWorkingSet(set);
+    final rating = _ratingLabel(set);
 
     return SizedBox(
       height: 36,
@@ -741,7 +939,7 @@ class _LoggedSetRow extends ConsumerWidget {
               '${set.setNumber}',
               style: theme.textTheme.labelLarge?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: set.isWarmup ? muted : accent,
+                color: dimmed ? muted : accent,
               ),
             ),
           ),
@@ -753,32 +951,53 @@ class _LoggedSetRow extends ConsumerWidget {
                 seconds: set.seconds,
                 unit: unit,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodyLarge?.copyWith(
-                color: set.isWarmup ? muted : null,
+                color: dimmed ? muted : null,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
           ),
-          if (set.isWarmup) ...[
-            _WarmupBadge(colour: muted),
+          if (rating != null) ...[
+            Text(
+              rating,
+              style: theme.textTheme.labelSmall?.copyWith(color: muted),
+            ),
+            const SizedBox(width: 6),
+          ],
+          if (_badgeFor(set.type) case final badge?) ...[
+            _SetTypeBadge(letter: badge, colour: muted),
             const SizedBox(width: 4),
           ],
+          // Re-tagging is the common repair: you ramp up, the bar feels
+          // light, and what you called a warm-up was really your first
+          // working set — or the last set went to failure and you only
+          // decided so afterwards. Without this the only fix is deleting the
+          // row and logging it again from memory.
+          //
+          // The shared option sheet rather than a popup menu, whose rows are
+          // too tight to hit with a thumb mid-workout.
           IconButton(
-            // Re-tagging is the common repair: you ramp up, the bar feels
-            // light, and what you called a warm-up was really your first
-            // working set. Without this the only fix is deleting the row and
-            // logging it again from memory.
-            icon: Icon(
-              set.isWarmup ? Icons.arrow_upward : Icons.local_fire_department,
-            ),
+            icon: const Icon(Icons.tune),
             iconSize: 18,
             visualDensity: VisualDensity.compact,
-            tooltip: set.isWarmup
-                ? 'Make this a working set'
-                : 'Make this a warm-up',
-            onPressed: () => ref
-                .read(sessionRepositoryProvider)
-                .setWarmup(id: set.id, isWarmup: !set.isWarmup),
+            tooltip: 'Change set type',
+            onPressed: () async {
+              final type = await showOptionPicker<SetType>(
+                context: context,
+                title: 'Set type',
+                options: [
+                  for (final type in SetType.values)
+                    (value: type, label: type.label, subtitle: null),
+                ],
+                selected: set.type,
+              );
+              if (type == null || type == set.type) return;
+              await ref
+                  .read(sessionRepositoryProvider)
+                  .setSetType(id: set.id, type: type);
+            },
           ),
           IconButton(
             icon: const Icon(Icons.close),
@@ -794,10 +1013,31 @@ class _LoggedSetRow extends ConsumerWidget {
   }
 }
 
-/// The small "W" that marks a ramp-up row.
-class _WarmupBadge extends StatelessWidget {
-  const _WarmupBadge({required this.colour});
+/// The letter a row of [type] is badged with, or null for an ordinary
+/// working set — the default needs no label, and a badge on every row would
+/// stop the unusual ones standing out.
+String? _badgeFor(SetType type) => switch (type) {
+  SetType.warmup => 'W',
+  SetType.drop => 'D',
+  SetType.failure => 'F',
+  SetType.normal => null,
+};
 
+/// "RPE 8" or "RIR 2", whichever the set was rated in, or null when unrated.
+String? _ratingLabel(LoggedSet set) {
+  final rpe = set.rpe;
+  if (rpe != null) {
+    return 'RPE ${rpe == rpe.roundToDouble() ? rpe.round() : rpe}';
+  }
+  if (set.rir != null) return 'RIR ${set.rir}';
+  return null;
+}
+
+/// The small letter that marks a warm-up, drop or failure row.
+class _SetTypeBadge extends StatelessWidget {
+  const _SetTypeBadge({required this.letter, required this.colour});
+
+  final String letter;
   final Color colour;
 
   @override
@@ -809,7 +1049,7 @@ class _WarmupBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
-        'W',
+        letter,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(color: colour),
       ),
     );

@@ -11,6 +11,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/features/data_export/data/export_format.dart';
 import 'package:gymfy/features/data_export/data/export_repository.dart';
+import 'package:gymfy/features/import/data/import_format.dart';
 import 'package:gymfy/features/workout/data/session_repository.dart';
 import 'package:gymfy/features/workout/data/workout_repository.dart';
 import 'package:gymfy/shared/database/app_database.dart';
@@ -20,7 +21,9 @@ ExportSet set({
   String exercise = 'Barbell Bench Press',
   List<String> muscles = const ['chest'],
   int setNumber = 1,
-  bool isWarmup = false,
+  SetType setType = SetType.normal,
+  double? rpe,
+  int? rir,
   double weightKg = 100,
   int reps = 5,
   DateTime? at,
@@ -31,7 +34,9 @@ ExportSet set({
     exerciseName: exercise,
     muscleIds: muscles,
     setNumber: setNumber,
-    isWarmup: isWarmup,
+    setType: setType,
+    rpe: rpe,
+    rir: rir,
     weightKg: weightKg,
     reps: reps,
   );
@@ -81,12 +86,42 @@ void main() {
     });
 
     test('marks warm-ups so they can be filtered out later', () {
-      final csv = toCsv([set(isWarmup: true), set()]);
+      final csv = toCsv([set(setType: SetType.warmup), set()]);
 
       // Included, not dropped: this is your data, and an export deciding what
       // you may see is an export you cannot trust.
       expect(rowsOf(csv)[0], contains(',warmup,'));
       expect(rowsOf(csv)[1], contains(',working,'));
+    });
+
+    test('names drop and failure sets too', () {
+      final csv = toCsv([
+        set(setType: SetType.drop),
+        set(setType: SetType.failure),
+      ]);
+
+      expect(rowsOf(csv)[0], contains(',drop,'));
+      expect(rowsOf(csv)[1], contains(',failure,'));
+    });
+
+    test('the type words read back as the same types on import', () {
+      // Not an importer for this file — but if one ever reads it, or the
+      // user hands the CSV to another app, the words mean what they say.
+      for (final type in SetType.values) {
+        expect(parseSetTypeCell(exportSetType(type)), type, reason: type.name);
+      }
+    });
+
+    test('carries the effort rating, blank when unrated', () {
+      final csv = toCsv([set(rpe: 8.5), set(rir: 0), set()]);
+      final rpe = csvColumns.indexOf('rpe');
+      final rir = csvColumns.indexOf('rir');
+
+      List<String> cells(String row) => row.split(',');
+      expect(cells(rowsOf(csv)[0])[rpe], '8.5');
+      expect(cells(rowsOf(csv)[1])[rir], '0');
+      expect(cells(rowsOf(csv)[2])[rpe], '');
+      expect(cells(rowsOf(csv)[2])[rir], '');
     });
 
     test('joins muscles without a comma', () {
@@ -147,6 +182,31 @@ void main() {
       final workouts = json['workouts'] as List;
       expect(workouts, hasLength(1));
       expect((workouts.single as Map)['sets'], hasLength(2));
+    });
+
+    test('names each set’s type and rating', () {
+      final json =
+          jsonDecode(
+                toJson(
+                  ExportData(
+                    sets: [
+                      set(setType: SetType.drop),
+                      set(setType: SetType.warmup),
+                      set(rpe: 9),
+                    ],
+                  ),
+                ),
+              )
+              as Map<String, dynamic>;
+
+      final sets =
+          ((json['workouts'] as List).single as Map)['sets'] as List<dynamic>;
+      expect((sets[0] as Map)['type'], 'drop');
+      expect((sets[0] as Map)['warmup'], isFalse);
+      expect((sets[1] as Map)['warmup'], isTrue);
+      expect((sets[2] as Map)['rpe'], 9);
+      // Omitted rather than null when unrated.
+      expect((sets[0] as Map).containsKey('rpe'), isFalse);
     });
 
     test('keeps two workouts on the same day apart', () {
