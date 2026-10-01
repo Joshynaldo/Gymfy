@@ -1,0 +1,248 @@
+{
+  "format": "gymfy.plan",
+  "version": 1,
+  "splits": [
+    {
+      "name": "Push / Pull / Legs",
+      "days": [
+        {
+          "name": "Push",
+          "weekdays": [
+            1,
+            4
+          ],
+          "exercises": [
+            {
+              "exerciseId": "barbell_bench_press",
+              "name": "Barbell Bench Press",
+              "muscleIds": [
+                "chest",
+                "front_deltoid",
+                "triceps"
+              ],
+              "sets": 4,
+              "reps": 6,
+              "repsMax": 8,
+              "warmupSets": 2
+            },
+            {
+              "exerciseId": "overhead_barbell_press",
+              "name": "Overhead Barbell Press",
+              "muscleIds": [
+                "front_deltoid",
+                "triceps",
+                "trapezius"
+              ],
+              "sets": 3,
+              "reps": 8,
+              "repsMax": 10
+            },
+            {
+              "exerciseId": "incline_dumbbell_press",
+              "name": "Incline Dumbbell Press",
+              "muscleIds": [
+                "chest",
+                "front_deltoid",
+                "triceps"
+              ],
+              "sets": 3,
+              "reps": 8,
+              "repsMax": 12
+            },
+            {
+              "exerciseId": "cable_lateral_raise",
+              "name": "Cable Lateral Raise",
+              "muscleIds": [
+                "side_deltoid"
+              ],
+              "sets": 3,
+              "reps": 12,
+              "repsMax": 15
+            },
+            {
+              "exerciseId": "triceps_pushdown",
+              "name": "Triceps Pushdown",
+              "muscleIds": [
+                "triceps"
+              ],
+              "sets": 3,
+              "reps": 10,
+              "repsMax": 12,
+              "supersetGroup": 1
+            },
+            {
+              "exerciseId": "overhead_triceps_extension",
+              "name": "Overhead Triceps Extension",
+              "muscleIds": [
+                "triceps"
+              ],
+              "sets": 3,
+              "reps": 10,
+              "repsMax": 12,
+              "supersetGroup": 1
+            }
+          ]
+        },
+        {
+          "name": "Pull",
+          "weekdays": [
+            2,
+            5
+          ],
+          "exercises": [
+            {
+              "exerciseId": "barbell_row",
+              "name": "Barbell Row",
+              "muscleIds": [
+                "lats",
+                "trapezius",
+                "rear_deltoid",
+                "biceps"
+              ],
+              "sets": 4,
+              "reps": 6,
+              "repsMax": 8,
+              "warmupSets": 2
+            },
+            {
+              "exerciseId": "pull_up",
+              "name": "Pull-Up",
+              "muscleIds": [
+                "lats",
+                "biceps",
+                "rear_deltoid"
+              ],
+              "sets": 3,
+              "reps": 6,
+              "repsMax": 10
+            },
+            {
+              "exerciseId": "seated_cable_row",
+              "name": "Seated Cable Row",
+              "muscleIds": [
+                "lats",
+                "trapezius",
+                "rear_deltoid",
+                "biceps"
+              ],
+              "sets": 3,
+              "reps": 10,
+              "repsMax": 12
+            },
+            {
+              "exerciseId": "face_pull",
+              "name": "Face Pull",
+              "muscleIds": [
+                "rear_deltoid",
+                "trapezius"
+              ],
+              "sets": 3,
+              "reps": 15
+            },
+            {
+              "exerciseId": "barbell_biceps_curl",
+              "name": "Barbell Biceps Curl",
+              "muscleIds": [
+                "biceps",
+                "forearms"
+              ],
+              "sets": 3,
+              "reps": 10,
+              "repsMax": 12,
+              "supersetGroup": 1
+            },
+            {
+              "exerciseId": "dumbbell_hammer_curl",
+              "name": "Dumbbell Hammer Curl",
+              "muscleIds": [
+                "biceps",
+                "forearms"
+              ],
+              "sets": 3,
+              "reps": 10,
+              "repsMax": 12,
+              "supersetGroup": 1
+            }
+          ]
+        },
+        {
+          "name": "Legs",
+          "weekdays": [
+            3,
+            6
+          ],
+          "exercises": [
+            {
+              "exerciseId": "barbell_back_squat",
+              "name": "Barbell Back Squat",
+              "muscleIds": [
+                "quads",
+                "glutes",
+                "hamstrings",
+                "lower_back"
+              ],
+              "sets": 4,
+              "reps": 6,
+              "repsMax": 8,
+              "warmupSets": 2
+            },
+            {
+              "exerciseId": "romanian_deadlift",
+              "name": "Romanian Deadlift",
+              "muscleIds": [
+                "hamstrings",
+                "glutes",
+                "lower_back"
+              ],
+              "sets": 3,
+              "reps": 8,
+              "repsMax": 10
+            },
+            {
+              "exerciseId": "leg_press",
+              "name": "Leg Press",
+              "muscleIds": [
+                "quads",
+                "glutes",
+                "hamstrings"
+              ],
+              "sets": 3,
+              "reps": 10,
+              "repsMax": 12
+            },
+            {
+              "exerciseId": "leg_extension",
+              "name": "Leg Extension",
+              "muscleIds": [
+                "quads"
+              ],
+              "sets": 3,
+              "reps": 12,
+              "repsMax": 15
+            },
+            {
+              "exerciseId": "lying_leg_curl",
+              "name": "Lying Leg Curl",
+              "muscleIds": [
+                "hamstrings"
+              ],
+              "sets": 3,
+              "reps": 10,
+              "repsMax": 12
+            },
+            {
+              "exerciseId": "standing_calf_raise",
+              "name": "Standing Calf Raise",
+              "muscleIds": [
+                "calves"
+              ],
+              "sets": 4,
+              "reps": 12,
+              "repsMax": 15
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

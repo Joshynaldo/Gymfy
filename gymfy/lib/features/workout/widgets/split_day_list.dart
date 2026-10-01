@@ -21,9 +21,14 @@ import '../../../shared/widgets/app_card.dart';
 /// overview screen (which shows any other split you tap into). One widget, so
 /// the two can't drift into showing the same data differently.
 class SplitDayList extends ConsumerWidget {
-  const SplitDayList({super.key, required this.splitId});
+  const SplitDayList({super.key, required this.splitId, this.header});
 
   final int splitId;
+
+  /// Shown above the first day, scrolling with them — the training block's
+  /// "week 2 of 4" line. Left to the screen to build, since both screens
+  /// already hold the split row it needs.
+  final Widget? header;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -46,6 +51,7 @@ class SplitDayList extends ConsumerWidget {
           padding:
               const EdgeInsets.fromLTRB(12, 12, 12, 96) + barInsets(context),
           children: [
+            ?header,
             for (final scheduled in days)
               DayCard(splitId: splitId, scheduled: scheduled),
           ],

@@ -15,6 +15,7 @@ import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/glass_sheet.dart';
 import '../../../shared/widgets/pressable.dart';
 import '../../overload/data/overload_math.dart';
+import '../../overload/data/percent_target.dart' show formatPercent;
 import '../../plates/widgets/plate_stacker.dart';
 
 /// What a finished trip through the sheet produces.
@@ -889,6 +890,16 @@ class _SuggestionNote extends StatelessWidget {
         Icons.trending_down,
         'Several increases in a row. A lighter week at '
             '${formatWeightUnit(suggestion.weight, unit)} is suggested.',
+      ),
+      OverloadReason.percentOfMax => (
+        Icons.percent,
+        'Planned at ${formatPercent(suggestion.targetPercent ?? 0)} of your '
+            '1RM — ${formatWeightUnit(suggestion.weight, unit)}.',
+      ),
+      OverloadReason.blockDeload => (
+        Icons.trending_down,
+        'Deload week: ${formatPercent(suggestion.deloadPercent ?? 0)} of your '
+            'working weight — ${formatWeightUnit(suggestion.weight, unit)}.',
       ),
       _ => (
         Icons.remove,

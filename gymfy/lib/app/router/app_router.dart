@@ -19,6 +19,7 @@ import '../../features/data_export/screens/export_screen.dart';
 import '../../features/help/screens/help_screen.dart';
 import '../../features/import/screens/import_screen.dart';
 import '../../features/plan_share/screens/share_plan_screen.dart';
+import '../../features/programs/screens/programs_screen.dart';
 import '../../features/progress/screens/progress_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
 
@@ -83,6 +84,19 @@ GoRouter goRouter(Ref ref) {
                         path: 'day/:dayId',
                         builder: (context, state) => DayBuilderScreen(
                           dayId: int.parse(state.pathParameters['dayId']!),
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Bundled programmes, imported as new splits.
+                  GoRoute(
+                    path: 'programs',
+                    builder: (context, state) => const ProgramsScreen(),
+                    routes: [
+                      GoRoute(
+                        path: ':programId',
+                        builder: (context, state) => ProgramDetailScreen(
+                          programId: state.pathParameters['programId']!,
                         ),
                       ),
                     ],

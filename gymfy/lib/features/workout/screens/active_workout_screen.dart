@@ -19,6 +19,7 @@ import '../../exercises/screens/exercise_detail_screen.dart';
 import '../../exercises/widgets/exercise_note.dart';
 import '../../overload/data/overload_math.dart';
 import '../../overload/data/overload_repository.dart';
+import '../../overload/data/percent_target.dart' show formatPercent;
 import '../../plates/screens/plate_calculator_screen.dart';
 import '../../settings/data/notification_preferences.dart';
 import '../data/rest_timer_controller.dart';
@@ -650,6 +651,17 @@ class _SuggestionLine extends ConsumerWidget {
       OverloadReason.deload => (
         Icons.trending_down,
         'Several increases in a row — a lighter $weight is suggested',
+      ),
+      // A planned % of 1RM, and a training block's deload week — see
+      // overloadSuggestionProvider for when each applies.
+      OverloadReason.percentOfMax => (
+        Icons.percent,
+        '${formatPercent(suggestion.targetPercent ?? 0)} of your 1RM — $weight',
+      ),
+      OverloadReason.blockDeload => (
+        Icons.trending_down,
+        'Deload week at '
+            '${formatPercent(suggestion.deloadPercent ?? 0)} — $weight',
       ),
       _ => (Icons.remove, 'Same $weight as last time'),
     };

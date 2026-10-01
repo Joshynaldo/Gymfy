@@ -88,11 +88,25 @@ enum OverloadReason {
 
   /// No history for this exercise yet, so there is nothing to base a step on.
   firstTime,
+
+  /// The plan names a percentage of the 1RM, and the weight is that share of
+  /// the tested or estimated max. See [OverloadSuggestion.targetPercent].
+  percentOfMax,
+
+  /// The split's training block is in its deload week, so the weight is the
+  /// block's deload percentage of the working weight (or of the %1RM weight).
+  /// See [OverloadSuggestion.deloadPercent].
+  blockDeload,
 }
 
 /// What to put in front of the user for their next set.
 class OverloadSuggestion {
-  const OverloadSuggestion({required this.weight, required this.reason});
+  const OverloadSuggestion({
+    required this.weight,
+    required this.reason,
+    this.targetPercent,
+    this.deloadPercent,
+  });
 
   /// In kilograms. Still needs rounding to something loadable — see
   /// `loadableSuggestion` in overload_repository.dart, which knows the user's
@@ -100,6 +114,15 @@ class OverloadSuggestion {
   final double weight;
 
   final OverloadReason reason;
+
+  /// The plan's percentage of 1RM this weight was worked out from, 0–100.
+  /// Set for [OverloadReason.percentOfMax], and for a block deload of a
+  /// percentage target; null otherwise.
+  final double? targetPercent;
+
+  /// The training block's deload load, 0–100 of the working weight. Set only
+  /// for [OverloadReason.blockDeload].
+  final double? deloadPercent;
 
   bool get isIncrease => reason == OverloadReason.earned;
 }
