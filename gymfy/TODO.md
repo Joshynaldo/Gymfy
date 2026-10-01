@@ -716,6 +716,15 @@ Track progress here. Update after each session.
 
 ## 🟢 Done
 
+### Insights: Reviews, Ziele, Kalender (Schema v27) ✅
+Eine neue Tabelle (`goals`), sonst keine Schema-Änderung. Spalten, Regeln und Helfer stehen in `FEATURE_PLAN.md` unter „Schema v27"
+- [x] **Monats-Review und „Year in Training"** — Progress → Trends, unter dem Recap. Workouts, Volumen, Trainingszeit (nur bekannte Minuten; Importe ohne Länge werden gezählt, nicht getimt), Top-Übungen, Rekorde, meisttrainierte Muskeln, Trainingstage, längster Streak, jeweils gegen den Vormonat bzw. das Vorjahr. Keine eigene Abfrage: Recap-Sätze, Heatmap-Minuten (jetzt auch über das ganze Log) und neu Rekorde pro Tag — mit den Regeln der Workout-Zusammenfassung, also ergibt ein Monat genau die Summe seiner Zusammenfassungen. Öffnet am 1. auf dem gerade beendeten Monat
+- [x] **Teilen als Bild** — die Review-Karte wird per `RepaintBoundary` zum PNG und geht über einen eigenen Kotlin-Channel (`ShareBridge.kt`, `ACTION_SEND` mit FileProvider-URI aus `<cache>/share/`) an das Teilen-Menü. Klappt das nicht (z. B. iOS), bietet `file_picker` das Speichern an. **Kein neues Paket, keine neue Android-Abhängigkeit** (`androidx.core` lag schon auf dem Classpath); Phone-Build up-to-date gemessen 8,2 s vorher / 8,5 s nachher (Median aus 5, A/B mit warmem Daemon) — im Rauschen
+- [x] **Ziele** — Gewicht auf einer Übung bis Datum (gezählt wird der schwerste *Arbeitssatz* oder ein getestetes 1RM, bewusst nicht das geschätzte 1RM: „100 kg heben" heißt, 100 kg waren auf der Stange), Workouts pro Woche (Woche beginnt am ersten Wochentag der Geräte-Region), Körpergewicht erreichen (Diät oder Aufbau, je nach Start). Fortschritt wird aus dem Log abgeleitet, gespeichert wird nur, wann die Feier gesehen wurde. Kompakte Karte auf Home, Ziele-Screen (Home und Progress → All-time), kleine Feier mit Haptik, respektiert Reduce Motion
+- [x] **Kalender** — Monatsansicht neben dem Jahresraster (Progress → All-time). Trainingstage in der Akzentfarbe, Tippen listet die Workouts des Tages (freie inklusive), jedes öffnet seine Zusammenfassung innerhalb von Progress (`/progress/session/:id`, mit Zurück-Pfeil)
+- [ ] **Nur auf dem Gerät prüfbar:** das Teilen-Menü selbst (FileProvider-Grant, Vorschau, Empfänger-Apps), die Bildqualität des PNGs, die Haptik der Feier, der erste Wochentag mit echter Geräte-Region
+- [ ] Offen: Ziele noch nicht in Daten-Export (CSV/JSON) — im Backup sind sie; Wochenbeginn wird nur beim App-Start gelesen
+
 ### Wettbewerbs-Lücken (Schema v26, P1–P3) ✅
 Ein Schema-Sprung (v25 → v26) für alles, danach vier Feature-Branches ohne weitere Schema-Änderung. Vertrag, Helfer und Regeln stehen in `FEATURE_PLAN.md`
 - [x] **Backup & Restore (P1)** — Details oben beim Daten-Export
