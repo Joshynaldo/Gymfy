@@ -1,3 +1,5 @@
+import '../../l10n/l10n.dart';
+
 /// What kind of set a logged set was.
 ///
 /// Stored on `logged_sets.set_type` as the enum's [name], like `Equipment` —
@@ -21,7 +23,16 @@ enum SetType {
 
   const SetType(this.label);
 
+  /// The English name. On screen use [localizedLabel].
   final String label;
+
+  /// The name in the app's language, e.g. "Aufwärmsatz".
+  String localizedLabel(AppLocalizations l10n) => switch (this) {
+    SetType.warmup => l10n.setTypeWarmup,
+    SetType.normal => l10n.setTypeNormal,
+    SetType.drop => l10n.setTypeDrop,
+    SetType.failure => l10n.setTypeFailure,
+  };
 
   /// Whether a set of this type may feed estimated 1RM, personal records,
   /// progress charts and overload suggestions.

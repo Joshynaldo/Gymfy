@@ -12,6 +12,8 @@ import 'features/onboarding/data/onboarding_repository.dart';
 import 'features/onboarding/screens/onboarding_screen.dart';
 import 'features/wear/data/wear_sync.dart';
 import 'features/workout_notification/data/workout_notification.dart';
+import 'l10n/app_language.dart';
+import 'l10n/l10n.dart';
 
 Future<void> main() async {
   // Required because we touch the database (a platform plugin) before runApp.
@@ -40,6 +42,12 @@ class GymfyApp extends ConsumerWidget {
     // its own live preview.
     final accent = ref.watch(accentColorProvider);
     final theme = buildAppTheme(ref.watch(appThemeProvider), accent);
+    // The chosen language, or null to follow the phone. Watched before the
+    // onboarding flag on purpose: both are one read of the same table, the
+    // reads run in the order they were asked for, and this way the language
+    // is known before the first real screen is — no English frame flashing up
+    // on a phone set to German, or the other way round.
+    final locale = ref.watch(appLocaleProvider);
     final onboarded = ref.watch(onboardingCompleteProvider);
 
     // Kept alive from the root, and watched rather than read: nothing reads
@@ -69,10 +77,16 @@ class GymfyApp extends ConsumerWidget {
     // database, so the first redirect would run before the answer arrived and
     // let a brand-new user straight into the app. Swapping the whole app once,
     // when the answer lands, has no such race.
+    //
+    // All three apps carry the same localisation setup, so the language is
+    // right from the first frame, the onboarding included.
     return switch (onboarded) {
       AsyncData(value: false) => MaterialApp(
         title: 'Gymfy',
         debugShowCheckedModeBanner: false,
+        locale: locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: theme,
         darkTheme: theme,
         themeMode: ThemeMode.dark,
@@ -84,6 +98,9 @@ class GymfyApp extends ConsumerWidget {
       AsyncData(value: true) => MaterialApp.router(
         title: 'Gymfy',
         debugShowCheckedModeBanner: false,
+        locale: locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         // Dark mode first: we build a dark theme and lock the app to it.
         theme: theme,
         darkTheme: theme,
@@ -98,6 +115,9 @@ class GymfyApp extends ConsumerWidget {
       _ => MaterialApp(
         title: 'Gymfy',
         debugShowCheckedModeBanner: false,
+        locale: locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: theme,
         darkTheme: theme,
         themeMode: ThemeMode.dark,

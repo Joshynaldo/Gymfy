@@ -4,6 +4,7 @@ import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/weekday.dart';
@@ -31,6 +32,7 @@ class TodayCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final date = today ?? DateTime.now();
     final weekday = date.weekday;
+    final l10n = context.l10n;
 
     final activeSplit = ref.watch(activeSplitProvider).value;
     final dayAsync = ref.watch(dayForWeekdayProvider(weekday));
@@ -52,10 +54,10 @@ class TodayCard extends ConsumerWidget {
         _MessageCard(
           weekday: weekday,
           icon: Icons.help_outline,
-          title: 'No active split',
+          title: l10n.homeTodayNoSplitTitle,
           // Names what the Workout tab now asks for, so the two screens agree.
-          message: 'Pick the programme you are following to plan your week.',
-          actionLabel: 'Choose a split',
+          message: l10n.homeTodayNoSplitMessage,
+          actionLabel: l10n.homeTodayNoSplitAction,
           onAction: () => context.go('/workout'),
           footer: const _FreeWorkoutFooter(),
         ),
@@ -65,8 +67,8 @@ class TodayCard extends ConsumerWidget {
         _MessageCard(
           weekday: weekday,
           icon: Icons.bedtime_outlined,
-          title: 'Rest day',
-          message: 'Nothing scheduled in ${activeSplit.name}.',
+          title: l10n.homeTodayRestTitle,
+          message: l10n.homeTodayRestMessage(activeSplit.name),
           footer: const _FreeWorkoutFooter(),
         ),
       ),
@@ -120,6 +122,7 @@ class _WorkoutCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final planned = ref.watch(dayExercisesProvider(day.id)).value ?? const [];
     final running = ref.watch(inProgressSessionProvider).value;
 
@@ -136,7 +139,7 @@ class _WorkoutCard extends ConsumerWidget {
           const SizedBox(height: 20),
           if (planned.isEmpty)
             Text(
-              'No exercises yet — open the day to add some.',
+              l10n.homeTodayNoExercises,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -175,19 +178,19 @@ class _WorkoutCard extends ConsumerWidget {
             // Resuming rather than offering a second Start: two live sessions
             // would split one workout's sets across both.
             AppButton(
-              label: 'Resume ${running.name}',
+              label: l10n.homeTodayResume(running.name),
               icon: Icons.play_arrow,
               onPressed: () => context.go('/workout/session/${running.id}'),
             )
           else if (planned.isNotEmpty)
             AppButton(
-              label: 'Start workout',
+              label: l10n.homeTodayStart,
               icon: Icons.play_arrow,
               onPressed: () => _start(context, ref),
             )
           else
             AppButton(
-              label: 'Add exercises',
+              label: l10n.homeTodayAddExercises,
               icon: Icons.add,
               kind: AppButtonKind.secondary,
               onPressed: () =>
@@ -285,16 +288,17 @@ class _FreeWorkoutFooter extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final running = ref.watch(inProgressSessionProvider).value;
+    final l10n = context.l10n;
 
     if (running != null) {
       return AppButton(
-        label: 'Resume ${running.name}',
+        label: l10n.homeTodayResume(running.name),
         icon: Icons.play_arrow,
         onPressed: () => context.go('/workout/session/${running.id}'),
       );
     }
     return AppButton(
-      label: 'Start empty workout',
+      label: l10n.homeTodayStartEmpty,
       icon: Icons.bolt_outlined,
       // Secondary: on a rest day, resting is the plan. This is for the day
       // you train anyway, and it should not shout over the message above.
@@ -321,7 +325,10 @@ class _Heading extends StatelessWidget {
 
     return Row(
       children: [
-        Text(weekdayName(weekday).toUpperCase(), style: style),
+        Text(
+          weekdayName(weekday, l10n: context.l10n).toUpperCase(),
+          style: style,
+        ),
         if (trailing != null) ...[
           const Spacer(),
           Flexible(

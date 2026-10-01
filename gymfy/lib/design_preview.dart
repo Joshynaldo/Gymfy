@@ -132,7 +132,7 @@ class _ShellState extends State<_Shell> {
       bottomNavigationBar: GlassNavBar(
         selectedIndex: _tab,
         onDestinationSelected: (index) => setState(() => _tab = index),
-        destinations: mainDestinations,
+        destinations: mainDestinations(context),
       ),
     );
   }

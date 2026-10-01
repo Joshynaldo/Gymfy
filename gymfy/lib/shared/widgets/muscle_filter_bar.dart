@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/l10n.dart';
 import '../utils/exercise_display.dart';
 import 'app_chip.dart';
 
@@ -62,6 +63,7 @@ class MuscleFilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final ordered = [
       ...muscles.where(selected.contains),
       ...muscles.where((m) => !selected.contains(m)),
@@ -77,7 +79,7 @@ class MuscleFilterBar extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: AppChip(
-              label: 'All',
+              label: l10n.commonAll,
               selected: selected.isEmpty,
               // Already showing everything, so this would be a no-op tap. A
               // disabled chip says "you're here" better than one that does
@@ -89,7 +91,7 @@ class MuscleFilterBar extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: AppChip(
-                label: muscleLabel(muscle),
+                label: muscleLabel(muscle, l10n: l10n),
                 selected: selected.contains(muscle),
                 onTap: () => onToggle(muscle),
               ),

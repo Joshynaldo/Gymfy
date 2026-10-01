@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../app/theme/app_theme.dart';
+import '../../../l10n/l10n.dart';
 
 /// Picks the app theme from a dropdown, with a preview of each option.
 ///
@@ -21,6 +22,7 @@ class ThemePicker extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final current = ref.watch(appThemeProvider);
     final accent = ref.watch(accentColorProvider);
 
@@ -79,7 +81,9 @@ class ThemePicker extends ConsumerWidget {
               children: [
                 Expanded(
                   child: Text(
-                    '${current.label} was designed around its own accent.',
+                    l10n.settingsThemeAccentSuggestion(
+                      current.localizedLabel(l10n),
+                    ),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -90,7 +94,7 @@ class ThemePicker extends ConsumerWidget {
                   onPressed: () => ref
                       .read(accentColorProvider.notifier)
                       .setAccent(suggested),
-                  child: const Text('Use it'),
+                  child: Text(l10n.settingsThemeUseAccent),
                 ),
               ],
             ),
@@ -115,7 +119,7 @@ class _ClosedRow extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: Text(
-            theme.label,
+            theme.localizedLabel(context.l10n),
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodyLarge,
           ),
@@ -135,6 +139,7 @@ class _OpenRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final l10n = context.l10n;
 
     return Row(
       children: [
@@ -145,9 +150,9 @@ class _OpenRow extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(theme.label, style: textTheme.bodyLarge),
+              Text(theme.localizedLabel(l10n), style: textTheme.bodyLarge),
               Text(
-                theme.description,
+                theme.localizedDescription(l10n),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: textTheme.bodySmall?.copyWith(

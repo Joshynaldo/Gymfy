@@ -5,6 +5,7 @@
 // day. Duplicating the logic would let the two drift apart, and "the library
 // found it but the picker didn't" is a confusing bug to be on the wrong end of.
 
+import '../../l10n/l10n.dart';
 import '../database/app_database.dart';
 import '../models/equipment.dart';
 import 'exercise_display.dart';
@@ -17,11 +18,17 @@ import 'exercise_display.dart';
 /// answer a question almost nobody has, and would usually return nothing.
 ///
 /// An empty [query] and an empty [muscleFilters] both mean "no restriction".
+///
+/// With [l10n], a muscle also matches by its name in that language, so
+/// "Schulter" finds the lateral raise on a German phone. The English names
+/// match either way: exercise names stay English, and people search in the
+/// words they see on them.
 bool matchesExerciseSearch(
   Exercise exercise, {
   required String query,
   required Set<String> muscleFilters,
   Set<Equipment> equipmentFilters = const {},
+  AppLocalizations? l10n,
 }) {
   final needle = query.trim().toLowerCase();
   final matchesQuery =
@@ -30,7 +37,13 @@ bool matchesExerciseSearch(
       // Searching by muscle: "delt" finds the lateral raise even though the
       // word never appears in its name.
       exercise.muscleIds.any(
-        (muscleId) => muscleLabel(muscleId).toLowerCase().contains(needle),
+        (muscleId) =>
+            muscleLabel(muscleId).toLowerCase().contains(needle) ||
+            (l10n != null &&
+                muscleLabel(
+                  muscleId,
+                  l10n: l10n,
+                ).toLowerCase().contains(needle)),
       );
 
   final matchesMuscle =

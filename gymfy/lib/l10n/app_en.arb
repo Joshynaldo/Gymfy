@@ -1,0 +1,355 @@
+{
+  "@@locale": "en",
+
+  "commonCancel": "Cancel",
+  "commonSave": "Save",
+  "commonDone": "Done",
+  "commonCreate": "Create",
+  "commonCopy": "Copy",
+  "commonBack": "Back",
+  "commonNext": "Next",
+  "commonAll": "All",
+  "commonNotSet": "Not set",
+  "@commonNotSet": {
+    "description": "A setting or profile value the user has not given yet."
+  },
+  "commonToday": "Today",
+  "commonYesterday": "Yesterday",
+
+  "shellNavHome": "Home",
+  "shellNavWorkout": "Workout",
+  "shellNavProgress": "Progress",
+  "shellNavMore": "More",
+
+  "sharedWeightWheelLabel": "Weight",
+  "sharedLoggedSetReps": "{weight} × {reps} reps",
+  "@sharedLoggedSetReps": {
+    "description": "One logged set. weight is already formatted with its unit, e.g. 80 kg.",
+    "placeholders": {
+      "weight": { "type": "String" },
+      "reps": { "type": "int" }
+    }
+  },
+  "sharedAddedToDayNone": "{asked, plural, =1{Already in that day} other{All {asked} were already in that day}}",
+  "@sharedAddedToDayNone": {
+    "description": "Adding exercises to a workout day added none, because the day had them all already.",
+    "placeholders": {
+      "asked": { "type": "int" }
+    }
+  },
+  "sharedAddedToDayAdded": "{added, plural, =1{1 exercise added} other{{added} exercises added}}",
+  "@sharedAddedToDayAdded": {
+    "placeholders": {
+      "added": { "type": "int" }
+    }
+  },
+  "sharedAddedToDaySkipped": "{addedText} — {skipped} already there",
+  "@sharedAddedToDaySkipped": {
+    "description": "addedText is sharedAddedToDayAdded; skipped counts the exercises the day already had.",
+    "placeholders": {
+      "addedText": { "type": "String" },
+      "skipped": { "type": "int" }
+    }
+  },
+
+  "muscleChest": "Chest",
+  "muscleFrontDeltoid": "Front Deltoid",
+  "muscleSideDeltoid": "Side Deltoid",
+  "muscleBiceps": "Biceps",
+  "muscleForearms": "Forearms",
+  "muscleAbs": "Abs",
+  "muscleObliques": "Obliques",
+  "muscleQuads": "Quads",
+  "muscleAdductors": "Adductors",
+  "muscleTrapezius": "Trapezius",
+  "muscleRearDeltoid": "Rear Deltoid",
+  "muscleLats": "Lats",
+  "muscleLowerBack": "Lower Back",
+  "muscleTriceps": "Triceps",
+  "muscleGlutes": "Glutes",
+  "muscleHamstrings": "Hamstrings",
+  "muscleCalves": "Calves",
+  "muscleNeck": "Neck",
+
+  "equipmentBarbell": "Barbell",
+  "equipmentDumbbell": "Dumbbell",
+  "equipmentMachine": "Machine",
+  "equipmentCable": "Cable",
+  "equipmentBodyweight": "Bodyweight",
+  "equipmentOther": "Other",
+
+  "setTypeWarmup": "Warm-up",
+  "setTypeNormal": "Working",
+  "setTypeDrop": "Drop set",
+  "setTypeFailure": "Failure",
+
+  "lifterSexMale": "Male",
+  "lifterSexFemale": "Female",
+
+  "measurementFieldWeight": "Weight",
+  "measurementFieldChest": "Chest",
+  "measurementFieldWaist": "Waist",
+  "measurementFieldHips": "Hips",
+  "measurementFieldArms": "Arms",
+  "measurementFieldLegs": "Legs",
+
+  "goalKindLift": "Lift",
+  "goalKindFrequency": "Workouts",
+  "goalKindBodyweight": "Bodyweight",
+
+  "bodyProfileHeightLabel": "Height",
+  "bodyProfileHeightQuestion": "How tall are you?",
+  "bodyProfileAgeLabel": "Age",
+  "bodyProfileAgeQuestion": "How old are you?",
+  "bodyProfileAgeHelper": "Kept as your year of birth, so it stays correct.",
+
+  "themeDarkDefaultLabel": "Dark",
+  "themeDarkDefaultDescription": "Near-black with soft grey cards.",
+  "themeAmoledLabel": "AMOLED black",
+  "themeAmoledDescription": "True black. Saves power on OLED screens.",
+  "themeHighContrastLabel": "High contrast",
+  "themeHighContrastDescription": "Brighter text and visible borders.",
+  "themeTokyoNightDescription": "Deep blue-grey with a soft indigo cast.",
+  "themeDraculaDescription": "Dark violet with high-saturation accents.",
+  "themeCatppuccinMochaDescription": "Warm, muted pastels on deep charcoal.",
+  "themeGruvboxDescription": "Warm retro browns and greens.",
+  "themeHyperDescription": "Translucent glass over a living backdrop.",
+
+  "notificationRestRunningTitle": "Resting",
+  "notificationRestRunningChannel": "Rest timer countdown",
+  "notificationRestRunningChannelDescription": "Shows the rest countdown while you are in another app.",
+  "notificationRestOverTitle": "Rest over",
+  "notificationRestOverBody": "Next set of {exercise}",
+  "@notificationRestOverBody": {
+    "placeholders": {
+      "exercise": { "type": "String" }
+    }
+  },
+  "notificationRestOverChannel": "Rest timer",
+  "notificationRestOverChannelDescription": "Tells you when a rest between sets is over.",
+
+  "settingsTitle": "Settings",
+  "settingsSectionTheme": "Theme",
+  "settingsSectionAccent": "Accent",
+  "settingsSectionUnits": "Units",
+  "settingsSectionLanguage": "Language",
+  "settingsSectionPlates": "Plates",
+  "settingsSectionOverload": "Progressive overload",
+  "settingsSectionLogging": "Logging",
+  "settingsSectionYou": "You",
+  "settingsSectionRestTimer": "Rest timer",
+  "settingsSectionData": "Data",
+  "settingsSectionHealthConnect": "Health Connect",
+  "settingsAccentCaption": "Drives buttons, highlights and charts.",
+  "settingsUnitsCaption": "Weights are always stored in kilograms, so switching back and forth never changes what you logged.",
+  "settingsLanguageTitle": "App language",
+  "settingsLanguageSystem": "System default",
+  "settingsLanguageSystemSubtitle": "Follows your phone: {language}",
+  "@settingsLanguageSystemSubtitle": {
+    "description": "language is the name of the language the phone's settings resolve to, in that language (English, Deutsch).",
+    "placeholders": {
+      "language": { "type": "String" }
+    }
+  },
+  "settingsLanguageExerciseNames": "Exercise names stay in English.",
+  "@settingsLanguageExerciseNames": {
+    "description": "Shown under the language picker while the app is not in English: the bundled exercise library is not translated."
+  },
+  "settingsBackupTitle": "Backup & restore",
+  "settingsBackupSubtitle": "Everything in one file, plus automatic backups",
+  "settingsExportTitle": "Export data",
+  "settingsExportSubtitle": "Save your whole log as a spreadsheet or JSON",
+  "settingsNameTitle": "Name",
+  "settingsNameDialogTitle": "Your name",
+  "settingsNameDialogHint": "Leave empty to remove",
+  "settingsDefaultRestTitle": "Default rest",
+  "settingsDefaultRestSubtitle": "{rest} between sets",
+  "@settingsDefaultRestSubtitle": {
+    "description": "rest is an already formatted rest length, e.g. 2:00.",
+    "placeholders": {
+      "rest": { "type": "String" }
+    }
+  },
+  "settingsRestAlertsTitle": "Rest timer notifications",
+  "settingsRestAlertsSubtitle": "Show the countdown in the notification shade and alert you when it runs out",
+  "settingsVibrateTitle": "Vibrate",
+  "settingsVibrateSubtitle": "Useful with the phone in a pocket",
+  "settingsWorkoutNotificationTitle": "Workout notification",
+  "settingsWorkoutNotificationSubtitle": "Keep the current set and rest in the notification shade, with buttons to log a set and control the rest",
+  "settingsBodyDiagramTitle": "Body diagram",
+  "settingsBodyDiagramNotSet": "Not set — showing the male diagram, no strength ranks",
+  "settingsBodyDiagramSubtitle": "{sex, select, female{Female diagram and strength standards} other{Male diagram and strength standards}}",
+  "@settingsBodyDiagramSubtitle": {
+    "description": "sex is the stored lifter sex: male or female.",
+    "placeholders": {
+      "sex": { "type": "String" }
+    }
+  },
+  "settingsThemeAccentSuggestion": "{theme} was designed around its own accent.",
+  "@settingsThemeAccentSuggestion": {
+    "placeholders": {
+      "theme": { "type": "String" }
+    }
+  },
+  "settingsThemeUseAccent": "Use it",
+
+  "moreTitle": "More",
+  "moreExerciseLibraryTitle": "Exercise library",
+  "moreExerciseLibrarySubtitle": "Every movement, searchable by name or muscle",
+  "moreCalorieLogTitle": "Calorie log",
+  "moreCalorieLogSubtitle": "Track meals, calories and macros",
+  "moreWeeklyTitle": "This week",
+  "moreWeeklySubtitle": "Calories over the last 7 days",
+  "moreOneRmTitle": "1RM calculator",
+  "moreOneRmSubtitle": "Estimate your one-rep max from any set",
+  "moreStrengthRankTitle": "Strength rank",
+  "moreStrengthRankSubtitle": "How your big lifts compare to your bodyweight",
+  "moreSharePlanTitle": "Share a plan",
+  "moreSharePlanSubtitle": "Send your splits to someone, or import theirs",
+  "moreImportTitle": "Import a history",
+  "moreImportSubtitle": "Bring your workouts over from Hevy, Strong or similar",
+  "moreHelpTitle": "Help",
+  "moreHelpSubtitle": "About Gymfy and who made it",
+  "moreSettingsTitle": "Settings",
+  "moreSettingsSubtitle": "Accent colour, your name, rest timer alerts",
+
+  "helpTitle": "Help",
+  "helpIntro": "Gymfy is made by one person. Everything you log stays on your phone — there is no account and no server.",
+  "helpFeedbackTitle": "Send feedback",
+  "helpFeedbackSubtitle": "Opens your mail app · only the app version is attached",
+  "helpDeveloperTitle": "Developer",
+  "helpDeveloperSubtitle": "Joshynaldo on GitHub",
+  "helpAnimationsTitle": "Exercise animations",
+  "helpAnimationsSubtitle": "ExerciseGymGifsDB · used with permission",
+  "helpVersionTitle": "Version",
+  "helpOpenLinkFailed": "Could not open {url}",
+  "@helpOpenLinkFailed": {
+    "placeholders": {
+      "url": { "type": "String" }
+    }
+  },
+  "helpNoMailApp": "No mail app found. Write to {address}",
+  "@helpNoMailApp": {
+    "placeholders": {
+      "address": { "type": "String" }
+    }
+  },
+  "helpFeedbackMailDevice": "Gymfy {version} on {platform} {osVersion}",
+  "@helpFeedbackMailDevice": {
+    "description": "First attached line of a feedback mail. platform is e.g. android, osVersion the system's own version string.",
+    "placeholders": {
+      "version": { "type": "String" },
+      "platform": { "type": "String" },
+      "osVersion": { "type": "String" }
+    }
+  },
+  "helpFeedbackMailNote": "Only these two lines are attached. Delete them if you would rather not send them.",
+
+  "onboardingSaving": "Saving…",
+  "onboardingFinish": "Start lifting",
+  "onboardingChangeLater": "You can change any of this later in Settings.",
+  "onboardingWelcomeTitle": "Welcome to Gymfy",
+  "onboardingWelcomeBody": "Everything you log stays on this phone — there is no account and nothing gets uploaded. What should we call you?",
+  "onboardingNameLabel": "Your name",
+  "onboardingNameHint": "Optional",
+  "onboardingSexTitle": "Body diagram and strength standards",
+  "onboardingSexBody": "Picks which body the muscle map draws, and which strength table your lifts are compared against. Optional — skip it and the app works the same, minus the ranks.",
+  "onboardingSexDecline": "Rather not say",
+  "onboardingBodyweightTitle": "How much do you weigh?",
+  "onboardingBodyweightBody": "Used to rank your lifts against your own bodyweight, and it becomes the first point on your weight chart. Leave it at zero to skip — nothing else depends on it.",
+  "onboardingBodyweightLabel": "Bodyweight",
+  "onboardingSkipped": "Skip",
+  "@onboardingSkipped": {
+    "description": "Shown as the value of the height and age fields while they are left out."
+  },
+  "onboardingOverloadTitle": "Should Gymfy suggest heavier weights?",
+  "onboardingOverloadBody": "When you hit every set at the top of your rep range, the next session opens with a bit more on the bar. It only ever suggests — the weight stays yours to change.",
+  "onboardingAccentTitle": "Pick your colour",
+  "onboardingAccentBody": "Drives buttons, highlights and charts across the app. Tap one to try it — the app changes as you go.",
+
+  "homeGreeting": "Hi, {name}",
+  "@homeGreeting": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "homeFindExerciseTooltip": "Find an exercise",
+  "homeStreakSemantics": "{days, plural, other{{days} day workout streak}}",
+  "@homeStreakSemantics": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "homeTodayNoSplitTitle": "No active split",
+  "homeTodayNoSplitMessage": "Pick the programme you are following to plan your week.",
+  "homeTodayNoSplitAction": "Choose a split",
+  "homeTodayRestTitle": "Rest day",
+  "homeTodayRestMessage": "Nothing scheduled in {split}.",
+  "@homeTodayRestMessage": {
+    "placeholders": {
+      "split": { "type": "String" }
+    }
+  },
+  "homeTodayNoExercises": "No exercises yet — open the day to add some.",
+  "homeTodayResume": "Resume {workout}",
+  "@homeTodayResume": {
+    "placeholders": {
+      "workout": { "type": "String" }
+    }
+  },
+  "homeTodayStart": "Start workout",
+  "homeTodayAddExercises": "Add exercises",
+  "homeTodayStartEmpty": "Start empty workout",
+  "homeNextUpTomorrow": "Tomorrow",
+  "homeNextUpNextWeekday": "Next {weekday}",
+  "@homeNextUpNextWeekday": {
+    "description": "A training day exactly one week away. weekday is the full weekday name.",
+    "placeholders": {
+      "weekday": { "type": "String" }
+    }
+  },
+  "homeLastWorkoutHeading": "LAST WORKOUT",
+  "homeLastWorkoutSets": "{count, plural, =1{1 set} other{{count} sets}} • {volume}",
+  "@homeLastWorkoutSets": {
+    "description": "volume is an already formatted weight with its unit, e.g. 4,200 kg.",
+    "placeholders": {
+      "count": { "type": "int" },
+      "volume": { "type": "String" }
+    }
+  },
+  "homeWeekTitle": "This week",
+  "homeWeekWorkouts": "{count, plural, =1{1 workout} other{{count} workouts}}",
+  "@homeWeekWorkouts": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "homeWeekLiftedSince": "lifted since {weekday}",
+  "@homeWeekLiftedSince": {
+    "description": "Under the week's total volume. weekday is the full name of the first day counted.",
+    "placeholders": {
+      "weekday": { "type": "String" }
+    }
+  },
+  "homeRecapPeriodWeek": "Week",
+  "homeRecapPeriodMonth": "Month",
+  "homeRecapPeriodYear": "Year",
+
+  "muscleMapFront": "Front",
+  "muscleMapBack": "Back",
+  "muscleMapShowHeatmap": "Switch to heatmap",
+  "muscleMapShowColours": "Switch to per-muscle colours",
+  "muscleMapLoadFailed": "Could not load the muscle map.\n{error}",
+  "@muscleMapLoadFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "muscleMapBodyLoadFailed": "Could not load the body map.\n{error}",
+  "@muscleMapBodyLoadFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "muscleMapContrastCaption": "Each muscle has its own colour. Brighter still means more volume."
+}

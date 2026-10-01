@@ -62,7 +62,7 @@ Future<void> _pumpShell(WidgetTester tester, {required AppTheme theme}) async {
             bottomNavigationBar: GlassNavBar(
               selectedIndex: 1,
               onDestinationSelected: (_) {},
-              destinations: mainDestinations,
+              destinations: mainDestinations(context),
             ),
           ),
         ),

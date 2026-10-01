@@ -302,7 +302,7 @@ class _ScreensPreviewState extends State<_ScreensPreview> {
               selectedIndex: _tab,
               onDestinationSelected: (index) =>
                   setState(() => _tab = index.clamp(0, 3)),
-              destinations: mainDestinations,
+              destinations: mainDestinations(context),
             ),
           ),
         ),

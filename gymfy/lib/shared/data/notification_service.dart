@@ -5,6 +5,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../../l10n/app_language.dart';
+import '../../l10n/l10n.dart';
+
 part 'notification_service.g.dart';
 
 /// Channel for the live countdown that sits in the shade while you rest.
@@ -32,9 +35,15 @@ const restTimerNotificationId = 1;
 /// someone declined a permission. Failures are swallowed because there is no
 /// useful recovery: the on-screen countdown is the real timer.
 class NotificationService {
-  NotificationService(this._plugin);
+  NotificationService(this._plugin, {AppLocalizations Function()? strings})
+    : _strings = strings ?? (() => englishLocalizations);
 
   final FlutterLocalNotificationsPlugin _plugin;
+
+  /// The words on the notification, asked for each time one is posted: the
+  /// language can change between one rest and the next, and a notification is
+  /// drawn by the system, so nothing rebuilds it the way a widget would be.
+  final AppLocalizations Function() _strings;
 
   bool _ready = false;
 
@@ -136,16 +145,22 @@ class NotificationService {
     try {
       await _ensureReady();
       final endsAt = DateTime.now().add(Duration(seconds: seconds));
+      final strings = _strings();
       await _plugin.show(
         id: restTimerNotificationId,
-        title: 'Resting',
+        title: strings.notificationRestRunningTitle,
         body: exerciseName,
         notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             restTimerRunningChannelId,
-            'Rest timer countdown',
+            // The channel's name and description are what Android lists under
+            // the app's notification settings. The plugin only creates a
+            // channel that doesn't exist yet, so these are in the language the
+            // app had when the first rest was posted; a later switch changes
+            // the notifications themselves, not the names in system settings.
+            strings.notificationRestRunningChannel,
             channelDescription:
-                'Shows the rest countdown while you are in another app.',
+                strings.notificationRestRunningChannelDescription,
             importance: Importance.low,
             priority: Priority.low,
             // Android draws the countdown from this timestamp.
@@ -182,15 +197,16 @@ class NotificationService {
       // Drop the backstop alarm first, so it can't buzz a second time for a
       // rest that has already been announced.
       await _plugin.cancel(id: restTimerNotificationId);
+      final strings = _strings();
       await _plugin.show(
         id: restTimerNotificationId,
-        title: 'Rest over',
-        body: 'Next set of $exerciseName',
+        title: strings.notificationRestOverTitle,
+        body: strings.notificationRestOverBody(exerciseName),
         notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             restTimerDoneChannelId,
-            'Rest timer',
-            channelDescription: 'Tells you when a rest between sets is over.',
+            strings.notificationRestOverChannel,
+            channelDescription: strings.notificationRestOverChannelDescription,
             importance: Importance.high,
             priority: Priority.high,
             enableVibration: vibrate,
@@ -227,18 +243,19 @@ class NotificationService {
   }) async {
     try {
       await _ensureReady();
+      final strings = _strings();
       await _plugin.zonedSchedule(
         id: restTimerNotificationId,
-        title: 'Rest over',
-        body: 'Next set of $exerciseName',
+        title: strings.notificationRestOverTitle,
+        body: strings.notificationRestOverBody(exerciseName),
         scheduledDate: tz.TZDateTime.now(
           tz.local,
         ).add(Duration(seconds: seconds)),
         notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             restTimerDoneChannelId,
-            'Rest timer',
-            channelDescription: 'Tells you when a rest between sets is over.',
+            strings.notificationRestOverChannel,
+            channelDescription: strings.notificationRestOverChannelDescription,
             importance: Importance.high,
             priority: Priority.high,
             enableVibration: vibrate,
@@ -271,5 +288,10 @@ class NotificationService {
 /// App-wide access to the [NotificationService].
 @Riverpod(keepAlive: true)
 NotificationService notificationService(Ref ref) {
-  return NotificationService(FlutterLocalNotificationsPlugin());
+  return NotificationService(
+    FlutterLocalNotificationsPlugin(),
+    // Read, not watched: the service is kept alive for the whole app, and
+    // rebuilding it on a language change would drop its initialised plugin.
+    strings: () => ref.read(appLocalizationsProvider),
+  );
 }

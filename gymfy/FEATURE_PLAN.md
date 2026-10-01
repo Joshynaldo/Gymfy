@@ -1,3 +1,93 @@
+# Localisation (English + German)
+
+**ARB key convention: `<area><Part><Purpose>`**, lowerCamelCase ASCII
+(`l10n_test.dart` checks the shape).
+- `<area>` is the `lib/features` folder in camelCase (`home`, `settings`,
+  `muscleMap`, `planShare`, `workoutNotification` …); `shell` for `lib/app`
+  (nav bar, router); `shared` for `lib/shared` widgets and utils; the type
+  name for a shared enum or model (`muscle`, `equipment`, `setType`,
+  `lifterSex`, `measurementField`, `goalKind`, `theme`, `bodyProfile`,
+  `notification`); `common` only for words that mean exactly the same
+  everywhere (`commonCancel`, `commonSave`, `commonDone`, `commonNotSet`,
+  `commonToday` …).
+- `<Part>` is the screen, widget or section, without `Screen`/`Card`:
+  `homeToday…`, `homeLastWorkout…`, `settingsRestTimer…`.
+- `<Purpose>`: `Title`, `Subtitle`, `Label`, `Hint`, `Tooltip`, `Message`,
+  `Caption`, `Action`, `Semantics`, `…Failed` for errors. Examples:
+  `homeTodayRestTitle`, `settingsDefaultRestSubtitle`,
+  `muscleMapShowHeatmap`, `helpOpenLinkFailed`.
+- Counts are one ICU plural named for what is counted (`homeWeekWorkouts`:
+  `{count, plural, =1{1 workout} other{{count} workouts}}`); grammatical
+  variants are an ICU select (`settingsBodyDiagramSubtitle`, because German
+  declines "Männliches/Weibliches"). Never build a sentence by `+` or by
+  splicing a translated word into another one.
+- Every placeholder is declared with its type in `app_en.arb`. Numbers and
+  dates that the app formats itself go in pre-formatted as `String`.
+
+**Setup.** `l10n.yaml`, `lib/l10n/app_en.arb` (template — its values are the
+English strings verbatim, so English widget tests keep finding them) and
+`app_de.arb`. The generated `lib/l10n/app_localizations*.dart` are
+**committed**, like every `.g.dart`; `flutter gen-l10n` regenerates them, and
+`flutter pub get` / `test` / `build` do too (`generate: true`).
+- Widgets: `context.l10n.someKey` (`lib/l10n/l10n.dart`). Never
+  `AppLocalizations.of(context)!`: most widget tests pump a bare
+  `MaterialApp` with no delegates, and `context.l10n` falls back to English
+  there.
+- No `BuildContext` (notifications, background sync): `ref.read(
+  appLocalizationsProvider)` in `lib/l10n/app_language.dart`, or
+  `englishLocalizations` for something that must stay English.
+- Language: `app_language` setting, Settings → Language. `system` follows the
+  phone (German phone → German, any unsupported language → English).
+  `appLocaleProvider` feeds every `MaterialApp` in `main.dart`.
+- Formatting: the helpers in `shared/utils/format.dart`, `units.dart`
+  (`formatWeightUnit`, `formatWeightIn`, `formatLoggedSet`), `weekday.dart`
+  and `home/data/recap.dart` (`bucketLabel`) take an optional `l10n:` — pass
+  `context.l10n`. Without it they print the old English. German: dates from
+  intl's CLDR data ("3. Okt. 2026", "Fr., 25. Sept."), numbers "62,5" and
+  "41.040". Leave `l10n` off for files (CSV, backups) and for a value going
+  back into a text field the user edits (`parseWeight` reads "1.040" as 1.04).
+  `formatDuration` ("1 h 05 min") is the same in German and takes none.
+- Enum labels: `.label` stays English (data, exports); on screen use
+  `.localizedLabel(context.l10n)` — `Equipment`, `SetType`, `LifterSex`,
+  `MeasurementField`, `GoalKind`, `RecapPeriod`, `AppTheme` (plus
+  `localizedDescription`). Muscles: `muscleLabel(id, l10n: context.l10n)`;
+  search: `matchesExerciseSearch(..., l10n: context.l10n)` so "Brust" finds
+  chest work.
+- Not translated, on purpose: exercise names (seed data), the editor theme
+  names (Tokyo Night, Dracula, Catppuccin Mocha, Gruvbox, Hyper), the
+  feedback mail's subject, units (`kg`, `lbs`, `cm`, `min`, `h`).
+- Tests: `l10n_test.dart` fails on a key missing from either file, on
+  mismatched placeholders and on a German value that is a copy of the
+  English (add genuine ones to `_sameInGerman`). German widget test:
+  `MaterialApp(locale: const Locale('de'), localizationsDelegates:
+  AppLocalizations.localizationsDelegates, supportedLocales:
+  AppLocalizations.supportedLocales)`; a pure unit test of German dates calls
+  `initializeDateFormatting('de')` (`package:intl/date_symbol_data_local.dart`)
+  first. Add your densest screens to `german_layout_test.dart`.
+
+**Translated so far:** `lib/main.dart`, `lib/app`, `lib/shared` (widgets,
+format/units/weekday helpers, enum and muscle labels, rest-timer
+notifications), and the features `settings`, `more`, `help`, `onboarding`,
+`home`, `muscle_map`. **Still English:** every other feature folder —
+including the panels other features put on the Settings screen (plates,
+overload, logging, rest-length picker, Health Connect) and onboarding's
+overload page, which `german_layout_test.dart` already lays out in German
+once they are translated.
+
+**German glossary** — du-form, the words German lifters use, the same word
+everywhere: workout → Training (pl. Trainings) · set → Satz/Sätze · rep →
+Wiederholung, short Wdh. · warm-up set → Aufwärmsatz · working set →
+Arbeitssatz · drop set → Dropsatz · failure → Bis Versagen · rest → Pause ·
+rest timer → Pausentimer · rest day → Ruhetag · exercise → Übung · exercise
+library → Übungsbibliothek · split → Split · programme → Programm · plan →
+Plan/Trainingsplan · weight → Gewicht · bodyweight → Körpergewicht · volume →
+Volumen · PR → PR/Bestleistung · 1RM → 1RM · progressive overload →
+Progressive Overload · deload → Deload · strength rank → Kraftlevel ·
+strength standards → Kraftstandards · muscle map → Muskelkarte · body diagram
+→ Körperdiagramm · plates → Hantelscheiben · log (verb) → loggen · theme →
+Design · accent → Akzentfarbe · not set → Nicht angegeben. English's spaced
+em dash becomes a spaced en dash (" – ").
+
 # Schema v26: what it added and the rules around it
 
 Every schema change for backup, logging, sessions and programs landed in **one
@@ -91,6 +181,8 @@ plan slot, **set null** when the slot is deleted).
 - Commit messages: no Claude mention / co-author trailer.
 
 ## Settings keys (AppSettings)
+- `app_language`: `system` (default; also what a missing row means) | `en` |
+  `de` — see Localisation above.
 - `effort_rating_mode`: `off` (default) | `rpe` | `rir`.
 - `auto_backup_mode`: `off` (default) | `weekly` | `after_workout`;
   `auto_backup_folder` (path/URI); `auto_backup_last_at` (ISO-8601);
@@ -178,12 +270,13 @@ restore refuses a backup with a table missing.
 
 ## Helpers added with v27 (reuse them)
 - `shared/utils/dates.dart`: `startOfWeek(day, firstWeekday)`, `daysBetween`.
-- `shared/utils/weekday.dart`: `firstWeekdayFor(Locale)` (CLDR table, no
-  `intl`), `weekdaysFrom(first)`. `shared/data/week_start.dart`:
-  `firstWeekdayProvider` (device region; Gymfy's own localisations are
-  English-only and would always say Sunday).
+- `shared/utils/weekday.dart`: `firstWeekdayFor(Locale)` (CLDR table, by
+  hand), `weekdaysFrom(first)`. `shared/data/week_start.dart`:
+  `firstWeekdayProvider` (device region, not the app language: English on a
+  German phone still starts on Monday).
 - `shared/utils/format.dart`: `formatMonthName`, `formatMonthYear`,
-  `formatDate` ("3 Oct 2026").
+  `formatDate` ("3 Oct 2026"; pass `l10n:` for "3. Okt. 2026", see
+  Localisation above).
 - `features/exercises/data/exercise_names.dart`: `exerciseNamesProvider`
   (id → name, archived included).
 - `features/workout/data/personal_records.dart`: `recordCountsByWorkout` and

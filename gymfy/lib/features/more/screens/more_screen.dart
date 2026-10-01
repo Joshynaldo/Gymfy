@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/fade_slide_in.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
@@ -28,76 +29,80 @@ class _Tool {
 class MoreScreen extends ConsumerWidget {
   const MoreScreen({super.key});
 
-  static const _tools = [
+  /// The hub's entries, worded in the app's language. Built per frame rather
+  /// than held as a constant, because the words change with the language.
+  static List<_Tool> _toolsFor(AppLocalizations l10n) => [
     // First, because it is the one people come to More looking for. It had a
     // bottom-nav tab of its own until four tabs left no room: you reach the
     // library when you are building a day or checking a movement, and both of
     // those start somewhere else in the app.
     _Tool(
       icon: Icons.menu_book,
-      title: 'Exercise library',
-      subtitle: 'Every movement, searchable by name or muscle',
+      title: l10n.moreExerciseLibraryTitle,
+      subtitle: l10n.moreExerciseLibrarySubtitle,
       route: '/exercises',
     ),
     _Tool(
       icon: Icons.restaurant,
-      title: 'Calorie log',
-      subtitle: 'Track meals, calories and macros',
+      title: l10n.moreCalorieLogTitle,
+      subtitle: l10n.moreCalorieLogSubtitle,
       route: '/more/calories',
     ),
     _Tool(
       icon: Icons.bar_chart,
-      title: 'This week',
-      subtitle: 'Calories over the last 7 days',
+      title: l10n.moreWeeklyTitle,
+      subtitle: l10n.moreWeeklySubtitle,
       route: '/more/weekly',
     ),
     _Tool(
       icon: Icons.calculate_outlined,
-      title: '1RM calculator',
-      subtitle: 'Estimate your one-rep max from any set',
+      title: l10n.moreOneRmTitle,
+      subtitle: l10n.moreOneRmSubtitle,
       route: '/more/one-rm',
     ),
     _Tool(
       icon: Icons.military_tech_outlined,
-      title: 'Strength rank',
-      subtitle: 'How your big lifts compare to your bodyweight',
+      title: l10n.moreStrengthRankTitle,
+      subtitle: l10n.moreStrengthRankSubtitle,
       route: '/more/rank',
     ),
     _Tool(
       icon: Icons.ios_share,
-      title: 'Share a plan',
-      subtitle: 'Send your splits to someone, or import theirs',
+      title: l10n.moreSharePlanTitle,
+      subtitle: l10n.moreSharePlanSubtitle,
       route: '/more/share-plan',
     ),
     _Tool(
       icon: Icons.move_to_inbox_outlined,
-      title: 'Import a history',
-      subtitle: 'Bring your workouts over from Hevy, Strong or similar',
+      title: l10n.moreImportTitle,
+      subtitle: l10n.moreImportSubtitle,
       route: '/more/import',
     ),
     _Tool(
       icon: Icons.help_outline,
-      title: 'Help',
-      subtitle: 'About Gymfy and who made it',
+      title: l10n.moreHelpTitle,
+      subtitle: l10n.moreHelpSubtitle,
       route: '/more/help',
     ),
     _Tool(
       icon: Icons.settings_outlined,
-      title: 'Settings',
-      subtitle: 'Accent colour, your name, rest timer alerts',
+      title: l10n.moreSettingsTitle,
+      subtitle: l10n.moreSettingsSubtitle,
       route: '/more/settings',
     ),
   ];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final tools = _toolsFor(l10n);
     return GlassScaffold(
-      appBar: GlassAppBar(title: const Text('More')),
+      appBar: GlassAppBar(title: Text(l10n.moreTitle)),
       body: (context) => ListView.builder(
         padding: const EdgeInsets.only(top: 8, bottom: 24) + barInsets(context),
-        itemCount: _tools.length,
+        itemCount: tools.length,
         itemBuilder: (context, index) {
-          final tool = _tools[index];
+          final tool = tools[index];
           return FadeSlideIn(
             // A short stagger down a fixed, always-visible list: the hub
             // assembles itself as it opens. Capped so the last row isn't still

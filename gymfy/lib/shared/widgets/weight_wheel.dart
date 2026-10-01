@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/l10n.dart';
+import '../utils/format.dart';
 import '../utils/units.dart';
 import 'number_wheel.dart';
 
@@ -32,7 +34,7 @@ class WeightWheel extends ConsumerStatefulWidget {
     required this.initialWeight,
     required this.unit,
     required this.onChanged,
-    this.label = 'Weight',
+    this.label,
   });
 
   /// Starting value, in [unit].
@@ -42,7 +44,8 @@ class WeightWheel extends ConsumerStatefulWidget {
   /// Called with the new weight, in [unit], on every change.
   final ValueChanged<double> onChanged;
 
-  final String label;
+  /// Above the whole-number drum. "Weight" in the app's language if omitted.
+  final String? label;
 
   @override
   ConsumerState<WeightWheel> createState() => _WeightWheelState();
@@ -110,13 +113,15 @@ class _WeightWheelState extends ConsumerState<WeightWheel> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final separator = decimalSeparator(l10n: l10n);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Expanded(
           flex: 3,
           child: NumberWheel(
-            label: widget.label,
+            label: widget.label ?? l10n.sharedWeightWheelLabel,
             controller: _wholeController,
             itemCount: _maxWhole + 1,
             labelAt: (index) => '$index',
@@ -134,8 +139,8 @@ class _WeightWheelState extends ConsumerState<WeightWheel> {
             controller: _fractionController,
             itemCount: _fractions.length,
             // Shown as ".25" rather than "0.25": it reads as a continuation of
-            // the number on the left, which is what it is.
-            labelAt: (index) => _fractionLabel(_fractions[index]),
+            // the number on the left, which is what it is. ",25" in German.
+            labelAt: (index) => _fractionLabel(_fractions[index], separator),
             onChanged: (index) {
               _fractionIndex = index;
               _report();
@@ -147,10 +152,8 @@ class _WeightWheelState extends ConsumerState<WeightWheel> {
   }
 }
 
-String _fractionLabel(double fraction) {
-  if (fraction == 0) return '.0';
-  return '.${(fraction * 100).round().toString().padLeft(2, '0')}'.replaceAll(
-    RegExp(r'0$'),
-    '',
-  );
+String _fractionLabel(double fraction, String separator) {
+  if (fraction == 0) return '${separator}0';
+  final digits = (fraction * 100).round().toString().padLeft(2, '0');
+  return '$separator${digits.replaceAll(RegExp(r'0$'), '')}';
 }

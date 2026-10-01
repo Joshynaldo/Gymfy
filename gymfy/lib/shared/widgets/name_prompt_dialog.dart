@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../l10n/l10n.dart';
 import '../../shared/widgets/glass_dialog.dart';
 
 /// Shows a simple "enter a name" dialog and returns the trimmed text, or null
 /// if the user cancelled or left it blank.
+///
+/// [confirmLabel] defaults to "Create" in the app's language.
 ///
 /// Used for creating splits and days. It owns its
 /// [TextEditingController] via a [StatefulWidget] so the controller is disposed
@@ -13,7 +16,7 @@ Future<String?> showNamePromptDialog(
   required String title,
   required String label,
   String? hint,
-  String confirmLabel = 'Create',
+  String? confirmLabel,
   String initialValue = '',
 }) async {
   final result = await showDialog<String>(
@@ -22,7 +25,7 @@ Future<String?> showNamePromptDialog(
       title: title,
       label: label,
       hint: hint,
-      confirmLabel: confirmLabel,
+      confirmLabel: confirmLabel ?? context.l10n.commonCreate,
       initialValue: initialValue,
     ),
   );
@@ -78,7 +81,7 @@ class _NamePromptDialogState extends State<_NamePromptDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(context.l10n.commonCancel),
         ),
         FilledButton(onPressed: _submit, child: Text(widget.confirmLabel)),
       ],

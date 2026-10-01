@@ -1,0 +1,20 @@
+# Flutter's gen-l10n (`flutter gen-l10n`, also run by `flutter pub get`,
+# `flutter test` and every build because pubspec.yaml sets `generate: true`).
+#
+# English is the template: every key exists there first, worded exactly as the
+# app has always shown it. German follows in app_de.arb. The key convention and
+# the German glossary are in FEATURE_PLAN.md ("Localisation").
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+# English first. A phone in a language Gymfy doesn't speak gets the first
+# supported locale, and alphabetical order would hand a French phone German.
+preferred-supported-locales: [en]
+# Nullable on purpose. Widgets read strings through `context.l10n`
+# (lib/l10n/l10n.dart), which falls back to English when no delegate is
+# installed — which is the case in every widget test that pumps its own bare
+# MaterialApp.
+nullable-getter: true
+# The output is committed, so keep it formatted like the rest of the code.
+format: true

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/l10n.dart';
 import '../../shared/data/settings_repository.dart';
 import 'glass.dart';
 import 'motion.dart';
@@ -205,10 +206,35 @@ enum AppTheme {
     this.suggestedAccent,
   });
 
-  /// Shown in the settings picker.
+  /// Shown in the settings picker, in English. On screen use [localizedLabel]
+  /// and [localizedDescription].
   final String label;
   final String description;
   final AppPalette palette;
+
+  /// The name in the app's language.
+  ///
+  /// The editor palettes keep theirs in every language — "Dracula" is the name
+  /// of a project, not a description of one. Only the three house themes are
+  /// words to translate.
+  String localizedLabel(AppLocalizations l10n) => switch (this) {
+    AppTheme.darkDefault => l10n.themeDarkDefaultLabel,
+    AppTheme.amoled => l10n.themeAmoledLabel,
+    AppTheme.highContrast => l10n.themeHighContrastLabel,
+    _ => label,
+  };
+
+  /// What the theme is for, in the app's language.
+  String localizedDescription(AppLocalizations l10n) => switch (this) {
+    AppTheme.darkDefault => l10n.themeDarkDefaultDescription,
+    AppTheme.amoled => l10n.themeAmoledDescription,
+    AppTheme.highContrast => l10n.themeHighContrastDescription,
+    AppTheme.tokyoNight => l10n.themeTokyoNightDescription,
+    AppTheme.dracula => l10n.themeDraculaDescription,
+    AppTheme.catppuccinMocha => l10n.themeCatppuccinMochaDescription,
+    AppTheme.gruvbox => l10n.themeGruvboxDescription,
+    AppTheme.hyper => l10n.themeHyperDescription,
+  };
 
   /// The accent this palette was designed around, for themes that have one.
   ///

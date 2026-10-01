@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../../l10n/l10n.dart';
 import 'exercise.dart';
 
 /// Something the user is working towards: a weight on one lift, a number of
@@ -79,7 +80,15 @@ enum GoalKind {
 
   const GoalKind(this.label);
 
+  /// The English name. On screen use [localizedLabel].
   final String label;
+
+  /// The name in the app's language, e.g. "Körpergewicht".
+  String localizedLabel(AppLocalizations l10n) => switch (this) {
+    GoalKind.lift => l10n.goalKindLift,
+    GoalKind.frequency => l10n.goalKindFrequency,
+    GoalKind.bodyweight => l10n.goalKindBodyweight,
+  };
 
   /// Reads a stored slug, or null for one this build does not know.
   ///

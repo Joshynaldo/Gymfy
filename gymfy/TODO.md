@@ -747,6 +747,16 @@ Track progress here. Update after each session.
 
 ## 🟡 In progress
 
+### Lokalisierung: Englisch + Deutsch (Teil 1 — Gerüst, Shell, Settings, Home, Onboarding)
+- [x] **gen-l10n eingerichtet.** `flutter_localizations` + `intl` (beide reines Dart, kein Plattform-Code, kein Netz), `generate: true`, `l10n.yaml`, `lib/l10n/app_en.arb` (Vorlage, Werte = die bisherigen englischen Texte wörtlich) und `app_de.arb`. Die generierten `app_localizations*.dart` werden **eingecheckt**, wie jede `.g.dart`. Englisch steht in `supportedLocales` vorn (`preferred-supported-locales`) — alphabetisch hätte ein französisches Handy Deutsch bekommen
+- [x] **`context.l10n`** statt `AppLocalizations.of(context)!`: fällt auf Englisch zurück, wenn kein Delegate da ist. Dadurch laufen die ~100 Widget-Tests mit eigenem nacktem `MaterialApp` unverändert weiter; nur drei Tests mussten angefasst werden, weil `mainDestinations` jetzt eine Funktion von `context` ist
+- [x] **Sprache in Settings → Sprache:** Systemsprache (Standard) / English / Deutsch, Schlüssel `app_language`, wirkt sofort. Ohne Wahl entscheidet das Handy: deutsches Handy → deutsche App, nicht unterstützte Sprache → Englisch. Übungsnamen bleiben englisch, das sagt die Einstellung einmal dazu
+- [x] **Übersetzt:** `lib/main.dart`, `lib/app`, `lib/shared` (Widgets, Datums-/Zahlenformat, Enum- und Muskelnamen, Pausen-Benachrichtigungen) und die Features settings, more, help, onboarding, home, muscle_map. Datum und Zahlen über `intl`: „3. Okt. 2026", „62,5 kg", „41.040". Konvention, Glossar und was noch fehlt: `FEATURE_PLAN.md` → *Localisation*
+- [x] **Ein echter Fund des neuen Layout-Tests:** die Geschlechts-Auswahl im Körperdiagramm-Eintrag lag als `trailing` neben dem Text und brauchte auf Deutsch bei 130 % Schrift die ganze Zeile („Trailing widget consumes the entire tile width"). Steht jetzt unter dem Text. Nebenbei: der Wochenkarten-Test in `overflow_test.dart` maß seit dem 18.09. nichts mehr, weil seine Sätze auf festen Tagen lagen und die Karte nur die letzten sieben Tage zeigt — die Sätze sind jetzt relativ zu heute datiert
+- [x] **Gemessen:** `flutter analyze` sauber, `flutter test` 2029/2029 (vorher 1970, +59 neue), `flutter build apk --debug` baut. Phone-Build up-to-date (`gradlew :app:assembleDebug`, warmer Daemon, vorher/nachher abwechselnd, 5 Läufe): vorher 12,93 / 12,52 / 12,13 / 11,98 / 12,06 s, mit l10n 13,41 / 12,64 / 12,69 / 12,58 / 12,02 s — Median 12,1 gegen 12,6 s, innerhalb der Streuung einer Spalte. `compileFlutterBuildDebug` bleibt UP-TO-DATE; kein `INTERNET` im Main-Manifest
+- [ ] **Restliche Features übersetzen** (backup, calculator, calendar, calories, data_export, exercises, goals, health_connect, import, overload, plan_share, plates, programs, progress, reviews, stats, wear, workout, workout_notification) — dabei die Panels, die andere Features in Settings und ins Onboarding hängen
+- [ ] **Nur auf dem Gerät prüfbar:** Sprachumschaltung bei laufender App, Systemsprache Deutsch/Österreich/Schweiz, Benachrichtigungstexte auf dem Lockscreen. Kanalnamen in den Android-Einstellungen bleiben in der Sprache, in der der Kanal zuerst angelegt wurde (das Plugin legt nur fehlende Kanäle an)
+
 ---
 
 ## 🟢 Done

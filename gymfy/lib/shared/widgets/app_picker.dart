@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/theme/accent_color.dart';
+import '../../l10n/l10n.dart';
 import 'glass_sheet.dart';
 import 'number_wheel.dart';
 
@@ -311,7 +312,7 @@ class _NumberWheelSheetState extends ConsumerState<_NumberWheelSheet> {
             width: double.infinity,
             child: FilledButton(
               onPressed: () => Navigator.of(context).pop(_value),
-              child: const Text('Done'),
+              child: Text(context.l10n.commonDone),
             ),
           ),
         ),

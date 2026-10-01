@@ -105,10 +105,12 @@ void main() {
   });
 
   group('the navigation bar', () {
-    Widget navBar() => GlassNavBar(
-      selectedIndex: 0,
-      onDestinationSelected: (_) {},
-      destinations: mainDestinations,
+    Widget navBar() => Builder(
+      builder: (context) => GlassNavBar(
+        selectedIndex: 0,
+        onDestinationSelected: (_) {},
+        destinations: mainDestinations(context),
+      ),
     );
 
     testWidgets('spans the screen on a flat theme', (tester) async {
@@ -147,7 +149,10 @@ void main() {
       await _pump(tester, AppTheme.hyper, bottom: navBar());
 
       final bar = tester.widget<NavigationBar>(find.byType(NavigationBar));
-      expect(bar.destinations.length, mainDestinations.length);
+      expect(
+        bar.destinations.length,
+        mainDestinations(tester.element(find.byType(NavigationBar))).length,
+      );
       expect(find.text('Workout'), findsOneWidget);
       expect(find.text('Progress'), findsOneWidget);
     });

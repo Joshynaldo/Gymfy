@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
 import '../../../shared/utils/weekday.dart';
@@ -28,6 +29,7 @@ class WeekCard extends ConsumerWidget {
     if (recap == null || recap.isEmpty) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final unit = ref.watch(weightUnitProvider);
     final peak = recap.buckets.fold<double>(
       0,
@@ -38,9 +40,8 @@ class WeekCard extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         AppSectionHeader(
-          title: 'This week',
-          countLabel:
-              '${recap.sessions} ${recap.sessions == 1 ? 'workout' : 'workouts'}',
+          title: l10n.homeWeekTitle,
+          countLabel: l10n.homeWeekWorkouts(recap.sessions),
         ),
         AppPanel(
           child: Column(
@@ -51,7 +52,8 @@ class WeekCard extends ConsumerWidget {
               // replaced itself says nothing happened.
               AnimatedCount(
                 value: weightIn(recap.totalVolumeKg, unit),
-                format: (value) => '${formatWeight(value)} ${unit.label}',
+                format: (value) =>
+                    '${formatWeight(value, l10n: l10n)} ${unit.label}',
                 style: theme.textTheme.headlineSmall,
               ),
               const SizedBox(height: 3),
@@ -59,7 +61,9 @@ class WeekCard extends ConsumerWidget {
               // letters, sized to fit under a bar. In a sentence it came out as
               // "lifted since S", which is not a day and not English.
               Text(
-                'lifted since ${weekdayName(recap.buckets.first.start.weekday)}',
+                l10n.homeWeekLiftedSince(
+                  weekdayName(recap.buckets.first.start.weekday, l10n: l10n),
+                ),
                 style: theme.textTheme.bodySmall,
               ),
               const SizedBox(height: 20),
@@ -75,7 +79,11 @@ class WeekCard extends ConsumerWidget {
                   for (final bucket in recap.buckets)
                     Expanded(
                       child: _Bar(
-                        label: bucket.label,
+                        label: bucketLabel(
+                          bucket.start,
+                          recap.period.grain,
+                          l10n: l10n,
+                        ),
                         // Against the tallest day rather than a fixed scale:
                         // the question is which day was the big one, not how
                         // this week compares to an arbitrary ceiling.

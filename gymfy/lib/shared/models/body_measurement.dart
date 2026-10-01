@@ -1,5 +1,7 @@
 import 'package:drift/drift.dart';
 
+import '../../l10n/l10n.dart';
+
 /// The user's body measurements on a given day.
 ///
 /// One row per calendar day (enforced by [uniqueKeys]), with every measurement
@@ -60,8 +62,18 @@ enum MeasurementField {
 
   const MeasurementField(this.label, this.unit);
 
-  /// Display name, e.g. "Waist".
+  /// Display name in English, e.g. "Waist". On screen use [localizedLabel].
   final String label;
+
+  /// The name in the app's language, e.g. "Taille".
+  String localizedLabel(AppLocalizations l10n) => switch (this) {
+    MeasurementField.weight => l10n.measurementFieldWeight,
+    MeasurementField.chest => l10n.measurementFieldChest,
+    MeasurementField.waist => l10n.measurementFieldWaist,
+    MeasurementField.hips => l10n.measurementFieldHips,
+    MeasurementField.arms => l10n.measurementFieldArms,
+    MeasurementField.legs => l10n.measurementFieldLegs,
+  };
 
   /// The unit values are stored in, e.g. "cm".
   final String unit;

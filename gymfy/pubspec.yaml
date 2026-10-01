@@ -30,6 +30,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # English and German (lib/l10n, configured in l10n.yaml). Both ship with the
+  # SDK and are pure Dart: no platform code, nothing for Gradle to build, no
+  # network. `intl` is pinned by flutter_localizations, hence `any` — the
+  # constraint Flutter's own localisation guide uses.
+  flutter_localizations:
+    sdk: flutter
+  intl: any
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -145,6 +152,9 @@ flutter_native_splash:
 
 # The following section is specific to Flutter packages.
 flutter:
+  # Generates lib/l10n/app_localizations*.dart from the ARB files beside them.
+  # The output is committed, like every other generated file in the repo.
+  generate: true
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

@@ -11,6 +11,7 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/l10n.dart';
 import '../data/settings_repository.dart';
 import 'format.dart';
 
@@ -79,8 +80,17 @@ double roundToLoadable(double kilograms, WeightUnit unit) {
 
 /// Formats a stored weight in [unit], without the unit label — for places that
 /// show the label separately, like a text field suffix or a chart axis.
-String formatWeightIn(double kilograms, WeightUnit unit) {
-  return formatWeight(weightIn(kilograms, unit));
+///
+/// Pass [l10n] for the language's separators ("62,5" in German), as with
+/// [formatWeight]. Not for a value going back into a text field the user
+/// edits: [parseWeight] reads a comma as the decimal point, so a grouped
+/// "1.040" would come back as one kilo.
+String formatWeightIn(
+  double kilograms,
+  WeightUnit unit, {
+  AppLocalizations? l10n,
+}) {
+  return formatWeight(weightIn(kilograms, unit), l10n: l10n);
 }
 
 /// Formats a stored weight with its unit, e.g. "62.5 kg" or "138 lbs".
@@ -88,8 +98,12 @@ String formatWeightIn(double kilograms, WeightUnit unit) {
 /// The one function nearly every screen wants. Rounds to something loadable
 /// first, so a converted weight reads like a weight rather than trailing five
 /// decimal places of conversion error.
-String formatWeightUnit(double kilograms, WeightUnit unit) {
-  return '${formatWeightIn(roundToLoadable(kilograms, unit), unit)} '
+String formatWeightUnit(
+  double kilograms,
+  WeightUnit unit, {
+  AppLocalizations? l10n,
+}) {
+  return '${formatWeightIn(roundToLoadable(kilograms, unit), unit, l10n: l10n)} '
       '${unit.label}';
 }
 
@@ -108,12 +122,14 @@ String formatLoggedSet({
   required int reps,
   required int? seconds,
   required WeightUnit unit,
+  AppLocalizations? l10n,
 }) {
+  final weight = formatWeightUnit(weightKg, unit, l10n: l10n);
   if (seconds != null) {
     final held = formatSetDuration(seconds);
-    return weightKg > 0 ? '${formatWeightUnit(weightKg, unit)} × $held' : held;
+    return weightKg > 0 ? '$weight × $held' : held;
   }
-  return '${formatWeightUnit(weightKg, unit)} × $reps reps';
+  return (l10n ?? englishLocalizations).sharedLoggedSetReps(weight, reps);
 }
 
 /// Parses a user-typed weight in [unit] and returns it in kilograms.
