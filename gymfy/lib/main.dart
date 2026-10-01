@@ -7,6 +7,7 @@ import 'app/theme/app_theme.dart';
 import 'app/theme/hyper_backdrop.dart';
 import 'features/backup/data/auto_backup.dart';
 import 'features/exercises/data/exercise_repository.dart';
+import 'features/health_connect/data/health_connect_sync.dart';
 import 'features/onboarding/data/onboarding_repository.dart';
 import 'features/onboarding/screens/onboarding_screen.dart';
 import 'features/wear/data/wear_sync.dart';
@@ -53,6 +54,10 @@ class GymfyApp extends ConsumerWidget {
     // Automatic backups. Here for the same reason: the moments they run on —
     // opening the app, finishing a workout — belong to other screens.
     ref.watch(autoBackupWatcherProvider);
+    // Health Connect: workouts out, weigh-ins in. Same reason again. Costs a
+    // settings read per trigger while both switches are off, which they are
+    // until someone turns one on.
+    ref.watch(healthConnectWatcherProvider);
 
     // Onboarding is gated here rather than by a router redirect. A redirect has
     // to answer synchronously, but "has onboarding finished" comes from the

@@ -9,6 +9,8 @@ import '../../../shared/data/settings_repository.dart';
 import '../../../shared/widgets/app_picker.dart';
 import '../../../shared/widgets/accent_swatch.dart';
 import '../../../shared/utils/units.dart';
+import '../../health_connect/data/health_connect_bridge.dart';
+import '../../health_connect/widgets/health_connect_settings_panel.dart';
 import '../../onboarding/data/onboarding_repository.dart';
 import '../../overload/widgets/overload_settings.dart';
 import '../../plates/widgets/plate_inventory_picker.dart';
@@ -70,8 +72,28 @@ class SettingsScreen extends ConsumerWidget {
           _SectionHeader('Data'),
           _BackupTile(),
           _ExportTile(),
+          _HealthConnectSection(),
         ],
       ),
+    );
+  }
+}
+
+/// Health Connect, last so it never pushes anything above it around, and only
+/// on Android — elsewhere there is no Health Connect to describe.
+class _HealthConnectSection extends StatelessWidget {
+  const _HealthConnectSection();
+
+  @override
+  Widget build(BuildContext context) {
+    if (!HealthConnectBridge.supported) return const SizedBox.shrink();
+    return const Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Divider(height: 1),
+        _SectionHeader('Health Connect'),
+        HealthConnectSettingsPanel(),
+      ],
     );
   }
 }

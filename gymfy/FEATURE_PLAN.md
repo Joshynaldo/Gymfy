@@ -96,6 +96,18 @@ plan slot, **set null** when the slot is deleted).
   `auto_backup_folder` (path/URI); `auto_backup_last_at` (ISO-8601);
   `auto_backup_last_error` (last failed automatic backup, shown on the screen).
 - Warm-up calculator ramp: `warmup_ramp_percents` (e.g. `40,60,80`).
+- Health Connect (`lib/features/health_connect/`, no schema change):
+  `health_connect_write_workouts`, `health_connect_read_bodyweight`
+  (`true`|`false`, both off by default); `health_connect_write_since`
+  (ISO-8601, workouts finished after it are written automatically, older ones
+  only by the backfill); `health_connect_written_sessions` (JSON
+  `{sessionId: clientRecordId}`, how deletions find their record);
+  `health_connect_weight_imports` (JSON `{"yyyy-mm-dd": {id, kg}}`, how a
+  typed or edited bodyweight is told apart from an import);
+  `health_connect_weight_checked_at` (ISO-8601); `health_connect_last_error`.
+  These live in `app_settings`, so a backup restore brings back the ledgers
+  of that moment: records written after the backup are not deleted from
+  Health Connect by the restore.
 
 ## Feature areas and the files they touched
 **P1 Backup & restore** — new `lib/features/backup/` (data: `backup_format.dart`,
