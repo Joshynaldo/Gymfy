@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/data/settings_repository.dart';
 import '../data/rank_inputs.dart';
 
@@ -21,15 +22,15 @@ class RankSetupPrompt extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Before we can rank you', style: theme.textTheme.titleMedium),
+        Text(l10n.calculatorSetupTitle, style: theme.textTheme.titleMedium),
         const SizedBox(height: 4),
         Text(
-          'A rank compares your lifts to your own bodyweight, so it needs two '
-          'things from you.',
+          l10n.calculatorSetupMessage,
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -51,16 +52,14 @@ class _SexPrompt extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return _PromptCard(
       icon: Icons.people_outline,
-      title: 'Which standards should we use?',
+      title: l10n.calculatorSetupSexTitle,
       // Being explicit about why beats a bare question — this is the sort of
       // field people are (rightly) suspicious of an app asking for.
-      body:
-          'Published strength standards differ by sex: a bodyweight bench '
-          'press is intermediate for men and advanced for women. Picking the '
-          'wrong table would just give you a wrong rank.',
+      body: l10n.calculatorSetupSexMessage,
       action: Row(
         children: [
           for (final sex in LifterSex.values) ...[
@@ -69,7 +68,7 @@ class _SexPrompt extends ConsumerWidget {
                 onPressed: () => ref
                     .read(settingsRepositoryProvider)
                     .write(lifterSexSetting, sex.name),
-                child: Text(sex.label),
+                child: Text(sex.localizedLabel(l10n)),
               ),
             ),
             if (sex != LifterSex.values.last) const SizedBox(width: 12),
@@ -88,19 +87,18 @@ class _BodyweightPrompt extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return _PromptCard(
       icon: Icons.monitor_weight_outlined,
-      title: 'Log your bodyweight',
-      body:
-          'Ranks are a ratio of what you lift to what you weigh. Add your '
-          'weight under Progress → Measurements and it shows up here.',
+      title: l10n.calculatorSetupBodyweightTitle,
+      body: l10n.calculatorSetupBodyweightMessage,
       action: Align(
         alignment: Alignment.centerLeft,
         child: FilledButton.icon(
           onPressed: () => context.go('/progress/measurements'),
           icon: const Icon(Icons.straighten),
-          label: const Text('Open measurements'),
+          label: Text(l10n.calculatorSetupOpenMeasurements),
         ),
       ),
       theme: theme,

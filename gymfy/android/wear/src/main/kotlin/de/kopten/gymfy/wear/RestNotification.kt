@@ -40,13 +40,16 @@ object RestNotification {
     fun ensureChannel(context: Context) {
         val channel = NotificationChannel(
             CHANNEL_ID,
-            "Rest timer",
+            // In the watch's language. Android keeps a channel's name from
+            // when it was created and updates it when this runs again, which
+            // it does on every start.
+            context.getString(R.string.rest_channel_name),
             // High, because the whole point is that it reaches you when you
             // are not looking. Vibration is handled by the channel so the
             // buzz survives the app being frozen too.
             NotificationManager.IMPORTANCE_HIGH,
         ).apply {
-            description = "The countdown between sets"
+            description = context.getString(R.string.rest_channel_description)
             enableVibration(true)
         }
         context.getSystemService(NotificationManager::class.java)
@@ -65,7 +68,7 @@ object RestNotification {
 
         val notification = Notification.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
-            .setContentTitle(exercise.ifEmpty { "Rest" })
+            .setContentTitle(exercise.ifEmpty { context.getString(R.string.rest_notification_title) })
             // The three lines that make the system do the counting: `when` is
             // the deadline, the chronometer renders the difference, and
             // countDown makes it run towards zero rather than up from it.

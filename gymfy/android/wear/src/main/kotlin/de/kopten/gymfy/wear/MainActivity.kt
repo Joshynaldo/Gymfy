@@ -40,6 +40,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.rotary.onRotaryScrollEvent
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.graphics.Color
@@ -196,7 +197,7 @@ fun WearApp(demoRestSeconds: Int = 0) {
 @Composable
 private fun Idle() {
     Text(
-        text = "No workout running",
+        text = stringResource(R.string.idle_no_workout),
         textAlign = TextAlign.Center,
         style = MaterialTheme.typography.bodyMedium,
     )
@@ -351,7 +352,7 @@ private fun RestTimer(
             verticalArrangement = Arrangement.Center,
         ) {
             Text(
-                text = if (remaining > 0) formatRest(remaining) else "Rest over",
+                text = if (remaining > 0) formatRest(remaining) else stringResource(R.string.rest_over),
                 style = MaterialTheme.typography.displaySmall,
             )
             if (state.exercise.isNotEmpty()) {
@@ -371,8 +372,8 @@ private fun RestTimer(
             // about its own +30s.
             if (remaining > 0) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    CommandChip("+30s", COMMAND_ADD_THIRTY)
-                    CommandChip("Skip", COMMAND_SKIP_REST)
+                    CommandChip(stringResource(R.string.rest_add_thirty), COMMAND_ADD_THIRTY)
+                    CommandChip(stringResource(R.string.rest_skip), COMMAND_SKIP_REST)
                 }
             }
         }
@@ -509,8 +510,14 @@ private fun LogSet(state: WorkoutState) {
             onMinus = { changeWeight(-1) },
             onPlus = { changeWeight(1) },
         )
+        // The watch's own plural rules, in the watch's language.
+        val resources = LocalContext.current.resources
         Stepper(
-            label = if (state.nextTimed) formatRest(value) else "$value reps",
+            label = if (state.nextTimed) {
+                formatRest(value)
+            } else {
+                resources.getQuantityString(R.plurals.reps_count, value, value)
+            },
             selected = dial == Dial.REPS,
             onSelect = { dial = Dial.REPS },
             onMinus = { changeValue(-1) },
@@ -526,7 +533,7 @@ private fun LogSet(state: WorkoutState) {
             modifier = Modifier.width(110.dp),
         ) {
             Text(
-                text = "Log",
+                text = stringResource(R.string.log_set),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )

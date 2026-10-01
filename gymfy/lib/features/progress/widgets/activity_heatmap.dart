@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/utils/dates.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/weekday.dart';
@@ -90,6 +91,7 @@ class _ActivityHeatmapState extends ConsumerState<ActivityHeatmap> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
     final minutes = ref.watch(activityMinutesProvider).value;
 
@@ -106,7 +108,10 @@ class _ActivityHeatmapState extends ConsumerState<ActivityHeatmap> {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-          child: Text('Activity', style: theme.textTheme.titleMedium),
+          child: Text(
+            l10n.progressActivityTitle,
+            style: theme.textTheme.titleMedium,
+          ),
         ),
         AppCard(
           margin: const EdgeInsets.symmetric(horizontal: 12),
@@ -140,6 +145,7 @@ class _ActivityHeatmapState extends ConsumerState<ActivityHeatmap> {
                             labelColour: theme.colorScheme.onSurfaceVariant,
                             selectionColour: theme.colorScheme.onSurface,
                             textDirection: Directionality.of(context),
+                            l10n: l10n,
                           ),
                         ),
                       ),
@@ -220,7 +226,9 @@ class _WeekdayLabels extends StatelessWidget {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  weekday.isOdd && weekday <= 5 ? weekdayInitial(weekday) : '',
+                  weekday.isOdd && weekday <= 5
+                      ? weekdayInitial(weekday, l10n: context.l10n)
+                      : '',
                   style: style,
                 ),
               ),
@@ -242,6 +250,7 @@ class _HeatmapPainter extends CustomPainter {
     required this.labelColour,
     required this.selectionColour,
     required this.textDirection,
+    required this.l10n,
   });
 
   final DateTime start;
@@ -252,6 +261,9 @@ class _HeatmapPainter extends CustomPainter {
   final Color labelColour;
   final Color selectionColour;
   final TextDirection textDirection;
+
+  /// For the month names along the top.
+  final AppLocalizations l10n;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -305,7 +317,7 @@ class _HeatmapPainter extends CustomPainter {
         lastMonth = columnStart.month;
         _paintText(
           canvas,
-          formatMonthAbbr(columnStart),
+          formatMonthAbbr(columnStart, l10n: l10n),
           Offset(week * _step, 0),
         );
       }
@@ -329,7 +341,8 @@ class _HeatmapPainter extends CustomPainter {
     return old.minutes != minutes ||
         old.selected != selected ||
         old.today != today ||
-        old.palette != palette;
+        old.palette != palette ||
+        old.l10n != l10n;
   }
 }
 
@@ -357,24 +370,30 @@ class _Caption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final style = theme.textTheme.bodySmall?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
     );
 
     if (selected != null) {
       final day = minutes[selected];
-      final label = formatDayLabel(selected!, today: today);
+      final label = formatDayLabel(selected!, today: today, l10n: l10n);
 
       return Text(switch (day) {
-        null => '$label — rest day',
+        null => l10n.progressActivityRestDay(label),
         // Trained, with nothing honest to say about how long. An imported
         // session whose file recorded no usable end reads like this, and
         // "1 min trained" beside eighteen sets would be a made-up number
         // standing where the real one is missing.
-        (minutes: 0, untimed: _) => '$label — trained, length not recorded',
-        _ =>
-          '$label — ${formatDuration(Duration(minutes: day.minutes))} '
-              'trained${day.untimed > 0 ? ', and one more not recorded' : ''}',
+        (minutes: 0, untimed: _) => l10n.progressActivityUntimed(label),
+        _ when day.untimed > 0 => l10n.progressActivityTrainedPlusUntimed(
+          label,
+          formatDuration(Duration(minutes: day.minutes)),
+        ),
+        _ => l10n.progressActivityTrained(
+          label,
+          formatDuration(Duration(minutes: day.minutes)),
+        ),
       }, style: style);
     }
 
@@ -387,12 +406,14 @@ class _Caption extends StatelessWidget {
       children: [
         Expanded(
           child: Text(
-            '${days == 1 ? '1 day' : '$days days'} • '
-            '${formatDuration(Duration(minutes: total))} this year',
+            l10n.progressActivityYear(
+              days,
+              formatDuration(Duration(minutes: total)),
+            ),
             style: style,
           ),
         ),
-        Text('Less', style: style),
+        Text(l10n.progressActivityLess, style: style),
         const SizedBox(width: 4),
         for (final colour in palette)
           Padding(
@@ -407,7 +428,7 @@ class _Caption extends StatelessWidget {
             ),
           ),
         const SizedBox(width: 4),
-        Text('More', style: style),
+        Text(l10n.progressActivityMore, style: style),
       ],
     );
   }

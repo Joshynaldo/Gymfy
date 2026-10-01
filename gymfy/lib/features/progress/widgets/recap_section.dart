@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/utils/exercise_display.dart';
 import '../../../shared/utils/units.dart';
 import '../../../shared/widgets/bar_chart.dart';
@@ -30,6 +31,7 @@ class _RecapSectionState extends ConsumerState<RecapSection> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final recap = ref.watch(recapProvider(_period));
     final unit = ref.watch(weightUnitProvider);
 
@@ -55,7 +57,11 @@ class _RecapSectionState extends ConsumerState<RecapSection> {
             onChanged: (value) => setState(() => _period = value),
             segments: [
               for (final period in RecapPeriod.values)
-                (value: period, label: period.label, leading: null),
+                (
+                  value: period,
+                  label: period.localizedLabel(l10n),
+                  leading: null,
+                ),
             ],
           ),
         ),
@@ -88,7 +94,7 @@ class _EmptyPeriod extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       child: Center(
         child: Text(
-          'Nothing logged in the last ${period.label.toLowerCase()}.',
+          context.l10n.progressRecapEmpty(period.name),
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -151,6 +157,7 @@ class _VolumeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     // Rest days are zeros, not gaps.
     //
     // They were nulls, and the line simply skipped them — so a week with
@@ -162,9 +169,9 @@ class _VolumeCard extends StatelessWidget {
     final peak = values.fold<double>(0, (m, v) => v > m ? v : m);
 
     return _RecapCard(
-      title: 'Volume',
-      headline: formatWeightUnit(recap.totalVolumeKg, unit),
-      detail: 'lifted in the last ${recap.period.label.toLowerCase()}',
+      title: l10n.progressRecapVolumeTitle,
+      headline: formatWeightUnit(recap.totalVolumeKg, unit, l10n: l10n),
+      detail: l10n.progressRecapVolumeDetail(recap.period.name),
       // A line, not bars. Volume over time is a *trend* — the question is
       // whether it is going up — and a row of bars asks you to compare their
       // heights to answer that. The sessions card below stays bars, because
@@ -173,7 +180,7 @@ class _VolumeCard extends StatelessWidget {
         height: 150,
         child: _VolumeLine(
           values: values,
-          labels: [for (final b in recap.buckets) b.label],
+          labels: _labels(recap, l10n),
           peak: peak,
         ),
       ),
@@ -204,7 +211,7 @@ class _VolumeLine extends ConsumerWidget {
     if (spots.length < 2) {
       return Center(
         child: Text(
-          'One day is not a trend yet.',
+          context.l10n.progressRecapOneDay,
           style: Theme.of(context).textTheme.bodySmall,
         ),
       );
@@ -270,18 +277,18 @@ class _SessionsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final peak = recap.buckets.fold<int>(
       0,
       (m, b) => b.sessions > m ? b.sessions : m,
     );
 
     return _RecapCard(
-      title: 'Workouts',
+      title: l10n.progressRecapWorkoutsTitle,
       headline: '${recap.sessions}',
       detail: recap.personalRecords == 0
-          ? 'sessions in the last ${recap.period.label.toLowerCase()}'
-          : 'sessions • ${recap.personalRecords} personal '
-                '${recap.personalRecords == 1 ? 'record' : 'records'}',
+          ? l10n.progressRecapSessionsDetail(recap.period.name)
+          : l10n.progressRecapSessionsRecords(recap.personalRecords),
       child: SizedBox(
         height: 140,
         child: SimpleBarChart(
@@ -289,7 +296,7 @@ class _SessionsCard extends StatelessWidget {
           // screen's one accent, and two accent charts on one screen is two
           // things claiming to be the headline.
           muted: true,
-          labels: [for (final b in recap.buckets) b.label],
+          labels: _labels(recap, l10n),
           values: [
             for (final b in recap.buckets)
               b.sessions == 0 ? null : b.sessions.toDouble(),
@@ -300,8 +307,7 @@ class _SessionsCard extends StatelessWidget {
           yLabel: (value) =>
               value == value.roundToDouble() ? '${value.round()}' : '',
           tooltip: (i) =>
-              '${recap.buckets[i].sessions} '
-              '${recap.buckets[i].sessions == 1 ? 'workout' : 'workouts'}',
+              l10n.progressRecapWorkoutsTooltip(recap.buckets[i].sessions),
         ),
       ),
     );
@@ -326,6 +332,7 @@ class _MusclesCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final entries = recap.muscleSets.entries.toList()
       // Ties broken by name so the order is stable between rebuilds rather
       // than shuffling whenever two muscles have the same count.
@@ -341,9 +348,9 @@ class _MusclesCard extends ConsumerWidget {
     final top = shown.first.value;
 
     return _RecapCard(
-      title: 'What you trained',
-      headline: muscleLabel(shown.first.key),
-      detail: 'took the most sets',
+      title: l10n.progressRecapMusclesTitle,
+      headline: muscleLabel(shown.first.key, l10n: l10n),
+      detail: l10n.progressRecapMusclesDetail,
       child: Column(
         children: [
           for (final entry in shown)
@@ -354,7 +361,7 @@ class _MusclesCard extends ConsumerWidget {
                   SizedBox(
                     width: 96,
                     child: Text(
-                      muscleLabel(entry.key),
+                      muscleLabel(entry.key, l10n: l10n),
                       style: theme.textTheme.bodySmall,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -375,10 +382,11 @@ class _MusclesCard extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
+                  // Room for "12 Sätze" as well as "12 sets".
                   SizedBox(
-                    width: 52,
+                    width: 60,
                     child: Text(
-                      '${entry.value} ${entry.value == 1 ? 'set' : 'sets'}',
+                      l10n.progressRecapMuscleSets(entry.value),
                       textAlign: TextAlign.right,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
@@ -394,5 +402,11 @@ class _MusclesCard extends ConsumerWidget {
     );
   }
 }
+
+/// The letters under [recap]'s bars, in [l10n]'s language.
+List<String> _labels(RecapSummary recap, AppLocalizations l10n) => [
+  for (final bucket in recap.buckets)
+    bucketLabel(bucket.start, recap.period.grain, l10n: l10n),
+];
 
 /// Volume axis labels get long fast — 12,000 kg in a week is ordinary. `12k`

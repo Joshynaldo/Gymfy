@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- German for HealthPermissionsRationaleActivity, shown when Health
+         Connect runs in German. The same promises as values/strings.xml,
+         and the switch names exactly as the German Settings screen spells
+         them (healthConnect… in lib/l10n/app_de.arb) — health_connect_test
+         checks both. Change all three together. -->
+    <string name="health_rationale_title">Gymfy und Health Connect</string>
+    <string name="health_rationale_body">Gymfy liest oder schreibt nur dann
+        etwas in Health Connect, wenn du das in Gymfy unter Einstellungen →
+        Health Connect einschaltest. Beide Schalter sind aus, bis du das
+        tust.\n\nTrainings eintragen (Training schreiben): Wenn du ein Training
+        abschließt, fügt Gymfy eine Trainingseinheit hinzu – Krafttraining,
+        Start- und Endzeit und den Namen des Trainings. Keine Sätze, Gewichte,
+        Notizen, Körpermaße oder Fotos. Frühere Trainings werden nur
+        eingetragen, wenn du auf „Frühere Trainings eintragen“ tippst. Solange
+        das Eintragen an ist, löscht das Löschen eines Trainings in Gymfy auch
+        seine Einheit hier.\n\nKörpergewicht übernehmen (Gewicht lesen): Wenn
+        du Gymfy öffnest, liest es die Gewichtswerte der letzten 30 Tage und
+        trägt dein Körpergewicht an Tagen ein, an denen du keines eingetragen
+        hast – jeweils den ersten Wert des Tages. Ein selbst eingetragenes
+        Gewicht wird nie ersetzt, und kein Wert wird zweimal übernommen. Sonst
+        wird nichts gelesen.\n\nAlles bleibt auf diesem Handy. Gymfy hat
+        keinen Internetzugriff und schickt nichts irgendwohin. Apps, denen du
+        erlaubst, Trainingsdaten aus Health Connect zu lesen, sehen die
+        Trainings, die Gymfy eingetragen hat.\n\nZum Beenden schalte den
+        Schalter in Gymfy aus. Um den Zugriff zu entziehen oder zu löschen,
+        was Gymfy eingetragen hat, nutze die Health-Connect-Einstellungen für
+        Gymfy oder „In Health Connect verwalten“ in Gymfy. Schon eingetragene
+        Trainings bleiben in Health Connect, bis du sie dort löschst.</string>
+</resources>

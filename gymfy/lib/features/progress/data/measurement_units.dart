@@ -5,6 +5,7 @@
 // measurement needs to ask "is this the weight one?" — this puts that question
 // in one place rather than repeating the conditional per screen.
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/models/body_measurement.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
@@ -25,15 +26,29 @@ extension MeasurementDisplay on MeasurementField {
       isWeight ? weightToKilograms(typed, weightUnit) : typed;
 
   /// Formats a stored value without its unit label.
-  String formatValue(double stored, WeightUnit weightUnit) {
-    if (!isWeight) return formatWeight(stored);
+  ///
+  /// Pass [l10n] for the language's separators on screen ("82,5" in German).
+  /// Leave it off for a value going into a text field the user edits.
+  String formatValue(
+    double stored,
+    WeightUnit weightUnit, {
+    AppLocalizations? l10n,
+  }) {
+    if (!isWeight) return formatWeight(stored, l10n: l10n);
     // Rounded so a converted weight doesn't read as 181.88499 lbs.
-    return formatWeightIn(roundToLoadable(stored, weightUnit), weightUnit);
+    return formatWeightIn(
+      roundToLoadable(stored, weightUnit),
+      weightUnit,
+      l10n: l10n,
+    );
   }
 
   /// Formats a stored value with its unit label, e.g. "82.5 kg" or "94 cm".
-  String formatWithUnit(double stored, WeightUnit weightUnit) =>
-      '${formatValue(stored, weightUnit)} ${labelIn(weightUnit)}';
+  String formatWithUnit(
+    double stored,
+    WeightUnit weightUnit, {
+    AppLocalizations? l10n,
+  }) => '${formatValue(stored, weightUnit, l10n: l10n)} ${labelIn(weightUnit)}';
 
   /// Parses a typed value into what should be stored, or null if unusable.
   double? parseStored(String text, WeightUnit weightUnit) {

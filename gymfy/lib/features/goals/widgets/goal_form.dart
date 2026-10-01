@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/data/week_start.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/models/body_measurement.dart';
@@ -28,7 +29,9 @@ import 'goal_progress_row.dart';
 Future<void> showGoalForm(BuildContext context, {Goal? editing}) {
   return showGlassSheet<void>(
     context: context,
-    title: editing == null ? 'New goal' : 'Edit goal',
+    title: editing == null
+        ? context.l10n.goalsNew
+        : context.l10n.goalsFormEditTitle,
     child: GoalForm(editing: editing),
   );
 }
@@ -84,6 +87,7 @@ class _GoalFormState extends ConsumerState<GoalForm> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final unit = ref.watch(weightUnitProvider);
 
     return SingleChildScrollView(
@@ -107,7 +111,11 @@ class _GoalFormState extends ConsumerState<GoalForm> {
               }),
               segments: [
                 for (final kind in GoalKind.values)
-                  (value: kind, label: kind.label, leading: null),
+                  (
+                    value: kind,
+                    label: kind.localizedLabel(l10n),
+                    leading: null,
+                  ),
               ],
             ),
             const SizedBox(height: 18),
@@ -120,9 +128,11 @@ class _GoalFormState extends ConsumerState<GoalForm> {
           if (_kind != GoalKind.frequency) ...[
             const SizedBox(height: 14),
             AppPickerField(
-              label: 'By',
+              label: l10n.goalsFormBy,
               icon: Icons.event_outlined,
-              value: _deadline == null ? 'No deadline' : formatDate(_deadline!),
+              value: _deadline == null
+                  ? l10n.goalsFormNoDeadline
+                  : formatDate(_deadline!, l10n: l10n),
               onTap: _pickDeadline,
             ),
           ],
@@ -137,7 +147,9 @@ class _GoalFormState extends ConsumerState<GoalForm> {
           ],
           const SizedBox(height: 18),
           AppButton(
-            label: _editing ? 'Save changes' : 'Save goal',
+            label: _editing
+                ? l10n.goalsFormSaveChanges
+                : l10n.goalsFormSaveGoal,
             onPressed: _saving ? null : () => _save(unit),
           ),
         ],
@@ -162,14 +174,15 @@ class _GoalFormState extends ConsumerState<GoalForm> {
 
   List<Widget> _liftFields(WeightUnit unit) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final name = exerciseNameFor(ref, _exerciseId);
     final best = _bestLift(watch: true);
 
     return [
       AppPickerField(
-        label: 'Exercise',
+        label: l10n.goalsExercise,
         icon: Icons.fitness_center,
-        value: name ?? 'Choose an exercise',
+        value: name ?? l10n.goalsFormChooseExercise,
         onTap: _pickExercise,
         // Fixed once set: the goal's starting point was that lift's best, so
         // a goal on a different lift is a new goal, not an edit.
@@ -178,10 +191,10 @@ class _GoalFormState extends ConsumerState<GoalForm> {
       const SizedBox(height: 8),
       Text(
         best == null
-            ? 'Counts your heaviest working set — warm-ups and drop sets '
-                  'never do — or a tested max.'
-            : 'Your best so far: ${formatWeightUnit(best, unit)}. Counts your '
-                  'heaviest working set, or a tested max.',
+            ? l10n.goalsFormLiftHint
+            : l10n.goalsFormLiftHintBest(
+                formatWeightUnit(best, unit, l10n: l10n),
+              ),
         style: theme.textTheme.bodySmall?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,
         ),
@@ -192,7 +205,7 @@ class _GoalFormState extends ConsumerState<GoalForm> {
         // arrives, so it opens on that lift's suggestion rather than keeping
         // the last one's.
         key: ValueKey('lift-target-$_exerciseId-${best != null}'),
-        label: 'Target',
+        label: l10n.goalsFormTarget,
         unit: unit,
         initialWeight:
             _targetShown ??
@@ -207,7 +220,7 @@ class _GoalFormState extends ConsumerState<GoalForm> {
   Future<void> _pickExercise() async {
     final picked = await showSingleExercisePicker(
       context,
-      title: 'Goal for which lift?',
+      title: context.l10n.goalsFormPickLift,
     );
     if (picked == null || !mounted) return;
     setState(() {
@@ -221,17 +234,18 @@ class _GoalFormState extends ConsumerState<GoalForm> {
 
   List<Widget> _frequencyFields() {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final first = ref.watch(firstWeekdayProvider);
 
     return [
       AppPickerField(
-        label: 'How often',
+        label: l10n.goalsFormHowOften,
         icon: Icons.event_repeat,
-        value: workoutsPerWeekLabel(_perWeek),
+        value: workoutsPerWeekLabel(_perWeek, l10n: l10n),
         onTap: () async {
           final picked = await showNumberPicker(
             context: context,
-            title: 'Workouts a week',
+            title: l10n.goalsFormWorkoutsAWeek,
             min: 1,
             max: maxWorkoutsPerWeek,
             initial: _perWeek,
@@ -241,8 +255,7 @@ class _GoalFormState extends ConsumerState<GoalForm> {
       ),
       const SizedBox(height: 8),
       Text(
-        'Counts finished workouts, free ones included. Weeks start on '
-        '${weekdayName(first)}.',
+        l10n.goalsFormFrequencyHint(weekdayName(first, l10n: l10n)),
         style: theme.textTheme.bodySmall?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,
         ),
@@ -254,6 +267,7 @@ class _GoalFormState extends ConsumerState<GoalForm> {
 
   List<Widget> _bodyweightFields(WeightUnit unit) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final latest = ref.watch(latestBodyweightProvider);
     final start = _editing ? widget.editing!.startValue : latest?.value;
 
@@ -261,24 +275,27 @@ class _GoalFormState extends ConsumerState<GoalForm> {
       if (start != null)
         Text(
           _editing
-              ? 'Started from ${formatWeightUnit(start, unit)}.'
-              : 'Starting from ${formatWeightUnit(start, unit)}, logged '
-                    '${formatDayLabel(latest!.day)}.',
+              ? l10n.goalsFormStartedFrom(
+                  formatWeightUnit(start, unit, l10n: l10n),
+                )
+              : l10n.goalsFormStartingFrom(
+                  formatWeightUnit(start, unit, l10n: l10n),
+                  formatDayLabel(latest!.day, l10n: l10n),
+                ),
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
         )
       else ...[
         Text(
-          'No weigh-in yet. What do you weigh today? It is saved to your '
-          'measurements too.',
+          l10n.goalsFormNoWeighIn,
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 10),
         WeightWheel(
-          label: 'Now',
+          label: l10n.goalsFormNow,
           unit: unit,
           initialWeight: _nowShown ?? weightIn(_defaultBodyweightKg, unit),
           onChanged: (value) => _nowShown = value,
@@ -287,7 +304,7 @@ class _GoalFormState extends ConsumerState<GoalForm> {
       const SizedBox(height: 14),
       WeightWheel(
         key: ValueKey('bodyweight-target-${start != null}'),
-        label: 'Target',
+        label: l10n.goalsFormTarget,
         unit: unit,
         initialWeight:
             _targetShown ??
@@ -302,28 +319,30 @@ class _GoalFormState extends ConsumerState<GoalForm> {
   // --- Deadline and save ----------------------------------------------------
 
   Future<void> _pickDeadline() async {
+    final l10n = context.l10n;
     final today = dateOnly(clock.now());
     const custom = -1;
     final picked = await showOptionPicker<int>(
       context: context,
-      title: 'Reach it by',
+      title: l10n.goalsFormReachBy,
       selected: null,
       options: [
         for (final weeks in _deadlineWeeks)
           (
             value: weeks ?? 0,
             label: weeks == null
-                ? 'No deadline'
+                ? l10n.goalsFormNoDeadline
                 : weeks < 26
-                ? 'In $weeks weeks'
-                : 'In 6 months',
+                ? l10n.goalsFormInWeeks(weeks)
+                : l10n.goalsFormInSixMonths,
             subtitle: weeks == null
                 ? null
                 : formatDate(
                     DateTime(today.year, today.month, today.day + weeks * 7),
+                    l10n: l10n,
                   ),
           ),
-        (value: custom, label: 'Pick a date', subtitle: null),
+        (value: custom, label: l10n.goalsFormPickDate, subtitle: null),
       ],
     );
     if (picked == null || !mounted) return;
@@ -347,7 +366,7 @@ class _GoalFormState extends ConsumerState<GoalForm> {
           _deadline ?? DateTime(today.year, today.month + 3, today.day),
       firstDate: today,
       lastDate: DateTime(today.year + 5, today.month, today.day),
-      helpText: 'Reach it by',
+      helpText: l10n.goalsFormReachBy,
     );
     if (date != null && mounted) setState(() => _deadline = dateOnly(date));
   }
@@ -401,6 +420,7 @@ class _GoalFormState extends ConsumerState<GoalForm> {
     final problem = goalDraftProblem(
       draft,
       today: clock.now(),
+      l10n: context.l10n,
       // Only a new lift goal has to beat your best. An existing one keeps
       // the target it was set with even after you have passed it.
       bestLiftKg: editing == null && draft.kind == GoalKind.lift
@@ -437,7 +457,7 @@ class _GoalFormState extends ConsumerState<GoalForm> {
       if (mounted) {
         setState(() {
           _saving = false;
-          _problem = 'Could not save that goal.\n$error';
+          _problem = context.l10n.goalsFormSaveFailed('$error');
         });
       }
     }

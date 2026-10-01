@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/glass.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/models/goal.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_card.dart';
@@ -26,15 +27,16 @@ class GoalsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final statuses = ref.watch(goalStatusesProvider);
 
     return GlassScaffold(
       appBar: GlassAppBar(
-        title: const Text('Goals'),
+        title: Text(l10n.goalsTitle),
         actions: [
           GlassIconButton(
             icon: Icons.add,
-            tooltip: 'New goal',
+            tooltip: l10n.goalsNew,
             onPressed: () => showGoalForm(context),
           ),
         ],
@@ -72,15 +74,24 @@ class GoalsScreen extends ConsumerWidget {
                 status: status,
               ),
             if (working.isNotEmpty) ...[
-              AppSectionHeader(title: 'Working on', count: working.length),
+              AppSectionHeader(
+                title: l10n.goalsSectionWorking,
+                count: working.length,
+              ),
               for (final status in working) _GoalTile(status: status),
             ],
             if (reached.isNotEmpty) ...[
-              AppSectionHeader(title: 'Reached', count: reached.length),
+              AppSectionHeader(
+                title: l10n.goalsSectionReached,
+                count: reached.length,
+              ),
               for (final status in reached) _GoalTile(status: status),
             ],
             if (archived.isNotEmpty) ...[
-              AppSectionHeader(title: 'Archived', count: archived.length),
+              AppSectionHeader(
+                title: l10n.goalsSectionArchived,
+                count: archived.length,
+              ),
               for (final status in archived) _GoalTile(status: status),
             ],
           ],
@@ -114,7 +125,7 @@ class _GoalTile extends ConsumerWidget {
           children: [
             Expanded(child: GoalProgressRow(status: status)),
             IconButton(
-              tooltip: 'More',
+              tooltip: context.l10n.goalsActionsTooltip,
               icon: const Icon(Icons.more_vert),
               onPressed: () => _showActions(context, ref),
             ),
@@ -132,6 +143,7 @@ class _GoalTile extends ConsumerWidget {
       context: context,
       child: Builder(
         builder: (sheetContext) {
+          final l10n = sheetContext.l10n;
           void close() => Navigator.of(sheetContext).pop();
           return Column(
             mainAxisSize: MainAxisSize.min,
@@ -140,7 +152,7 @@ class _GoalTile extends ConsumerWidget {
               if (!status.archived)
                 AppTile(
                   icon: Icons.edit_outlined,
-                  title: 'Edit',
+                  title: l10n.commonEdit,
                   trailing: null,
                   onTap: () {
                     close();
@@ -151,10 +163,10 @@ class _GoalTile extends ConsumerWidget {
                 icon: status.archived
                     ? Icons.unarchive_outlined
                     : Icons.archive_outlined,
-                title: status.archived ? 'Restore' : 'Archive',
+                title: status.archived ? l10n.goalsRestore : l10n.goalsArchive,
                 subtitle: status.archived
-                    ? 'Back on Home and in the list'
-                    : 'Off Home, kept here for the record',
+                    ? l10n.goalsRestoreSubtitle
+                    : l10n.goalsArchiveSubtitle,
                 trailing: null,
                 onTap: () {
                   close();
@@ -163,7 +175,7 @@ class _GoalTile extends ConsumerWidget {
               ),
               AppTile(
                 icon: Icons.delete_outline,
-                title: 'Delete',
+                title: l10n.commonDelete,
                 trailing: null,
                 onTap: () async {
                   close();
@@ -181,21 +193,20 @@ class _GoalTile extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => GlassDialog(
-        title: const Text('Delete this goal?'),
+        title: Text(context.l10n.goalsDeleteTitle),
         content: Text(
           status.kind == GoalKind.frequency
-              ? 'Your workouts stay as they are. Only the goal goes.'
-              : 'Your log stays as it is. Archive it instead to keep it on '
-                    'record.',
+              ? context.l10n.goalsDeleteFrequencyMessage
+              : context.l10n.goalsDeleteMessage,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete'),
+            child: Text(context.l10n.commonDelete),
           ),
         ],
       ),
@@ -211,6 +222,7 @@ class _NoGoals extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(32, 40, 32, 24) + barInsets(context),
@@ -222,20 +234,19 @@ class _NoGoals extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text(
-          'No goals yet',
+          l10n.goalsEmptyTitle,
           textAlign: TextAlign.center,
           style: theme.textTheme.titleSmall,
         ),
         const SizedBox(height: 8),
         Text(
-          'A weight on a lift by a date, a number of workouts every week, or '
-          'a bodyweight to reach. Progress fills in from what you log.',
+          l10n.goalsEmptyMessage,
           textAlign: TextAlign.center,
           style: theme.textTheme.bodySmall,
         ),
         const SizedBox(height: 24),
         AppButton(
-          label: 'Set a goal',
+          label: l10n.goalsSetGoal,
           icon: Icons.flag_outlined,
           onPressed: () => showGoalForm(context),
         ),

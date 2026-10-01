@@ -14,6 +14,8 @@ import 'package:gymfy/features/wear/data/wear_sync.dart';
 import 'package:gymfy/features/workout/data/next_set.dart';
 import 'package:gymfy/features/workout/data/rest_timer_controller.dart';
 import 'package:gymfy/features/workout/data/session_repository.dart';
+import 'package:gymfy/l10n/app_language.dart';
+import 'package:gymfy/l10n/l10n.dart';
 // RestTimer is also a Drift row class in here — the controller is the one
 // this test means.
 import 'package:gymfy/shared/database/app_database.dart' hide RestTimer;
@@ -60,6 +62,9 @@ void main() {
       // And the next set to log, which reads the running order. Not what
       // these tests are about; wear_log_set_test.dart covers it.
       nextSetProvider.overrideWith((ref, id) async => null),
+      // The lines the watch shows are worded in the app's language, which
+      // is a setting in the database too.
+      appLocalizationsProvider.overrideWithValue(englishLocalizations),
     ],
   );
 
@@ -87,7 +92,8 @@ void main() {
     expect(
       bridge.pushed.last,
       idleWearWorkout,
-      reason: 'the watch was left showing a finished workout as ongoing — '
+      reason:
+          'the watch was left showing a finished workout as ongoing — '
           'without this push it keeps the last state it was ever told',
     );
   });

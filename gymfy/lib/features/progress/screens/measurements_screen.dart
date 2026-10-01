@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/models/body_measurement.dart';
 import '../../../shared/utils/dates.dart';
@@ -43,15 +44,16 @@ class _MeasurementsScreenState extends ConsumerState<MeasurementsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final historyAsync = ref.watch(measurementHistoryProvider);
 
     return GlassScaffold(
       appBar: GlassAppBar(
-        title: const Text('Measurements'),
+        title: Text(l10n.progressMeasurementsTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.show_chart),
-            tooltip: 'History',
+            tooltip: l10n.progressMeasurementsHistoryTooltip,
             onPressed: () => context.go('/progress/measurements/history'),
           ),
         ],
@@ -77,7 +79,7 @@ class _MeasurementsScreenState extends ConsumerState<MeasurementsScreen> {
                   child: Padding(
                     padding: const EdgeInsets.all(24),
                     child: Text(
-                      'Could not load measurements.\n$error',
+                      l10n.progressMeasurementsLoadFailed('$error'),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -128,6 +130,7 @@ class _DayNavigator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       child: Row(
@@ -136,13 +139,16 @@ class _DayNavigator extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.chevron_left),
             onPressed: onPrevious,
-            tooltip: 'Previous day',
+            tooltip: l10n.commonPreviousDay,
           ),
-          Text(formatDayLabel(day), style: theme.textTheme.titleMedium),
+          Text(
+            formatDayLabel(day, l10n: l10n),
+            style: theme.textTheme.titleMedium,
+          ),
           IconButton(
             icon: const Icon(Icons.chevron_right),
             onPressed: onNext,
-            tooltip: 'Next day',
+            tooltip: l10n.commonNextDay,
           ),
         ],
       ),
@@ -173,6 +179,7 @@ class _DayForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final row = _today;
 
     return ListView(
@@ -182,8 +189,10 @@ class _DayForm extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
           child: Text(
             row != null
-                ? 'Last updated ${formatDateTime(row.updatedAt)}'
-                : 'Nothing measured on this day yet — tap a row to add it.',
+                ? l10n.progressMeasurementsLastUpdated(
+                    formatDateTime(row.updatedAt, l10n: l10n),
+                  )
+                : l10n.progressMeasurementsNothing,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -220,6 +229,7 @@ class _FieldTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
     final unit = ref.watch(weightUnitProvider);
     // The change is computed in display units so it matches the two numbers
@@ -231,11 +241,13 @@ class _FieldTile extends ConsumerWidget {
 
     return AppTile(
       icon: _iconFor(field),
-      title: field.label,
+      title: field.localizedLabel(l10n),
       subtitle: previous == null
           ? null
-          : 'Was ${field.formatWithUnit(previous!.value, unit)} '
-                'on ${formatShortDate(previous!.day)}',
+          : l10n.progressMeasurementsWas(
+              field.formatWithUnit(previous!.value, unit, l10n: l10n),
+              formatShortDate(previous!.day, l10n: l10n),
+            ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -245,12 +257,15 @@ class _FieldTile extends ConsumerWidget {
               child: Text(
                 // No judgement on direction — up is good for arms, bad for
                 // waist, and only the user knows which they're after.
-                '${delta > 0 ? '+' : '−'}${formatWeight(delta.abs())}',
+                '${delta > 0 ? '+' : '−'}'
+                '${formatWeight(delta.abs(), l10n: l10n)}',
                 style: theme.textTheme.bodySmall?.copyWith(color: accent),
               ),
             ),
           Text(
-            current == null ? '—' : field.formatWithUnit(current!, unit),
+            current == null
+                ? '—'
+                : field.formatWithUnit(current!, unit, l10n: l10n),
             style: theme.textTheme.titleMedium?.copyWith(
               color: current == null
                   ? theme.colorScheme.onSurfaceVariant
@@ -329,8 +344,10 @@ class _MeasurementDialogState extends State<_MeasurementDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final label = widget.field.localizedLabel(l10n);
     return GlassDialog(
-      title: Text(widget.field.label),
+      title: Text(label),
       // Only bodyweight gets the wheel. The others are centimetres, and a drum
       // of quarter-kilos would be offering the wrong steps in the wrong unit —
       // a circumference wheel is its own job, not this one.
@@ -338,7 +355,7 @@ class _MeasurementDialogState extends State<_MeasurementDialog> {
           ? WeightWheel(
               initialWeight: _wheelWeight,
               unit: widget.unit,
-              label: widget.field.label,
+              label: label,
               onChanged: (value) => _wheelWeight = value,
             )
           : TextField(
@@ -351,7 +368,7 @@ class _MeasurementDialogState extends State<_MeasurementDialog> {
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
               ],
               decoration: InputDecoration(
-                labelText: widget.field.label,
+                labelText: label,
                 suffixText: widget.field.labelIn(widget.unit),
               ),
               onSubmitted: (_) => _save(),
@@ -361,13 +378,13 @@ class _MeasurementDialogState extends State<_MeasurementDialog> {
           TextButton(
             // Clearing sends an explicit null, which wipes just this field.
             onPressed: () => Navigator.of(context).pop((value: null)),
-            child: const Text('Clear'),
+            child: Text(l10n.progressClear),
           ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.commonCancel),
         ),
-        FilledButton(onPressed: _save, child: const Text('Save')),
+        FilledButton(onPressed: _save, child: Text(l10n.commonSave)),
       ],
     );
   }

@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/l10n.dart';
+import '../../../shared/utils/format.dart';
 import '../../home/data/activity_repository.dart';
 import '../../home/data/recap_repository.dart';
 
@@ -67,6 +69,32 @@ const volumeComparisons = <({String label, double kg})>[
   (label: 'a humpback whale', kg: 30000),
   (label: 'a loaded 747', kg: 400000),
 ];
+
+/// [comparison] as the sentence under the all-time grid: "That is 2.3× a
+/// London bus."
+///
+/// One message per thing rather than the thing spliced into a sentence:
+/// German says "Das sind 2,3 Londoner Busse", which needs the plural the
+/// English label doesn't have. [volumeComparisons]' labels stay English and
+/// pick the message.
+String describeVolumeComparison(
+  ({String label, double times}) comparison, {
+  AppLocalizations? l10n,
+}) {
+  final strings = l10n ?? englishLocalizations;
+  final times = formatDecimal(comparison.times, 1, l10n: l10n);
+  return switch (comparison.label) {
+    'a grand piano' => strings.statsComparisonPiano(times),
+    'a small car' => strings.statsComparisonCar(times),
+    'a rhino' => strings.statsComparisonRhino(times),
+    'a London bus' => strings.statsComparisonBus(times),
+    'a humpback whale' => strings.statsComparisonWhale(times),
+    'a loaded 747' => strings.statsComparisonJumbo(times),
+    // Unreachable while every label above has a message, and the test that
+    // walks [volumeComparisons] keeps it that way.
+    _ => strings.statsComparisonPiano(times),
+  };
+}
 
 /// How many of the biggest comparable thing [volumeKg] adds up to.
 ///

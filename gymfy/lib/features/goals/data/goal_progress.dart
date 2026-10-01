@@ -25,6 +25,7 @@
 //   starts on the phone's first day of the week. It never finishes; it is met
 //   or not, week by week.
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/models/goal.dart';
 import '../../../shared/utils/dates.dart';
@@ -296,35 +297,38 @@ const maxWorkoutsPerWeek = 7;
 /// null when it can.
 ///
 /// [bestLiftKg] is the heaviest working set already logged on the chosen
-/// exercise; [today] is used to refuse a deadline in the past.
+/// exercise; [today] is used to refuse a deadline in the past. Worded in
+/// [l10n]'s language, English without it.
 String? goalDraftProblem(
   GoalDraft draft, {
   required DateTime today,
   double? bestLiftKg,
+  AppLocalizations? l10n,
 }) {
+  final strings = l10n ?? englishLocalizations;
   final deadline = draft.deadline;
   if (deadline != null && dateOnly(deadline).isBefore(dateOnly(today))) {
-    return 'Pick a date that has not passed yet.';
+    return strings.goalsProblemPastDate;
   }
   switch (draft.kind) {
     case GoalKind.lift:
-      if (draft.exerciseId == null) return 'Choose the exercise.';
-      if (draft.target <= 0) return 'Set the weight to reach.';
+      if (draft.exerciseId == null) return strings.goalsProblemChooseExercise;
+      if (draft.target <= 0) return strings.goalsProblemSetWeight;
       // Already done is not a goal — and saving it would celebrate on the
       // spot, for something that happened before it was asked for.
       if (bestLiftKg != null && draft.target <= bestLiftKg + _epsilon) {
-        return 'You have already lifted that — aim higher.';
+        return strings.goalsProblemAlreadyLifted;
       }
     case GoalKind.frequency:
       if (draft.target < 1 || draft.target > maxWorkoutsPerWeek) {
-        return 'Pick between 1 and $maxWorkoutsPerWeek workouts a week.';
+        return strings.goalsProblemWorkoutsRange(maxWorkoutsPerWeek);
       }
     case GoalKind.bodyweight:
-      if (draft.target <= 0) return 'Set the weight to reach.';
+      if (draft.target <= 0) return strings.goalsProblemSetWeight;
       final start = draft.startValue;
-      if (start == null) return 'Log your current weight first.';
+      if (start == null) return strings.goalsProblemLogWeight;
       if ((draft.target - start).abs() < _epsilon) {
-        return 'That is the weight you are now — pick a different one.';
+        return strings.goalsProblemSameWeight;
       }
   }
   return null;

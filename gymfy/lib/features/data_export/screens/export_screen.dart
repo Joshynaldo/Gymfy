@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../data/export_format.dart';
 import '../data/export_repository.dart';
@@ -31,41 +32,37 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return GlassScaffold(
-      appBar: GlassAppBar(title: const Text('Export data')),
+      appBar: GlassAppBar(title: Text(l10n.dataExportTitle)),
       body: (context) => ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24) + barInsets(context),
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
             child: Text(
-              'Save a copy of everything you have logged. The file is '
-              'written wherever you choose — nothing is uploaded anywhere.',
+              l10n.dataExportIntro,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ),
-          const AppSectionHeader(title: 'Format'),
+          AppSectionHeader(title: l10n.dataExportFormatTitle),
           _FormatCard(
             icon: Icons.table_chart_outlined,
-            title: 'Spreadsheet',
+            title: l10n.dataExportCsvTitle,
             badge: 'CSV',
-            subtitle:
-                'One row per set, ready to open in Excel or Sheets and '
-                'chart however you like.',
-            buttonLabel: 'Save CSV',
+            subtitle: l10n.dataExportCsvSubtitle,
+            buttonLabel: l10n.dataExportCsvButton,
             onPressed: _busy ? null : _exportCsv,
           ),
           _FormatCard(
             icon: Icons.data_object,
-            title: 'Everything',
+            title: l10n.dataExportJsonTitle,
             badge: 'JSON',
-            subtitle:
-                'Your workouts with their sets kept together, plus your '
-                'body measurements and calorie log.',
-            buttonLabel: 'Save JSON',
+            subtitle: l10n.dataExportJsonSubtitle,
+            buttonLabel: l10n.dataExportJsonButton,
             onPressed: _busy ? null : _exportJson,
           ),
           const SizedBox(height: 12),
@@ -75,14 +72,12 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
           // scroll past.
           AppPanel(
             icon: Icons.info_outline,
-            title: 'This is a copy, not a backup',
+            title: l10n.dataExportCopyTitle,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Gymfy cannot import these files back, and progress photos '
-                  'are not included. To move to a new phone, or to keep a '
-                  'copy you can restore, use a backup instead.',
+                  l10n.dataExportCopyMessage,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -93,7 +88,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                   child: TextButton.icon(
                     onPressed: () => context.go('/more/settings/backup'),
                     icon: const Icon(Icons.backup_outlined, size: 18),
-                    label: const Text('Backup & restore'),
+                    label: Text(l10n.backupTitle),
                   ),
                 ),
               ],
@@ -107,7 +102,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
   Future<void> _exportCsv() => _save(
     extension: 'csv',
     build: (data) => toCsv(data.sets),
-    emptyMessage: 'No finished workouts to export yet.',
+    emptyMessage: context.l10n.dataExportNoWorkouts,
   );
 
   Future<void> _exportJson() => _save(
@@ -115,7 +110,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
     build: toJson,
     // JSON carries measurements and meals too, so it can be worth saving even
     // with no workouts logged.
-    emptyMessage: 'Nothing logged to export yet.',
+    emptyMessage: context.l10n.dataExportNothing,
   );
 
   Future<void> _save({
@@ -132,14 +127,14 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
       }
 
       final saved = await FilePicker.saveFile(
-        dialogTitle: 'Save your data',
+        dialogTitle: _l10n.dataExportSaveDialogTitle,
         fileName: exportFileName(extension),
         bytes: utf8.encode(build(data)),
       );
       if (saved == null) return; // Cancelled.
-      _say('Saved ${exportFileName(extension)}');
+      _say(_l10n.dataExportSaved(exportFileName(extension)));
     } catch (error) {
-      _say('Could not save that file.\n$error');
+      _say(_l10n.dataExportSaveFailed('$error'));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -154,6 +149,10 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
     if (extension == 'csv') return data.sets.isEmpty;
     return data.sets.isEmpty && data.measurements.isEmpty && data.meals.isEmpty;
   }
+
+  /// The strings for messages said after an await. [_say] checks [mounted]
+  /// before showing anything, so the fallback is never seen.
+  AppLocalizations get _l10n => mounted ? context.l10n : englishLocalizations;
 
   void _say(String message) {
     if (!mounted) return;

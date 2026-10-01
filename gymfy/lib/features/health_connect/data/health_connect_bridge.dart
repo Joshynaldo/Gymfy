@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../l10n/l10n.dart';
+
 part 'health_connect_bridge.g.dart';
 
 /// Whether Health Connect can be used on this phone, as the settings screen
@@ -21,7 +23,20 @@ enum HealthConnectAvailability {
 
   const HealthConnectAvailability(this.label);
 
+  /// The English wording. On screen use [localizedLabel].
   final String label;
+
+  /// What the settings line says, in the app's language.
+  String localizedLabel(AppLocalizations l10n) => switch (this) {
+    HealthConnectAvailability.unsupported =>
+      l10n.healthConnectAvailabilityUnsupported,
+    HealthConnectAvailability.notInstalled =>
+      l10n.healthConnectAvailabilityNotInstalled,
+    HealthConnectAvailability.needsUpdate =>
+      l10n.healthConnectAvailabilityNeedsUpdate,
+    HealthConnectAvailability.available =>
+      l10n.healthConnectAvailabilityAvailable,
+  };
 
   /// Reads the bridge's answer. Anything unrecognised is [unsupported]: a
   /// feature that writes health data should never switch itself on because a

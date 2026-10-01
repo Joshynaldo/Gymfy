@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/dates.dart';
 import '../../../shared/utils/format.dart';
@@ -28,9 +29,10 @@ class ExerciseProgressScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final exerciseAsync = ref.watch(exerciseProvider(exerciseId));
     final historyAsync = ref.watch(exerciseHistoryProvider(exerciseId));
-    final title = exerciseAsync.value?.name ?? 'Progress';
+    final title = exerciseAsync.value?.name ?? l10n.progressTitle;
 
     return GlassScaffold(
       appBar: GlassAppBar(title: Text(title)),
@@ -40,16 +42,14 @@ class ExerciseProgressScreen extends ConsumerWidget {
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              'Could not load progress.\n$error',
+              l10n.progressExerciseLoadFailed('$error'),
               textAlign: TextAlign.center,
             ),
           ),
         ),
         data: (points) {
           if (points.isEmpty) {
-            return const Center(
-              child: Text('No logged sessions for this exercise yet.'),
-            );
+            return Center(child: Text(l10n.progressExerciseNoSessions));
           }
           final records = personalRecordsFrom(points);
           final bestOneRm = bestEstimatedOneRm(points);
@@ -63,7 +63,10 @@ class ExerciseProgressScreen extends ConsumerWidget {
                 const EdgeInsets.fromLTRB(16, 16, 16, 32) + barInsets(context),
             children: [
               if (records != null) ...[
-                Text('Personal records', style: theme.textTheme.titleMedium),
+                Text(
+                  l10n.progressExerciseRecords,
+                  style: theme.textTheme.titleMedium,
+                ),
                 const SizedBox(height: 12),
                 _RecordsRow(records: records),
                 const SizedBox(height: 24),
@@ -77,14 +80,16 @@ class ExerciseProgressScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
               ],
               Text(
-                holds ? 'Longest hold' : 'Top-set weight',
+                holds
+                    ? l10n.progressExerciseLongestHold
+                    : l10n.progressExerciseTopSetWeight,
                 style: theme.textTheme.titleMedium,
               ),
               const SizedBox(height: 4),
               Text(
                 holds
-                    ? 'The longest single hold each session.'
-                    : 'The heaviest set you did each session.',
+                    ? l10n.progressExerciseLongestHoldCaption
+                    : l10n.progressExerciseTopSetCaption,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -97,7 +102,7 @@ class ExerciseProgressScreen extends ConsumerWidget {
               if (points.length == 1) ...[
                 const SizedBox(height: 16),
                 Text(
-                  'Log this exercise in more sessions to see a trend line.',
+                  l10n.progressExerciseTrendHint,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
@@ -134,15 +139,18 @@ class _OneRmBadge extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
     final tested = ref.watch(testedOneRmProvider(exerciseId)).value;
     final unit = ref.watch(weightUnitProvider);
 
-    final label = tested != null ? 'Tested 1RM' : 'Estimated 1RM';
+    final label = tested != null
+        ? l10n.progressOneRmTested
+        : l10n.progressOneRmEstimated;
     final value = tested != null
-        ? formatWeightUnit(tested.weightKg, unit)
+        ? formatWeightUnit(tested.weightKg, unit, l10n: l10n)
         : best != null
-        ? '≈ ${formatWeightUnit(best!.oneRm, unit)}'
+        ? '≈ ${formatWeightUnit(best!.oneRm, unit, l10n: l10n)}'
         : '—';
 
     return InkWell(
@@ -190,7 +198,7 @@ class _OneRmBadge extends ConsumerWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    _subtitle(tested, unit),
+                    _subtitle(tested, unit, l10n),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -209,20 +217,30 @@ class _OneRmBadge extends ConsumerWidget {
     );
   }
 
-  String _subtitle(TestedOneRm? tested, WeightUnit unit) {
+  String _subtitle(
+    TestedOneRm? tested,
+    WeightUnit unit,
+    AppLocalizations l10n,
+  ) {
     if (tested != null) {
-      final line = 'Tested on ${formatShortDate(tested.testedOn)}';
+      final date = formatShortDate(tested.testedOn, l10n: l10n);
       // Keep the estimate visible as a second opinion — if your log implies
       // more than your last test, it's time to retest.
-      if (best == null) return line;
-      return '$line • log suggests '
-          '≈ ${formatWeightUnit(best!.oneRm, unit)}';
+      if (best == null) return l10n.progressOneRmTestedOn(date);
+      return l10n.progressOneRmTestedOnSuggests(
+        date,
+        formatWeightUnit(best!.oneRm, unit, l10n: l10n),
+      );
     }
-    if (best == null) return 'Tap to enter a max you tested';
+    if (best == null) return l10n.progressOneRmTapToEnter;
+    final date = formatShortDate(best!.date, l10n: l10n);
     return best!.reps == 1
-        ? 'You lifted this for a single on ${formatShortDate(best!.date)}'
-        : 'From ${formatWeightUnit(best!.weight, unit)} × ${best!.reps} '
-              'on ${formatShortDate(best!.date)}';
+        ? l10n.progressOneRmSingle(date)
+        : l10n.progressOneRmFrom(
+            formatWeightUnit(best!.weight, unit, l10n: l10n),
+            best!.reps,
+            date,
+          );
   }
 
   Future<void> _edit(
@@ -301,10 +319,11 @@ class _TestedOneRmDialogState extends State<_TestedOneRmDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final weight = _weight > 0 ? weightToKilograms(_weight, widget.unit) : null;
 
     return GlassDialog(
-      title: const Text('Tested 1RM'),
+      title: Text(l10n.progressOneRmTested),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -318,7 +337,7 @@ class _TestedOneRmDialogState extends State<_TestedOneRmDialog> {
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.event),
-            title: Text(formatDayLabel(_testedOn)),
+            title: Text(formatDayLabel(_testedOn, l10n: l10n)),
             trailing: const Icon(Icons.edit_calendar_outlined),
             onTap: _pickDate,
           ),
@@ -330,11 +349,11 @@ class _TestedOneRmDialogState extends State<_TestedOneRmDialog> {
             onPressed: () => Navigator.of(
               context,
             ).pop((weightKg: null, testedOn: _testedOn)),
-            child: const Text('Clear'),
+            child: Text(l10n.progressClear),
           ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.commonCancel),
         ),
         FilledButton(
           // Disabled rather than silently rejecting an unparseable number.
@@ -343,7 +362,7 @@ class _TestedOneRmDialogState extends State<_TestedOneRmDialog> {
               : () => Navigator.of(
                   context,
                 ).pop((weightKg: weight, testedOn: _testedOn)),
-          child: const Text('Save'),
+          child: Text(l10n.commonSave),
         ),
       ],
     );
@@ -357,6 +376,7 @@ class _RecordsRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final unit = ref.watch(weightUnitProvider);
 
     // IntrinsicHeight gives the Row a finite height so the tiles can stretch to
@@ -375,30 +395,42 @@ class _RecordsRow extends ConsumerWidget {
             child: hold
                 ? _RecordTile(
                     icon: Icons.timer_outlined,
-                    label: 'Longest hold',
+                    label: l10n.progressExerciseLongestHold,
                     value: formatSetDuration(records.longestHold!),
-                    detail: formatShortDate(records.longestHoldDate!),
+                    detail: formatShortDate(
+                      records.longestHoldDate!,
+                      l10n: l10n,
+                    ),
                   )
                 : _RecordTile(
                     icon: Icons.fitness_center,
-                    label: 'Heaviest',
-                    value: formatWeightUnit(records.heaviestWeight, unit),
+                    label: l10n.progressRecordHeaviest,
+                    value: formatWeightUnit(
+                      records.heaviestWeight,
+                      unit,
+                      l10n: l10n,
+                    ),
                     detail:
                         '× ${records.repsAtHeaviest} '
-                        '• ${formatShortDate(records.heaviestDate)}',
+                        '• ${formatShortDate(records.heaviestDate, l10n: l10n)}',
                   ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: _RecordTile(
               icon: Icons.bar_chart,
-              label: hold ? 'Most time' : 'Best volume',
+              label: hold
+                  ? l10n.progressRecordMostTime
+                  : l10n.progressRecordBestVolume,
               value: hold
                   ? formatSetDuration(records.bestSeconds)
-                  : formatWeightUnit(records.bestVolume, unit),
-              detail:
-                  'in a session '
-                  '• ${formatShortDate(hold ? records.bestSecondsDate! : records.bestVolumeDate)}',
+                  : formatWeightUnit(records.bestVolume, unit, l10n: l10n),
+              detail: l10n.progressRecordInASession(
+                formatShortDate(
+                  hold ? records.bestSecondsDate! : records.bestVolumeDate,
+                  l10n: l10n,
+                ),
+              ),
             ),
           ),
         ],

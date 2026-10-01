@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/widgets/chart_style.dart';
 import '../data/measurements_repository.dart';
@@ -42,6 +43,7 @@ class MeasurementTimelineChart extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
 
     final first = points.first.day;
@@ -82,7 +84,7 @@ class MeasurementTimelineChart extends ConsumerWidget {
               getTitlesWidget: (value, _) => Padding(
                 padding: const EdgeInsets.only(right: 6),
                 child: Text(
-                  formatWeight(value),
+                  formatWeight(value, l10n: l10n),
                   style: chartLabelStyle(context),
                 ),
               ),
@@ -101,7 +103,7 @@ class MeasurementTimelineChart extends ConsumerWidget {
                 return Padding(
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
-                    formatShortDate(day),
+                    formatShortDate(day, l10n: l10n),
                     style: chartLabelStyle(context),
                   ),
                 );
@@ -115,7 +117,8 @@ class MeasurementTimelineChart extends ConsumerWidget {
             getTooltipItems: (touchedSpots) => touchedSpots.map((spot) {
               final day = first.add(Duration(days: spot.x.round()));
               return LineTooltipItem(
-                '${formatWeight(spot.y)} $unit\n${formatShortDate(day)}',
+                '${formatWeight(spot.y, l10n: l10n)} $unit\n'
+                '${formatShortDate(day, l10n: l10n)}',
                 TextStyle(
                   color: theme.colorScheme.onInverseSurface,
                   fontWeight: FontWeight.w600,

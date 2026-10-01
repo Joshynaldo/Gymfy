@@ -70,11 +70,13 @@ enum ShareOutcome {
 /// The three steps are passed in so the fallback can be tested without a
 /// phone: [writeTemp] puts the bytes where the FileProvider can reach them,
 /// [share] opens the sheet, [save] is the system save dialog and answers
-/// whether a file was written. The defaults are the real ones.
+/// whether a file was written. The defaults are the real ones. [saveTitle]
+/// heads the save dialog, where the system shows one.
 Future<ShareOutcome> shareOrSaveImage(
   Uint8List bytes, {
   required String fileName,
   required String title,
+  String saveTitle = 'Save image',
   Future<String> Function(Uint8List bytes, String fileName)? writeTemp,
   Future<bool> Function(String path, String title)? share,
   Future<bool> Function(Uint8List bytes, String fileName)? save,
@@ -83,7 +85,8 @@ Future<ShareOutcome> shareOrSaveImage(
   final open =
       share ??
       (path, title) => const ImageShareBridge().sharePng(path, title: title);
-  final keep = save ?? _saveWithPicker;
+  final keep =
+      save ?? (bytes, fileName) => _saveWithPicker(bytes, fileName, saveTitle);
 
   var shared = false;
   try {
@@ -112,9 +115,13 @@ Future<String> writeShareFile(Uint8List bytes, String fileName) async {
   return file.path;
 }
 
-Future<bool> _saveWithPicker(Uint8List bytes, String fileName) async {
+Future<bool> _saveWithPicker(
+  Uint8List bytes,
+  String fileName,
+  String title,
+) async {
   final saved = await FilePicker.saveFile(
-    dialogTitle: 'Save image',
+    dialogTitle: title,
     fileName: fileName,
     bytes: bytes,
     mimeType: 'image/png',

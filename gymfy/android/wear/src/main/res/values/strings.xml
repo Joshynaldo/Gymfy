@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The watch's own words: the empty screen, the rest ring, the stepper
+         and the rest notification. Everything else the watch shows (the
+         workout, "3 sets logged", "Set 2 of 4", the repeat button) arrives
+         from the phone already worded in the phone app's language.
+
+         These follow the WATCH's language, which is how Android picks
+         resources. German is in values-de. -->
+    <string name="idle_no_workout">No workout running</string>
+    <string name="rest_over">Rest over</string>
+    <!-- Adds thirty seconds to the running rest. -->
+    <string name="rest_add_thirty">+30s</string>
+    <string name="rest_skip">Skip</string>
+    <!-- Logs the set dialled in on the watch. -->
+    <string name="log_set">Log</string>
+    <plurals name="reps_count">
+        <item quantity="one">%d rep</item>
+        <item quantity="other">%d reps</item>
+    </plurals>
+    <string name="rest_channel_name">Rest timer</string>
+    <string name="rest_channel_description">The countdown between sets</string>
+    <!-- The rest notification's title when the phone sent no exercise. -->
+    <string name="rest_notification_title">Rest</string>
+</resources>

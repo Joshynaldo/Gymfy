@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/utils/exercise_display.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
@@ -31,6 +32,7 @@ class ReviewShareCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
     final unit = ref.watch(weightUnitProvider);
     final now = review.current;
@@ -43,7 +45,9 @@ class ReviewShareCard extends ConsumerWidget {
     // Only compared when the period before had something in it: "+12 vs
     // August" after a first month of nothing is a comparison with a blank.
     final compare = !before.isEmpty;
-    final versus = 'vs ${period.previous.shortLabel}';
+    final versus = l10n.reviewsVersus(
+      period.previous.localizedShortLabel(l10n),
+    );
 
     String? delta(num a, num b, [String Function(num)? format]) =>
         compare ? signedDelta(a, b, format: format) : null;
@@ -63,8 +67,8 @@ class ReviewShareCard extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     period.span == ReviewSpan.month
-                        ? 'YOUR MONTH IN TRAINING'
-                        : 'YOUR YEAR IN TRAINING',
+                        ? l10n.reviewsCardMonthHeading
+                        : l10n.reviewsCardYearHeading,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.labelSmall?.copyWith(
@@ -77,14 +81,14 @@ class ReviewShareCard extends ConsumerWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              period.label,
+              period.localizedLabel(l10n),
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
             ),
             if (running)
               Text(
-                'So far — ${period.shortLabel} is not over yet',
+                l10n.reviewsCardSoFar(period.localizedShortLabel(l10n)),
                 style: theme.textTheme.bodySmall?.copyWith(color: muted),
               ),
             const SizedBox(height: 18),
@@ -92,18 +96,18 @@ class ReviewShareCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _Figure(
-                  label: now.workouts == 1 ? 'workout' : 'workouts',
+                  label: l10n.reviewsCardWorkouts(now.workouts),
                   value: '${now.workouts}',
                   delta: delta(now.workouts, before.workouts),
                   versus: versus,
                 ),
                 _Figure(
-                  label: 'lifted',
-                  value: formatWeightUnit(now.volumeKg, unit),
+                  label: l10n.reviewsCardLifted,
+                  value: formatWeightUnit(now.volumeKg, unit, l10n: l10n),
                   delta: delta(
                     now.volumeKg,
                     before.volumeKg,
-                    (v) => formatWeightUnit(v.toDouble(), unit),
+                    (v) => formatWeightUnit(v.toDouble(), unit, l10n: l10n),
                   ),
                   versus: versus,
                 ),
@@ -115,8 +119,8 @@ class ReviewShareCard extends ConsumerWidget {
               children: [
                 _Figure(
                   label: now.untimedWorkouts == 0
-                      ? 'trained'
-                      : 'trained, ${now.untimedWorkouts} not timed',
+                      ? l10n.reviewsCardTrained
+                      : l10n.reviewsCardTrainedUntimed(now.untimedWorkouts),
                   // Known minutes only; a workout whose length was never
                   // recorded is counted above and left off the clock.
                   value: formatDuration(Duration(minutes: now.minutes)),
@@ -128,9 +132,7 @@ class ReviewShareCard extends ConsumerWidget {
                   versus: versus,
                 ),
                 _Figure(
-                  label: now.records == 1
-                      ? 'personal record'
-                      : 'personal records',
+                  label: l10n.reviewsCardRecords(now.records),
                   value: '${now.records}',
                   delta: delta(now.records, before.records),
                   versus: versus,
@@ -140,15 +142,14 @@ class ReviewShareCard extends ConsumerWidget {
             const SizedBox(height: 14),
             Text(
               [
-                '${now.activeDays} ${now.activeDays == 1 ? 'day' : 'days'} trained',
-                'longest streak ${now.longestStreak} '
-                    '${now.longestStreak == 1 ? 'day' : 'days'}',
+                l10n.reviewsCardDaysTrained(now.activeDays),
+                l10n.reviewsCardLongestStreak(now.longestStreak),
               ].join(' · '),
               style: theme.textTheme.bodySmall?.copyWith(color: muted),
             ),
             if (now.topExercises.isNotEmpty) ...[
               const SizedBox(height: 18),
-              _Heading(text: 'Top exercises', colour: muted),
+              _Heading(text: l10n.reviewsCardTopExercises, colour: muted),
               const SizedBox(height: 6),
               for (final (index, exercise)
                   in now.topExercises.take(shareCardTopCount).indexed)
@@ -159,14 +160,13 @@ class ReviewShareCard extends ConsumerWidget {
                   label:
                       names[exercise.exerciseId] ??
                       muscleLabel(exercise.exerciseId),
-                  value:
-                      '${exercise.sets} ${exercise.sets == 1 ? 'set' : 'sets'}',
+                  value: l10n.reviewsSets(exercise.sets),
                   accent: accent,
                 ),
             ],
             if (now.muscleSets.isNotEmpty) ...[
               const SizedBox(height: 14),
-              _Heading(text: 'Most trained', colour: muted),
+              _Heading(text: l10n.reviewsCardMostTrained, colour: muted),
               const SizedBox(height: 8),
               for (final entry in now.muscleSets.take(shareCardTopCount))
                 _MuscleBar(
@@ -177,7 +177,7 @@ class ReviewShareCard extends ConsumerWidget {
             ],
             const SizedBox(height: 16),
             Text(
-              'Tracked with Gymfy',
+              l10n.reviewsCardTrackedWith,
               textAlign: TextAlign.right,
               style: theme.textTheme.labelSmall?.copyWith(color: muted),
             ),
@@ -344,7 +344,7 @@ class _MuscleBar extends StatelessWidget {
             child: SizedBox(
               width: double.infinity,
               child: Text(
-                muscleLabel(muscleId),
+                muscleLabel(muscleId, l10n: context.l10n),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall,

@@ -166,7 +166,10 @@ void main() {
     health.weights = [
       (
         id: 'scale-1',
-        time: DateTime(today.year, today.month, today.day, 7),
+        // Yesterday morning, not today's: between midnight and seven a
+        // weigh-in at 7:00 today is still in the future, and the import
+        // rightly reads nothing — which made this test fail every night.
+        time: DateTime(today.year, today.month, today.day - 1, 7),
         offsetSeconds: null,
         kg: 80.4,
       ),

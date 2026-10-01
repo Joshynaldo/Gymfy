@@ -70,7 +70,7 @@ final class WearSyncProvider extends $NotifierProvider<WearSync, WearWorkout> {
   }
 }
 
-String _$wearSyncHash() => r'e53d06db576c67d3ebcfba680d3b8ee74cb7cf8e';
+String _$wearSyncHash() => r'f73d09dd5ed72bc90e4127c4ecb1aba7f59122c5';
 
 /// Keeps the watch in step with the phone.
 ///

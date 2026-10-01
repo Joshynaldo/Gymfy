@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/glass.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
+import '../../../shared/utils/weekday.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_segmented.dart';
@@ -85,6 +87,10 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
 
   bool _busy = false;
 
+  /// The strings for messages set after an await, when the widget may be
+  /// gone; every caller checks [mounted] before showing one.
+  AppLocalizations get _l10n => mounted ? context.l10n : englishLocalizations;
+
   Future<void> _pick() async {
     setState(() {
       _busy = true;
@@ -109,14 +115,14 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
       _assumed ??= ref.read(weightUnitProvider);
       await _reparse();
     } on CsvException catch (error) {
-      _fail(error.message);
+      _fail(error.describe(_l10n));
     } on ImportFormatException catch (error) {
-      _fail(error.message);
+      _fail(error.describe(_l10n));
     } on FormatException {
       // utf8.decode on something that isn't text at all.
-      _fail('That file is not readable as text. Export it again as CSV.');
+      _fail(_l10n.importErrorNotText);
     } catch (error) {
-      _fail('Could not read that file.\n$error');
+      _fail(_l10n.importErrorReadFailed('$error'));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -130,12 +136,13 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
     final parsed = parseWorkoutCsv(
       source,
       assumedUnit: _assumed ?? WeightUnit.kg,
+      untitledName: _l10n.importUntitledWorkout,
     );
     final repository = ref.read(importRepositoryProvider);
     final already = await repository.countAlreadyHere(parsed);
     final near = await repository.countNearDuplicates(parsed);
     final plan = planForImport(parsed);
-    final splitName = defaultSplitName(parsed.source);
+    final splitName = defaultSplitName(parsed.source, l10n: _l10n);
     final exists = plan.isEmpty
         ? false
         : await repository.hasSplitNamed(splitName);
@@ -186,7 +193,12 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
       // After the history, and in its own transaction: a split that fails to
       // build should not take a year of training down with it.
       final plan = _buildSplit && _chosenDays.isNotEmpty
-          ? await repository.createSplitFrom(preview, only: _chosenDays)
+          ? await repository.createSplitFrom(
+              preview,
+              // The name the preview showed, in the language it showed it.
+              name: defaultSplitName(preview.source, l10n: _l10n),
+              only: _chosenDays,
+            )
           : null;
 
       if (!mounted) return;
@@ -209,13 +221,11 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
           _preview = null;
           _source = null;
           _plan = const [];
-          _error = 'Could not import that file.\n$error';
+          _error = _l10n.importErrorImportFailed('$error');
         } else {
           _outcome = outcome;
           _planOutcome = null;
-          _splitFailure =
-              'Your workouts were imported, but the split could not be '
-              'built.\n$error';
+          _splitFailure = _l10n.importErrorSplitFailed('$error');
           _preview = null;
           _source = null;
           _plan = const [];
@@ -228,6 +238,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final preview = _preview;
     final outcome = _outcome;
 
@@ -242,7 +253,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
     final canImport = incoming > 0 || willBuildSplit;
 
     return GlassScaffold(
-      appBar: GlassAppBar(title: const Text('Import a history')),
+      appBar: GlassAppBar(title: Text(l10n.importTitle)),
       body: (context) => ListView(
         padding: const EdgeInsets.only(top: 4, bottom: 24) + barInsets(context),
         children: [
@@ -260,7 +271,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
             if (_plan.isNotEmpty)
               _PlanPanel(
                 plan: _plan,
-                splitName: defaultSplitName(preview.source),
+                splitName: defaultSplitName(preview.source, l10n: l10n),
                 alreadyExists: _splitExists,
                 enabled: _buildSplit,
                 chosen: _chosenDays,
@@ -297,7 +308,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
             child: AppButton(
-              label: preview == null ? 'Choose a file' : 'Choose another file',
+              label: preview == null
+                  ? l10n.importChooseFile
+                  : l10n.importChooseAnother,
               icon: Icons.folder_open,
               kind: preview == null
                   ? AppButtonKind.primary
@@ -312,8 +325,12 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                 // The numbers are on the button because this is the one action
                 // here that changes data the user cannot see on screen.
                 label: _busy
-                    ? 'Importing…'
-                    : _importLabel(incoming, willBuildSplit ? _plan.length : 0),
+                    ? l10n.importImporting
+                    : _importLabel(
+                        incoming,
+                        willBuildSplit ? _plan.length : 0,
+                        l10n,
+                      ),
                 icon: Icons.download,
                 onPressed: _busy || !canImport ? null : _import,
               ),
@@ -330,13 +347,11 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
 /// independent: a file can add eighty workouts and no split, a split and no
 /// workouts, or both, and the button is the last thing read before a year of
 /// training is written.
-String _importLabel(int workouts, int days) {
-  final parts = [
-    if (workouts > 0) '$workouts workout${workouts == 1 ? '' : 's'}',
-    if (days > 0) 'a split of $days day${days == 1 ? '' : 's'}',
-  ];
-  if (parts.isEmpty) return 'Import';
-  return 'Import ${parts.join(' and ')}';
+String _importLabel(int workouts, int days, AppLocalizations l10n) {
+  if (workouts > 0 && days > 0) return l10n.importButtonBoth(workouts, days);
+  if (workouts > 0) return l10n.importButtonWorkouts(workouts);
+  if (days > 0) return l10n.importButtonSplit(days);
+  return l10n.importButton;
 }
 
 class _Explainer extends StatelessWidget {
@@ -345,16 +360,13 @@ class _Explainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return AppPanel(
       icon: Icons.move_to_inbox_outlined,
-      title: 'Bring your history with you',
+      title: l10n.importExplainerTitle,
       child: Text(
-        'Export your workouts from the other app as a CSV file, then pick it '
-        'here. Hevy and Strong both do this from their settings.\n\n'
-        'Columns are matched by name, so most exports work without anything '
-        'being configured. Nothing is overwritten — importing only adds, and '
-        'importing the same file twice adds nothing the second time.',
+        l10n.importExplainerMessage,
         style: theme.textTheme.bodySmall?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,
           height: 1.4,
@@ -379,6 +391,7 @@ class _PreviewPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final sessions = preview.sessions;
     final incoming = sessions.length - alreadyHere;
 
@@ -392,15 +405,11 @@ class _PreviewPanel extends StatelessWidget {
 
       return AppPanel(
         icon: Icons.help_outline,
-        title: 'Nothing to import',
+        title: l10n.importNothingTitle,
         child: SelectableText(
           dates > 0 && sample != null
-              ? 'That file was read, but $dates of its rows have a date this '
-                    'app could not make sense of — the first one is '
-                    '"$sample".\n\nSend that line on and it can be taught to '
-                    'read it.'
-              : 'That file was read, but none of its rows were sets — no '
-                    'exercise name, reps and weight together on any line.',
+              ? l10n.importNothingUnreadableDates(dates, sample)
+              : l10n.importNothingNoSets,
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
             height: 1.4,
@@ -411,33 +420,34 @@ class _PreviewPanel extends StatelessWidget {
 
     return AppPanel(
       icon: Icons.fact_check_outlined,
-      title: 'What is in this file',
+      title: l10n.importPreviewTitle,
       // Naming the app is reassurance at the one moment it is worth
       // something: just before committing a year of training on the strength
       // of a preview. Recognition only — the import does not depend on it.
       subtitle: preview.source == null
           ? null
-          : 'Looks like a ${preview.source} export',
+          : l10n.importPreviewSource(preview.source!),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _Line('Workouts', '${sessions.length}'),
-          _Line('Sets', '${preview.setCount}'),
-          _Line('Exercises', '${preview.exerciseNames.length}'),
+          _Line(l10n.importPreviewWorkouts, '${sessions.length}'),
+          _Line(l10n.importPreviewSets, '${preview.setCount}'),
+          _Line(l10n.importPreviewExercises, '${preview.exerciseNames.length}'),
           _Line(
-            'From',
-            '${formatShortDate(sessions.first.start)} '
-                '${sessions.first.start.year}',
+            l10n.importPreviewFrom,
+            formatDate(sessions.first.start, l10n: l10n),
           ),
           _Line(
-            'To',
-            '${formatShortDate(sessions.last.start)} '
-                '${sessions.last.start.year}',
+            l10n.importPreviewTo,
+            formatDate(sessions.last.start, l10n: l10n),
           ),
           if (alreadyHere > 0)
-            _Line('Already here', '$alreadyHere — will be skipped'),
+            _Line(
+              l10n.importAlreadyHere,
+              l10n.importPreviewWillSkip(alreadyHere),
+            ),
           if (preview.skippedRows > 0)
-            _Line('Rows that were not sets', '${preview.skippedRows}'),
+            _Line(l10n.importPreviewNotSets, '${preview.skippedRows}'),
           if (preview.skippedNoDate > 0 && preview.unreadableDate != null) ...[
             const SizedBox(height: 10),
             SelectableText(
@@ -446,9 +456,10 @@ class _PreviewPanel extends StatelessWidget {
               // otherwise import silently short, with the missing weeks
               // counted under "rows that were not sets" — which names the
               // wrong cause and hides the only fact that could fix it.
-              '${preview.skippedNoDate} rows were left out because their date '
-              'could not be read — the first is "${preview.unreadableDate}". '
-              'Send that line on and it can be taught to read it.',
+              l10n.importPreviewDatesSkipped(
+                preview.skippedNoDate,
+                preview.unreadableDate!,
+              ),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.error,
                 height: 1.4,
@@ -458,8 +469,8 @@ class _PreviewPanel extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             incoming == 0
-                ? 'Every workout in this file is already on your phone.'
-                : '$incoming workouts will be added.',
+                ? l10n.importPreviewAllHere
+                : l10n.importPreviewWillAdd(incoming),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -472,9 +483,7 @@ class _PreviewPanel extends StatelessWidget {
               // between apps logs the same session in both for a while, and
               // the two exports disagree by a minute — enough that the
               // skip-what-is-already-here rule does not catch them.
-              '$nearDuplicates of them start within an hour of a workout you '
-              'already have. If you have imported the same training from '
-              'another app, those will be added a second time.',
+              l10n.importPreviewNearDuplicates(nearDuplicates),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.error,
                 height: 1.4,
@@ -518,19 +527,17 @@ class _PlanPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return AppPanel(
       icon: Icons.calendar_month_outlined,
-      title: 'Build a split from this file',
-      subtitle: enabled ? 'Will be called "$splitName"' : null,
+      title: l10n.importPlanTitle,
+      subtitle: enabled ? l10n.importPlanWillBeCalled(splitName) : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Your workout names become the days of a split, each holding the '
-            'exercises you actually train on it, with the sets and reps you '
-            'have been doing. Nothing existing is changed — this adds a new '
-            'split you can edit or delete.',
+            l10n.importPlanExplainer,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
               height: 1.4,
@@ -543,8 +550,7 @@ class _PlanPanel extends StatelessWidget {
               // reasonable thing to want, being handed one unasked is not.
               // The two would be indistinguishable in the split switcher,
               // which lists them by name.
-              'You already have a split called "$splitName". Turning this on '
-              'adds a second one with the same name.',
+              l10n.importPlanExists(splitName),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.error,
                 height: 1.4,
@@ -553,7 +559,7 @@ class _PlanPanel extends StatelessWidget {
           ],
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Create the split'),
+            title: Text(l10n.importPlanCreate),
             value: enabled,
             onChanged: onChanged,
           ),
@@ -574,7 +580,7 @@ class _PlanPanel extends StatelessWidget {
                 // accident. StrengthLog names an untitled workout after the
                 // clock, so "Saturday Evening: Machine Shoulder Press — 1
                 // workout" reads as the one-off it is next to "Push — 7".
-                subtitle: Text(_dayLine(day)),
+                subtitle: Text(_dayLine(day, l10n)),
               ),
         ],
       ),
@@ -583,18 +589,15 @@ class _PlanPanel extends StatelessWidget {
 }
 
 /// The line under a day in the plan panel: how often, how much, and when.
-String _dayLine(PlannedDay day) {
+String _dayLine(PlannedDay day, AppLocalizations l10n) {
   final parts = [
-    '${day.sessionCount} workout${day.sessionCount == 1 ? '' : 's'}',
-    '${day.exercises.length} exercise${day.exercises.length == 1 ? '' : 's'}',
-    if (day.weekdays.isNotEmpty) day.weekdays.map(_weekdayName).join(', '),
+    l10n.importPlanDayWorkouts(day.sessionCount),
+    l10n.importPlanDayExercises(day.exercises.length),
+    if (day.weekdays.isNotEmpty)
+      day.weekdays.map((d) => weekdayShort(d, l10n: l10n)).join(', '),
   ];
   return parts.join(' · ');
 }
-
-/// ISO weekday to its short name.
-String _weekdayName(int weekday) =>
-    const ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][weekday - 1];
 
 /// Only shown when the file does not say what unit its weights are in.
 class _UnitPanel extends StatelessWidget {
@@ -609,10 +612,11 @@ class _UnitPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return AppPanel(
       icon: Icons.scale_outlined,
-      title: 'What unit is this file in?',
+      title: l10n.importUnitTitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -621,8 +625,7 @@ class _UnitPanel extends StatelessWidget {
             // cannot be checked afterwards by looking: 100 kg and 100 lbs are
             // both plausible numbers, and the wrong choice rewrites a whole
             // history by a factor of 2.2.
-            'This export does not name its unit, so it has to be told. '
-            'Getting it wrong scales every weight you import.',
+            l10n.importUnitMessage,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
               height: 1.4,
@@ -630,9 +633,17 @@ class _UnitPanel extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           AppSegmented<WeightUnit>(
-            segments: const [
-              (value: WeightUnit.kg, label: 'Kilograms', leading: null),
-              (value: WeightUnit.lbs, label: 'Pounds', leading: null),
+            segments: [
+              (
+                value: WeightUnit.kg,
+                label: l10n.importUnitKilograms,
+                leading: null,
+              ),
+              (
+                value: WeightUnit.lbs,
+                label: l10n.importUnitPounds,
+                leading: null,
+              ),
             ],
             selected: unit,
             // A no-op rather than a disabled control: AppSegmented has no
@@ -657,32 +668,32 @@ class _OutcomePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return AppPanel(
       icon: Icons.check_circle_outline,
-      title: 'Imported',
+      title: l10n.importOutcomeTitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _Line('Workouts added', '${outcome.sessionsAdded}'),
-          _Line('Sets added', '${outcome.setsAdded}'),
+          _Line(l10n.importOutcomeWorkoutsAdded, '${outcome.sessionsAdded}'),
+          _Line(l10n.importOutcomeSetsAdded, '${outcome.setsAdded}'),
           if (outcome.sessionsSkipped > 0)
-            _Line('Already here', '${outcome.sessionsSkipped} — skipped'),
-          if (plan != null) ...[
-            _Line('Split created', plan!.splitName),
             _Line(
-              'Days',
-              '${plan!.days} day${plan!.days == 1 ? '' : 's'}, with '
-                  '${plan!.exercises} exercise'
-                  '${plan!.exercises == 1 ? '' : 's'}',
+              l10n.importAlreadyHere,
+              l10n.importOutcomeSkipped(outcome.sessionsSkipped),
+            ),
+          if (plan != null) ...[
+            _Line(l10n.importOutcomeSplitCreated, plan!.splitName),
+            _Line(
+              l10n.importOutcomeDays,
+              l10n.importOutcomeDaysValue(plan!.days, plan!.exercises),
             ),
             const SizedBox(height: 10),
             Text(
               // Where to find it, because the split list is not on the way
               // back from here and a split nobody can find is not one.
-              'Find it under Workout → Splits. Its days are already on the '
-              'weekdays you have been training them on — open a day to change '
-              'that, or to add one the history was not clear about.',
+              l10n.importOutcomeFindSplit,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
                 height: 1.4,
@@ -695,9 +706,7 @@ class _OutcomePanel extends StatelessWidget {
               // Said rather than hidden, because these rows are incomplete in
               // a way that shows up later: no muscles means they are missing
               // from the muscle map and from every muscle filter.
-              '${outcome.exercisesCreated.length} exercises were new and have '
-              'been added to your library. They have no muscles set yet, so '
-              'they will not appear on the muscle map until you edit them.',
+              l10n.importOutcomeNewExercises(outcome.exercisesCreated.length),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
                 height: 1.4,
@@ -758,7 +767,7 @@ class _ErrorPanel extends StatelessWidget {
 
     return AppPanel(
       icon: Icons.error_outline,
-      title: 'That file could not be read',
+      title: context.l10n.importErrorTitle,
       child: SelectableText(
         // Selectable so the header line can be copied out of it. When a file
         // will not load, what its columns are called is the one piece of

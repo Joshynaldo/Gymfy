@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
+import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
 import '../data/rank_inputs.dart';
 import '../data/ranked_lifts.dart';
@@ -46,10 +48,13 @@ class _RankCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
     final unit = ref.watch(weightUnitProvider);
     final rank = lift.rank;
     final next = rank.next;
+    final oneRm = formatWeightUnit(lift.oneRm, unit, l10n: l10n);
+    final ratio = formatDecimal(rank.ratio, 2, l10n: l10n);
 
     return _Shell(
       // Tapping through to the full screen puts this lift in context against
@@ -68,7 +73,7 @@ class _RankCard extends ConsumerWidget {
             children: [
               Expanded(
                 child: Text(
-                  'STRENGTH RANK',
+                  l10n.calculatorBadgeHeading,
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w600,
@@ -77,7 +82,7 @@ class _RankCard extends ConsumerWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                rank.tier.label,
+                rank.tier.localizedLabel(l10n),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: accent,
                   fontWeight: FontWeight.w600,
@@ -111,9 +116,9 @@ class _RankCard extends ConsumerWidget {
             children: [
               Expanded(
                 child: Text(
-                  '${formatWeightUnit(lift.oneRm, unit)} '
-                  '${lift.tested ? 'tested' : 'estimated'} · '
-                  '${rank.ratio.toStringAsFixed(2)}× bodyweight',
+                  lift.tested
+                      ? l10n.calculatorBadgeTested(oneRm, ratio)
+                      : l10n.calculatorBadgeEstimated(oneRm, ratio),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -124,9 +129,11 @@ class _RankCard extends ConsumerWidget {
               const SizedBox(width: 12),
               Text(
                 next == null
-                    ? 'Top tier'
-                    : '+${formatWeightUnit(rank.weightToNext!, unit)} '
-                          'to ${next.label}',
+                    ? l10n.calculatorBadgeTopTier
+                    : l10n.calculatorBadgeToNext(
+                        formatWeightUnit(rank.weightToNext!, unit, l10n: l10n),
+                        next.localizedLabel(l10n),
+                      ),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -146,6 +153,7 @@ class _SetupNudge extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
 
     return _Shell(
@@ -159,13 +167,12 @@ class _SetupNudge extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'This lift can be ranked',
+                  l10n.calculatorBadgeNudgeTitle,
                   style: theme.textTheme.titleSmall,
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Add your bodyweight and pick a standards table to see where '
-                  'you sit.',
+                  l10n.calculatorBadgeNudgeMessage,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),

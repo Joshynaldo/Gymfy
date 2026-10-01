@@ -319,25 +319,23 @@ class BackupRepository {
     final known = {for (final t in _db.allTables) t.actualTableName: t};
     for (final name in migrated.tables.keys) {
       if (!known.containsKey(name)) {
-        throw BackupException(
-          'That backup is damaged and cannot be read (unknown table "$name").',
-        );
+        throw BackupException(BackupProblem.damaged, 'unknown table "$name"');
       }
     }
     for (final table in known.values) {
       final data = migrated.tables[table.actualTableName];
       if (data == null) {
         throw BackupException(
-          'That backup is damaged and cannot be read '
-          '(table "${table.actualTableName}" is missing).',
+          BackupProblem.damaged,
+          'table "${table.actualTableName}" is missing',
         );
       }
       final columns = {for (final c in table.$columns) c.name};
       for (final column in data.columns) {
         if (!columns.contains(column)) {
           throw BackupException(
-            'That backup is damaged and cannot be read '
-            '(unknown column "$column" in "${table.actualTableName}").',
+            BackupProblem.damaged,
+            'unknown column "$column" in "${table.actualTableName}"',
           );
         }
       }
@@ -408,8 +406,8 @@ class BackupRepository {
       final broken = await _db.customSelect('PRAGMA foreign_key_check').get();
       if (broken.isNotEmpty) {
         throw const BackupException(
-          'That backup is damaged and cannot be read (some rows point at '
-          'data that is not in it).',
+          BackupProblem.damaged,
+          'some rows point at data that is not in it',
         );
       }
     });
@@ -422,13 +420,13 @@ class BackupRepository {
   BackupPayload _payloadOf(Archive archive) {
     final entry = archive.find(backupJsonEntry);
     if (entry == null || !entry.isFile) {
-      throw const BackupException('That file is not a Gymfy backup.');
+      throw const BackupException(BackupProblem.notABackup);
     }
     final String source;
     try {
       source = utf8.decode(entry.content);
     } on FormatException {
-      throw const BackupException('That file is not a Gymfy backup.');
+      throw const BackupException(BackupProblem.notABackup);
     }
     return BackupPayload.decode(source);
   }
@@ -445,7 +443,7 @@ class BackupRepository {
         archive = ZipDecoder().decodeStream(input);
       } catch (_) {
         // Not a zip at all — a plan file, a CSV, a photo picked by mistake.
-        throw const BackupException('That file is not a Gymfy backup.');
+        throw const BackupException(BackupProblem.notABackup);
       }
       return await body(archive);
     } finally {

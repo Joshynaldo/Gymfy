@@ -1,6 +1,8 @@
 // One-rep-max estimation. Pure maths, no Flutter and no database — so it can be
 // unit tested directly and reused by charts later in this phase.
 
+import '../../../l10n/l10n.dart';
+
 /// Estimates a one-rep max with the Epley formula:
 /// `1RM = weight × (1 + reps / 30)`.
 ///
@@ -51,8 +53,18 @@ enum OneRmFormula {
 
   const OneRmFormula(this.label, this.note);
 
+  /// The formula's name. A surname, so the same in every language.
   final String label;
+
+  /// The English note. On screen use [localizedNote].
   final String note;
+
+  /// What sets this formula apart, in the app's language.
+  String localizedNote(AppLocalizations l10n) => switch (this) {
+    OneRmFormula.epley => l10n.calculatorFormulaEpleyNote,
+    OneRmFormula.brzycki => l10n.calculatorFormulaBrzyckiNote,
+    OneRmFormula.lander => l10n.calculatorFormulaLanderNote,
+  };
 
   /// This formula's estimate, or null if the input is out of its usable range.
   double? estimate({required double weight, required int reps}) {

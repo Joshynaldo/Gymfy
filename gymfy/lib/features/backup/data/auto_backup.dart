@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/data/settings_repository.dart';
 import '../../workout/data/session_repository.dart';
 import 'backup_format.dart';
@@ -40,7 +41,17 @@ enum AutoBackupMode {
 
   /// What is stored in the settings table.
   final String slug;
+
+  /// The English name. On screen use [localizedLabel].
   final String label;
+
+  /// The short name on the backup screen's switch, in the app's language.
+  /// "After workout" there, for room, where [label] says "After each workout".
+  String localizedLabel(AppLocalizations l10n) => switch (this) {
+    AutoBackupMode.off => l10n.commonOff,
+    AutoBackupMode.weekly => l10n.backupModeWeekly,
+    AutoBackupMode.afterWorkout => l10n.backupModeAfterWorkout,
+  };
 
   /// Reads a stored value. Anything unrecognised is [off]: a backup that runs
   /// when nobody asked for it would be writing files into a folder the user

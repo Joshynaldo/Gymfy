@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/models/body_measurement.dart';
 import '../../../shared/utils/format.dart';
@@ -29,17 +30,18 @@ class _MeasurementHistoryScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final historyAsync = ref.watch(measurementHistoryProvider);
 
     return GlassScaffold(
-      appBar: GlassAppBar(title: const Text('Measurement history')),
+      appBar: GlassAppBar(title: Text(l10n.progressHistoryTitle)),
       body: (context) => historyAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              'Could not load measurements.\n$error',
+              l10n.progressMeasurementsLoadFailed('$error'),
               textAlign: TextAlign.center,
             ),
           ),
@@ -115,7 +117,7 @@ class _FieldPicker extends ConsumerWidget {
       children: [
         for (final field in MeasurementField.values)
           AppChip(
-            label: field.label,
+            label: field.localizedLabel(context.l10n),
             selected: field == selected,
             onTap: () => onChanged(field),
           ),
@@ -134,6 +136,7 @@ class _Summary extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
     final unit = ref.watch(weightUnitProvider);
 
@@ -159,7 +162,7 @@ class _Summary extends ConsumerWidget {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
-                field.formatValue(latest.value, unit),
+                field.formatValue(latest.value, unit, l10n: l10n),
                 style: theme.textTheme.headlineMedium,
               ),
               const SizedBox(width: 4),
@@ -167,15 +170,15 @@ class _Summary extends ConsumerWidget {
               const Spacer(),
               Text(
                 // Direction only, no colour coding — see _FieldTile.
-                '$sign${formatWeight(change.abs())} ${field.labelIn(unit)}',
+                '$sign${formatWeight(change.abs(), l10n: l10n)} '
+                '${field.labelIn(unit)}',
                 style: theme.textTheme.titleMedium?.copyWith(color: accent),
               ),
             ],
           ),
           const SizedBox(height: 4),
           Text(
-            '${points.length} measurements over '
-            '${days == 1 ? '1 day' : '$days days'}',
+            l10n.progressHistoryCount(points.length, days),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -195,8 +198,8 @@ class _NotEnoughData extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final unit = ref.watch(weightUnitProvider);
-    final label = field.label.toLowerCase();
 
     return Padding(
       padding: const EdgeInsets.only(top: 48),
@@ -210,18 +213,18 @@ class _NotEnoughData extends ConsumerWidget {
           const SizedBox(height: 16),
           Text(
             points.isEmpty
-                ? 'No $label measurements yet'
-                : 'Only one $label measurement so far',
+                ? l10n.progressHistoryNone(field.name)
+                : l10n.progressHistoryOnlyOne(field.name),
             style: theme.textTheme.titleMedium,
           ),
           const SizedBox(height: 8),
           Text(
             points.isEmpty
-                ? 'Measure your $label on the measurements screen and it will '
-                      'show up here.'
-                : '${field.formatWithUnit(points.single.value, unit)} on '
-                      '${formatShortDate(points.single.day)}. Log it again on '
-                      'another day to see a trend.',
+                ? l10n.progressHistoryNoneHint(field.name)
+                : l10n.progressHistoryOnlyOneHint(
+                    field.formatWithUnit(points.single.value, unit, l10n: l10n),
+                    formatShortDate(points.single.day, l10n: l10n),
+                  ),
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,

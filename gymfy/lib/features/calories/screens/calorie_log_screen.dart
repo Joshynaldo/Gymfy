@@ -3,6 +3,7 @@ import 'package:flutter/services.dart' show FilteringTextInputFormatter;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/dates.dart';
 import '../../../shared/utils/format.dart';
@@ -42,10 +43,11 @@ class _CalorieLogScreenState extends ConsumerState<CalorieLogScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final entriesAsync = ref.watch(calorieEntriesForDayProvider(_day));
 
     return GlassScaffold(
-      appBar: GlassAppBar(title: const Text('Calorie log')),
+      appBar: GlassAppBar(title: Text(l10n.caloriesLogTitle)),
       // The day stepper is fixed, so it is held clear of the app bar; only the
       // list below it slides under the bars.
       body: (context) => Padding(
@@ -67,7 +69,7 @@ class _CalorieLogScreenState extends ConsumerState<CalorieLogScreen> {
                   child: Padding(
                     padding: const EdgeInsets.all(24),
                     child: Text(
-                      'Could not load the log.\n$error',
+                      l10n.caloriesLogLoadFailed('$error'),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -81,7 +83,7 @@ class _CalorieLogScreenState extends ConsumerState<CalorieLogScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addMeal,
         icon: const Icon(Icons.add),
-        label: const Text('Add meal'),
+        label: Text(l10n.caloriesAddMeal),
       ),
     );
   }
@@ -120,6 +122,7 @@ class _DayNavigator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       child: Row(
@@ -128,13 +131,16 @@ class _DayNavigator extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.chevron_left),
             onPressed: onPrevious,
-            tooltip: 'Previous day',
+            tooltip: l10n.commonPreviousDay,
           ),
-          Text(formatDayLabel(day), style: theme.textTheme.titleMedium),
+          Text(
+            formatDayLabel(day, l10n: l10n),
+            style: theme.textTheme.titleMedium,
+          ),
           IconButton(
             icon: const Icon(Icons.chevron_right),
             onPressed: onNext,
-            tooltip: 'Next day',
+            tooltip: l10n.commonNextDay,
           ),
         ],
       ),
@@ -149,6 +155,7 @@ class _DayContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final totalCalories = entries.fold<int>(0, (s, e) => s + e.calories);
     final protein = entries.fold<int>(0, (s, e) => s + e.protein);
     final carbs = entries.fold<int>(0, (s, e) => s + e.carbs);
@@ -166,12 +173,15 @@ class _DayContent extends StatelessWidget {
           child: MacroBreakdown(protein: protein, carbs: carbs, fat: fat),
         ),
         if (entries.isEmpty)
-          const Padding(
-            padding: EdgeInsets.only(top: 48),
-            child: Center(child: Text('No meals logged for this day yet.')),
+          Padding(
+            padding: const EdgeInsets.only(top: 48),
+            child: Center(child: Text(l10n.caloriesNoMeals)),
           )
         else ...[
-          AppSectionHeader(title: 'Meals', count: entries.length),
+          AppSectionHeader(
+            title: l10n.caloriesMealsTitle,
+            count: entries.length,
+          ),
           for (final entry in entries)
             FadeSlideIn(child: _MealTile(entry: entry)),
         ],
@@ -189,6 +199,7 @@ class _CalorieSummary extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
     final remaining = goal - total;
     final progress = goal <= 0 ? 0.0 : (total / goal).clamp(0.0, 1.0);
@@ -197,26 +208,39 @@ class _CalorieSummary extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
+          // A wrap rather than a row with a spacer: the two ends sit apart
+          // while they fit, and "1.250 übrig" drops under the total rather
+          // than off the card when they don't — German at large text, or a
+          // four-digit total.
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.end,
+            spacing: 12,
             children: [
-              Text(
-                '$total',
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    '$total',
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '/ $goal kcal',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 4),
               Text(
-                '/ $goal kcal',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                remaining >= 0 ? '$remaining left' : '${-remaining} over',
+                remaining >= 0
+                    ? l10n.caloriesLeft(remaining)
+                    : l10n.caloriesOver(-remaining),
                 style: theme.textTheme.titleSmall?.copyWith(
                   color: remaining >= 0 ? accent : theme.colorScheme.error,
                 ),
@@ -247,11 +271,12 @@ class _MealTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return AppTile(
       icon: Icons.restaurant,
       title: entry.name,
-      subtitle: 'P ${entry.protein}g • C ${entry.carbs}g • F ${entry.fat}g',
+      subtitle: l10n.caloriesMacroLine(entry.protein, entry.carbs, entry.fat),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -272,7 +297,7 @@ class _MealTile extends ConsumerWidget {
           ),
           IconButton(
             icon: const Icon(Icons.delete_outline),
-            tooltip: 'Delete entry',
+            tooltip: l10n.caloriesDeleteEntry,
             visualDensity: VisualDensity.compact,
             onPressed: () =>
                 ref.read(calorieRepositoryProvider).deleteEntry(entry.id),
@@ -325,8 +350,9 @@ class _AddMealDialogState extends State<_AddMealDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return GlassDialog(
-      title: const Text('Add meal'),
+      title: Text(l10n.caloriesAddMeal),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -335,25 +361,37 @@ class _AddMealDialogState extends State<_AddMealDialog> {
               controller: _name,
               autofocus: true,
               textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(
-                labelText: 'Meal',
-                hintText: 'e.g. Chicken & rice',
+              decoration: InputDecoration(
+                labelText: l10n.caloriesMealLabel,
+                hintText: l10n.caloriesMealHint,
               ),
             ),
             const SizedBox(height: 8),
-            _NumberField(controller: _calories, label: 'Calories (kcal)'),
+            _NumberField(
+              controller: _calories,
+              label: l10n.caloriesCaloriesLabel,
+            ),
             Row(
               children: [
                 Expanded(
-                  child: _NumberField(controller: _protein, label: 'Protein g'),
+                  child: _NumberField(
+                    controller: _protein,
+                    label: l10n.caloriesProteinLabel,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _NumberField(controller: _carbs, label: 'Carbs g'),
+                  child: _NumberField(
+                    controller: _carbs,
+                    label: l10n.caloriesCarbsLabel,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _NumberField(controller: _fat, label: 'Fat g'),
+                  child: _NumberField(
+                    controller: _fat,
+                    label: l10n.caloriesFatLabel,
+                  ),
                 ),
               ],
             ),
@@ -363,9 +401,9 @@ class _AddMealDialogState extends State<_AddMealDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.commonCancel),
         ),
-        FilledButton(onPressed: _submit, child: const Text('Add')),
+        FilledButton(onPressed: _submit, child: Text(l10n.commonAdd)),
       ],
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/utils/units.dart';
 import '../../exercises/data/exercise_names.dart';
 import '../data/goal_labels.dart';
@@ -21,17 +22,21 @@ class GoalProgressRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
     final unit = ref.watch(weightUnitProvider);
     final title = goalTitle(
       status,
       exerciseName: exerciseNameFor(ref, status.goal.exerciseId),
       unit: unit,
+      l10n: l10n,
     );
+    final value = goalValue(status, unit: unit, l10n: l10n);
+    final caption = goalCaption(status, l10n: l10n);
     final muteColour = theme.colorScheme.onSurfaceVariant;
 
     return Semantics(
-      label: '$title, ${goalValue(status, unit: unit)}, ${goalCaption(status)}',
+      label: '$title, $value, $caption',
       excludeSemantics: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -55,7 +60,7 @@ class GoalProgressRow extends ConsumerWidget {
               ),
               const SizedBox(width: 10),
               Text(
-                goalValue(status, unit: unit),
+                value,
                 maxLines: 1,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontFeatures: const [FontFeature.tabularFigures()],
@@ -79,7 +84,7 @@ class GoalProgressRow extends ConsumerWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            goalCaption(status),
+            caption,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.bodySmall?.copyWith(

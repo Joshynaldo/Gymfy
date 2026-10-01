@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/data/settings_repository.dart';
 import '../../../shared/widgets/glass_dialog.dart';
 import '../data/health_connect_bridge.dart';
@@ -84,7 +85,7 @@ class _HealthConnectSettingsPanelState
     final sync = ref.read(healthConnectSyncProvider);
     if (!on) return sync.setWriteWorkouts(false);
     if (!await _ensure(writeExercisePermission)) {
-      _say('Health Connect did not allow Gymfy to write workouts.');
+      _say(_l10n.healthConnectWriteRefused);
       return;
     }
     await sync.setWriteWorkouts(true);
@@ -94,7 +95,7 @@ class _HealthConnectSettingsPanelState
     final sync = ref.read(healthConnectSyncProvider);
     if (!on) return sync.setReadBodyweight(false);
     if (!await _ensure(readWeightPermission)) {
-      _say('Health Connect did not allow Gymfy to read your weight.');
+      _say(_l10n.healthConnectReadRefused);
       return;
     }
     await sync.setReadBodyweight(true);
@@ -102,11 +103,7 @@ class _HealthConnectSettingsPanelState
     // visibly does something.
     final filled = await sync.importBodyweight();
     if (filled != null && filled > 0) {
-      _say(
-        filled == 1
-            ? 'Added 1 weigh-in to your measurements.'
-            : 'Added $filled weigh-ins to your measurements.',
-      );
+      _say(_l10n.healthConnectWeighInsAdded(filled));
     }
   });
 
@@ -126,20 +123,16 @@ class _HealthConnectSettingsPanelState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => GlassDialog(
-        title: const Text('Write past workouts?'),
-        content: const Text(
-          'Adds every finished workout from before you switched this on to '
-          'Health Connect, as strength training with its start and end time. '
-          'Workouts already there are not added twice.',
-        ),
+        title: Text(context.l10n.healthConnectBackfillTitle),
+        content: Text(context.l10n.healthConnectBackfillMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Write'),
+            child: Text(context.l10n.healthConnectBackfillConfirm),
           ),
         ],
       ),
@@ -151,16 +144,21 @@ class _HealthConnectSettingsPanelState
           .read(healthConnectSyncProvider)
           .syncWorkouts(backfill: true);
       if (result == null) {
-        _say('Health Connect is not allowing Gymfy to write workouts.');
+        _say(_l10n.healthConnectWriteNotAllowed);
         return;
       }
-      _say(describeBackfill(result));
+      _say(describeBackfill(result, l10n: _l10n));
     });
   }
+
+  /// The strings for snackbars said after an await, when the widget may be
+  /// gone; [_say] checks [mounted] before showing one.
+  AppLocalizations get _l10n => mounted ? context.l10n : englishLocalizations;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
     final muted = theme.textTheme.bodySmall?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
@@ -182,31 +180,29 @@ class _HealthConnectSettingsPanelState
     final canRead = granted.contains(readWeightPermission);
     // A switch that is on while Health Connect no longer grants it — revoked
     // in Health Connect's own settings. Said plainly, with the fix next to it.
-    final missing = [
-      if (write && !canWrite) 'write workouts',
-      if (read && !canRead) 'read your weight',
-    ];
+    final missingWrite = write && !canWrite;
+    final missingRead = read && !canRead;
+    final missing = missingWrite || missingRead;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-          child: Text(
-            "Android's store for health data, on this phone. Gymfy can add "
-            'your finished workouts to it and fill in your bodyweight from a '
-            'smart scale. It all stays on the device — Gymfy has no internet '
-            'access.',
-            style: muted,
-          ),
+          child: Text(l10n.healthConnectIntro, style: muted),
         ),
         ListTile(
           leading: Icon(
             available ? Icons.favorite : Icons.favorite_border,
             color: available ? accent : null,
           ),
+          // The product's name, the same in every language.
           title: const Text('Health Connect'),
-          subtitle: Text(asked.hasValue ? availability.label : 'Checking…'),
+          subtitle: Text(
+            asked.hasValue
+                ? availability.localizedLabel(l10n)
+                : l10n.healthConnectChecking,
+          ),
           trailing: switch (availability) {
             HealthConnectAvailability.notInstalled ||
             HealthConnectAvailability.needsUpdate => TextButton(
@@ -215,12 +211,12 @@ class _HealthConnectSettingsPanelState
                 final opened = await ref
                     .read(healthConnectBridgeProvider)
                     .openStore();
-                if (!opened) _say('Could not open the Play Store.');
+                if (!opened) _say(_l10n.healthConnectStoreFailed);
               },
               child: Text(
                 availability == HealthConnectAvailability.notInstalled
-                    ? 'Install'
-                    : 'Update',
+                    ? l10n.healthConnectInstall
+                    : l10n.healthConnectUpdate,
               ),
             ),
             _ => null,
@@ -228,35 +224,36 @@ class _HealthConnectSettingsPanelState
         ),
         SwitchListTile(
           secondary: const Icon(Icons.fitness_center),
-          title: const Text('Write workouts'),
-          subtitle: const Text(
-            'Each workout you finish appears as strength training, with its '
-            'name, start and end',
-          ),
+          title: Text(l10n.healthConnectWriteTitle),
+          subtitle: Text(l10n.healthConnectWriteSubtitle),
           value: write,
           onChanged: available && !_busy ? _setWrite : null,
         ),
         SwitchListTile(
           secondary: const Icon(Icons.monitor_weight_outlined),
-          title: const Text('Read bodyweight'),
-          subtitle: const Text(
-            "Weigh-ins fill in days where you haven't entered a weight. A "
-            'weight you typed is never replaced',
-          ),
+          title: Text(l10n.healthConnectReadTitle),
+          subtitle: Text(l10n.healthConnectReadSubtitle),
           value: read,
           onChanged: available && !_busy ? _setRead : null,
         ),
         if (available)
           ListTile(
             leading: const Icon(Icons.verified_user_outlined),
-            title: const Text('Permissions'),
+            title: Text(l10n.healthConnectPermissionsTitle),
             subtitle: Text(
-              missing.isNotEmpty
-                  ? 'Health Connect no longer lets Gymfy '
-                        '${missing.join(' or ')}'
-                  : 'Workouts: ${canWrite ? 'allowed' : 'not allowed'} · '
-                        'Weight: ${canRead ? 'allowed' : 'not allowed'}',
-              style: missing.isNotEmpty
+              missing
+                  ? l10n.healthConnectPermissionsMissing(
+                      missingWrite && missingRead
+                          ? 'both'
+                          : missingWrite
+                          ? 'write'
+                          : 'read',
+                    )
+                  : l10n.healthConnectPermissionsStatus(
+                      canWrite ? 'yes' : 'no',
+                      canRead ? 'yes' : 'no',
+                    ),
+              style: missing
                   ? theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.error,
                     )
@@ -267,16 +264,14 @@ class _HealthConnectSettingsPanelState
               onPressed: _busy || (canWrite && canRead)
                   ? null
                   : () => _grant(write: write, read: read),
-              child: const Text('Grant'),
+              child: Text(l10n.healthConnectGrant),
             ),
           ),
         if (available && write && canWrite)
           ListTile(
             leading: const Icon(Icons.history),
-            title: const Text('Write past workouts'),
-            subtitle: const Text(
-              'Only workouts finished from now on are written by themselves',
-            ),
+            title: Text(l10n.healthConnectBackfillTile),
+            subtitle: Text(l10n.healthConnectBackfillTileSubtitle),
             trailing: const Icon(Icons.chevron_right),
             enabled: !_busy,
             onTap: _backfill,
@@ -284,22 +279,20 @@ class _HealthConnectSettingsPanelState
         if (available)
           ListTile(
             leading: const Icon(Icons.open_in_new),
-            title: const Text('Manage in Health Connect'),
-            subtitle: const Text(
-              'Revoke access, or delete what Gymfy wrote there',
-            ),
+            title: Text(l10n.healthConnectManageTitle),
+            subtitle: Text(l10n.healthConnectManageSubtitle),
             onTap: () async {
               final opened = await ref
                   .read(healthConnectBridgeProvider)
                   .openHealthConnect();
-              if (!opened) _say('Could not open Health Connect.');
+              if (!opened) _say(_l10n.healthConnectOpenFailed);
             },
           ),
         if (lastError != null && (write || read))
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
             child: Text(
-              'Last sync with Health Connect failed: $lastError',
+              l10n.healthConnectLastError(lastError),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.error,
               ),
@@ -310,20 +303,16 @@ class _HealthConnectSettingsPanelState
   }
 }
 
-/// The snackbar after "Write past workouts".
-String describeBackfill(WorkoutSyncResult result) {
-  final wrote = switch (result.written) {
-    0 => 'No workouts needed writing',
-    1 => 'Wrote 1 workout to Health Connect',
-    final n => 'Wrote $n workouts to Health Connect',
-  };
-  final untimed = switch (result.untimed) {
-    0 => '',
-    1 => ' 1 without a recorded length was left out.',
-    final n => ' $n without a recorded length were left out.',
-  };
-  final failed = result.error == null
-      ? ''
-      : ' Then it stopped: ${result.error}';
-  return '$wrote.$untimed$failed';
+/// The snackbar after "Write past workouts", in [l10n]'s language (English
+/// without it). Up to three sentences: what was written, what was left out,
+/// and why it stopped.
+String describeBackfill(WorkoutSyncResult result, {AppLocalizations? l10n}) {
+  final strings = l10n ?? englishLocalizations;
+  final error = result.error;
+  return [
+    strings.healthConnectBackfillWrote(result.written),
+    if (result.untimed > 0)
+      strings.healthConnectBackfillUntimed(result.untimed),
+    if (error != null) strings.healthConnectBackfillStopped(error),
+  ].join(' ');
 }

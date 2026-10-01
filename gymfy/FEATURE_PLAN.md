@@ -65,24 +65,25 @@ English strings verbatim, so English widget tests keep finding them) and
   `initializeDateFormatting('de')` (`package:intl/date_symbol_data_local.dart`)
   first. Add your densest screens to `german_layout_test.dart`.
 
-**Translated so far:** `lib/main.dart`, `lib/app`, `lib/shared` (widgets,
-format/units/weekday helpers, enum and muscle labels, rest-timer
-notifications), and the features `settings`, `more`, `help`, `onboarding`,
-`home`, `muscle_map`, `workout`, `workout_notification`, `overload`,
-`plates`, `plan_share`, `programs` and `exercises` (screens and widgets —
-not the exercise names in the seed and catalogue data). That includes the
-panels those features put on Settings (plates, overload, logging, rest
-length) and onboarding's overload page. **Still English:** `backup`,
-`calculator`, `calendar`, `calories`, `data_export`, `goals`,
-`health_connect`, `import`, `progress`, `reviews`, `stats`, `wear`.
+**Translated:** everything the app shows — `lib/main.dart`, `lib/app`,
+`lib/shared` and every feature folder, including the panels features put on
+Settings (plates, overload, logging, rest length, Health Connect) and
+onboarding's overload page. **Left English on purpose**, besides the list
+above: exercise names, the bundled programmes' names and day names, sessions
+already saved as "Free workout" or "Imported workout", the product name
+"Health Connect", the contents of exported files (CSV headers, the JSON's
+note — files are data, read by other programs), the short English
+diagnostics inside a damaged-backup message and inside errors quoted from
+the platform (`$error`), and the two developer harnesses
+`lib/design_preview.dart` and `lib/preview_screens.dart`, which ship in no
+build.
 
 What the second batch added, for whoever translates the rest:
 - More helpers take an optional `l10n:` and print the old English without
   it: `formatPercent` (German "72,5 %", with a no-break space),
   `formatPlate`/`formatBar` (leave `formatPlate` English for storage —
   `encodePlates` joins with commas), `formatRecordValue`/`describeRecord`,
-  `describeSetPosition`/`describeNextNumbers` (the watch payload in
-  `wear_sync.dart` still calls them without one), `programFacts`,
+  `describeSetPosition`/`describeNextNumbers`, `programFacts`,
   `blockWeekLabel`, `exerciseTarget`, `filterOptionsFor` (pass the same
   `l10n` as `matchesExerciseSearch`, or a German query empties the chips),
   `buildPlanPdf`, `workoutNotificationFrom`.
@@ -110,6 +111,44 @@ What the second batch added, for whoever translates the rest:
   builder's superset caption wraps, the plate total's label gives way to the
   number, and the training block sheet's buttons sit in an `OverflowBar`.
 
+What the third batch (progress, stats, calculator, calendar, calories, goals,
+reviews, backup, data_export, import, health_connect, wear) added:
+- `formatDecimal(value, digits, l10n:)` in `format.dart`, for ratios and
+  multipliers that are not weights ("1,24× Körpergewicht").
+- Optional `l10n:` and the old English without it: `goalTitle`,
+  `goalValue`, `goalCaption`, `workoutsPerWeekLabel`, `goalDraftProblem`,
+  `describeVolumeComparison` (one message per thing, since German needs
+  "2,3 Londoner Doppeldeckerbusse"), `describeBackfill`, `defaultSplitName`,
+  `describeRepeatableSet`, `wearWorkoutFrom`, `MeasurementDisplay`'s
+  `formatValue`/`formatWithUnit` (leave `l10n` off for the text field).
+  `ReviewPeriod` keeps `label`/`shortLabel` English and gained
+  `localizedLabel`/`localizedShortLabel`.
+- `localizedLabel` for `StrengthTier`, `ProgressView`, `AutoBackupMode`,
+  `HealthConnectAvailability`, `ImportField`; `OneRmFormula.localizedNote`
+  (the formula names are surnames and stay).
+- `BackupException`, `CsvException` and `ImportFormatException` carry a
+  problem (`BackupProblem`, `CsvProblem`, the missing `ImportField`s plus
+  the file's headers) and are worded by the screen with `describe(l10n)`;
+  `message` is the English the old tests read. Column matching in the import
+  is untouched — `parseWorkoutCsv` only gained `untitledName`, the name an
+  untitled workout is saved under, and the screen passes it in the app's
+  language, like the split it builds (`createSplitFrom(name: …)`).
+- The watch payload is worded on the phone in the phone app's language:
+  `WearSync` watches `appLocalizationsProvider`, so a test container without
+  a database overrides it, like `WorkoutNotificationSync`. The watch's own
+  few words (idle screen, "Rest over", +30 s, skip, Log, reps, the rest
+  channel) are Android string resources in `android/wear/src/main/res`
+  with `values-de`, and follow the watch's language.
+- The Health Connect privacy screen (`HealthPermissionsRationaleActivity`)
+  has `android/app/src/main/res/values-de/strings.xml`; Health Connect
+  shows it in the phone's language. It names the switches as the German
+  Settings screen does — `localized_insights_test.dart` checks both.
+- An ICU select with one-word branches (`beginner{beginner}`) is fine:
+  `l10n_test.dart` no longer reads a branch body as a placeholder.
+- The calorie summary's "left/over" figure sits in a `Wrap` and drops under
+  the total when the two don't fit — found by
+  `german_insights_layout_test.dart`, which covers these screens.
+
 **German glossary** — du-form, the words German lifters use, the same word
 everywhere: workout → Training (pl. Trainings) · set → Satz/Sätze · rep →
 Wiederholung, short Wdh. · warm-up set → Aufwärmsatz · working set →
@@ -127,7 +166,14 @@ Supersatz · top set → Topsatz · rep range → Wiederholungsbereich · warm-u
 ramp → Aufwärmschema · working weight → Arbeitsgewicht · RPE/RIR → RPE/RIR
 · training block → Trainingsblock · deload week → Deload-Woche · beginner /
 intermediate → Einsteiger / Fortgeschritten · equipment → Ausrüstung ·
-custom (exercise) → Eigene · personal record → Bestleistung. Set-type
+custom (exercise) → Eigene · personal record → Bestleistung · strength
+tiers Beginner / Novice / Intermediate / Advanced / Elite → Neuling /
+Anfänger / Fortgeschritten / Erfahren / Elite ("auf Stufe Erfahren") ·
+measurements → Körpermaße · weigh-in → Gewichtswert, "gewogen" · streak →
+Serie ("3 Tage in Folge") · review → Rückblick · all-time → Gesamt/Insgesamt
+· trends → Verlauf · backup → Backup (das) · restore → Wiederherstellen ·
+write to Health Connect → eintragen · read bodyweight → Körpergewicht
+übernehmen · macros → Makros (P / KH / F). Set-type
 badges: A (Aufwärmsatz), D (Dropsatz), V (Versagen). English's spaced em
 dash becomes a spaced en dash (" – ").
 

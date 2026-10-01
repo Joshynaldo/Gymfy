@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import '../../../l10n/l10n.dart';
+
 /// The file extension a full backup is saved under.
 ///
 /// Its own extension rather than `.zip`, so a backup is never mistaken for
@@ -35,11 +37,51 @@ const backupFormatVersion = 1;
 /// never written by any build of this app.
 const minRestorableSchemaVersion = 25;
 
-/// A problem with a backup file, worded for the person who picked it.
-class BackupException implements Exception {
-  const BackupException(this.message);
+/// Why a backup file can't be read or restored.
+enum BackupProblem {
+  /// Not a zip, or a zip without a Gymfy backup in it — a plan file, a CSV, a
+  /// photo picked by mistake.
+  notABackup,
 
-  final String message;
+  /// Written by a newer build than this one.
+  tooNew,
+
+  /// Older than [minRestorableSchemaVersion].
+  tooOld,
+
+  /// A schema step this build has no migration for. A bug in this app rather
+  /// than in the file; [BackupException.detail] is the version.
+  noMigration,
+
+  /// A backup, but a broken one; [BackupException.detail] says where.
+  damaged,
+}
+
+/// A problem with a backup file, worded for the person who picked it.
+///
+/// Carries the [problem] rather than a sentence, so the screen that shows it
+/// words it in the app's language — the way `PlanFormatException` does.
+class BackupException implements Exception {
+  const BackupException(this.problem, [this.detail = '']);
+
+  final BackupProblem problem;
+
+  /// What is broken, for [BackupProblem.damaged] ("it has no tables"), or the
+  /// version, for [BackupProblem.noMigration]. Left in English in every
+  /// language: it is a diagnostic to quote back, not a sentence to read.
+  final String detail;
+
+  /// What to tell the user, in [l10n]'s language.
+  String describe(AppLocalizations l10n) => switch (problem) {
+    BackupProblem.notABackup => l10n.backupErrorNotBackup,
+    BackupProblem.tooNew => l10n.backupErrorTooNew,
+    BackupProblem.tooOld => l10n.backupErrorTooOld,
+    BackupProblem.noMigration => l10n.backupErrorNoMigration(detail),
+    BackupProblem.damaged => l10n.backupErrorDamaged(detail),
+  };
+
+  /// The message in English.
+  String get message => describe(englishLocalizations);
 
   @override
   String toString() => message;
@@ -163,19 +205,16 @@ class BackupPayload {
     try {
       json = jsonDecode(source);
     } on FormatException {
-      throw const BackupException('That file is not a Gymfy backup.');
+      throw const BackupException(BackupProblem.notABackup);
     }
     if (json is! Map || json['format'] != backupFormatId) {
-      throw const BackupException('That file is not a Gymfy backup.');
+      throw const BackupException(BackupProblem.notABackup);
     }
 
     final formatVersion = json['formatVersion'];
     if (formatVersion is! int) throw _corrupt('it has no format version');
     if (formatVersion > backupFormatVersion) {
-      throw const BackupException(
-        'That backup was made by a newer version of Gymfy. Update the app to '
-        'restore it.',
-      );
+      throw const BackupException(BackupProblem.tooNew);
     }
 
     final schemaVersion = json['schemaVersion'];
@@ -217,15 +256,10 @@ class BackupPayload {
 /// missing data — the one thing a restore must never do.
 void checkRestorable(int schemaVersion, {required int currentVersion}) {
   if (schemaVersion > currentVersion) {
-    throw const BackupException(
-      'That backup was made by a newer version of Gymfy. Update the app to '
-      'restore it.',
-    );
+    throw const BackupException(BackupProblem.tooNew);
   }
   if (schemaVersion < minRestorableSchemaVersion) {
-    throw const BackupException(
-      'That backup is from a version of Gymfy too old to restore.',
-    );
+    throw const BackupException(BackupProblem.tooOld);
   }
 }
 
@@ -245,7 +279,8 @@ BackupPayload migrateBackup(BackupPayload payload, {required int to}) {
       // A schema bump with no step here is a bug in this file, not in the
       // user's backup — but the user is the one who'd lose data, so stop.
       throw BackupException(
-        'Gymfy cannot read backups from version ${current.schemaVersion} yet.',
+        BackupProblem.noMigration,
+        '${current.schemaVersion}',
       );
     }
     current = step(current);
@@ -384,7 +419,7 @@ bool isSafePhotoName(String name) =>
     name != '..';
 
 BackupException _corrupt(String detail) =>
-    BackupException('That backup is damaged and cannot be read ($detail).');
+    BackupException(BackupProblem.damaged, detail);
 
 bool _truthy(Object? value) => value == 1 || value == true;
 

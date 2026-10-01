@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/glass.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/utils/exercise_display.dart';
 import '../../../shared/utils/units.dart';
 import '../../../shared/widgets/app_card.dart';
@@ -49,6 +50,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final review = ref.watch(reviewProvider(_period));
     final canShare = review != null && !review.current.isEmpty;
     final atLatest = _period.isCurrent(_today) || _period.start.isAfter(_today);
@@ -57,14 +59,14 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
       appBar: GlassAppBar(
         title: Text(
           _period.span == ReviewSpan.month
-              ? 'Monthly review'
-              : 'Year in training',
+              ? l10n.reviewsMonthlyTitle
+              : l10n.reviewsYearTitle,
         ),
         actions: [
           if (canShare)
             GlassIconButton(
               icon: Icons.ios_share,
-              tooltip: 'Share as image',
+              tooltip: l10n.reviewsShareTooltip,
               onPressed: _sharing ? () {} : _share,
             ),
         ],
@@ -73,7 +75,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         padding: const EdgeInsets.only(top: 4, bottom: 24) + barInsets(context),
         children: [
           _PeriodStepper(
-            label: _period.label,
+            label: _period.localizedLabel(l10n),
             onPrevious: () => setState(() => _period = _period.previous),
             onNext: atLatest
                 ? null
@@ -111,24 +113,22 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         _shareKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
     if (boundary == null) return;
     setState(() => _sharing = true);
+    final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
     try {
       final bytes = await capturePng(boundary);
       final outcome = await shareOrSaveImage(
         bytes,
         fileName: _fileName(_period),
-        title: 'Share your ${_period.label} review',
+        title: l10n.reviewsShareTitle(_period.localizedLabel(l10n)),
+        saveTitle: l10n.reviewsSaveImageTitle,
       );
       if (outcome == ShareOutcome.saved) {
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Text('Image saved — send it from your files.'),
-          ),
-        );
+        messenger.showSnackBar(SnackBar(content: Text(l10n.reviewsImageSaved)));
       }
     } catch (error) {
       messenger.showSnackBar(
-        SnackBar(content: Text('Could not make the image.\n$error')),
+        SnackBar(content: Text(l10n.reviewsImageFailed('$error'))),
       );
     } finally {
       if (mounted) setState(() => _sharing = false);
@@ -160,13 +160,14 @@ class _PeriodStepper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
       child: Row(
         children: [
           IconButton(
-            tooltip: 'Earlier',
+            tooltip: l10n.reviewsEarlier,
             icon: const Icon(Icons.chevron_left),
             onPressed: onPrevious,
           ),
@@ -182,7 +183,7 @@ class _PeriodStepper extends StatelessWidget {
             ),
           ),
           IconButton(
-            tooltip: 'Later',
+            tooltip: l10n.reviewsLater,
             icon: const Icon(Icons.chevron_right),
             onPressed: onNext,
           ),
@@ -200,6 +201,9 @@ class _NothingLogged extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
+    final month = period.span == ReviewSpan.month;
+    final label = period.localizedLabel(l10n);
 
     return AppCard(
       padding: const EdgeInsets.all(24),
@@ -212,15 +216,15 @@ class _NothingLogged extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'No workouts in ${period.label}.',
+            month
+                ? l10n.reviewsNoWorkoutsMonth(label)
+                : l10n.reviewsNoWorkoutsYear(label),
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium,
           ),
           const SizedBox(height: 4),
           Text(
-            'Step back to an earlier '
-            '${period.span == ReviewSpan.month ? 'month' : 'year'} with the '
-            'arrows above.',
+            l10n.reviewsStepBack(period.span.name),
             textAlign: TextAlign.center,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
@@ -241,6 +245,7 @@ class _ExerciseList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final names = ref.watch(exerciseNamesProvider);
     final unit = ref.watch(weightUnitProvider);
     final shown = stats.topExercises.take(_listedExercises).toList();
@@ -249,17 +254,19 @@ class _ExerciseList extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        AppSectionHeader(title: 'Exercises', count: stats.topExercises.length),
+        AppSectionHeader(
+          title: l10n.reviewsExercisesTitle,
+          count: stats.topExercises.length,
+        ),
         for (final exercise in shown)
           AppTile(
             icon: exerciseIcon,
             title:
                 names[exercise.exerciseId] ?? muscleLabel(exercise.exerciseId),
             subtitle: [
-              '${exercise.sets} ${exercise.sets == 1 ? 'set' : 'sets'}',
-              '${exercise.workouts} '
-                  '${exercise.workouts == 1 ? 'workout' : 'workouts'}',
-              formatWeightUnit(exercise.volumeKg, unit),
+              l10n.reviewsSets(exercise.sets),
+              l10n.reviewsWorkouts(exercise.workouts),
+              formatWeightUnit(exercise.volumeKg, unit, l10n: l10n),
             ].join(' · '),
             trailing: const Icon(Icons.show_chart, size: 20),
             // Pushed rather than gone to, so back returns to this review

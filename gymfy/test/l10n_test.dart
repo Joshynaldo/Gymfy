@@ -19,10 +19,14 @@ Map<String, String> _messages(String path) {
 }
 
 /// The placeholder names a message uses: `{name}`, and the `{count, plural …`
-/// that opens a plural or select. Literal text inside a plural branch, like
-/// the `{1 set}` in `=1{1 set}`, starts with a digit and is not counted.
+/// that opens a plural or select. A branch's body is not one: its brace
+/// follows the branch's key, so the `{1 set}` in `=1{1 set}` and the
+/// `{beginner}` in `beginner{beginner}` are both skipped, while the `{count}`
+/// in `other{{count} sets}` still counts.
 Set<String> _placeholders(String message) => {
-  for (final match in RegExp(r'\{([A-Za-z_]\w*)\s*[,}]').allMatches(message))
+  for (final match in RegExp(
+    r'(?<![\w=])\{([A-Za-z_]\w*)\s*[,}]',
+  ).allMatches(message))
     match.group(1)!,
 };
 
@@ -50,6 +54,12 @@ const _sameInGerman = {
   'workoutLogMinutes',
   'planSharePdf',
   'exercisesNameLabel',
+  // The top strength tier; German lifters say Elite too.
+  'strengthTierElite',
+  // The macro, as German food labels and lifters both call it.
+  'caloriesMacroProtein',
+  // "80 kg x 8" on the watch's repeat button: numbers only, kept short.
+  'wearRepeatSet',
 };
 
 void main() {

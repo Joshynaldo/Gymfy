@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/bar_chart.dart';
@@ -16,17 +17,18 @@ class WeeklyOverviewScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final weekAsync = ref.watch(weeklyOverviewProvider);
 
     return GlassScaffold(
-      appBar: GlassAppBar(title: const Text('This week')),
+      appBar: GlassAppBar(title: Text(l10n.caloriesWeekTitle)),
       body: (context) => weekAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              'Could not load the week.\n$error',
+              l10n.caloriesWeekLoadFailed('$error'),
               textAlign: TextAlign.center,
             ),
           ),
@@ -49,6 +51,7 @@ class _CaloriesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     const goal = defaultCalorieGoal;
     final logged = week.where((d) => d.calories > 0).toList();
     final average = logged.isEmpty
@@ -65,12 +68,11 @@ class _CaloriesSection extends StatelessWidget {
 
     return AppPanel(
       icon: Icons.local_fire_department_outlined,
-      title: 'Calories',
+      title: l10n.caloriesWeekCalories,
       // Days with nothing logged show no bar rather than a misleading zero.
       subtitle: logged.isEmpty
-          ? 'Nothing logged in the last 7 days.'
-          : '$average kcal average • $onTarget of ${logged.length} '
-                'logged ${logged.length == 1 ? 'day' : 'days'} within goal',
+          ? l10n.caloriesWeekNothing
+          : l10n.caloriesWeekSummary(average, onTarget, logged.length),
       // The headline number belongs in the heading row, not buried in the
       // sentence under it: it is the one figure you opened this screen for.
       trailing: logged.isEmpty
@@ -87,7 +89,9 @@ class _CaloriesSection extends StatelessWidget {
           SizedBox(
             height: 180,
             child: SimpleBarChart(
-              labels: [for (final d in week) formatWeekdayAbbr(d.day)],
+              labels: [
+                for (final d in week) formatWeekdayAbbr(d.day, l10n: l10n),
+              ],
               values: [
                 for (final d in week)
                   d.calories == 0 ? null : d.calories.toDouble(),
@@ -97,12 +101,13 @@ class _CaloriesSection extends StatelessWidget {
               overGoalIsBad: true,
               yLabel: (value) => value.round().toString(),
               tooltip: (i) =>
-                  '${week[i].calories} kcal\n${formatDayLabel(week[i].day)}',
+                  '${week[i].calories} kcal\n'
+                  '${formatDayLabel(week[i].day, l10n: l10n)}',
             ),
           ),
           const SizedBox(height: 10),
           Text(
-            'Dashed line = daily goal ($goal kcal)',
+            l10n.caloriesWeekGoalLine(goal),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),

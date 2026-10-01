@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../data/goal_repository.dart';
 import 'goal_celebration.dart';
@@ -38,6 +39,7 @@ class GoalsCard extends ConsumerWidget {
     if (celebrating.isEmpty && active.isEmpty) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final shown = active.take(homeGoalRows).toList();
     final more = active.length - shown.length;
 
@@ -45,8 +47,10 @@ class GoalsCard extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         AppSectionHeader(
-          title: 'Goals',
-          countLabel: active.isEmpty ? null : '${active.length} active',
+          title: l10n.goalsTitle,
+          countLabel: active.isEmpty
+              ? null
+              : l10n.goalsCardActive(active.length),
         ),
         for (final status in celebrating)
           GoalCelebration(
@@ -67,7 +71,7 @@ class GoalsCard extends ConsumerWidget {
                 if (more > 0) ...[
                   const SizedBox(height: 12),
                   Text(
-                    '+$more more',
+                    l10n.goalsCardMore(more),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),

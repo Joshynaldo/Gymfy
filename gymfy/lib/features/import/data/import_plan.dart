@@ -27,6 +27,7 @@
 // functions — which matters, because "is this the right plan?" is a question
 // about arithmetic, not about drift.
 
+import '../../../l10n/l10n.dart';
 import 'import_format.dart';
 
 /// The longest a [Splits] or [WorkoutDays] name may be — both columns are
@@ -47,8 +48,16 @@ const defaultRecentSessions = 8;
 /// Names the app it came from when the header said so, because "Hevy import"
 /// sitting in the split list a month later still explains itself, and "My
 /// split 2" does not. [source] is [WorkoutImport.source].
-String defaultSplitName(String? source) =>
-    source == null ? 'Imported split' : '$source import';
+///
+/// In [l10n]'s language — "Hevy-Import" for someone using the app in German
+/// — and English without it. The name is the user's from then on, like any
+/// split's, so it is written in the language they read it in.
+String defaultSplitName(String? source, {AppLocalizations? l10n}) {
+  final strings = l10n ?? englishLocalizations;
+  return source == null
+      ? strings.importSplitNameDefault
+      : strings.importSplitNameFrom(source);
+}
 
 /// One planned exercise, with the targets its history suggests.
 class PlannedSlot {

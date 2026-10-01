@@ -6,6 +6,7 @@
 // `LifterSex` moved to shared/ once onboarding and the muscle map needed it as
 // well. Re-exported so callers that reason about standards still get it from
 // the standards file.
+import '../../../l10n/l10n.dart';
 import '../../../shared/data/lifter_sex.dart';
 
 export '../../../shared/data/lifter_sex.dart' show LifterSex;
@@ -24,7 +25,17 @@ enum StrengthTier {
 
   const StrengthTier(this.label);
 
+  /// The English name. On screen use [localizedLabel].
   final String label;
+
+  /// The name in the app's language, e.g. "Fortgeschritten".
+  String localizedLabel(AppLocalizations l10n) => switch (this) {
+    StrengthTier.beginner => l10n.strengthTierBeginner,
+    StrengthTier.novice => l10n.strengthTierNovice,
+    StrengthTier.intermediate => l10n.strengthTierIntermediate,
+    StrengthTier.advanced => l10n.strengthTierAdvanced,
+    StrengthTier.elite => l10n.strengthTierElite,
+  };
 
   /// The tier above this one, or null if you're already at the top.
   StrengthTier? get next =>

@@ -70,6 +70,18 @@ String _localiseSeparators(String english, AppLocalizations? l10n) {
 String decimalSeparator({AppLocalizations? l10n}) =>
     _localiseSeparators('.', l10n);
 
+/// [value] with exactly [fractionDigits] decimals, in [l10n]'s separators:
+/// "1.25" in English, "1,25" in German.
+///
+/// For ratios, multipliers and averages — "1.25× bodyweight", "2.3× a rhino"
+/// — which are never big enough to need grouping. A weight goes through
+/// [formatWeight].
+String formatDecimal(
+  double value,
+  int fractionDigits, {
+  AppLocalizations? l10n,
+}) => _localiseSeparators(value.toStringAsFixed(fractionDigits), l10n);
+
 /// Formats a weight for display: whole numbers show without a decimal (60),
 /// fractional plates show one decimal place (62.5). Keeps the UI tidy while
 /// still supporting half-kilo / half-pound increments.

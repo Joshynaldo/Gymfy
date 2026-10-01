@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../app/theme/motion.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/models/goal.dart';
 import '../../../shared/utils/units.dart';
 import '../../../shared/widgets/app_card.dart';
@@ -42,6 +43,7 @@ class _GoalCelebrationState extends ConsumerState<GoalCelebration> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
     final unit = ref.watch(weightUnitProvider);
     final status = widget.status;
@@ -71,7 +73,9 @@ class _GoalCelebrationState extends ConsumerState<GoalCelebration> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      weekly ? 'Week done' : 'Goal reached',
+                      weekly
+                          ? l10n.goalsCelebrationWeekDone
+                          : l10n.goalsCelebrationReached,
                       style: theme.textTheme.titleSmall?.copyWith(
                         color: accent,
                         fontWeight: FontWeight.w700,
@@ -86,6 +90,7 @@ class _GoalCelebrationState extends ConsumerState<GoalCelebration> {
                           status.goal.exerciseId,
                         ),
                         unit: unit,
+                        l10n: l10n,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -95,7 +100,7 @@ class _GoalCelebrationState extends ConsumerState<GoalCelebration> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      goalCaption(status),
+                      goalCaption(status, l10n: l10n),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -106,7 +111,7 @@ class _GoalCelebrationState extends ConsumerState<GoalCelebration> {
                         onPressed: () => ref
                             .read(goalRepositoryProvider)
                             .markCelebrated(status.goal.id),
-                        child: const Text('Nice'),
+                        child: Text(l10n.goalsCelebrationNice),
                       ),
                     ),
                   ],

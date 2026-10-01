@@ -1247,5 +1247,1352 @@
     }
   },
   "exercisesEquipmentFilter": "Filter by equipment",
-  "exercisesAllEquipment": "All equipment"
+  "exercisesAllEquipment": "All equipment",
+
+  "strengthTierBeginner": "Beginner",
+  "strengthTierNovice": "Novice",
+  "strengthTierIntermediate": "Intermediate",
+  "strengthTierAdvanced": "Advanced",
+  "strengthTierElite": "Elite",
+
+  "calculatorOneRmTitle": "1RM calculator",
+  "calculatorOneRmSetTitle": "The set you did",
+  "calculatorOneRmWeightLabel": "Weight lifted",
+  "calculatorOneRmReps": "Reps",
+  "calculatorOneRmEmpty": "Enter the weight you lifted and how many reps you got, and the estimate appears here.",
+  "calculatorOneRmEstimated": "Estimated 1RM",
+  "calculatorOneRmSingleRep": "A single rep is already your max — no estimating needed.",
+  "calculatorOneRmFormulasAgree": "All three formulas agree.",
+  "calculatorOneRmRange": "Average of {count} formulas • they range {low}–{high} {unit}",
+  "@calculatorOneRmRange": {
+    "description": "Under the estimated 1RM. low and high are formatted weights, unit is kg or lbs.",
+    "placeholders": {
+      "count": { "type": "int" },
+      "low": { "type": "String" },
+      "high": { "type": "String" },
+      "unit": { "type": "String" }
+    }
+  },
+  "calculatorOneRmPlates": "What plates is that?",
+  "calculatorOneRmRoughGuess": "Above {reps} reps this is a rough guess — the formula was built from heavy sets, and high-rep sets say more about your endurance than your max.",
+  "@calculatorOneRmRoughGuess": {
+    "placeholders": {
+      "reps": { "type": "int" }
+    }
+  },
+  "calculatorFormulaTitle": "Formula comparison",
+  "calculatorFormulaEpleyNote": "The common default",
+  "calculatorFormulaBrzyckiNote": "Conservative on high reps",
+  "calculatorFormulaLanderNote": "Close to Epley when heavy",
+  "calculatorFormulaCaveat": "All three are curve fits, not measurements. They line up on heavy sets and drift apart as the reps climb — if you need the real number, test it.",
+  "calculatorLoadTitle": "What to load",
+  "calculatorLoadSubtitle": "Weights you should manage for a given rep count.",
+  "calculatorLoadReps": "{count, plural, =1{1 rep} other{{count} reps}}",
+  "@calculatorLoadReps": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "calculatorRankTitle": "Strength rank",
+  "calculatorYourLifts": "Your lifts",
+  "calculatorRankNotLogged": "Not logged yet: {names}",
+  "@calculatorRankNotLogged": {
+    "description": "names is a comma-separated list of exercise names, which stay English.",
+    "placeholders": {
+      "names": { "type": "String" }
+    }
+  },
+  "calculatorRankHowToReadTitle": "How to read this",
+  "calculatorRankHowToReadMessage": "Standards are population averages from published tables, not physics. Limb lengths and bodyweight both skew them — treat a rank as a rough bracket, not a verdict.",
+  "calculatorRankStandards": "{sex, select, female{Female standards} other{Male standards}}",
+  "@calculatorRankStandards": {
+    "description": "Which strength standards table the ranks use. sex is male or female.",
+    "placeholders": {
+      "sex": { "type": "String" }
+    }
+  },
+  "calculatorRankBasis": "{standards} • {bodyweight} bodyweight",
+  "@calculatorRankBasis": {
+    "description": "What the ranks are computed from. standards is calculatorRankStandards, bodyweight a formatted weight.",
+    "placeholders": {
+      "standards": { "type": "String" },
+      "bodyweight": { "type": "String" }
+    }
+  },
+  "calculatorRankBasisDated": "{standards} • {bodyweight} bodyweight ({date})",
+  "@calculatorRankBasisDated": {
+    "description": "As calculatorRankBasis, with the day the bodyweight was measured.",
+    "placeholders": {
+      "standards": { "type": "String" },
+      "bodyweight": { "type": "String" },
+      "date": { "type": "String" }
+    }
+  },
+  "calculatorRankUseSex": "{sex, select, female{Use female} other{Use male}}",
+  "@calculatorRankUseSex": {
+    "description": "Switches the standards table to the other sex. sex is the table switched to.",
+    "placeholders": {
+      "sex": { "type": "String" }
+    }
+  },
+  "calculatorLiftTested": "{weight} tested • {ratio}× bodyweight",
+  "@calculatorLiftTested": {
+    "placeholders": {
+      "weight": { "type": "String" },
+      "ratio": { "type": "String" }
+    }
+  },
+  "calculatorLiftEstimated": "{weight} estimated • {ratio}× bodyweight",
+  "@calculatorLiftEstimated": {
+    "placeholders": {
+      "weight": { "type": "String" },
+      "ratio": { "type": "String" }
+    }
+  },
+  "calculatorLiftTopTier": "Top tier — nothing above this",
+  "calculatorLiftToNext": "{weight} to {tier}",
+  "@calculatorLiftToNext": {
+    "description": "How much more 1RM reaches the next strength tier. tier is a strengthTier label.",
+    "placeholders": {
+      "weight": { "type": "String" },
+      "tier": { "type": "String" }
+    }
+  },
+  "calculatorNothingRankedTitle": "No ranked lifts yet",
+  "calculatorNothingRankedMessage": "Log a set of any barbell or cable lift — bench, squat, deadlift, press, row, curl, pulldown — and its rank appears here. Dumbbell, machine and bodyweight work is left out: there is no way to compare those numbers between two gyms.",
+  "calculatorSetupTitle": "Before we can rank you",
+  "calculatorSetupMessage": "A rank compares your lifts to your own bodyweight, so it needs two things from you.",
+  "calculatorSetupSexTitle": "Which standards should we use?",
+  "calculatorSetupSexMessage": "Published strength standards differ by sex: a bodyweight bench press is intermediate for men and advanced for women. Picking the wrong table would just give you a wrong rank.",
+  "calculatorSetupBodyweightTitle": "Log your bodyweight",
+  "calculatorSetupBodyweightMessage": "Ranks are a ratio of what you lift to what you weigh. Add your weight under Progress → Measurements and it shows up here.",
+  "calculatorSetupOpenMeasurements": "Open measurements",
+  "calculatorBadgeHeading": "STRENGTH RANK",
+  "calculatorBadgeTested": "{weight} tested · {ratio}× bodyweight",
+  "@calculatorBadgeTested": {
+    "placeholders": {
+      "weight": { "type": "String" },
+      "ratio": { "type": "String" }
+    }
+  },
+  "calculatorBadgeEstimated": "{weight} estimated · {ratio}× bodyweight",
+  "@calculatorBadgeEstimated": {
+    "placeholders": {
+      "weight": { "type": "String" },
+      "ratio": { "type": "String" }
+    }
+  },
+  "calculatorBadgeTopTier": "Top tier",
+  "calculatorBadgeToNext": "+{weight} to {tier}",
+  "@calculatorBadgeToNext": {
+    "placeholders": {
+      "weight": { "type": "String" },
+      "tier": { "type": "String" }
+    }
+  },
+  "calculatorBadgeNudgeTitle": "This lift can be ranked",
+  "calculatorBadgeNudgeMessage": "Add your bodyweight and pick a standards table to see where you sit.",
+
+  "statsReadingVolume": "Volume",
+  "statsReadingFatigue": "Fatigue",
+  "statsFatigueEmpty": "Everything is recovered — nothing you have trained recently is still weighing on you.",
+  "statsVolumeEmpty": "No training logged in the last 7 days — finish a workout to light up your muscle map.",
+  "statsFatigueCaption": "Brighter means less recovered — recent work halves every two days.",
+  "statsVolumeCaption": "Brighter means more volume this week, relative to your hardest-hit muscle.",
+  "statsFatigueContrastCaption": "Each muscle has its own colour. Brighter still means less recovered.",
+  "statsRankNeedsSetup": "Ranks compare your lifts to your own bodyweight, so they need your bodyweight and which standards table to use.",
+  "statsRankSetUp": "Set it up",
+  "statsRankEmpty": "Log a barbell or cable lift — bench, squat, deadlift, press, row, curl — and its medal appears here.",
+  "statsRankFullBreakdown": "See the full breakdown",
+  "statsOverallLabel": "Overall",
+  "statsOverallEvery": "Every ranked lift is {tier, select, beginner{beginner} novice{novice} intermediate{intermediate} advanced{advanced} other{elite}}.",
+  "@statsOverallEvery": {
+    "description": "Under the overall strength tier, when every ranked lift has the same tier.",
+    "placeholders": {
+      "tier": { "type": "String" }
+    }
+  },
+  "statsOverallWeakest": "Your weakest ranked lift. Your best is {best, select, beginner{beginner} novice{novice} intermediate{intermediate} advanced{advanced} other{elite}}.",
+  "@statsOverallWeakest": {
+    "description": "Under the overall strength tier, which is the weakest lift's; best is the strongest lift's tier.",
+    "placeholders": {
+      "best": { "type": "String" }
+    }
+  },
+  "statsRankRowTested": "{tier} • {weight} tested",
+  "@statsRankRowTested": {
+    "placeholders": {
+      "tier": { "type": "String" },
+      "weight": { "type": "String" }
+    }
+  },
+  "statsRankRowEstimated": "{tier} • {weight} est.",
+  "@statsRankRowEstimated": {
+    "placeholders": {
+      "tier": { "type": "String" },
+      "weight": { "type": "String" }
+    }
+  },
+  "statsRankRowTop": "Top",
+  "statsAllTimeTitle": "All time",
+  "statsTotalsWorkouts": "{count, plural, =1{workout} other{workouts}}",
+  "@statsTotalsWorkouts": {
+    "description": "Label under the number of workouts; the number is shown above it.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "statsTotalsSets": "{count, plural, =1{set} other{sets}}",
+  "@statsTotalsSets": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "statsTotalsTrained": "trained",
+  "statsTotalsLifted": "lifted",
+  "statsTotalsDays": "{count, plural, =1{day} other{days}}",
+  "@statsTotalsDays": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "statsTotalsStreak": "{count, plural, other{day streak}}",
+  "@statsTotalsStreak": {
+    "description": "Label under the current streak in days; the number is shown above it.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "statsComparisonPiano": "That is {times}× a grand piano.",
+  "@statsComparisonPiano": {
+    "description": "Lifetime volume compared to something heavy. times is a formatted number like 2.3.",
+    "placeholders": {
+      "times": { "type": "String" }
+    }
+  },
+  "statsComparisonCar": "That is {times}× a small car.",
+  "@statsComparisonCar": {
+    "placeholders": {
+      "times": { "type": "String" }
+    }
+  },
+  "statsComparisonRhino": "That is {times}× a rhino.",
+  "@statsComparisonRhino": {
+    "placeholders": {
+      "times": { "type": "String" }
+    }
+  },
+  "statsComparisonBus": "That is {times}× a London bus.",
+  "@statsComparisonBus": {
+    "placeholders": {
+      "times": { "type": "String" }
+    }
+  },
+  "statsComparisonWhale": "That is {times}× a humpback whale.",
+  "@statsComparisonWhale": {
+    "placeholders": {
+      "times": { "type": "String" }
+    }
+  },
+  "statsComparisonJumbo": "That is {times}× a loaded 747.",
+  "@statsComparisonJumbo": {
+    "placeholders": {
+      "times": { "type": "String" }
+    }
+  },
+
+  "caloriesLogTitle": "Calorie log",
+  "caloriesLogLoadFailed": "Could not load the log.\n{error}",
+  "@caloriesLogLoadFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "caloriesAddMeal": "Add meal",
+  "commonPreviousDay": "Previous day",
+  "commonNextDay": "Next day",
+  "caloriesNoMeals": "No meals logged for this day yet.",
+  "caloriesMealsTitle": "Meals",
+  "caloriesLeft": "{count} left",
+  "@caloriesLeft": {
+    "description": "Calories still left today under the goal.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "caloriesOver": "{count} over",
+  "@caloriesOver": {
+    "description": "Calories eaten today beyond the goal.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "caloriesMacroLine": "P {protein}g • C {carbs}g • F {fat}g",
+  "@caloriesMacroLine": {
+    "description": "A meal's macros in grams: protein, carbs, fat.",
+    "placeholders": {
+      "protein": { "type": "int" },
+      "carbs": { "type": "int" },
+      "fat": { "type": "int" }
+    }
+  },
+  "caloriesDeleteEntry": "Delete entry",
+  "caloriesMealLabel": "Meal",
+  "caloriesMealHint": "e.g. Chicken & rice",
+  "caloriesCaloriesLabel": "Calories (kcal)",
+  "caloriesProteinLabel": "Protein g",
+  "caloriesCarbsLabel": "Carbs g",
+  "caloriesFatLabel": "Fat g",
+  "caloriesWeekTitle": "This week",
+  "caloriesWeekLoadFailed": "Could not load the week.\n{error}",
+  "@caloriesWeekLoadFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "caloriesWeekCalories": "Calories",
+  "caloriesWeekNothing": "Nothing logged in the last 7 days.",
+  "caloriesWeekSummary": "{average} kcal average • {onTarget} of {logged, plural, =1{1 logged day} other{{logged} logged days}} within goal",
+  "@caloriesWeekSummary": {
+    "placeholders": {
+      "average": { "type": "int" },
+      "onTarget": { "type": "int" },
+      "logged": { "type": "int" }
+    }
+  },
+  "caloriesWeekGoalLine": "Dashed line = daily goal ({goal} kcal)",
+  "@caloriesWeekGoalLine": {
+    "placeholders": {
+      "goal": { "type": "int" }
+    }
+  },
+  "caloriesMacrosTitle": "Macros",
+  "caloriesMacrosEmpty": "Add meals with macros to see your split.",
+  "caloriesMacroProtein": "Protein",
+  "caloriesMacroCarbs": "Carbs",
+  "caloriesMacroFat": "Fat",
+  "caloriesMacroShare": "{grams}g · {percent}%",
+  "@caloriesMacroShare": {
+    "description": "One macro in the legend: grams eaten and its share of the day's calories.",
+    "placeholders": {
+      "grams": { "type": "int" },
+      "percent": { "type": "int" }
+    }
+  },
+
+  "calendarTitle": "Calendar",
+  "calendarPreviousMonth": "Previous month",
+  "calendarNextMonth": "Next month",
+  "calendarDayTrainedSemantics": "{date}, trained",
+  "@calendarDayTrainedSemantics": {
+    "description": "Screen-reader label of a calendar day with a finished workout.",
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "calendarRestDay": "{day} — rest day",
+  "@calendarRestDay": {
+    "description": "Under the calendar, for a tapped day with no workout. day is 'Today', 'Yesterday' or a date.",
+    "placeholders": {
+      "day": { "type": "String" }
+    }
+  },
+  "calendarDaySets": "{count, plural, =1{1 set} other{{count} sets}}",
+  "@calendarDaySets": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "goalsTitle": "Goals",
+  "goalsNew": "New goal",
+  "goalsExercise": "Exercise",
+  "goalsTitleBodyweight": "Bodyweight · {weight}",
+  "@goalsTitleBodyweight": {
+    "description": "A bodyweight goal's title. weight is the formatted target.",
+    "placeholders": {
+      "weight": { "type": "String" }
+    }
+  },
+  "goalsWorkoutsPerWeek": "{count, plural, =1{1 workout a week} other{{count} workouts a week}}",
+  "@goalsWorkoutsPerWeek": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "goalsValueOf": "{current} of {target}",
+  "@goalsValueOf": {
+    "description": "Workouts done this week out of the weekly goal, e.g. 2 of 3.",
+    "placeholders": {
+      "current": { "type": "int" },
+      "target": { "type": "int" }
+    }
+  },
+  "goalsCaptionWeekDone": "Done this week",
+  "goalsCaptionWeekToGo": "{count} to go this week",
+  "@goalsCaptionWeekToGo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "goalsCaptionWeeksInARow": "{count} weeks in a row",
+  "@goalsCaptionWeeksInARow": {
+    "description": "Weeks in a row a weekly goal was met; only shown from 2 up.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "goalsCaptionReached": "Reached {date}",
+  "@goalsCaptionReached": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "goalsCaptionWasDue": "Was due {date}",
+  "@goalsCaptionWasDue": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "goalsCaptionDueToday": "Due today",
+  "goalsCaptionDaysLeft": "{count, plural, =1{1 day left} other{{count} days left}}",
+  "@goalsCaptionDaysLeft": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "goalsCaptionBy": "By {date}",
+  "@goalsCaptionBy": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "goalsCaptionNotTrained": "Not trained yet",
+  "goalsCaptionNoWeighIn": "No weigh-in yet",
+  "goalsCaptionHeaviest": "Heaviest working set",
+  "goalsCaptionLatestWeighIn": "Latest weigh-in",
+  "goalsProblemPastDate": "Pick a date that has not passed yet.",
+  "goalsProblemChooseExercise": "Choose the exercise.",
+  "goalsProblemSetWeight": "Set the weight to reach.",
+  "goalsProblemAlreadyLifted": "You have already lifted that — aim higher.",
+  "goalsProblemWorkoutsRange": "Pick between 1 and {max} workouts a week.",
+  "@goalsProblemWorkoutsRange": {
+    "placeholders": {
+      "max": { "type": "int" }
+    }
+  },
+  "goalsProblemLogWeight": "Log your current weight first.",
+  "goalsProblemSameWeight": "That is the weight you are now — pick a different one.",
+  "goalsSectionWorking": "Working on",
+  "goalsSectionReached": "Reached",
+  "goalsSectionArchived": "Archived",
+  "goalsActionsTooltip": "More",
+  "goalsRestore": "Restore",
+  "goalsArchive": "Archive",
+  "goalsRestoreSubtitle": "Back on Home and in the list",
+  "goalsArchiveSubtitle": "Off Home, kept here for the record",
+  "goalsDeleteTitle": "Delete this goal?",
+  "goalsDeleteFrequencyMessage": "Your workouts stay as they are. Only the goal goes.",
+  "goalsDeleteMessage": "Your log stays as it is. Archive it instead to keep it on record.",
+  "goalsEmptyTitle": "No goals yet",
+  "goalsEmptyMessage": "A weight on a lift by a date, a number of workouts every week, or a bodyweight to reach. Progress fills in from what you log.",
+  "goalsSetGoal": "Set a goal",
+  "goalsCardActive": "{count} active",
+  "@goalsCardActive": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "goalsCardMore": "+{count} more",
+  "@goalsCardMore": {
+    "description": "Under the goals on Home: how many active goals are not listed.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "goalsLinkYourGoals": "Your goals",
+  "goalsLinkEmpty": "A lift, a weekly habit or a bodyweight to reach",
+  "goalsLinkReachedOnly": "{reached} reached — set the next one",
+  "@goalsLinkReachedOnly": {
+    "placeholders": {
+      "reached": { "type": "int" }
+    }
+  },
+  "goalsLinkActiveOnly": "{active} in progress",
+  "@goalsLinkActiveOnly": {
+    "placeholders": {
+      "active": { "type": "int" }
+    }
+  },
+  "goalsLinkBoth": "{active} in progress, {reached} reached",
+  "@goalsLinkBoth": {
+    "placeholders": {
+      "active": { "type": "int" },
+      "reached": { "type": "int" }
+    }
+  },
+  "goalsCelebrationWeekDone": "Week done",
+  "goalsCelebrationReached": "Goal reached",
+  "goalsCelebrationNice": "Nice",
+  "goalsFormEditTitle": "Edit goal",
+  "goalsFormBy": "By",
+  "goalsFormNoDeadline": "No deadline",
+  "goalsFormSaveChanges": "Save changes",
+  "goalsFormSaveGoal": "Save goal",
+  "goalsFormChooseExercise": "Choose an exercise",
+  "goalsFormLiftHint": "Counts your heaviest working set — warm-ups and drop sets never do — or a tested max.",
+  "goalsFormLiftHintBest": "Your best so far: {weight}. Counts your heaviest working set, or a tested max.",
+  "@goalsFormLiftHintBest": {
+    "placeholders": {
+      "weight": { "type": "String" }
+    }
+  },
+  "goalsFormTarget": "Target",
+  "goalsFormPickLift": "Goal for which lift?",
+  "goalsFormHowOften": "How often",
+  "goalsFormWorkoutsAWeek": "Workouts a week",
+  "goalsFormFrequencyHint": "Counts finished workouts, free ones included. Weeks start on {weekday}.",
+  "@goalsFormFrequencyHint": {
+    "placeholders": {
+      "weekday": { "type": "String" }
+    }
+  },
+  "goalsFormStartedFrom": "Started from {weight}.",
+  "@goalsFormStartedFrom": {
+    "placeholders": {
+      "weight": { "type": "String" }
+    }
+  },
+  "goalsFormStartingFrom": "Starting from {weight}, logged {day}.",
+  "@goalsFormStartingFrom": {
+    "description": "day is 'Today', 'Yesterday' or a short date.",
+    "placeholders": {
+      "weight": { "type": "String" },
+      "day": { "type": "String" }
+    }
+  },
+  "goalsFormNoWeighIn": "No weigh-in yet. What do you weigh today? It is saved to your measurements too.",
+  "goalsFormNow": "Now",
+  "goalsFormReachBy": "Reach it by",
+  "goalsFormInWeeks": "In {count} weeks",
+  "@goalsFormInWeeks": {
+    "description": "A deadline offered in the picker; count is 4, 8 or 12.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "goalsFormInSixMonths": "In 6 months",
+  "goalsFormPickDate": "Pick a date",
+  "goalsFormSaveFailed": "Could not save that goal.\n{error}",
+  "@goalsFormSaveFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "progressTitle": "Progress",
+  "progressViewBody": "Body",
+  "progressViewTrends": "Trends",
+  "progressViewAllTime": "All-time",
+  "progressPerExercise": "Per exercise",
+  "progressTrackedByHand": "Tracked by hand",
+  "progressMeasurementsTitle": "Measurements",
+  "progressMeasurementsSubtitle": "Weight, waist, arms — and how they have moved",
+  "progressPhotosTitle": "Progress photos",
+  "progressPhotosSubtitle": "Compare two dates side by side",
+  "progressNoHistoryTitle": "Nothing logged yet",
+  "progressNoHistoryMessage": "Finish a workout and its exercises appear here, each with its own chart.",
+  "progressClear": "Clear",
+  "progressExerciseLoadFailed": "Could not load progress.\n{error}",
+  "@progressExerciseLoadFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "progressExerciseNoSessions": "No logged sessions for this exercise yet.",
+  "progressExerciseRecords": "Personal records",
+  "progressExerciseLongestHold": "Longest hold",
+  "progressExerciseTopSetWeight": "Top-set weight",
+  "progressExerciseLongestHoldCaption": "The longest single hold each session.",
+  "progressExerciseTopSetCaption": "The heaviest set you did each session.",
+  "progressExerciseTrendHint": "Log this exercise in more sessions to see a trend line.",
+  "progressOneRmTested": "Tested 1RM",
+  "progressOneRmEstimated": "Estimated 1RM",
+  "progressOneRmTestedOn": "Tested on {date}",
+  "@progressOneRmTestedOn": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "progressOneRmTestedOnSuggests": "Tested on {date} • log suggests ≈ {weight}",
+  "@progressOneRmTestedOnSuggests": {
+    "description": "A tested 1RM, with the estimate from the log beside it as a second opinion.",
+    "placeholders": {
+      "date": { "type": "String" },
+      "weight": { "type": "String" }
+    }
+  },
+  "progressOneRmTapToEnter": "Tap to enter a max you tested",
+  "progressOneRmSingle": "You lifted this for a single on {date}",
+  "@progressOneRmSingle": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "progressOneRmFrom": "From {weight} × {reps} on {date}",
+  "@progressOneRmFrom": {
+    "description": "Which logged set the estimated 1RM comes from.",
+    "placeholders": {
+      "weight": { "type": "String" },
+      "reps": { "type": "int" },
+      "date": { "type": "String" }
+    }
+  },
+  "progressRecordHeaviest": "Heaviest",
+  "progressRecordMostTime": "Most time",
+  "progressRecordBestVolume": "Best volume",
+  "progressRecordInASession": "in a session • {date}",
+  "@progressRecordInASession": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "progressMeasurementsHistoryTooltip": "History",
+  "progressMeasurementsLoadFailed": "Could not load measurements.\n{error}",
+  "@progressMeasurementsLoadFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "progressMeasurementsLastUpdated": "Last updated {date}",
+  "@progressMeasurementsLastUpdated": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "progressMeasurementsNothing": "Nothing measured on this day yet — tap a row to add it.",
+  "progressMeasurementsWas": "Was {value} on {date}",
+  "@progressMeasurementsWas": {
+    "description": "The previous measurement of a field, under its name. value includes its unit.",
+    "placeholders": {
+      "value": { "type": "String" },
+      "date": { "type": "String" }
+    }
+  },
+  "progressHistoryTitle": "Measurement history",
+  "progressHistoryCount": "{count} measurements over {days, plural, =1{1 day} other{{days} days}}",
+  "@progressHistoryCount": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "days": { "type": "int" }
+    }
+  },
+  "progressHistoryNone": "No {field, select, weight{weight} chest{chest} waist{waist} hips{hips} arms{arms} other{legs}} measurements yet",
+  "@progressHistoryNone": {
+    "description": "field is the measurement: weight, chest, waist, hips, arms or legs.",
+    "placeholders": {
+      "field": { "type": "String" }
+    }
+  },
+  "progressHistoryOnlyOne": "Only one {field, select, weight{weight} chest{chest} waist{waist} hips{hips} arms{arms} other{legs}} measurement so far",
+  "@progressHistoryOnlyOne": {
+    "placeholders": {
+      "field": { "type": "String" }
+    }
+  },
+  "progressHistoryNoneHint": "Measure your {field, select, weight{weight} chest{chest} waist{waist} hips{hips} arms{arms} other{legs}} on the measurements screen and it will show up here.",
+  "@progressHistoryNoneHint": {
+    "placeholders": {
+      "field": { "type": "String" }
+    }
+  },
+  "progressHistoryOnlyOneHint": "{value} on {date}. Log it again on another day to see a trend.",
+  "@progressHistoryOnlyOneHint": {
+    "placeholders": {
+      "value": { "type": "String" },
+      "date": { "type": "String" }
+    }
+  },
+  "progressPhotosCompareTooltip": "Compare",
+  "progressPhotosLoadFailed": "Could not load photos.\n{error}",
+  "@progressPhotosLoadFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "progressPhotosAdd": "Add photo",
+  "progressPhotosClose": "Close",
+  "progressPhotosDeleteTooltip": "Delete photo",
+  "progressPhotosDeleteTitle": "Delete photo?",
+  "progressPhotosDeleteMessage": "This removes the photo from Gymfy for good. The original in your gallery is untouched.",
+  "progressPhotosNoteLabel": "Note (optional)",
+  "progressPhotosNoteHint": "e.g. front relaxed",
+  "progressPhotosEmptyTitle": "No photos yet",
+  "progressPhotosEmptyMessage": "Add a photo from your gallery and Gymfy keeps its own copy, so your progress shots stay put even if you clear your gallery.",
+  "progressCompareTitle": "Compare",
+  "progressComparePickBefore": "Pick the \"before\" photo",
+  "progressComparePickAfter": "Pick the \"after\" photo",
+  "progressCompareSameDay": "Same day",
+  "progressCompareDaysApart": "{count, plural, =1{1 day apart} other{{count} days apart}}",
+  "@progressCompareDaysApart": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "progressCompareWeeksApart": "{count, plural, =1{1 week apart} other{{count} weeks apart}}",
+  "@progressCompareWeeksApart": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "progressCompareMonthsApart": "{count, plural, =1{1 month apart} other{{count} months apart}}",
+  "@progressCompareMonthsApart": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "progressCompareBefore": "Before",
+  "progressCompareAfter": "After",
+  "progressCompareNotEnoughTitle": "Nothing to compare yet",
+  "progressCompareNotEnoughMessage": "Add at least two progress photos and you can fade between any two of them here.",
+  "progressActivityTitle": "Activity",
+  "progressActivityRestDay": "{day} — rest day",
+  "@progressActivityRestDay": {
+    "description": "Under the year grid for a tapped day with no workout. day is 'Today', 'Yesterday' or a date.",
+    "placeholders": {
+      "day": { "type": "String" }
+    }
+  },
+  "progressActivityUntimed": "{day} — trained, length not recorded",
+  "@progressActivityUntimed": {
+    "placeholders": {
+      "day": { "type": "String" }
+    }
+  },
+  "progressActivityTrained": "{day} — {duration} trained",
+  "@progressActivityTrained": {
+    "placeholders": {
+      "day": { "type": "String" },
+      "duration": { "type": "String" }
+    }
+  },
+  "progressActivityTrainedPlusUntimed": "{day} — {duration} trained, and one more not recorded",
+  "@progressActivityTrainedPlusUntimed": {
+    "description": "A day with timed workouts and one more whose length was never recorded.",
+    "placeholders": {
+      "day": { "type": "String" },
+      "duration": { "type": "String" }
+    }
+  },
+  "progressActivityYear": "{days, plural, =1{1 day} other{{days} days}} • {duration} this year",
+  "@progressActivityYear": {
+    "placeholders": {
+      "days": { "type": "int" },
+      "duration": { "type": "String" }
+    }
+  },
+  "progressActivityLess": "Less",
+  "progressActivityMore": "More",
+  "progressStreakTitle": "Streak",
+  "progressStreakDays": "{count, plural, =1{1 day} other{{count} days}}",
+  "@progressStreakDays": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "progressStreakCurrent": "current",
+  "progressStreakBest": "best ever",
+  "progressRecapEmpty": "Nothing logged in the last {period, select, week{week} month{month} other{year}}.",
+  "@progressRecapEmpty": {
+    "description": "period is week, month or year.",
+    "placeholders": {
+      "period": { "type": "String" }
+    }
+  },
+  "progressRecapVolumeTitle": "Volume",
+  "progressRecapVolumeDetail": "lifted in the last {period, select, week{week} month{month} other{year}}",
+  "@progressRecapVolumeDetail": {
+    "placeholders": {
+      "period": { "type": "String" }
+    }
+  },
+  "progressRecapOneDay": "One day is not a trend yet.",
+  "progressRecapWorkoutsTitle": "Workouts",
+  "progressRecapSessionsDetail": "sessions in the last {period, select, week{week} month{month} other{year}}",
+  "@progressRecapSessionsDetail": {
+    "placeholders": {
+      "period": { "type": "String" }
+    }
+  },
+  "progressRecapSessionsRecords": "sessions • {count, plural, =1{1 personal record} other{{count} personal records}}",
+  "@progressRecapSessionsRecords": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "progressRecapWorkoutsTooltip": "{count, plural, =1{1 workout} other{{count} workouts}}",
+  "@progressRecapWorkoutsTooltip": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "progressRecapMusclesTitle": "What you trained",
+  "progressRecapMusclesDetail": "took the most sets",
+  "progressRecapMuscleSets": "{count, plural, =1{1 set} other{{count} sets}}",
+  "@progressRecapMuscleSets": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "reviewsTitle": "Reviews",
+  "reviewsMonthlyTitle": "Monthly review",
+  "reviewsYearTitle": "Year in training",
+  "reviewsMonthlySubtitle": "{period} — and how it compares",
+  "@reviewsMonthlySubtitle": {
+    "description": "period is a month and year, e.g. September 2026.",
+    "placeholders": {
+      "period": { "type": "String" }
+    }
+  },
+  "reviewsYearSubtitle": "{period}, start to finish",
+  "@reviewsYearSubtitle": {
+    "description": "period is a year, e.g. 2026.",
+    "placeholders": {
+      "period": { "type": "String" }
+    }
+  },
+  "reviewsShareTooltip": "Share as image",
+  "reviewsShareTitle": "Share your {period} review",
+  "@reviewsShareTitle": {
+    "description": "Title of the share sheet. period is a month and year, or a year.",
+    "placeholders": {
+      "period": { "type": "String" }
+    }
+  },
+  "reviewsSaveImageTitle": "Save image",
+  "reviewsImageSaved": "Image saved — send it from your files.",
+  "reviewsImageFailed": "Could not make the image.\n{error}",
+  "@reviewsImageFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "reviewsEarlier": "Earlier",
+  "reviewsLater": "Later",
+  "reviewsNoWorkoutsMonth": "No workouts in {period}.",
+  "@reviewsNoWorkoutsMonth": {
+    "description": "period is a month and year, e.g. September 2026.",
+    "placeholders": {
+      "period": { "type": "String" }
+    }
+  },
+  "reviewsNoWorkoutsYear": "No workouts in {period}.",
+  "@reviewsNoWorkoutsYear": {
+    "description": "period is a year, e.g. 2026.",
+    "placeholders": {
+      "period": { "type": "String" }
+    }
+  },
+  "reviewsStepBack": "Step back to an earlier {span, select, month{month} other{year}} with the arrows above.",
+  "@reviewsStepBack": {
+    "description": "span is month or year.",
+    "placeholders": {
+      "span": { "type": "String" }
+    }
+  },
+  "reviewsExercisesTitle": "Exercises",
+  "reviewsSets": "{count, plural, =1{1 set} other{{count} sets}}",
+  "@reviewsSets": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "reviewsWorkouts": "{count, plural, =1{1 workout} other{{count} workouts}}",
+  "@reviewsWorkouts": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "reviewsVersus": "vs {period}",
+  "@reviewsVersus": {
+    "description": "After a change on the review card: what it is compared against, e.g. 'vs August'.",
+    "placeholders": {
+      "period": { "type": "String" }
+    }
+  },
+  "reviewsCardMonthHeading": "YOUR MONTH IN TRAINING",
+  "reviewsCardYearHeading": "YOUR YEAR IN TRAINING",
+  "reviewsCardSoFar": "So far — {period} is not over yet",
+  "@reviewsCardSoFar": {
+    "description": "period is a month name or a year.",
+    "placeholders": {
+      "period": { "type": "String" }
+    }
+  },
+  "reviewsCardWorkouts": "{count, plural, =1{workout} other{workouts}}",
+  "@reviewsCardWorkouts": {
+    "description": "Label under the number of workouts; the number is shown above it.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "reviewsCardLifted": "lifted",
+  "reviewsCardTrained": "trained",
+  "reviewsCardTrainedUntimed": "trained, {count} not timed",
+  "@reviewsCardTrainedUntimed": {
+    "description": "Under the time trained; count workouts had no recorded length.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "reviewsCardRecords": "{count, plural, =1{personal record} other{personal records}}",
+  "@reviewsCardRecords": {
+    "description": "Label under the number of personal records; the number is shown above it.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "reviewsCardDaysTrained": "{count, plural, =1{1 day trained} other{{count} days trained}}",
+  "@reviewsCardDaysTrained": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "reviewsCardLongestStreak": "longest streak {count, plural, =1{1 day} other{{count} days}}",
+  "@reviewsCardLongestStreak": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "reviewsCardTopExercises": "Top exercises",
+  "reviewsCardMostTrained": "Most trained",
+  "reviewsCardTrackedWith": "Tracked with Gymfy",
+
+  "healthConnectAvailabilityUnsupported": "Not available on this phone",
+  "healthConnectAvailabilityNotInstalled": "Not installed",
+  "healthConnectAvailabilityNeedsUpdate": "Needs an update",
+  "healthConnectAvailabilityAvailable": "Available",
+  "healthConnectIntro": "Android's store for health data, on this phone. Gymfy can add your finished workouts to it and fill in your bodyweight from a smart scale. It all stays on the device — Gymfy has no internet access.",
+  "healthConnectChecking": "Checking…",
+  "healthConnectInstall": "Install",
+  "healthConnectUpdate": "Update",
+  "healthConnectStoreFailed": "Could not open the Play Store.",
+  "healthConnectWriteTitle": "Write workouts",
+  "healthConnectWriteSubtitle": "Each workout you finish appears as strength training, with its name, start and end",
+  "healthConnectReadTitle": "Read bodyweight",
+  "healthConnectReadSubtitle": "Weigh-ins fill in days where you haven't entered a weight. A weight you typed is never replaced",
+  "healthConnectWriteRefused": "Health Connect did not allow Gymfy to write workouts.",
+  "healthConnectReadRefused": "Health Connect did not allow Gymfy to read your weight.",
+  "healthConnectWeighInsAdded": "{count, plural, =1{Added 1 weigh-in to your measurements.} other{Added {count} weigh-ins to your measurements.}}",
+  "@healthConnectWeighInsAdded": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "healthConnectPermissionsTitle": "Permissions",
+  "healthConnectPermissionsMissing": "Health Connect no longer lets Gymfy {what, select, write{write workouts} read{read your weight} other{write workouts or read your weight}}",
+  "@healthConnectPermissionsMissing": {
+    "description": "A switch is on but Health Connect has since revoked its permission. what is write, read or both.",
+    "placeholders": {
+      "what": { "type": "String" }
+    }
+  },
+  "healthConnectPermissionsStatus": "Workouts: {workouts, select, yes{allowed} other{not allowed}} · Weight: {weight, select, yes{allowed} other{not allowed}}",
+  "@healthConnectPermissionsStatus": {
+    "description": "Whether each permission is granted; workouts and weight are yes or no.",
+    "placeholders": {
+      "workouts": { "type": "String" },
+      "weight": { "type": "String" }
+    }
+  },
+  "healthConnectGrant": "Grant",
+  "healthConnectBackfillTile": "Write past workouts",
+  "healthConnectBackfillTileSubtitle": "Only workouts finished from now on are written by themselves",
+  "healthConnectBackfillTitle": "Write past workouts?",
+  "healthConnectBackfillMessage": "Adds every finished workout from before you switched this on to Health Connect, as strength training with its start and end time. Workouts already there are not added twice.",
+  "healthConnectBackfillConfirm": "Write",
+  "healthConnectWriteNotAllowed": "Health Connect is not allowing Gymfy to write workouts.",
+  "healthConnectBackfillWrote": "{count, plural, =0{No workouts needed writing.} =1{Wrote 1 workout to Health Connect.} other{Wrote {count} workouts to Health Connect.}}",
+  "@healthConnectBackfillWrote": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "healthConnectBackfillUntimed": "{count, plural, =1{1 without a recorded length was left out.} other{{count} without a recorded length were left out.}}",
+  "@healthConnectBackfillUntimed": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "healthConnectBackfillStopped": "Then it stopped: {error}",
+  "@healthConnectBackfillStopped": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "healthConnectManageTitle": "Manage in Health Connect",
+  "healthConnectManageSubtitle": "Revoke access, or delete what Gymfy wrote there",
+  "healthConnectOpenFailed": "Could not open Health Connect.",
+  "healthConnectLastError": "Last sync with Health Connect failed: {error}",
+  "@healthConnectLastError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "wearSetsLogged": "{count, plural, =0{No sets yet} =1{1 set logged} other{{count} sets logged}}",
+  "@wearSetsLogged": {
+    "description": "On the watch, under the workout's name.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "wearRepeatReps": "{count, plural, =1{1 rep} other{{count} reps}}",
+  "@wearRepeatReps": {
+    "description": "The watch's repeat button for a bodyweight set.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "wearRepeatSet": "{weight} x {reps}",
+  "@wearRepeatSet": {
+    "description": "The watch's repeat button: the last working set. A plain x, which every watch font has.",
+    "placeholders": {
+      "weight": { "type": "String" },
+      "reps": { "type": "int" }
+    }
+  },
+
+  "backupTitle": "Backup & restore",
+  "backupIntro": "One file with everything in Gymfy — workouts, plans, exercises, measurements, meals, settings and progress photos. Restore it on this phone or a new one. Nothing is uploaded anywhere.",
+  "backupSectionBackUp": "Back up",
+  "backupSaveTitle": "Save a backup",
+  "backupSaveMessage": "Saves a .{extension} file wherever you choose. Keep a copy somewhere other than this phone.",
+  "@backupSaveMessage": {
+    "placeholders": {
+      "extension": { "type": "String" }
+    }
+  },
+  "backupSaveButton": "Save backup",
+  "backupSectionRestore": "Restore",
+  "backupRestoreTitle": "Restore from a backup",
+  "backupRestoreMessage": "Replaces everything on this phone with what is in the backup. You will see what it holds before anything changes.",
+  "backupChooseButton": "Choose backup",
+  "backupAutomaticTitle": "Automatic backup",
+  "backupSaveDialogTitle": "Save your backup",
+  "backupSaved": "Saved {name}",
+  "@backupSaved": {
+    "description": "name is the backup's file name.",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "backupSaveFailed": "Could not save the backup.\n{error}",
+  "@backupSaveFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "backupFinishWorkoutFirst": "Finish or discard your current workout before restoring.",
+  "backupPickDialogTitle": "Choose a backup",
+  "backupRestored": "Backup restored.",
+  "backupRestoreFailed": "Could not restore that backup.\n{error}",
+  "@backupRestoreFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "backupFolderPickerTitle": "Folder for backups",
+  "backupCantWriteTitle": "Gymfy can't write there",
+  "backupCantWriteMessage": "Android only lets Gymfy save into some folders. Try a folder inside Documents or Download — or use Gymfy's own folder, which always works but is deleted if you uninstall the app:\n\n{folder}",
+  "@backupCantWriteMessage": {
+    "description": "Documents and Download are Android's folder names. folder is a path.",
+    "placeholders": {
+      "folder": { "type": "String" }
+    }
+  },
+  "backupUseAppFolder": "Use Gymfy's folder",
+  "backupFolderFailed": "Could not use that folder either.\n{problem}",
+  "@backupFolderFailed": {
+    "placeholders": {
+      "problem": { "type": "String" }
+    }
+  },
+  "backupFolderSet": "Backups will be saved to {path}",
+  "@backupFolderSet": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
+  "backupReplaceTitle": "Replace everything?",
+  "backupReplaceMessage": "Backup from {date}: {workouts, plural, =1{1 workout} other{{workouts} workouts}}, {sets, plural, =1{1 set} other{{sets} sets}}, {photos, plural, =1{1 photo} other{{photos} photos}}.\n\nEverything currently on this phone will be replaced by it. This cannot be undone — save a backup first if you might want today's data back.",
+  "@backupReplaceMessage": {
+    "description": "Before a restore. date is when the backup was made, with the time.",
+    "placeholders": {
+      "date": { "type": "String" },
+      "workouts": { "type": "int" },
+      "sets": { "type": "int" },
+      "photos": { "type": "int" }
+    }
+  },
+  "backupRestoreButton": "Restore",
+  "backupModeWeekly": "Weekly",
+  "backupModeAfterWorkout": "After workout",
+  "backupNoFolder": "No folder chosen",
+  "backupLastFailed": "Last automatic backup failed: {error}",
+  "@backupLastFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "backupLastAt": "Last backup {date}",
+  "@backupLastAt": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "backupNoneYet": "No automatic backup yet",
+  "backupChange": "Change",
+  "backupChoose": "Choose",
+  "backupNowButton": "Back up to folder now",
+  "backupAutoExplainer": "Runs while Gymfy is open — when you open it once a week has passed, or right after you finish a workout. The last {keep} automatic backups are kept. Choose a folder in Documents or Download; cloud drives and SD cards are not supported.",
+  "@backupAutoExplainer": {
+    "placeholders": {
+      "keep": { "type": "int" }
+    }
+  },
+  "backupErrorNotBackup": "That file is not a Gymfy backup.",
+  "backupErrorTooNew": "That backup was made by a newer version of Gymfy. Update the app to restore it.",
+  "backupErrorTooOld": "That backup is from a version of Gymfy too old to restore.",
+  "backupErrorNoMigration": "Gymfy cannot read backups from version {version} yet.",
+  "@backupErrorNoMigration": {
+    "placeholders": {
+      "version": { "type": "String" }
+    }
+  },
+  "backupErrorDamaged": "That backup is damaged and cannot be read ({detail}).",
+  "@backupErrorDamaged": {
+    "description": "detail is a short English diagnostic, e.g. 'it has no tables', quoted as it is.",
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+
+  "dataExportTitle": "Export data",
+  "dataExportIntro": "Save a copy of everything you have logged. The file is written wherever you choose — nothing is uploaded anywhere.",
+  "dataExportFormatTitle": "Format",
+  "dataExportCsvTitle": "Spreadsheet",
+  "dataExportCsvSubtitle": "One row per set, ready to open in Excel or Sheets and chart however you like.",
+  "dataExportCsvButton": "Save CSV",
+  "dataExportJsonTitle": "Everything",
+  "dataExportJsonSubtitle": "Your workouts with their sets kept together, plus your body measurements and calorie log.",
+  "dataExportJsonButton": "Save JSON",
+  "dataExportCopyTitle": "This is a copy, not a backup",
+  "dataExportCopyMessage": "Gymfy cannot import these files back, and progress photos are not included. To move to a new phone, or to keep a copy you can restore, use a backup instead.",
+  "dataExportNoWorkouts": "No finished workouts to export yet.",
+  "dataExportNothing": "Nothing logged to export yet.",
+  "dataExportSaveDialogTitle": "Save your data",
+  "dataExportSaved": "Saved {name}",
+  "@dataExportSaved": {
+    "description": "name is the exported file's name.",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "dataExportSaveFailed": "Could not save that file.\n{error}",
+  "@dataExportSaveFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "commonListOr": "{first} or {second}",
+  "@commonListOr": {
+    "description": "The last two items of a list of alternatives; the ones before are joined with commas.",
+    "placeholders": {
+      "first": { "type": "String" },
+      "second": { "type": "String" }
+    }
+  },
+  "importTitle": "Import a history",
+  "importErrorTitle": "That file could not be read",
+  "importErrorNotText": "That file is not readable as text. Export it again as CSV.",
+  "importErrorReadFailed": "Could not read that file.\n{error}",
+  "@importErrorReadFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "importErrorImportFailed": "Could not import that file.\n{error}",
+  "@importErrorImportFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "importErrorSplitFailed": "Your workouts were imported, but the split could not be built.\n{error}",
+  "@importErrorSplitFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "importErrorUnclosedQuote": "This file has a quote that is never closed, so the rest of it cannot be read. It may have been cut short while being saved.",
+  "importErrorEmpty": "That file is empty.",
+  "importErrorNotWorkoutExport": "This does not look like a workout export — it has no {fields} column.\n\nThe columns found were: {headers}.",
+  "@importErrorNotWorkoutExport": {
+    "description": "fields lists the missing columns (importField… joined with commonListOr); headers are the file's own column names, quoted as they are.",
+    "placeholders": {
+      "fields": { "type": "String" },
+      "headers": { "type": "String" }
+    }
+  },
+  "importFieldDate": "a date",
+  "importFieldExercise": "an exercise name",
+  "importFieldReps": "reps",
+  "importFieldWeight": "a weight",
+  "importSplitNameDefault": "Imported split",
+  "importSplitNameFrom": "{source} import",
+  "@importSplitNameFrom": {
+    "description": "The name of a split built from an import. source is the other app's name, e.g. Hevy.",
+    "placeholders": {
+      "source": { "type": "String" }
+    }
+  },
+  "importChooseFile": "Choose a file",
+  "importChooseAnother": "Choose another file",
+  "importImporting": "Importing…",
+  "importButton": "Import",
+  "importButtonWorkouts": "{count, plural, =1{Import 1 workout} other{Import {count} workouts}}",
+  "@importButtonWorkouts": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "importButtonSplit": "{days, plural, =1{Import a split of 1 day} other{Import a split of {days} days}}",
+  "@importButtonSplit": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "importButtonBoth": "Import {workouts, plural, =1{1 workout} other{{workouts} workouts}} and {days, plural, =1{a split of 1 day} other{a split of {days} days}}",
+  "@importButtonBoth": {
+    "placeholders": {
+      "workouts": { "type": "int" },
+      "days": { "type": "int" }
+    }
+  },
+  "importExplainerTitle": "Bring your history with you",
+  "importExplainerMessage": "Export your workouts from the other app as a CSV file, then pick it here. Hevy and Strong both do this from their settings.\n\nColumns are matched by name, so most exports work without anything being configured. Nothing is overwritten — importing only adds, and importing the same file twice adds nothing the second time.",
+  "importNothingTitle": "Nothing to import",
+  "importNothingUnreadableDates": "That file was read, but {count} of its rows have a date this app could not make sense of — the first one is \"{sample}\".\n\nSend that line on and it can be taught to read it.",
+  "@importNothingUnreadableDates": {
+    "description": "sample is the first unreadable date, exactly as the file has it.",
+    "placeholders": {
+      "count": { "type": "int" },
+      "sample": { "type": "String" }
+    }
+  },
+  "importNothingNoSets": "That file was read, but none of its rows were sets — no exercise name, reps and weight together on any line.",
+  "importPreviewTitle": "What is in this file",
+  "importPreviewSource": "Looks like a {source} export",
+  "@importPreviewSource": {
+    "description": "source is the other app's name, e.g. Hevy.",
+    "placeholders": {
+      "source": { "type": "String" }
+    }
+  },
+  "importPreviewWorkouts": "Workouts",
+  "importPreviewSets": "Sets",
+  "importPreviewExercises": "Exercises",
+  "importPreviewFrom": "From",
+  "importPreviewTo": "To",
+  "importAlreadyHere": "Already here",
+  "importPreviewWillSkip": "{count} — will be skipped",
+  "@importPreviewWillSkip": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "importPreviewNotSets": "Rows that were not sets",
+  "importPreviewDatesSkipped": "{count} rows were left out because their date could not be read — the first is \"{sample}\". Send that line on and it can be taught to read it.",
+  "@importPreviewDatesSkipped": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "sample": { "type": "String" }
+    }
+  },
+  "importPreviewAllHere": "Every workout in this file is already on your phone.",
+  "importPreviewWillAdd": "{count, plural, =1{1 workout will be added.} other{{count} workouts will be added.}}",
+  "@importPreviewWillAdd": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "importPreviewNearDuplicates": "{count} of them start within an hour of a workout you already have. If you have imported the same training from another app, those will be added a second time.",
+  "@importPreviewNearDuplicates": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "importPlanTitle": "Build a split from this file",
+  "importPlanWillBeCalled": "Will be called \"{name}\"",
+  "@importPlanWillBeCalled": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "importPlanExplainer": "Your workout names become the days of a split, each holding the exercises you actually train on it, with the sets and reps you have been doing. Nothing existing is changed — this adds a new split you can edit or delete.",
+  "importPlanExists": "You already have a split called \"{name}\". Turning this on adds a second one with the same name.",
+  "@importPlanExists": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "importPlanCreate": "Create the split",
+  "importPlanDayWorkouts": "{count, plural, =1{1 workout} other{{count} workouts}}",
+  "@importPlanDayWorkouts": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "importPlanDayExercises": "{count, plural, =1{1 exercise} other{{count} exercises}}",
+  "@importPlanDayExercises": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "importUnitTitle": "What unit is this file in?",
+  "importUnitMessage": "This export does not name its unit, so it has to be told. Getting it wrong scales every weight you import.",
+  "importUnitKilograms": "Kilograms",
+  "importUnitPounds": "Pounds",
+  "importOutcomeTitle": "Imported",
+  "importOutcomeWorkoutsAdded": "Workouts added",
+  "importOutcomeSetsAdded": "Sets added",
+  "importOutcomeSkipped": "{count} — skipped",
+  "@importOutcomeSkipped": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "importOutcomeSplitCreated": "Split created",
+  "importOutcomeDays": "Days",
+  "importOutcomeDaysValue": "{days, plural, =1{1 day} other{{days} days}}, with {exercises, plural, =1{1 exercise} other{{exercises} exercises}}",
+  "@importOutcomeDaysValue": {
+    "placeholders": {
+      "days": { "type": "int" },
+      "exercises": { "type": "int" }
+    }
+  },
+  "importOutcomeFindSplit": "Find it under Workout → Splits. Its days are already on the weekdays you have been training them on — open a day to change that, or to add one the history was not clear about.",
+  "importOutcomeNewExercises": "{count, plural, =1{1 exercise was new and has been added to your library. It has no muscles set yet, so it will not appear on the muscle map until you edit it.} other{{count} exercises were new and have been added to your library. They have no muscles set yet, so they will not appear on the muscle map until you edit them.}}",
+  "@importOutcomeNewExercises": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "importUntitledWorkout": "Imported workout",
+  "@importUntitledWorkout": {
+    "description": "The name an imported workout is saved under when the file gives it none."
+  }
 }

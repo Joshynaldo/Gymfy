@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/data/settings_repository.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
@@ -20,12 +21,13 @@ class StrengthRankScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final inputs = ref.watch(rankInputsProvider);
     final lifts = ref.watch(rankedLiftsProvider);
     final ready = inputs.sex != null && inputs.bodyweightKg != null;
 
     return GlassScaffold(
-      appBar: GlassAppBar(title: const Text('Strength rank')),
+      appBar: GlassAppBar(title: Text(l10n.calculatorRankTitle)),
       body: (context) => ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32) + barInsets(context),
         children: [
@@ -34,7 +36,10 @@ class StrengthRankScreen extends ConsumerWidget {
           else ...[
             _Basis(inputs: inputs),
             if (lifts.ranked.isNotEmpty)
-              AppSectionHeader(title: 'Your lifts', count: lifts.ranked.length),
+              AppSectionHeader(
+                title: l10n.calculatorYourLifts,
+                count: lifts.ranked.length,
+              ),
             for (final lift in lifts.ranked) _LiftCard(lift: lift),
             if (lifts.ranked.isEmpty) const _NothingRankedYet(),
             if (lifts.unlogged.isNotEmpty) ...[
@@ -42,7 +47,7 @@ class StrengthRankScreen extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Text(
-                  'Not logged yet: ${lifts.unlogged.join(', ')}',
+                  l10n.calculatorRankNotLogged(lifts.unlogged.join(', ')),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -55,11 +60,9 @@ class StrengthRankScreen extends ConsumerWidget {
             // it looks, in the same weight as the ranks themselves.
             AppPanel(
               icon: Icons.balance,
-              title: 'How to read this',
+              title: l10n.calculatorRankHowToReadTitle,
               child: Text(
-                'Standards are population averages from published tables, '
-                'not physics. Limb lengths and bodyweight both skew them — '
-                'treat a rank as a rough bracket, not a verdict.',
+                l10n.calculatorRankHowToReadMessage,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -81,8 +84,14 @@ class _Basis extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final unit = ref.watch(weightUnitProvider);
     final measuredOn = inputs.measuredOn;
+    final standards = l10n.calculatorRankStandards(inputs.sex!.name);
+    final bodyweight = formatWeightUnit(inputs.bodyweightKg!, unit, l10n: l10n);
+    final other = inputs.sex == LifterSex.male
+        ? LifterSex.female
+        : LifterSex.male;
 
     return AppPanel(
       padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
@@ -90,9 +99,13 @@ class _Basis extends ConsumerWidget {
         children: [
           Expanded(
             child: Text(
-              '${inputs.sex!.label} standards • '
-              '${formatWeightUnit(inputs.bodyweightKg!, unit)} bodyweight'
-              '${measuredOn == null ? '' : ' (${formatShortDate(measuredOn)})'}',
+              measuredOn == null
+                  ? l10n.calculatorRankBasis(standards, bodyweight)
+                  : l10n.calculatorRankBasisDated(
+                      standards,
+                      bodyweight,
+                      formatShortDate(measuredOn, l10n: l10n),
+                    ),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -103,15 +116,8 @@ class _Basis extends ConsumerWidget {
             // on this setting.
             onPressed: () => ref
                 .read(settingsRepositoryProvider)
-                .write(
-                  lifterSexSetting,
-                  inputs.sex == LifterSex.male
-                      ? LifterSex.female.name
-                      : LifterSex.male.name,
-                ),
-            child: Text(
-              'Use ${inputs.sex == LifterSex.male ? 'female' : 'male'}',
-            ),
+                .write(lifterSexSetting, other.name),
+            child: Text(l10n.calculatorRankUseSex(other.name)),
           ),
         ],
       ),
@@ -128,18 +134,20 @@ class _LiftCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
     final unit = ref.watch(weightUnitProvider);
     final rank = lift.rank;
     final next = rank.next;
+    final oneRm = formatWeightUnit(lift.oneRm, unit, l10n: l10n);
+    final ratio = formatDecimal(rank.ratio, 2, l10n: l10n);
 
     return AppPanel(
       title: lift.name,
-      subtitle:
-          '${formatWeightUnit(lift.oneRm, unit)} '
-          '${lift.tested ? 'tested' : 'estimated'} • '
-          '${rank.ratio.toStringAsFixed(2)}× bodyweight',
-      trailing: _TierPill(label: rank.tier.label),
+      subtitle: lift.tested
+          ? l10n.calculatorLiftTested(oneRm, ratio)
+          : l10n.calculatorLiftEstimated(oneRm, ratio),
+      trailing: _TierPill(label: rank.tier.localizedLabel(l10n)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -157,9 +165,11 @@ class _LiftCard extends ConsumerWidget {
           const SizedBox(height: 8),
           Text(
             next == null
-                ? 'Top tier — nothing above this'
-                : '${formatWeightUnit(rank.weightToNext!, unit)} '
-                      'to ${next.label}',
+                ? l10n.calculatorLiftTopTier
+                : l10n.calculatorLiftToNext(
+                    formatWeightUnit(rank.weightToNext!, unit, l10n: l10n),
+                    next.localizedLabel(l10n),
+                  ),
             style: theme.textTheme.bodySmall,
           ),
         ],
@@ -202,6 +212,7 @@ class _NothingRankedYet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return Column(
       children: [
@@ -212,13 +223,13 @@ class _NothingRankedYet extends StatelessWidget {
           color: theme.colorScheme.onSurfaceVariant,
         ),
         const SizedBox(height: 16),
-        Text('No ranked lifts yet', style: theme.textTheme.titleLarge),
+        Text(
+          l10n.calculatorNothingRankedTitle,
+          style: theme.textTheme.titleLarge,
+        ),
         const SizedBox(height: 8),
         Text(
-          'Log a set of any barbell or cable lift — bench, squat, deadlift, '
-          'press, row, curl, pulldown — and its rank appears here. Dumbbell, '
-          'machine and bodyweight work is left out: there is no way to compare '
-          'those numbers between two gyms.',
+          l10n.calculatorNothingRankedMessage,
           textAlign: TextAlign.center,
           style: theme.textTheme.bodyMedium,
         ),

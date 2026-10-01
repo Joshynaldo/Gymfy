@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/data/week_start.dart';
 import '../../../shared/utils/dates.dart';
 import '../../../shared/utils/format.dart';
@@ -50,6 +51,7 @@ class _TrainingCalendarState extends ConsumerState<TrainingCalendar> {
     }
 
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final sessions = ref.watch(calendarMonthProvider(_month)).value;
     final byDay = <DateTime, List<CalendarSession>>{};
     for (final session in sessions ?? const <CalendarSession>[]) {
@@ -62,7 +64,7 @@ class _TrainingCalendarState extends ConsumerState<TrainingCalendar> {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-          child: Text('Calendar', style: theme.textTheme.titleMedium),
+          child: Text(l10n.calendarTitle, style: theme.textTheme.titleMedium),
         ),
         AppCard(
           margin: const EdgeInsets.symmetric(horizontal: 12),
@@ -73,13 +75,13 @@ class _TrainingCalendarState extends ConsumerState<TrainingCalendar> {
               Row(
                 children: [
                   IconButton(
-                    tooltip: 'Previous month',
+                    tooltip: l10n.calendarPreviousMonth,
                     icon: const Icon(Icons.chevron_left),
                     onPressed: () => _moveMonth(-1),
                   ),
                   Expanded(
                     child: Text(
-                      formatMonthYear(_month),
+                      formatMonthYear(_month, l10n: l10n),
                       textAlign: TextAlign.center,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -89,7 +91,7 @@ class _TrainingCalendarState extends ConsumerState<TrainingCalendar> {
                     ),
                   ),
                   IconButton(
-                    tooltip: 'Next month',
+                    tooltip: l10n.calendarNextMonth,
                     icon: const Icon(Icons.chevron_right),
                     // The future has nothing in it to look at.
                     onPressed: atCurrentMonth ? null : () => _moveMonth(1),
@@ -159,7 +161,10 @@ class _MonthGrid extends ConsumerWidget {
             for (final weekday in weekdaysFrom(firstWeekday))
               Expanded(
                 child: Center(
-                  child: Text(weekdayInitial(weekday), style: labelStyle),
+                  child: Text(
+                    weekdayInitial(weekday, l10n: context.l10n),
+                    style: labelStyle,
+                  ),
                 ),
               ),
           ],
@@ -211,6 +216,8 @@ class _DayCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
+    final date = formatDate(day, l10n: l10n);
     final ink = trained
         ? Colors.white
         : future
@@ -220,7 +227,7 @@ class _DayCell extends StatelessWidget {
     return Semantics(
       button: !future,
       selected: selected,
-      label: '${formatDate(day)}${trained ? ', trained' : ''}',
+      label: trained ? l10n.calendarDayTrainedSemantics(date) : date,
       excludeSemantics: true,
       child: InkResponse(
         onTap: future ? null : onTap,
@@ -280,13 +287,14 @@ class _DayList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final label = formatDayLabel(day, today: today);
+    final l10n = context.l10n;
+    final label = formatDayLabel(day, today: today, l10n: l10n);
 
     if (sessions.isEmpty) {
       return Padding(
         padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
         child: Text(
-          '$label — rest day',
+          l10n.calendarRestDay(label),
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -332,7 +340,7 @@ class _DayList extends StatelessWidget {
               [
                 _time(session.finishedAt),
                 if (session.length != null) formatDuration(session.length!),
-                '${session.sets} ${session.sets == 1 ? 'set' : 'sets'}',
+                l10n.calendarDaySets(session.sets),
               ].join(' · '),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

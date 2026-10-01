@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../home/data/recap_repository.dart';
 import '../data/review.dart';
@@ -25,6 +26,7 @@ class ReviewLinks extends ConsumerWidget {
     final sets = ref.watch(recapSetsProvider).value;
     if (sets == null || sets.isEmpty) return const SizedBox.shrink();
 
+    final l10n = context.l10n;
     final now = today ?? DateTime.now();
     final month = defaultReviewPeriod(ReviewSpan.month, now, sets);
     final year = defaultReviewPeriod(ReviewSpan.year, now, sets);
@@ -32,19 +34,19 @@ class ReviewLinks extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const AppSectionHeader(title: 'Reviews'),
+        AppSectionHeader(title: l10n.reviewsTitle),
         AppTile(
           icon: Icons.calendar_view_month,
-          title: 'Monthly review',
-          subtitle: '${month.label} — and how it compares',
+          title: l10n.reviewsMonthlyTitle,
+          subtitle: l10n.reviewsMonthlySubtitle(month.localizedLabel(l10n)),
           onTap: () => context.go(
             '/progress/review/month/${month.start.year}/${month.start.month}',
           ),
         ),
         AppTile(
           icon: Icons.auto_awesome_outlined,
-          title: 'Year in training',
-          subtitle: '${year.label}, start to finish',
+          title: l10n.reviewsYearTitle,
+          subtitle: l10n.reviewsYearSubtitle(year.localizedLabel(l10n)),
           onTap: () => context.go('/progress/review/year/${year.start.year}'),
         ),
       ],

@@ -1,6 +1,8 @@
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../l10n/app_language.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/data/settings_repository.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/units.dart';
@@ -27,8 +29,10 @@ WearWorkout wearWorkoutFrom({
   String lastSet = '',
   NextSet? next,
   WeightUnit unit = WeightUnit.kg,
+  AppLocalizations? l10n,
 }) {
   if (session == null) return idleWearWorkout;
+  final strings = l10n ?? englishLocalizations;
 
   // A deadline rather than a countdown — see WearWorkout.restEndsAtMs. Built
   // from `now` rather than read from the timer so the arithmetic is testable
@@ -54,17 +58,15 @@ WearWorkout wearWorkoutFrom({
     // string when nothing is resting is honest; guessing the exercise from
     // the last logged set would be wrong as soon as you skip ahead.
     exercise: resting ? rest!.exerciseName : '',
-    sets: switch (loggedSets) {
-      0 => 'No sets yet',
-      1 => '1 set logged',
-      _ => '$loggedSets sets logged',
-    },
+    // Worded on the phone, in the phone app's language: the watch draws
+    // these lines as they arrive and has no words of its own for them.
+    sets: strings.wearSetsLogged(loggedSets),
     restEndsAtMs: endsAt,
     restTotalSeconds: resting ? rest!.totalSeconds : 0,
     lastSet: lastSet,
     nextExercise: next?.exerciseName ?? '',
     nextExerciseId: next?.exerciseId ?? '',
-    nextSet: next == null ? '' : describeSetPosition(next),
+    nextSet: next == null ? '' : describeSetPosition(next, l10n: l10n),
     // In the display unit and on a loadable step, so an untouched value sent
     // back converts to exactly what the phone would have logged itself.
     nextWeight: next == null
@@ -123,15 +125,18 @@ class WearSync extends _$WearSync {
         ? null
         : ref.watch(nextSetProvider(session.id)).value;
     final unit = ref.watch(weightUnitProvider);
+    // Watched, so switching the app's language re-words the watch at once.
+    final l10n = ref.watch(appLocalizationsProvider);
 
     final payload = wearWorkoutFrom(
       session: session,
       rest: rest,
       loggedSets: logged.length,
       now: clock.now(),
-      lastSet: describeRepeatableSet(lastWorkingSet(logged), unit),
+      lastSet: describeRepeatableSet(lastWorkingSet(logged), unit, l10n: l10n),
       next: next,
       unit: unit,
+      l10n: l10n,
     );
 
     // The rest timer rebuilds once a second while it runs. Sending on every
@@ -461,17 +466,26 @@ LoggedSet? lastWorkingSet(List<LoggedSet> sets) {
   return null;
 }
 
-/// Renders [set] as the label on the watch's repeat button.
+/// Renders [set] as the label on the watch's repeat button, in [l10n]'s
+/// language (English without it).
 ///
 /// Empty when there is nothing to repeat, which is also how the watch
 /// decides whether to offer the button at all — one field, one meaning,
 /// no separate "can repeat" flag to fall out of step with it.
-String describeRepeatableSet(LoggedSet? set, WeightUnit unit) {
+String describeRepeatableSet(
+  LoggedSet? set,
+  WeightUnit unit, {
+  AppLocalizations? l10n,
+}) {
   if (set == null) return '';
   // A timed hold has no reps to repeat and no weight worth showing; it is
   // also the one kind of set where "the same again" means holding still for
   // a while, which is not a thing a button can do for you.
   if (set.seconds != null) return '';
-  if (set.weight <= 0) return '${set.reps} reps';
-  return '${formatWeightUnit(set.weight, unit)} x ${set.reps}';
+  final strings = l10n ?? englishLocalizations;
+  if (set.weight <= 0) return strings.wearRepeatReps(set.reps);
+  return strings.wearRepeatSet(
+    formatWeightUnit(set.weight, unit, l10n: l10n),
+    set.reps,
+  );
 }

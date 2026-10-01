@@ -2130,4 +2130,2120 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get exercisesAllEquipment => 'Jede Ausrüstung';
+
+  @override
+  String get strengthTierBeginner => 'Neuling';
+
+  @override
+  String get strengthTierNovice => 'Anfänger';
+
+  @override
+  String get strengthTierIntermediate => 'Fortgeschritten';
+
+  @override
+  String get strengthTierAdvanced => 'Erfahren';
+
+  @override
+  String get strengthTierElite => 'Elite';
+
+  @override
+  String get calculatorOneRmTitle => '1RM-Rechner';
+
+  @override
+  String get calculatorOneRmSetTitle => 'Dein Satz';
+
+  @override
+  String get calculatorOneRmWeightLabel => 'Gestemmtes Gewicht';
+
+  @override
+  String get calculatorOneRmReps => 'Wiederholungen';
+
+  @override
+  String get calculatorOneRmEmpty =>
+      'Gib das Gewicht und deine Wiederholungen ein, dann erscheint hier die Schätzung.';
+
+  @override
+  String get calculatorOneRmEstimated => 'Geschätztes 1RM';
+
+  @override
+  String get calculatorOneRmSingleRep =>
+      'Eine einzelne Wiederholung ist schon dein Maximum – da gibt es nichts zu schätzen.';
+
+  @override
+  String get calculatorOneRmFormulasAgree =>
+      'Alle drei Formeln sind sich einig.';
+
+  @override
+  String calculatorOneRmRange(int count, String low, String high, String unit) {
+    return 'Durchschnitt aus $count Formeln • Spanne $low–$high $unit';
+  }
+
+  @override
+  String get calculatorOneRmPlates => 'Welche Scheiben sind das?';
+
+  @override
+  String calculatorOneRmRoughGuess(int reps) {
+    return 'Über $reps Wiederholungen ist das nur eine grobe Schätzung – die Formeln stammen aus schweren Sätzen, und Sätze mit vielen Wiederholungen sagen mehr über deine Ausdauer als über dein Maximum.';
+  }
+
+  @override
+  String get calculatorFormulaTitle => 'Formelvergleich';
+
+  @override
+  String get calculatorFormulaEpleyNote => 'Der übliche Standard';
+
+  @override
+  String get calculatorFormulaBrzyckiNote =>
+      'Vorsichtig bei vielen Wiederholungen';
+
+  @override
+  String get calculatorFormulaLanderNote => 'Bei schweren Sätzen nah an Epley';
+
+  @override
+  String get calculatorFormulaCaveat =>
+      'Alle drei sind Näherungskurven, keine Messungen. Bei schweren Sätzen liegen sie beieinander, mit steigenden Wiederholungen driften sie auseinander – wenn du die echte Zahl brauchst, teste sie.';
+
+  @override
+  String get calculatorLoadTitle => 'Was du auflegst';
+
+  @override
+  String get calculatorLoadSubtitle =>
+      'Gewichte, die du für eine bestimmte Wiederholungszahl schaffen solltest.';
+
+  @override
+  String calculatorLoadReps(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Wdh.',
+      one: '1 Wdh.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get calculatorRankTitle => 'Kraftlevel';
+
+  @override
+  String get calculatorYourLifts => 'Deine Übungen';
+
+  @override
+  String calculatorRankNotLogged(String names) {
+    return 'Noch nicht geloggt: $names';
+  }
+
+  @override
+  String get calculatorRankHowToReadTitle => 'So liest du das';
+
+  @override
+  String get calculatorRankHowToReadMessage =>
+      'Die Standards sind Durchschnittswerte aus veröffentlichten Tabellen, keine Naturgesetze. Hebelverhältnisse und Körpergewicht verzerren sie – sieh dein Kraftlevel als grobe Einordnung, nicht als Urteil.';
+
+  @override
+  String calculatorRankStandards(String sex) {
+    String _temp0 = intl.Intl.selectLogic(sex, {
+      'female': 'Standards für Frauen',
+      'other': 'Standards für Männer',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String calculatorRankBasis(String standards, String bodyweight) {
+    return '$standards • $bodyweight Körpergewicht';
+  }
+
+  @override
+  String calculatorRankBasisDated(
+    String standards,
+    String bodyweight,
+    String date,
+  ) {
+    return '$standards • $bodyweight Körpergewicht ($date)';
+  }
+
+  @override
+  String calculatorRankUseSex(String sex) {
+    String _temp0 = intl.Intl.selectLogic(sex, {
+      'female': 'Frauen nutzen',
+      'other': 'Männer nutzen',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String calculatorLiftTested(String weight, String ratio) {
+    return '$weight getestet • $ratio× Körpergewicht';
+  }
+
+  @override
+  String calculatorLiftEstimated(String weight, String ratio) {
+    return '$weight geschätzt • $ratio× Körpergewicht';
+  }
+
+  @override
+  String get calculatorLiftTopTier => 'Höchste Stufe – darüber gibt es nichts';
+
+  @override
+  String calculatorLiftToNext(String weight, String tier) {
+    return '$weight bis $tier';
+  }
+
+  @override
+  String get calculatorNothingRankedTitle => 'Noch keine bewerteten Übungen';
+
+  @override
+  String get calculatorNothingRankedMessage =>
+      'Logge einen Satz einer Langhantel- oder Kabelzugübung – Bankdrücken, Kniebeuge, Kreuzheben, Schulterdrücken, Rudern, Curls, Latziehen – und ihr Kraftlevel erscheint hier. Kurzhantel-, Maschinen- und Körpergewichtsübungen bleiben außen vor: Diese Zahlen lassen sich zwischen zwei Studios nicht vergleichen.';
+
+  @override
+  String get calculatorSetupTitle => 'Bevor wir dich einstufen können';
+
+  @override
+  String get calculatorSetupMessage =>
+      'Ein Kraftlevel vergleicht deine Übungen mit deinem eigenen Körpergewicht – dafür brauchen wir zwei Dinge von dir.';
+
+  @override
+  String get calculatorSetupSexTitle => 'Welche Standards sollen wir nutzen?';
+
+  @override
+  String get calculatorSetupSexMessage =>
+      'Veröffentlichte Kraftstandards unterscheiden sich nach Geschlecht: Bankdrücken mit dem eigenen Körpergewicht ist bei Männern Fortgeschritten und bei Frauen Erfahren. Mit der falschen Tabelle bekämst du einfach ein falsches Kraftlevel.';
+
+  @override
+  String get calculatorSetupBodyweightTitle => 'Trag dein Körpergewicht ein';
+
+  @override
+  String get calculatorSetupBodyweightMessage =>
+      'Das Kraftlevel ist das Verhältnis von dem, was du hebst, zu dem, was du wiegst. Trag dein Gewicht unter Fortschritt → Körpermaße ein, dann taucht es hier auf.';
+
+  @override
+  String get calculatorSetupOpenMeasurements => 'Körpermaße öffnen';
+
+  @override
+  String get calculatorBadgeHeading => 'KRAFTLEVEL';
+
+  @override
+  String calculatorBadgeTested(String weight, String ratio) {
+    return '$weight getestet · $ratio× Körpergewicht';
+  }
+
+  @override
+  String calculatorBadgeEstimated(String weight, String ratio) {
+    return '$weight geschätzt · $ratio× Körpergewicht';
+  }
+
+  @override
+  String get calculatorBadgeTopTier => 'Höchste Stufe';
+
+  @override
+  String calculatorBadgeToNext(String weight, String tier) {
+    return '+$weight bis $tier';
+  }
+
+  @override
+  String get calculatorBadgeNudgeTitle => 'Diese Übung lässt sich einstufen';
+
+  @override
+  String get calculatorBadgeNudgeMessage =>
+      'Trag dein Körpergewicht ein und wähl eine Standardtabelle, um zu sehen, wo du stehst.';
+
+  @override
+  String get statsReadingVolume => 'Volumen';
+
+  @override
+  String get statsReadingFatigue => 'Ermüdung';
+
+  @override
+  String get statsFatigueEmpty =>
+      'Alles erholt – nichts, was du in letzter Zeit trainiert hast, belastet dich noch.';
+
+  @override
+  String get statsVolumeEmpty =>
+      'In den letzten 7 Tagen kein Training geloggt – schließ ein Training ab, damit deine Muskelkarte aufleuchtet.';
+
+  @override
+  String get statsFatigueCaption =>
+      'Heller heißt weniger erholt – die Belastung halbiert sich alle zwei Tage.';
+
+  @override
+  String get statsVolumeCaption =>
+      'Heller heißt mehr Volumen diese Woche, gemessen an deinem am stärksten belasteten Muskel.';
+
+  @override
+  String get statsFatigueContrastCaption =>
+      'Jeder Muskel hat seine eigene Farbe. Heller heißt weiterhin weniger erholt.';
+
+  @override
+  String get statsRankNeedsSetup =>
+      'Das Kraftlevel vergleicht deine Übungen mit deinem eigenen Körpergewicht – dafür braucht es dein Körpergewicht und die passende Standardtabelle.';
+
+  @override
+  String get statsRankSetUp => 'Einrichten';
+
+  @override
+  String get statsRankEmpty =>
+      'Logge eine Langhantel- oder Kabelzugübung – Bankdrücken, Kniebeuge, Kreuzheben, Schulterdrücken, Rudern, Curls – und ihre Medaille erscheint hier.';
+
+  @override
+  String get statsRankFullBreakdown => 'Alle Details ansehen';
+
+  @override
+  String get statsOverallLabel => 'Gesamt';
+
+  @override
+  String statsOverallEvery(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'beginner': 'Neuling',
+      'novice': 'Anfänger',
+      'intermediate': 'Fortgeschritten',
+      'advanced': 'Erfahren',
+      'other': 'Elite',
+    });
+    return 'Alle bewerteten Übungen liegen auf Stufe $_temp0.';
+  }
+
+  @override
+  String statsOverallWeakest(String best) {
+    String _temp0 = intl.Intl.selectLogic(best, {
+      'beginner': 'Neuling',
+      'novice': 'Anfänger',
+      'intermediate': 'Fortgeschritten',
+      'advanced': 'Erfahren',
+      'other': 'Elite',
+    });
+    return 'Deine schwächste bewertete Übung. Deine beste liegt auf Stufe $_temp0.';
+  }
+
+  @override
+  String statsRankRowTested(String tier, String weight) {
+    return '$tier • $weight getestet';
+  }
+
+  @override
+  String statsRankRowEstimated(String tier, String weight) {
+    return '$tier • $weight geschätzt';
+  }
+
+  @override
+  String get statsRankRowTop => 'Spitze';
+
+  @override
+  String get statsAllTimeTitle => 'Insgesamt';
+
+  @override
+  String statsTotalsWorkouts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Trainings',
+      one: 'Training',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String statsTotalsSets(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Sätze',
+      one: 'Satz',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get statsTotalsTrained => 'trainiert';
+
+  @override
+  String get statsTotalsLifted => 'gestemmt';
+
+  @override
+  String statsTotalsDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Tage',
+      one: 'Tag',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String statsTotalsStreak(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Tage in Folge',
+      one: 'Tag in Folge',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String statsComparisonPiano(String times) {
+    return 'Das sind $times Konzertflügel.';
+  }
+
+  @override
+  String statsComparisonCar(String times) {
+    return 'Das sind $times Kleinwagen.';
+  }
+
+  @override
+  String statsComparisonRhino(String times) {
+    return 'Das sind $times Nashörner.';
+  }
+
+  @override
+  String statsComparisonBus(String times) {
+    return 'Das sind $times Londoner Doppeldeckerbusse.';
+  }
+
+  @override
+  String statsComparisonWhale(String times) {
+    return 'Das sind $times Buckelwale.';
+  }
+
+  @override
+  String statsComparisonJumbo(String times) {
+    return 'Das sind $times vollbeladene Jumbojets.';
+  }
+
+  @override
+  String get caloriesLogTitle => 'Kalorientagebuch';
+
+  @override
+  String caloriesLogLoadFailed(String error) {
+    return 'Das Tagebuch konnte nicht geladen werden.\n$error';
+  }
+
+  @override
+  String get caloriesAddMeal => 'Mahlzeit hinzufügen';
+
+  @override
+  String get commonPreviousDay => 'Vorheriger Tag';
+
+  @override
+  String get commonNextDay => 'Nächster Tag';
+
+  @override
+  String get caloriesNoMeals =>
+      'Für diesen Tag sind noch keine Mahlzeiten eingetragen.';
+
+  @override
+  String get caloriesMealsTitle => 'Mahlzeiten';
+
+  @override
+  String caloriesLeft(int count) {
+    return '$count übrig';
+  }
+
+  @override
+  String caloriesOver(int count) {
+    return '$count zu viel';
+  }
+
+  @override
+  String caloriesMacroLine(int protein, int carbs, int fat) {
+    return 'P $protein g • KH $carbs g • F $fat g';
+  }
+
+  @override
+  String get caloriesDeleteEntry => 'Eintrag löschen';
+
+  @override
+  String get caloriesMealLabel => 'Mahlzeit';
+
+  @override
+  String get caloriesMealHint => 'z. B. Hähnchen mit Reis';
+
+  @override
+  String get caloriesCaloriesLabel => 'Kalorien (kcal)';
+
+  @override
+  String get caloriesProteinLabel => 'Protein (g)';
+
+  @override
+  String get caloriesCarbsLabel => 'KH (g)';
+
+  @override
+  String get caloriesFatLabel => 'Fett (g)';
+
+  @override
+  String get caloriesWeekTitle => 'Diese Woche';
+
+  @override
+  String caloriesWeekLoadFailed(String error) {
+    return 'Die Woche konnte nicht geladen werden.\n$error';
+  }
+
+  @override
+  String get caloriesWeekCalories => 'Kalorien';
+
+  @override
+  String get caloriesWeekNothing =>
+      'In den letzten 7 Tagen nichts eingetragen.';
+
+  @override
+  String caloriesWeekSummary(int average, int onTarget, int logged) {
+    String _temp0 = intl.Intl.pluralLogic(
+      logged,
+      locale: localeName,
+      other: '$logged eingetragenen Tagen',
+      one: '1 eingetragenen Tag',
+    );
+    return 'Ø $average kcal • $onTarget von $_temp0 im Ziel';
+  }
+
+  @override
+  String caloriesWeekGoalLine(int goal) {
+    return 'Gestrichelte Linie = Tagesziel ($goal kcal)';
+  }
+
+  @override
+  String get caloriesMacrosTitle => 'Makros';
+
+  @override
+  String get caloriesMacrosEmpty =>
+      'Trag Mahlzeiten mit Makros ein, um deine Verteilung zu sehen.';
+
+  @override
+  String get caloriesMacroProtein => 'Protein';
+
+  @override
+  String get caloriesMacroCarbs => 'Kohlenhydrate';
+
+  @override
+  String get caloriesMacroFat => 'Fett';
+
+  @override
+  String caloriesMacroShare(int grams, int percent) {
+    return '$grams g · $percent %';
+  }
+
+  @override
+  String get calendarTitle => 'Kalender';
+
+  @override
+  String get calendarPreviousMonth => 'Vorheriger Monat';
+
+  @override
+  String get calendarNextMonth => 'Nächster Monat';
+
+  @override
+  String calendarDayTrainedSemantics(String date) {
+    return '$date, trainiert';
+  }
+
+  @override
+  String calendarRestDay(String day) {
+    return '$day – Ruhetag';
+  }
+
+  @override
+  String calendarDaySets(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Sätze',
+      one: '1 Satz',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get goalsTitle => 'Ziele';
+
+  @override
+  String get goalsNew => 'Neues Ziel';
+
+  @override
+  String get goalsExercise => 'Übung';
+
+  @override
+  String goalsTitleBodyweight(String weight) {
+    return 'Körpergewicht · $weight';
+  }
+
+  @override
+  String goalsWorkoutsPerWeek(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Trainings pro Woche',
+      one: '1 Training pro Woche',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String goalsValueOf(int current, int target) {
+    return '$current von $target';
+  }
+
+  @override
+  String get goalsCaptionWeekDone => 'Diese Woche geschafft';
+
+  @override
+  String goalsCaptionWeekToGo(int count) {
+    return 'Noch $count diese Woche';
+  }
+
+  @override
+  String goalsCaptionWeeksInARow(int count) {
+    return '$count Wochen in Folge';
+  }
+
+  @override
+  String goalsCaptionReached(String date) {
+    return 'Erreicht am $date';
+  }
+
+  @override
+  String goalsCaptionWasDue(String date) {
+    return 'War fällig am $date';
+  }
+
+  @override
+  String get goalsCaptionDueToday => 'Heute fällig';
+
+  @override
+  String goalsCaptionDaysLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Noch $count Tage',
+      one: 'Noch 1 Tag',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String goalsCaptionBy(String date) {
+    return 'Bis $date';
+  }
+
+  @override
+  String get goalsCaptionNotTrained => 'Noch nicht trainiert';
+
+  @override
+  String get goalsCaptionNoWeighIn => 'Noch nicht gewogen';
+
+  @override
+  String get goalsCaptionHeaviest => 'Schwerster Arbeitssatz';
+
+  @override
+  String get goalsCaptionLatestWeighIn => 'Zuletzt gewogen';
+
+  @override
+  String get goalsProblemPastDate =>
+      'Wähl ein Datum, das noch nicht vorbei ist.';
+
+  @override
+  String get goalsProblemChooseExercise => 'Wähl die Übung.';
+
+  @override
+  String get goalsProblemSetWeight => 'Leg das Zielgewicht fest.';
+
+  @override
+  String get goalsProblemAlreadyLifted =>
+      'Das hast du schon geschafft – setz dir ein höheres Ziel.';
+
+  @override
+  String goalsProblemWorkoutsRange(int max) {
+    return 'Wähl zwischen 1 und $max Trainings pro Woche.';
+  }
+
+  @override
+  String get goalsProblemLogWeight => 'Trag zuerst dein aktuelles Gewicht ein.';
+
+  @override
+  String get goalsProblemSameWeight =>
+      'Das wiegst du gerade schon – wähl ein anderes Gewicht.';
+
+  @override
+  String get goalsSectionWorking => 'In Arbeit';
+
+  @override
+  String get goalsSectionReached => 'Erreicht';
+
+  @override
+  String get goalsSectionArchived => 'Archiviert';
+
+  @override
+  String get goalsActionsTooltip => 'Mehr';
+
+  @override
+  String get goalsRestore => 'Wiederherstellen';
+
+  @override
+  String get goalsArchive => 'Archivieren';
+
+  @override
+  String get goalsRestoreSubtitle => 'Wieder auf Start und in der Liste';
+
+  @override
+  String get goalsArchiveSubtitle => 'Nicht mehr auf Start, hier aufbewahrt';
+
+  @override
+  String get goalsDeleteTitle => 'Dieses Ziel löschen?';
+
+  @override
+  String get goalsDeleteFrequencyMessage =>
+      'Deine Trainings bleiben, wie sie sind. Nur das Ziel verschwindet.';
+
+  @override
+  String get goalsDeleteMessage =>
+      'Dein Log bleibt, wie es ist. Archivier das Ziel stattdessen, wenn du es aufheben willst.';
+
+  @override
+  String get goalsEmptyTitle => 'Noch keine Ziele';
+
+  @override
+  String get goalsEmptyMessage =>
+      'Ein Gewicht bei einer Übung bis zu einem Datum, eine Anzahl Trainings pro Woche oder ein Körpergewicht, das du erreichen willst. Der Fortschritt ergibt sich aus dem, was du loggst.';
+
+  @override
+  String get goalsSetGoal => 'Ziel setzen';
+
+  @override
+  String goalsCardActive(int count) {
+    return '$count aktiv';
+  }
+
+  @override
+  String goalsCardMore(int count) {
+    return '+$count weitere';
+  }
+
+  @override
+  String get goalsLinkYourGoals => 'Deine Ziele';
+
+  @override
+  String get goalsLinkEmpty =>
+      'Eine Übung, eine Wochengewohnheit oder ein Körpergewicht als Ziel';
+
+  @override
+  String goalsLinkReachedOnly(int reached) {
+    return '$reached erreicht – setz dir das nächste';
+  }
+
+  @override
+  String goalsLinkActiveOnly(int active) {
+    return '$active in Arbeit';
+  }
+
+  @override
+  String goalsLinkBoth(int active, int reached) {
+    return '$active in Arbeit, $reached erreicht';
+  }
+
+  @override
+  String get goalsCelebrationWeekDone => 'Woche geschafft';
+
+  @override
+  String get goalsCelebrationReached => 'Ziel erreicht';
+
+  @override
+  String get goalsCelebrationNice => 'Stark';
+
+  @override
+  String get goalsFormEditTitle => 'Ziel bearbeiten';
+
+  @override
+  String get goalsFormBy => 'Bis';
+
+  @override
+  String get goalsFormNoDeadline => 'Ohne Frist';
+
+  @override
+  String get goalsFormSaveChanges => 'Änderungen speichern';
+
+  @override
+  String get goalsFormSaveGoal => 'Ziel speichern';
+
+  @override
+  String get goalsFormChooseExercise => 'Übung wählen';
+
+  @override
+  String get goalsFormLiftHint =>
+      'Zählt deinen schwersten Arbeitssatz – Aufwärm- und Dropsätze nie – oder ein getestetes Maximum.';
+
+  @override
+  String goalsFormLiftHintBest(String weight) {
+    return 'Deine Bestleistung bisher: $weight. Zählt deinen schwersten Arbeitssatz oder ein getestetes Maximum.';
+  }
+
+  @override
+  String get goalsFormTarget => 'Ziel';
+
+  @override
+  String get goalsFormPickLift => 'Ziel für welche Übung?';
+
+  @override
+  String get goalsFormHowOften => 'Wie oft';
+
+  @override
+  String get goalsFormWorkoutsAWeek => 'Trainings pro Woche';
+
+  @override
+  String goalsFormFrequencyHint(String weekday) {
+    return 'Zählt abgeschlossene Trainings, freie inklusive. Die Woche beginnt am $weekday.';
+  }
+
+  @override
+  String goalsFormStartedFrom(String weight) {
+    return 'Gestartet bei $weight.';
+  }
+
+  @override
+  String goalsFormStartingFrom(String weight, String day) {
+    return 'Start bei $weight, eingetragen: $day.';
+  }
+
+  @override
+  String get goalsFormNoWeighIn =>
+      'Noch kein Gewicht eingetragen. Was wiegst du heute? Es landet auch in deinen Körpermaßen.';
+
+  @override
+  String get goalsFormNow => 'Aktuell';
+
+  @override
+  String get goalsFormReachBy => 'Erreichen bis';
+
+  @override
+  String goalsFormInWeeks(int count) {
+    return 'In $count Wochen';
+  }
+
+  @override
+  String get goalsFormInSixMonths => 'In 6 Monaten';
+
+  @override
+  String get goalsFormPickDate => 'Datum wählen';
+
+  @override
+  String goalsFormSaveFailed(String error) {
+    return 'Das Ziel konnte nicht gespeichert werden.\n$error';
+  }
+
+  @override
+  String get progressTitle => 'Fortschritt';
+
+  @override
+  String get progressViewBody => 'Körper';
+
+  @override
+  String get progressViewTrends => 'Verlauf';
+
+  @override
+  String get progressViewAllTime => 'Gesamt';
+
+  @override
+  String get progressPerExercise => 'Pro Übung';
+
+  @override
+  String get progressTrackedByHand => 'Von Hand erfasst';
+
+  @override
+  String get progressMeasurementsTitle => 'Körpermaße';
+
+  @override
+  String get progressMeasurementsSubtitle =>
+      'Gewicht, Taille, Arme – und wie sie sich entwickelt haben';
+
+  @override
+  String get progressPhotosTitle => 'Fortschrittsfotos';
+
+  @override
+  String get progressPhotosSubtitle => 'Zwei Tage nebeneinander vergleichen';
+
+  @override
+  String get progressNoHistoryTitle => 'Noch nichts geloggt';
+
+  @override
+  String get progressNoHistoryMessage =>
+      'Schließ ein Training ab, dann erscheinen hier seine Übungen, jede mit eigenem Diagramm.';
+
+  @override
+  String get progressClear => 'Entfernen';
+
+  @override
+  String progressExerciseLoadFailed(String error) {
+    return 'Der Fortschritt konnte nicht geladen werden.\n$error';
+  }
+
+  @override
+  String get progressExerciseNoSessions =>
+      'Für diese Übung gibt es noch keine geloggten Trainings.';
+
+  @override
+  String get progressExerciseRecords => 'Bestleistungen';
+
+  @override
+  String get progressExerciseLongestHold => 'Längstes Halten';
+
+  @override
+  String get progressExerciseTopSetWeight => 'Topsatz-Gewicht';
+
+  @override
+  String get progressExerciseLongestHoldCaption =>
+      'Das längste einzelne Halten pro Training.';
+
+  @override
+  String get progressExerciseTopSetCaption =>
+      'Dein schwerster Satz pro Training.';
+
+  @override
+  String get progressExerciseTrendHint =>
+      'Logge diese Übung in weiteren Trainings, um eine Trendlinie zu sehen.';
+
+  @override
+  String get progressOneRmTested => 'Getestetes 1RM';
+
+  @override
+  String get progressOneRmEstimated => 'Geschätztes 1RM';
+
+  @override
+  String progressOneRmTestedOn(String date) {
+    return 'Getestet am $date';
+  }
+
+  @override
+  String progressOneRmTestedOnSuggests(String date, String weight) {
+    return 'Getestet am $date • laut Log ≈ $weight';
+  }
+
+  @override
+  String get progressOneRmTapToEnter =>
+      'Tippe, um ein getestetes Maximum einzutragen';
+
+  @override
+  String progressOneRmSingle(String date) {
+    return 'Am $date für eine Wiederholung gehoben';
+  }
+
+  @override
+  String progressOneRmFrom(String weight, int reps, String date) {
+    return 'Aus $weight × $reps am $date';
+  }
+
+  @override
+  String get progressRecordHeaviest => 'Schwerster Satz';
+
+  @override
+  String get progressRecordMostTime => 'Längste Zeit';
+
+  @override
+  String get progressRecordBestVolume => 'Bestes Volumen';
+
+  @override
+  String progressRecordInASession(String date) {
+    return 'in einem Training • $date';
+  }
+
+  @override
+  String get progressMeasurementsHistoryTooltip => 'Verlauf';
+
+  @override
+  String progressMeasurementsLoadFailed(String error) {
+    return 'Die Körpermaße konnten nicht geladen werden.\n$error';
+  }
+
+  @override
+  String progressMeasurementsLastUpdated(String date) {
+    return 'Zuletzt geändert: $date';
+  }
+
+  @override
+  String get progressMeasurementsNothing =>
+      'An diesem Tag noch nichts gemessen – tippe auf eine Zeile, um einen Wert einzutragen.';
+
+  @override
+  String progressMeasurementsWas(String value, String date) {
+    return 'Am $date: $value';
+  }
+
+  @override
+  String get progressHistoryTitle => 'Verlauf der Körpermaße';
+
+  @override
+  String progressHistoryCount(int count, int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days Tage',
+      one: '1 Tag',
+    );
+    return '$count Messungen über $_temp0';
+  }
+
+  @override
+  String progressHistoryNone(String field) {
+    String _temp0 = intl.Intl.selectLogic(field, {
+      'weight': 'Gewicht',
+      'chest': 'Brust',
+      'waist': 'Taille',
+      'hips': 'Hüfte',
+      'arms': 'Arme',
+      'other': 'Beine',
+    });
+    return 'Noch keine Werte für $_temp0';
+  }
+
+  @override
+  String progressHistoryOnlyOne(String field) {
+    String _temp0 = intl.Intl.selectLogic(field, {
+      'weight': 'Gewicht',
+      'chest': 'Brust',
+      'waist': 'Taille',
+      'hips': 'Hüfte',
+      'arms': 'Arme',
+      'other': 'Beine',
+    });
+    return 'Bisher nur ein Wert für $_temp0';
+  }
+
+  @override
+  String progressHistoryNoneHint(String field) {
+    String _temp0 = intl.Intl.selectLogic(field, {
+      'weight': 'dein Gewicht',
+      'chest': 'deinen Brustumfang',
+      'waist': 'deinen Taillenumfang',
+      'hips': 'deinen Hüftumfang',
+      'arms': 'deinen Armumfang',
+      'other': 'deinen Beinumfang',
+    });
+    return 'Trag $_temp0 bei den Körpermaßen ein, dann erscheint der Verlauf hier.';
+  }
+
+  @override
+  String progressHistoryOnlyOneHint(String value, String date) {
+    return '$value am $date. Trag an einem anderen Tag wieder einen Wert ein, um einen Trend zu sehen.';
+  }
+
+  @override
+  String get progressPhotosCompareTooltip => 'Vergleichen';
+
+  @override
+  String progressPhotosLoadFailed(String error) {
+    return 'Die Fotos konnten nicht geladen werden.\n$error';
+  }
+
+  @override
+  String get progressPhotosAdd => 'Foto hinzufügen';
+
+  @override
+  String get progressPhotosClose => 'Schließen';
+
+  @override
+  String get progressPhotosDeleteTooltip => 'Foto löschen';
+
+  @override
+  String get progressPhotosDeleteTitle => 'Foto löschen?';
+
+  @override
+  String get progressPhotosDeleteMessage =>
+      'Damit ist das Foto endgültig aus Gymfy entfernt. Das Original in deiner Galerie bleibt unberührt.';
+
+  @override
+  String get progressPhotosNoteLabel => 'Notiz (optional)';
+
+  @override
+  String get progressPhotosNoteHint => 'z. B. von vorne, locker';
+
+  @override
+  String get progressPhotosEmptyTitle => 'Noch keine Fotos';
+
+  @override
+  String get progressPhotosEmptyMessage =>
+      'Füg ein Foto aus deiner Galerie hinzu, und Gymfy behält eine eigene Kopie – so bleiben deine Fortschrittsfotos erhalten, auch wenn du die Galerie leerst.';
+
+  @override
+  String get progressCompareTitle => 'Vergleich';
+
+  @override
+  String get progressComparePickBefore => '„Vorher“-Foto wählen';
+
+  @override
+  String get progressComparePickAfter => '„Nachher“-Foto wählen';
+
+  @override
+  String get progressCompareSameDay => 'Am selben Tag';
+
+  @override
+  String progressCompareDaysApart(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Tage dazwischen',
+      one: '1 Tag dazwischen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String progressCompareWeeksApart(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Wochen dazwischen',
+      one: '1 Woche dazwischen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String progressCompareMonthsApart(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Monate dazwischen',
+      one: '1 Monat dazwischen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get progressCompareBefore => 'Vorher';
+
+  @override
+  String get progressCompareAfter => 'Nachher';
+
+  @override
+  String get progressCompareNotEnoughTitle => 'Noch nichts zu vergleichen';
+
+  @override
+  String get progressCompareNotEnoughMessage =>
+      'Füg mindestens zwei Fortschrittsfotos hinzu, dann kannst du hier zwischen zwei beliebigen überblenden.';
+
+  @override
+  String get progressActivityTitle => 'Aktivität';
+
+  @override
+  String progressActivityRestDay(String day) {
+    return '$day – Ruhetag';
+  }
+
+  @override
+  String progressActivityUntimed(String day) {
+    return '$day – trainiert, Dauer nicht erfasst';
+  }
+
+  @override
+  String progressActivityTrained(String day, String duration) {
+    return '$day – $duration trainiert';
+  }
+
+  @override
+  String progressActivityTrainedPlusUntimed(String day, String duration) {
+    return '$day – $duration trainiert, dazu ein Training ohne erfasste Dauer';
+  }
+
+  @override
+  String progressActivityYear(int days, String duration) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days Tage',
+      one: '1 Tag',
+    );
+    return '$_temp0 • $duration dieses Jahr';
+  }
+
+  @override
+  String get progressActivityLess => 'Weniger';
+
+  @override
+  String get progressActivityMore => 'Mehr';
+
+  @override
+  String get progressStreakTitle => 'Serie';
+
+  @override
+  String progressStreakDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Tage',
+      one: '1 Tag',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get progressStreakCurrent => 'aktuell';
+
+  @override
+  String get progressStreakBest => 'Rekord';
+
+  @override
+  String progressRecapEmpty(String period) {
+    String _temp0 = intl.Intl.selectLogic(period, {
+      'week': 'In der letzten Woche nichts geloggt.',
+      'month': 'Im letzten Monat nichts geloggt.',
+      'other': 'Im letzten Jahr nichts geloggt.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get progressRecapVolumeTitle => 'Volumen';
+
+  @override
+  String progressRecapVolumeDetail(String period) {
+    String _temp0 = intl.Intl.selectLogic(period, {
+      'week': 'in der letzten Woche gestemmt',
+      'month': 'im letzten Monat gestemmt',
+      'other': 'im letzten Jahr gestemmt',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get progressRecapOneDay => 'Ein Tag ist noch kein Trend.';
+
+  @override
+  String get progressRecapWorkoutsTitle => 'Trainings';
+
+  @override
+  String progressRecapSessionsDetail(String period) {
+    String _temp0 = intl.Intl.selectLogic(period, {
+      'week': 'Trainings in der letzten Woche',
+      'month': 'Trainings im letzten Monat',
+      'other': 'Trainings im letzten Jahr',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String progressRecapSessionsRecords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Bestleistungen',
+      one: '1 Bestleistung',
+    );
+    return 'Trainings • $_temp0';
+  }
+
+  @override
+  String progressRecapWorkoutsTooltip(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Trainings',
+      one: '1 Training',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get progressRecapMusclesTitle => 'Was du trainiert hast';
+
+  @override
+  String get progressRecapMusclesDetail => 'bekam die meisten Sätze';
+
+  @override
+  String progressRecapMuscleSets(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Sätze',
+      one: '1 Satz',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get reviewsTitle => 'Rückblicke';
+
+  @override
+  String get reviewsMonthlyTitle => 'Monatsrückblick';
+
+  @override
+  String get reviewsYearTitle => 'Trainingsjahr';
+
+  @override
+  String reviewsMonthlySubtitle(String period) {
+    return '$period – und wie er im Vergleich abschneidet';
+  }
+
+  @override
+  String reviewsYearSubtitle(String period) {
+    return '$period, von Anfang bis Ende';
+  }
+
+  @override
+  String get reviewsShareTooltip => 'Als Bild teilen';
+
+  @override
+  String reviewsShareTitle(String period) {
+    return 'Rückblick auf $period teilen';
+  }
+
+  @override
+  String get reviewsSaveImageTitle => 'Bild speichern';
+
+  @override
+  String get reviewsImageSaved =>
+      'Bild gespeichert – du kannst es aus deinen Dateien verschicken.';
+
+  @override
+  String reviewsImageFailed(String error) {
+    return 'Das Bild konnte nicht erstellt werden.\n$error';
+  }
+
+  @override
+  String get reviewsEarlier => 'Früher';
+
+  @override
+  String get reviewsLater => 'Später';
+
+  @override
+  String reviewsNoWorkoutsMonth(String period) {
+    return 'Keine Trainings im $period.';
+  }
+
+  @override
+  String reviewsNoWorkoutsYear(String period) {
+    return 'Keine Trainings im Jahr $period.';
+  }
+
+  @override
+  String reviewsStepBack(String span) {
+    String _temp0 = intl.Intl.selectLogic(span, {
+      'month': 'einen Monat',
+      'other': 'ein Jahr',
+    });
+    return 'Geh mit den Pfeilen oben $_temp0 zurück.';
+  }
+
+  @override
+  String get reviewsExercisesTitle => 'Übungen';
+
+  @override
+  String reviewsSets(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Sätze',
+      one: '1 Satz',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String reviewsWorkouts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Trainings',
+      one: '1 Training',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String reviewsVersus(String period) {
+    return 'vs. $period';
+  }
+
+  @override
+  String get reviewsCardMonthHeading => 'DEIN TRAININGSMONAT';
+
+  @override
+  String get reviewsCardYearHeading => 'DEIN TRAININGSJAHR';
+
+  @override
+  String reviewsCardSoFar(String period) {
+    return 'Bisher – $period ist noch nicht vorbei';
+  }
+
+  @override
+  String reviewsCardWorkouts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Trainings',
+      one: 'Training',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get reviewsCardLifted => 'gestemmt';
+
+  @override
+  String get reviewsCardTrained => 'trainiert';
+
+  @override
+  String reviewsCardTrainedUntimed(int count) {
+    return 'trainiert, $count ohne Zeit';
+  }
+
+  @override
+  String reviewsCardRecords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Bestleistungen',
+      one: 'Bestleistung',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String reviewsCardDaysTrained(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Tage trainiert',
+      one: '1 Tag trainiert',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String reviewsCardLongestStreak(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Tage',
+      one: '1 Tag',
+    );
+    return 'längste Serie $_temp0';
+  }
+
+  @override
+  String get reviewsCardTopExercises => 'Top-Übungen';
+
+  @override
+  String get reviewsCardMostTrained => 'Am meisten trainiert';
+
+  @override
+  String get reviewsCardTrackedWith => 'Getrackt mit Gymfy';
+
+  @override
+  String get healthConnectAvailabilityUnsupported =>
+      'Auf diesem Handy nicht verfügbar';
+
+  @override
+  String get healthConnectAvailabilityNotInstalled => 'Nicht installiert';
+
+  @override
+  String get healthConnectAvailabilityNeedsUpdate => 'Braucht ein Update';
+
+  @override
+  String get healthConnectAvailabilityAvailable => 'Verfügbar';
+
+  @override
+  String get healthConnectIntro =>
+      'Androids Speicher für Gesundheitsdaten, direkt auf diesem Handy. Gymfy kann deine abgeschlossenen Trainings dort eintragen und dein Körpergewicht von einer smarten Waage übernehmen. Alles bleibt auf dem Gerät – Gymfy hat keinen Internetzugriff.';
+
+  @override
+  String get healthConnectChecking => 'Wird geprüft…';
+
+  @override
+  String get healthConnectInstall => 'Installieren';
+
+  @override
+  String get healthConnectUpdate => 'Aktualisieren';
+
+  @override
+  String get healthConnectStoreFailed =>
+      'Der Play Store konnte nicht geöffnet werden.';
+
+  @override
+  String get healthConnectWriteTitle => 'Trainings eintragen';
+
+  @override
+  String get healthConnectWriteSubtitle =>
+      'Jedes abgeschlossene Training erscheint als Krafttraining, mit Name, Start und Ende';
+
+  @override
+  String get healthConnectReadTitle => 'Körpergewicht übernehmen';
+
+  @override
+  String get healthConnectReadSubtitle =>
+      'Gewichtswerte füllen Tage, an denen du kein Gewicht eingetragen hast. Ein selbst eingetragenes Gewicht wird nie ersetzt';
+
+  @override
+  String get healthConnectWriteRefused =>
+      'Health Connect hat Gymfy nicht erlaubt, Trainings einzutragen.';
+
+  @override
+  String get healthConnectReadRefused =>
+      'Health Connect hat Gymfy nicht erlaubt, dein Gewicht zu lesen.';
+
+  @override
+  String healthConnectWeighInsAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Gewichtswerte zu deinen Körpermaßen hinzugefügt.',
+      one: '1 Gewichtswert zu deinen Körpermaßen hinzugefügt.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get healthConnectPermissionsTitle => 'Berechtigungen';
+
+  @override
+  String healthConnectPermissionsMissing(String what) {
+    String _temp0 = intl.Intl.selectLogic(what, {
+      'write': 'Trainings einzutragen',
+      'read': 'dein Gewicht zu lesen',
+      'other': 'Trainings einzutragen oder dein Gewicht zu lesen',
+    });
+    return 'Health Connect erlaubt Gymfy nicht mehr, $_temp0';
+  }
+
+  @override
+  String healthConnectPermissionsStatus(String workouts, String weight) {
+    String _temp0 = intl.Intl.selectLogic(workouts, {
+      'yes': 'erlaubt',
+      'other': 'nicht erlaubt',
+    });
+    String _temp1 = intl.Intl.selectLogic(weight, {
+      'yes': 'erlaubt',
+      'other': 'nicht erlaubt',
+    });
+    return 'Trainings: $_temp0 · Gewicht: $_temp1';
+  }
+
+  @override
+  String get healthConnectGrant => 'Erlauben';
+
+  @override
+  String get healthConnectBackfillTile => 'Frühere Trainings eintragen';
+
+  @override
+  String get healthConnectBackfillTileSubtitle =>
+      'Von selbst eingetragen werden nur Trainings, die du ab jetzt abschließt';
+
+  @override
+  String get healthConnectBackfillTitle => 'Frühere Trainings eintragen?';
+
+  @override
+  String get healthConnectBackfillMessage =>
+      'Trägt jedes abgeschlossene Training aus der Zeit vor dem Einschalten in Health Connect ein, als Krafttraining mit Start- und Endzeit. Trainings, die schon dort sind, kommen nicht doppelt dazu.';
+
+  @override
+  String get healthConnectBackfillConfirm => 'Eintragen';
+
+  @override
+  String get healthConnectWriteNotAllowed =>
+      'Health Connect erlaubt Gymfy gerade nicht, Trainings einzutragen.';
+
+  @override
+  String healthConnectBackfillWrote(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Trainings in Health Connect eingetragen.',
+      one: '1 Training in Health Connect eingetragen.',
+      zero: 'Es musste kein Training eingetragen werden.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String healthConnectBackfillUntimed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Trainings ohne erfasste Dauer wurden ausgelassen.',
+      one: '1 Training ohne erfasste Dauer wurde ausgelassen.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String healthConnectBackfillStopped(String error) {
+    return 'Dann wurde abgebrochen: $error';
+  }
+
+  @override
+  String get healthConnectManageTitle => 'In Health Connect verwalten';
+
+  @override
+  String get healthConnectManageSubtitle =>
+      'Zugriff entziehen oder löschen, was Gymfy dort eingetragen hat';
+
+  @override
+  String get healthConnectOpenFailed =>
+      'Health Connect konnte nicht geöffnet werden.';
+
+  @override
+  String healthConnectLastError(String error) {
+    return 'Letzter Abgleich mit Health Connect fehlgeschlagen: $error';
+  }
+
+  @override
+  String wearSetsLogged(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Sätze geloggt',
+      one: '1 Satz geloggt',
+      zero: 'Noch keine Sätze',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String wearRepeatReps(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Wdh.',
+      one: '1 Wdh.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String wearRepeatSet(String weight, int reps) {
+    return '$weight x $reps';
+  }
+
+  @override
+  String get backupTitle => 'Backup & Wiederherstellung';
+
+  @override
+  String get backupIntro =>
+      'Eine Datei mit allem aus Gymfy – Trainings, Pläne, Übungen, Körpermaße, Mahlzeiten, Einstellungen und Fortschrittsfotos. Stell sie auf diesem oder einem neuen Handy wieder her. Nichts wird irgendwo hochgeladen.';
+
+  @override
+  String get backupSectionBackUp => 'Sichern';
+
+  @override
+  String get backupSaveTitle => 'Backup speichern';
+
+  @override
+  String backupSaveMessage(String extension) {
+    return 'Speichert eine .$extension-Datei, wo du willst. Bewahr eine Kopie woanders als auf diesem Handy auf.';
+  }
+
+  @override
+  String get backupSaveButton => 'Backup speichern';
+
+  @override
+  String get backupSectionRestore => 'Wiederherstellen';
+
+  @override
+  String get backupRestoreTitle => 'Aus einem Backup wiederherstellen';
+
+  @override
+  String get backupRestoreMessage =>
+      'Ersetzt alles auf diesem Handy durch den Inhalt des Backups. Bevor sich etwas ändert, siehst du, was drin ist.';
+
+  @override
+  String get backupChooseButton => 'Backup auswählen';
+
+  @override
+  String get backupAutomaticTitle => 'Automatisches Backup';
+
+  @override
+  String get backupSaveDialogTitle => 'Dein Backup speichern';
+
+  @override
+  String backupSaved(String name) {
+    return '$name gespeichert';
+  }
+
+  @override
+  String backupSaveFailed(String error) {
+    return 'Das Backup konnte nicht gespeichert werden.\n$error';
+  }
+
+  @override
+  String get backupFinishWorkoutFirst =>
+      'Beende oder verwirf dein laufendes Training, bevor du wiederherstellst.';
+
+  @override
+  String get backupPickDialogTitle => 'Backup auswählen';
+
+  @override
+  String get backupRestored => 'Backup wiederhergestellt.';
+
+  @override
+  String backupRestoreFailed(String error) {
+    return 'Das Backup konnte nicht wiederhergestellt werden.\n$error';
+  }
+
+  @override
+  String get backupFolderPickerTitle => 'Ordner für Backups';
+
+  @override
+  String get backupCantWriteTitle => 'Gymfy kann dort nicht speichern';
+
+  @override
+  String backupCantWriteMessage(String folder) {
+    return 'Android lässt Gymfy nur in bestimmte Ordner speichern. Versuch einen Ordner in Documents oder Download – oder nimm Gymfys eigenen Ordner, der immer funktioniert, aber beim Deinstallieren der App gelöscht wird:\n\n$folder';
+  }
+
+  @override
+  String get backupUseAppFolder => 'Gymfys Ordner nutzen';
+
+  @override
+  String backupFolderFailed(String problem) {
+    return 'Auch dieser Ordner lässt sich nicht nutzen.\n$problem';
+  }
+
+  @override
+  String backupFolderSet(String path) {
+    return 'Backups werden in $path gespeichert';
+  }
+
+  @override
+  String get backupReplaceTitle => 'Alles ersetzen?';
+
+  @override
+  String backupReplaceMessage(String date, int workouts, int sets, int photos) {
+    String _temp0 = intl.Intl.pluralLogic(
+      workouts,
+      locale: localeName,
+      other: '$workouts Trainings',
+      one: '1 Training',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      sets,
+      locale: localeName,
+      other: '$sets Sätze',
+      one: '1 Satz',
+    );
+    String _temp2 = intl.Intl.pluralLogic(
+      photos,
+      locale: localeName,
+      other: '$photos Fotos',
+      one: '1 Foto',
+    );
+    return 'Backup vom $date: $_temp0, $_temp1, $_temp2.\n\nAlles, was gerade auf diesem Handy ist, wird dadurch ersetzt. Das lässt sich nicht rückgängig machen – speichere vorher ein Backup, falls du die heutigen Daten noch brauchen könntest.';
+  }
+
+  @override
+  String get backupRestoreButton => 'Wiederherstellen';
+
+  @override
+  String get backupModeWeekly => 'Wöchentlich';
+
+  @override
+  String get backupModeAfterWorkout => 'Nach dem Training';
+
+  @override
+  String get backupNoFolder => 'Kein Ordner gewählt';
+
+  @override
+  String backupLastFailed(String error) {
+    return 'Letztes automatisches Backup fehlgeschlagen: $error';
+  }
+
+  @override
+  String backupLastAt(String date) {
+    return 'Letztes Backup: $date';
+  }
+
+  @override
+  String get backupNoneYet => 'Noch kein automatisches Backup';
+
+  @override
+  String get backupChange => 'Ändern';
+
+  @override
+  String get backupChoose => 'Auswählen';
+
+  @override
+  String get backupNowButton => 'Jetzt in den Ordner sichern';
+
+  @override
+  String backupAutoExplainer(int keep) {
+    return 'Läuft, während Gymfy offen ist – wenn du die App öffnest und eine Woche vergangen ist, oder direkt nachdem du ein Training abgeschlossen hast. Die letzten $keep automatischen Backups werden behalten. Wähl einen Ordner in Documents oder Download; Cloud-Laufwerke und SD-Karten werden nicht unterstützt.';
+  }
+
+  @override
+  String get backupErrorNotBackup => 'Diese Datei ist kein Gymfy-Backup.';
+
+  @override
+  String get backupErrorTooNew =>
+      'Dieses Backup stammt von einer neueren Gymfy-Version. Aktualisiere die App, um es wiederherzustellen.';
+
+  @override
+  String get backupErrorTooOld =>
+      'Dieses Backup stammt von einer Gymfy-Version, die zu alt zum Wiederherstellen ist.';
+
+  @override
+  String backupErrorNoMigration(String version) {
+    return 'Gymfy kann Backups von Version $version noch nicht lesen.';
+  }
+
+  @override
+  String backupErrorDamaged(String detail) {
+    return 'Dieses Backup ist beschädigt und kann nicht gelesen werden ($detail).';
+  }
+
+  @override
+  String get dataExportTitle => 'Daten exportieren';
+
+  @override
+  String get dataExportIntro =>
+      'Speichere eine Kopie von allem, was du geloggt hast. Die Datei landet, wo du willst – nichts wird irgendwo hochgeladen.';
+
+  @override
+  String get dataExportFormatTitle => 'Dateiformat';
+
+  @override
+  String get dataExportCsvTitle => 'Tabelle';
+
+  @override
+  String get dataExportCsvSubtitle =>
+      'Eine Zeile pro Satz, bereit für Excel oder Google Tabellen und für Diagramme, wie du sie magst.';
+
+  @override
+  String get dataExportCsvButton => 'CSV speichern';
+
+  @override
+  String get dataExportJsonTitle => 'Alles';
+
+  @override
+  String get dataExportJsonSubtitle =>
+      'Deine Trainings samt ihren Sätzen, dazu deine Körpermaße und dein Kalorientagebuch.';
+
+  @override
+  String get dataExportJsonButton => 'JSON speichern';
+
+  @override
+  String get dataExportCopyTitle => 'Das ist eine Kopie, kein Backup';
+
+  @override
+  String get dataExportCopyMessage =>
+      'Gymfy kann diese Dateien nicht wieder importieren, und Fortschrittsfotos sind nicht enthalten. Für den Umzug auf ein neues Handy oder eine Kopie zum Wiederherstellen nimm stattdessen ein Backup.';
+
+  @override
+  String get dataExportNoWorkouts =>
+      'Noch keine abgeschlossenen Trainings zum Exportieren.';
+
+  @override
+  String get dataExportNothing =>
+      'Noch nichts geloggt, das sich exportieren ließe.';
+
+  @override
+  String get dataExportSaveDialogTitle => 'Deine Daten speichern';
+
+  @override
+  String dataExportSaved(String name) {
+    return '$name gespeichert';
+  }
+
+  @override
+  String dataExportSaveFailed(String error) {
+    return 'Die Datei konnte nicht gespeichert werden.\n$error';
+  }
+
+  @override
+  String commonListOr(String first, String second) {
+    return '$first oder $second';
+  }
+
+  @override
+  String get importTitle => 'Verlauf importieren';
+
+  @override
+  String get importErrorTitle => 'Diese Datei konnte nicht gelesen werden';
+
+  @override
+  String get importErrorNotText =>
+      'Diese Datei lässt sich nicht als Text lesen. Exportiere sie noch einmal als CSV.';
+
+  @override
+  String importErrorReadFailed(String error) {
+    return 'Die Datei konnte nicht gelesen werden.\n$error';
+  }
+
+  @override
+  String importErrorImportFailed(String error) {
+    return 'Die Datei konnte nicht importiert werden.\n$error';
+  }
+
+  @override
+  String importErrorSplitFailed(String error) {
+    return 'Deine Trainings wurden importiert, aber der Split konnte nicht erstellt werden.\n$error';
+  }
+
+  @override
+  String get importErrorUnclosedQuote =>
+      'In dieser Datei wird ein Anführungszeichen nie geschlossen, deshalb lässt sich der Rest nicht lesen. Vielleicht wurde sie beim Speichern abgeschnitten.';
+
+  @override
+  String get importErrorEmpty => 'Diese Datei ist leer.';
+
+  @override
+  String importErrorNotWorkoutExport(String fields, String headers) {
+    return 'Das sieht nicht nach einem Trainings-Export aus – es fehlt eine Spalte für $fields.\n\nGefundene Spalten: $headers.';
+  }
+
+  @override
+  String get importFieldDate => 'Datum';
+
+  @override
+  String get importFieldExercise => 'Übungsname';
+
+  @override
+  String get importFieldReps => 'Wiederholungen';
+
+  @override
+  String get importFieldWeight => 'Gewicht';
+
+  @override
+  String get importSplitNameDefault => 'Importierter Split';
+
+  @override
+  String importSplitNameFrom(String source) {
+    return '$source-Import';
+  }
+
+  @override
+  String get importChooseFile => 'Datei auswählen';
+
+  @override
+  String get importChooseAnother => 'Andere Datei auswählen';
+
+  @override
+  String get importImporting => 'Wird importiert…';
+
+  @override
+  String get importButton => 'Importieren';
+
+  @override
+  String importButtonWorkouts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Trainings importieren',
+      one: '1 Training importieren',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String importButtonSplit(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Einen Split mit $days Tagen importieren',
+      one: 'Einen Split mit 1 Tag importieren',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String importButtonBoth(int workouts, int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      workouts,
+      locale: localeName,
+      other: '$workouts Trainings',
+      one: '1 Training',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'einen Split mit $days Tagen',
+      one: 'einen Split mit 1 Tag',
+    );
+    return '$_temp0 und $_temp1 importieren';
+  }
+
+  @override
+  String get importExplainerTitle => 'Nimm deinen Verlauf mit';
+
+  @override
+  String get importExplainerMessage =>
+      'Exportiere deine Trainings in der anderen App als CSV-Datei und wähl sie dann hier aus. Hevy und Strong können das beide in ihren Einstellungen.\n\nSpalten werden über ihren Namen zugeordnet, deshalb funktionieren die meisten Exporte ohne jede Einrichtung. Nichts wird überschrieben – ein Import fügt nur hinzu, und wer dieselbe Datei zweimal importiert, bekommt beim zweiten Mal nichts dazu.';
+
+  @override
+  String get importNothingTitle => 'Nichts zu importieren';
+
+  @override
+  String importNothingUnreadableDates(int count, String sample) {
+    return 'Die Datei wurde gelesen, aber $count ihrer Zeilen haben ein Datum, mit dem diese App nichts anfangen kann – das erste ist „$sample“.\n\nSchick diese Zeile weiter, dann kann die App lernen, sie zu lesen.';
+  }
+
+  @override
+  String get importNothingNoSets =>
+      'Die Datei wurde gelesen, aber keine ihrer Zeilen war ein Satz – in keiner Zeile stehen Übungsname, Wiederholungen und Gewicht zusammen.';
+
+  @override
+  String get importPreviewTitle => 'Was in dieser Datei steckt';
+
+  @override
+  String importPreviewSource(String source) {
+    return 'Sieht nach einem $source-Export aus';
+  }
+
+  @override
+  String get importPreviewWorkouts => 'Trainings';
+
+  @override
+  String get importPreviewSets => 'Sätze';
+
+  @override
+  String get importPreviewExercises => 'Übungen';
+
+  @override
+  String get importPreviewFrom => 'Von';
+
+  @override
+  String get importPreviewTo => 'Bis';
+
+  @override
+  String get importAlreadyHere => 'Schon vorhanden';
+
+  @override
+  String importPreviewWillSkip(int count) {
+    return '$count – werden übersprungen';
+  }
+
+  @override
+  String get importPreviewNotSets => 'Zeilen, die keine Sätze waren';
+
+  @override
+  String importPreviewDatesSkipped(int count, String sample) {
+    return '$count Zeilen wurden ausgelassen, weil ihr Datum nicht lesbar war – das erste ist „$sample“. Schick diese Zeile weiter, dann kann die App lernen, sie zu lesen.';
+  }
+
+  @override
+  String get importPreviewAllHere =>
+      'Jedes Training in dieser Datei ist schon auf deinem Handy.';
+
+  @override
+  String importPreviewWillAdd(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Trainings werden hinzugefügt.',
+      one: '1 Training wird hinzugefügt.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String importPreviewNearDuplicates(int count) {
+    return '$count davon beginnen weniger als eine Stunde vor oder nach einem Training, das du schon hast. Wenn du dasselbe Training schon aus einer anderen App importiert hast, kommen diese ein zweites Mal dazu.';
+  }
+
+  @override
+  String get importPlanTitle => 'Einen Split aus dieser Datei erstellen';
+
+  @override
+  String importPlanWillBeCalled(String name) {
+    return 'Heißt dann „$name“';
+  }
+
+  @override
+  String get importPlanExplainer =>
+      'Deine Trainingsnamen werden zu den Tagen eines Splits, jeder mit den Übungen, die du dort wirklich trainierst, und den Sätzen und Wiederholungen, die du bisher machst. Nichts Bestehendes wird geändert – das fügt einen neuen Split hinzu, den du bearbeiten oder löschen kannst.';
+
+  @override
+  String importPlanExists(String name) {
+    return 'Du hast schon einen Split namens „$name“. Wenn du das einschaltest, kommt ein zweiter mit demselben Namen dazu.';
+  }
+
+  @override
+  String get importPlanCreate => 'Split erstellen';
+
+  @override
+  String importPlanDayWorkouts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Trainings',
+      one: '1 Training',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String importPlanDayExercises(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Übungen',
+      one: '1 Übung',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get importUnitTitle => 'In welcher Einheit ist diese Datei?';
+
+  @override
+  String get importUnitMessage =>
+      'Dieser Export nennt keine Einheit, also musst du sie angeben. Eine falsche Wahl verzerrt jedes importierte Gewicht.';
+
+  @override
+  String get importUnitKilograms => 'Kilogramm';
+
+  @override
+  String get importUnitPounds => 'Pfund';
+
+  @override
+  String get importOutcomeTitle => 'Importiert';
+
+  @override
+  String get importOutcomeWorkoutsAdded => 'Hinzugefügte Trainings';
+
+  @override
+  String get importOutcomeSetsAdded => 'Hinzugefügte Sätze';
+
+  @override
+  String importOutcomeSkipped(int count) {
+    return '$count – übersprungen';
+  }
+
+  @override
+  String get importOutcomeSplitCreated => 'Erstellter Split';
+
+  @override
+  String get importOutcomeDays => 'Tage';
+
+  @override
+  String importOutcomeDaysValue(int days, int exercises) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days Tage',
+      one: '1 Tag',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      exercises,
+      locale: localeName,
+      other: '$exercises Übungen',
+      one: '1 Übung',
+    );
+    return '$_temp0 mit $_temp1';
+  }
+
+  @override
+  String get importOutcomeFindSplit =>
+      'Du findest ihn unter Training → Splits. Seine Tage liegen schon auf den Wochentagen, an denen du sie trainiert hast – öffne einen Tag, um das zu ändern oder einen nachzutragen, bei dem der Verlauf nicht eindeutig war.';
+
+  @override
+  String importOutcomeNewExercises(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count Übungen waren neu und wurden deiner Bibliothek hinzugefügt. Ihnen sind noch keine Muskeln zugeordnet, deshalb erscheinen sie erst auf der Muskelkarte, wenn du sie bearbeitest.',
+      one:
+          '1 Übung war neu und wurde deiner Bibliothek hinzugefügt. Ihr sind noch keine Muskeln zugeordnet, deshalb erscheint sie erst auf der Muskelkarte, wenn du sie bearbeitest.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get importUntitledWorkout => 'Importiertes Training';
 }

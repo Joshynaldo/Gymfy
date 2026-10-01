@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/utils/dates.dart';
 import '../../../shared/utils/format.dart';
 import '../data/photo_repository.dart';
@@ -31,15 +32,16 @@ class _ProgressPhotosScreenState extends ConsumerState<ProgressPhotosScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final photosAsync = ref.watch(progressPhotosProvider);
 
     return GlassScaffold(
       appBar: GlassAppBar(
-        title: const Text('Progress photos'),
+        title: Text(l10n.progressPhotosTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.compare),
-            tooltip: 'Compare',
+            tooltip: l10n.progressPhotosCompareTooltip,
             onPressed: () => context.go('/progress/photos/compare'),
           ),
         ],
@@ -50,7 +52,7 @@ class _ProgressPhotosScreenState extends ConsumerState<ProgressPhotosScreen> {
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              'Could not load photos.\n$error',
+              l10n.progressPhotosLoadFailed('$error'),
               textAlign: TextAlign.center,
             ),
           ),
@@ -77,7 +79,7 @@ class _ProgressPhotosScreenState extends ConsumerState<ProgressPhotosScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _busy ? null : _addPhoto,
         icon: const Icon(Icons.add_a_photo),
-        label: const Text('Add photo'),
+        label: Text(l10n.progressPhotosAdd),
       ),
     );
   }
@@ -169,7 +171,7 @@ class _PhotoTile extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      formatShortDate(item.photo.date),
+                      formatShortDate(item.photo.date, l10n: context.l10n),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -206,7 +208,9 @@ class _PhotoViewer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final note = item.photo.note;
+    final day = formatDayLabel(item.photo.date, l10n: l10n);
 
     return Dialog.fullscreen(
       backgroundColor: Colors.black,
@@ -223,14 +227,12 @@ class _PhotoViewer extends StatelessWidget {
               children: [
                 IconButton(
                   icon: const Icon(Icons.close, color: Colors.white),
-                  tooltip: 'Close',
+                  tooltip: l10n.progressPhotosClose,
                   onPressed: () => Navigator.of(context).pop(),
                 ),
                 Expanded(
                   child: Text(
-                    note == null || note.isEmpty
-                        ? formatDayLabel(item.photo.date)
-                        : '${formatDayLabel(item.photo.date)} • $note',
+                    note == null || note.isEmpty ? day : '$day • $note',
                     style: theme.textTheme.titleSmall?.copyWith(
                       color: Colors.white,
                     ),
@@ -238,7 +240,7 @@ class _PhotoViewer extends StatelessWidget {
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete_outline, color: Colors.white),
-                  tooltip: 'Delete photo',
+                  tooltip: l10n.progressPhotosDeleteTooltip,
                   onPressed: () => _confirmDelete(context),
                 ),
               ],
@@ -253,19 +255,16 @@ class _PhotoViewer extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => GlassDialog(
-        title: const Text('Delete photo?'),
-        content: const Text(
-          'This removes the photo from Gymfy for good. The original in your '
-          'gallery is untouched.',
-        ),
+        title: Text(context.l10n.progressPhotosDeleteTitle),
+        content: Text(context.l10n.progressPhotosDeleteMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete'),
+            child: Text(context.l10n.commonDelete),
           ),
         ],
       ),
@@ -307,10 +306,11 @@ class _PhotoDetailsDialogState extends State<_PhotoDetailsDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final note = _note.text.trim();
 
     return GlassDialog(
-      title: const Text('Add photo'),
+      title: Text(l10n.progressPhotosAdd),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -318,7 +318,7 @@ class _PhotoDetailsDialogState extends State<_PhotoDetailsDialog> {
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.event),
-            title: Text(formatDayLabel(_day)),
+            title: Text(formatDayLabel(_day, l10n: l10n)),
             trailing: const Icon(Icons.edit_calendar_outlined),
             onTap: _pickDate,
           ),
@@ -326,9 +326,9 @@ class _PhotoDetailsDialogState extends State<_PhotoDetailsDialog> {
             controller: _note,
             textCapitalization: TextCapitalization.sentences,
             maxLength: 60,
-            decoration: const InputDecoration(
-              labelText: 'Note (optional)',
-              hintText: 'e.g. front relaxed',
+            decoration: InputDecoration(
+              labelText: l10n.progressPhotosNoteLabel,
+              hintText: l10n.progressPhotosNoteHint,
             ),
           ),
         ],
@@ -336,13 +336,13 @@ class _PhotoDetailsDialogState extends State<_PhotoDetailsDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.commonCancel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(
             context,
           ).pop((day: _day, note: note.isEmpty ? null : note)),
-          child: const Text('Save'),
+          child: Text(l10n.commonSave),
         ),
       ],
     );
@@ -368,11 +368,13 @@ class _EmptyState extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 16),
-            Text('No photos yet', style: theme.textTheme.titleLarge),
+            Text(
+              context.l10n.progressPhotosEmptyTitle,
+              style: theme.textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
             Text(
-              'Add a photo from your gallery and Gymfy keeps its own copy, so '
-              'your progress shots stay put even if you clear your gallery.',
+              context.l10n.progressPhotosEmptyMessage,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
             ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/widgets/chart_style.dart';
 import '../../../shared/utils/units.dart';
@@ -21,6 +22,7 @@ class ExerciseProgressChart extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
     final unit = ref.watch(weightUnitProvider);
 
@@ -86,7 +88,7 @@ class ExerciseProgressChart extends ConsumerWidget {
                   // sits there ambiguously between a weight and a duration.
                   holds
                       ? formatSetDuration(value.round())
-                      : formatWeight(value),
+                      : formatWeight(value, l10n: l10n),
                   style: chartLabelStyle(context),
                 ),
               ),
@@ -108,7 +110,7 @@ class ExerciseProgressChart extends ConsumerWidget {
                 return Padding(
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
-                    formatShortDate(points[i].date),
+                    formatShortDate(points[i].date, l10n: l10n),
                     style: chartLabelStyle(context),
                   ),
                 );
@@ -123,9 +125,10 @@ class ExerciseProgressChart extends ConsumerWidget {
               final p = points[spot.x.round()];
               final headline = holds
                   ? formatSetDuration(p.longestHold ?? 0)
-                  : '${formatWeightUnit(p.topWeight, unit)} × ${p.repsAtTop}';
+                  : '${formatWeightUnit(p.topWeight, unit, l10n: l10n)} '
+                        '× ${p.repsAtTop}';
               return LineTooltipItem(
-                '$headline\n${formatShortDate(p.date)}',
+                '$headline\n${formatShortDate(p.date, l10n: l10n)}',
                 TextStyle(
                   color: theme.colorScheme.onInverseSurface,
                   fontWeight: FontWeight.w600,

@@ -22,6 +22,7 @@
 // every one of those sources, so they count everywhere without a special
 // case.
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/utils/dates.dart';
 import '../../../shared/utils/format.dart';
 import '../../home/data/activity_repository.dart' show DayTraining;
@@ -72,15 +73,23 @@ class ReviewPeriod {
   /// Whether [today] is inside it — the review of a period still running.
   bool isCurrent(DateTime today) => contains(today);
 
-  /// "September 2026" or "2026".
-  String get label => switch (span) {
-    ReviewSpan.month => formatMonthYear(start),
+  /// "September 2026" or "2026". On screen use [localizedLabel].
+  String get label => localizedLabel(null);
+
+  /// "September" or "2026" — enough to say what a comparison is against. On
+  /// screen use [localizedShortLabel].
+  String get shortLabel => localizedShortLabel(null);
+
+  /// [label] in [l10n]'s language: "September 2026" in German too, "Oktober
+  /// 2026" a month later. English without it.
+  String localizedLabel(AppLocalizations? l10n) => switch (span) {
+    ReviewSpan.month => formatMonthYear(start, l10n: l10n),
     ReviewSpan.year => '${start.year}',
   };
 
-  /// "September" or "2026" — enough to say what a comparison is against.
-  String get shortLabel => switch (span) {
-    ReviewSpan.month => formatMonthName(start),
+  /// [shortLabel] in [l10n]'s language.
+  String localizedShortLabel(AppLocalizations? l10n) => switch (span) {
+    ReviewSpan.month => formatMonthName(start, l10n: l10n),
     ReviewSpan.year => '${start.year}',
   };
 
