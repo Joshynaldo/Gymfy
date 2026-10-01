@@ -26,6 +26,7 @@ import 'package:gymfy/features/workout/screens/active_workout_screen.dart';
 import 'package:gymfy/shared/database/app_database.dart' hide RestTimer;
 
 import 'support/default_accent.dart';
+import 'support/session_entries.dart';
 
 const _sessionId = 1;
 const _dayId = 10;
@@ -151,8 +152,8 @@ void main() {
           sessionSetsProvider.overrideWith(
             (ref, id) => Stream.value(const <LoggedSet>[]),
           ),
-          dayExercisesProvider.overrideWith(
-            (ref, dayId) => Stream.value([_planned]),
+          sessionExercisesProvider.overrideWith(
+            (ref, id) => Stream.value(sessionEntriesFor([_planned])),
           ),
           overloadSuggestionProvider.overrideWith((ref, key) async => null),
           restTimerProvider.overrideWith(_SilentTimer.new),

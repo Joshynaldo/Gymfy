@@ -17,6 +17,7 @@ import 'package:gymfy/shared/data/settings_repository.dart';
 import 'package:gymfy/shared/database/app_database.dart';
 
 import 'support/default_accent.dart';
+import 'support/session_entries.dart';
 
 const _sessionId = 1;
 const _dayId = 10;
@@ -146,8 +147,8 @@ void main() {
           sessionRepositoryProvider.overrideWithValue(sessions),
           sessionProvider.overrideWith((ref, id) => Stream.value(_session)),
           sessionSetsProvider.overrideWith((ref, id) => Stream.value(today)),
-          dayExercisesProvider.overrideWith(
-            (ref, dayId) => Stream.value([_planned]),
+          sessionExercisesProvider.overrideWith(
+            (ref, id) => Stream.value(sessionEntriesFor([_planned])),
           ),
           overloadSuggestionProvider.overrideWith((ref, key) async => null),
         ],

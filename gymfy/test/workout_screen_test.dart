@@ -200,4 +200,26 @@ void main() {
 
     expect(find.widgetWithText(AppButton, 'Add day'), findsOneWidget);
   });
+
+  group('an empty workout', () {
+    testWidgets('can be started from the app bar', (tester) async {
+      await _pumpTab(tester, splits: [_ppl], active: _ppl);
+
+      expect(find.byTooltip('Start empty workout'), findsOneWidget);
+    });
+
+    testWidgets('even with no active split', (tester) async {
+      await _pumpTab(tester, splits: [_upperLower], active: null);
+
+      expect(find.byTooltip('Start empty workout'), findsOneWidget);
+    });
+
+    testWidgets('and is offered before the first split exists', (tester) async {
+      // A plan is how most sessions start, not a requirement for logging one.
+      await _pumpTab(tester, splits: const [], active: null);
+
+      expect(find.byTooltip('Start empty workout'), findsOneWidget);
+      expect(find.text('Or start an empty workout'), findsOneWidget);
+    });
+  });
 }

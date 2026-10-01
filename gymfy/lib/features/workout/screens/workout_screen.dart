@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/accent_color.dart';
 import '../../../shared/database/app_database.dart';
 import '../data/workout_repository.dart';
+import '../widgets/free_workout.dart';
 import '../widgets/split_day_list.dart';
 import 'split_days_screen.dart' show addDayTo;
 import 'split_list_screen.dart' show createSplit;
@@ -56,9 +57,14 @@ class WorkoutScreen extends ConsumerWidget {
 
     if (splits.isEmpty) {
       return GlassScaffold(
-        appBar: GlassAppBar(title: const Text('Workout')),
-        body: (context) =>
-            _NoSplitsYet(onCreate: () => createSplit(context, ref)),
+        appBar: GlassAppBar(
+          title: const Text('Workout'),
+          actions: const [_FreeWorkoutAction()],
+        ),
+        body: (context) => _NoSplitsYet(
+          onCreate: () => createSplit(context, ref),
+          onFreeWorkout: () => startFreeWorkout(context, ref),
+        ),
       );
     }
 
@@ -69,7 +75,10 @@ class WorkoutScreen extends ConsumerWidget {
       return GlassScaffold(
         appBar: GlassAppBar(
           title: const Text('Workout'),
-          actions: [_SwitcherAction(splits: splits, activeId: null)],
+          actions: [
+            const _FreeWorkoutAction(),
+            _SwitcherAction(splits: splits, activeId: null),
+          ],
         ),
         body: (context) => _NoActiveSplit(
           onChoose: () => _openSwitcher(context, ref, splits, null),
@@ -80,7 +89,10 @@ class WorkoutScreen extends ConsumerWidget {
     return GlassScaffold(
       appBar: GlassAppBar(
         title: Text(active.name),
-        actions: [_SwitcherAction(splits: splits, activeId: active.id)],
+        actions: [
+          const _FreeWorkoutAction(),
+          _SwitcherAction(splits: splits, activeId: active.id),
+        ],
       ),
       body: (context) => SplitDayList(splitId: active.id),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
@@ -90,6 +102,24 @@ class WorkoutScreen extends ConsumerWidget {
         expand: false,
         onPressed: () => addDayTo(context, ref, active.id),
       ),
+    );
+  }
+}
+
+/// The app bar button that starts a free workout — training without a planned
+/// day, adding exercises as you go.
+///
+/// In the app bar of every state of the tab, including "no splits yet": a
+/// plan is how most sessions start, not a requirement for logging one.
+class _FreeWorkoutAction extends ConsumerWidget {
+  const _FreeWorkoutAction();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return IconButton(
+      icon: const Icon(Icons.bolt_outlined),
+      tooltip: 'Start empty workout',
+      onPressed: () => startFreeWorkout(context, ref),
     );
   }
 }
@@ -230,9 +260,10 @@ class _SwitcherSheet extends ConsumerWidget {
 
 /// Shown the very first time the tab is opened, before any split exists.
 class _NoSplitsYet extends StatelessWidget {
-  const _NoSplitsYet({required this.onCreate});
+  const _NoSplitsYet({required this.onCreate, required this.onFreeWorkout});
 
   final VoidCallback onCreate;
+  final VoidCallback onFreeWorkout;
 
   @override
   Widget build(BuildContext context) {
@@ -262,6 +293,13 @@ class _NoSplitsYet extends StatelessWidget {
               onPressed: onCreate,
               icon: const Icon(Icons.add),
               label: const Text('New split'),
+            ),
+            const SizedBox(height: 8),
+            // Second, and quieter: someone opening the app for the first time
+            // at the gym wants to log today's session before planning a week.
+            TextButton(
+              onPressed: onFreeWorkout,
+              child: const Text('Or start an empty workout'),
             ),
           ],
         ),

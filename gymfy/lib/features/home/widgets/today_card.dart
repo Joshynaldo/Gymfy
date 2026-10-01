@@ -9,6 +9,7 @@ import '../../../shared/utils/format.dart';
 import '../../../shared/utils/weekday.dart';
 import '../../workout/data/session_repository.dart';
 import '../../workout/data/workout_repository.dart';
+import '../../workout/widgets/free_workout.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../app/theme/motion.dart';
@@ -56,6 +57,7 @@ class TodayCard extends ConsumerWidget {
           message: 'Pick the programme you are following to plan your week.',
           actionLabel: 'Choose a split',
           onAction: () => context.go('/workout'),
+          footer: const _FreeWorkoutFooter(),
         ),
       ),
       _ when day == null => (
@@ -65,6 +67,7 @@ class TodayCard extends ConsumerWidget {
           icon: Icons.bedtime_outlined,
           title: 'Rest day',
           message: 'Nothing scheduled in ${activeSplit.name}.',
+          footer: const _FreeWorkoutFooter(),
         ),
       ),
       _ => (
@@ -214,6 +217,7 @@ class _MessageCard extends StatelessWidget {
     required this.message,
     this.actionLabel,
     this.onAction,
+    this.footer,
   });
 
   final int weekday;
@@ -222,6 +226,9 @@ class _MessageCard extends StatelessWidget {
   final String message;
   final String? actionLabel;
   final VoidCallback? onAction;
+
+  /// Shown under everything else, full width.
+  final Widget? footer;
 
   @override
   Widget build(BuildContext context) {
@@ -259,8 +266,40 @@ class _MessageCard extends StatelessWidget {
               ),
             ),
           ],
+          if (footer != null) ...[const SizedBox(height: 16), footer!],
         ],
       ),
+    );
+  }
+}
+
+/// The way to train on a day the plan has nothing for: start a free workout,
+/// or resume the one already running.
+///
+/// Resume wins for the same reason it does on the workout card — two live
+/// sessions would split one workout's sets across both — and because a free
+/// workout started on a rest day would otherwise have no way back from Home.
+class _FreeWorkoutFooter extends ConsumerWidget {
+  const _FreeWorkoutFooter();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final running = ref.watch(inProgressSessionProvider).value;
+
+    if (running != null) {
+      return AppButton(
+        label: 'Resume ${running.name}',
+        icon: Icons.play_arrow,
+        onPressed: () => context.go('/workout/session/${running.id}'),
+      );
+    }
+    return AppButton(
+      label: 'Start empty workout',
+      icon: Icons.bolt_outlined,
+      // Secondary: on a rest day, resting is the plan. This is for the day
+      // you train anyway, and it should not shout over the message above.
+      kind: AppButtonKind.secondary,
+      onPressed: () => startFreeWorkout(context, ref),
     );
   }
 }

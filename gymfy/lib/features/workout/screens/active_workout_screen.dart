@@ -32,16 +32,19 @@ import '../data/personal_records.dart';
 import '../data/rest_timer_controller.dart';
 import '../data/rest_timer_repository.dart';
 import '../data/session_repository.dart';
-import '../data/workout_repository.dart';
+import '../data/supersets.dart';
 import '../widgets/log_set_sheet.dart';
 import '../widgets/record_celebration.dart';
 import '../widgets/rest_timer_bar.dart';
+import '../widgets/session_exercise_actions.dart';
 import '../widgets/warmup_calculator_sheet.dart';
 
 /// The live workout screen: log sets exercise by exercise while you train.
 ///
-/// The exercise list comes from the session's planned day (so you see your
-/// targets), while the sets you log are saved against the session itself.
+/// The exercise list is the session's own running order — copied from the
+/// planned day when it started (so you see your targets), empty for a free
+/// workout, and editable as you go — while the sets you log are saved against
+/// the session itself.
 class ActiveWorkoutScreen extends ConsumerWidget {
   const ActiveWorkoutScreen({super.key, required this.sessionId});
 
@@ -102,8 +105,10 @@ class _ActiveWorkoutView extends ConsumerStatefulWidget {
 class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
   /// The exercise you picked by hand, if you picked one.
   ///
-  /// Held by id rather than by index: the day's plan can change underneath a
-  /// running session, and an index would then point at a different movement.
+  /// Held by id rather than by index: the running order can be added to,
+  /// swapped and reordered mid-session, and an index would then point at a
+  /// different movement. (A lift appears once per session, so the id is
+  /// enough.)
   String? _picked;
 
   /// The record being celebrated, if a set just beat one. See [_celebrate].
@@ -119,11 +124,8 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
   @override
   Widget build(BuildContext context) {
     final session = widget.session;
-    final dayId = session.dayId;
-    final planned = dayId == null
-        ? const <PlannedExercise>[]
-        : (ref.watch(dayExercisesProvider(dayId)).value ??
-              const <PlannedExercise>[]);
+    final entriesAsync = ref.watch(sessionExercisesProvider(session.id));
+    final planned = entriesAsync.value ?? const <SessionExerciseEntry>[];
     final sets =
         ref.watch(sessionSetsProvider(session.id)).value ?? const <LoggedSet>[];
 
@@ -158,7 +160,14 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
         ],
       ),
       body: (context) => planned.isEmpty
-          ? const _EmptyState()
+          // Nothing until the list has loaded, rather than flashing the empty
+          // state at a workout that has exercises.
+          ? (entriesAsync.hasValue
+                ? _EmptyState(
+                    isFree: session.dayId == null,
+                    onAdd: () => _addExercises(context, planned),
+                  )
+                : const SizedBox.shrink())
           : Stack(
               children: [
                 ListView(
@@ -178,13 +187,32 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
                       _CurrentExerciseCard(
                         key: ValueKey(current.exercise.id),
                         planned: current,
+                        supersetPartners: _partnersOf(planned, current),
                         loggedSets:
                             setsByExercise[current.exercise.id] ?? const [],
                         onLog: (type) => _log(context, current, type: type),
                         onWarmupCalculator: () =>
                             _openWarmupCalculator(context, current),
+                        onMore: () => _exerciseActions(
+                          context,
+                          current,
+                          planned,
+                          hasSets: setsByExercise.containsKey(
+                            current.exercise.id,
+                          ),
+                        ),
                       ),
                     ..._upNext(planned, current, setsByExercise),
+                    const SizedBox(height: 16),
+                    // At the foot of the list, where you look once the plan
+                    // runs out — and the only control a free workout starts
+                    // with, so it has to be findable without a menu.
+                    AppButton(
+                      label: 'Add exercise',
+                      icon: Icons.add,
+                      kind: AppButtonKind.secondary,
+                      onPressed: () => _addExercises(context, planned),
+                    ),
                   ],
                 ),
                 // Floating rather than in the flow: this is the one pane on the
@@ -243,8 +271,8 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
   /// Your pick if you made one, otherwise the first exercise still short of its
   /// planned working sets — which is where you are on any day you work through
   /// the plan in order.
-  PlannedExercise? _current(
-    List<PlannedExercise> planned,
+  SessionExerciseEntry? _current(
+    List<SessionExerciseEntry> planned,
     Map<String, List<LoggedSet>> setsByExercise,
   ) {
     if (planned.isEmpty) return null;
@@ -254,40 +282,200 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
       }
     }
     for (final entry in planned) {
-      final done = (setsByExercise[entry.exercise.id] ?? const [])
-          .where((s) => !s.isWarmup)
-          .length;
-      if (done < entry.entry.defaultSets) return entry;
+      if (_shortOfTarget(entry, setsByExercise)) return entry;
     }
     return planned.last;
   }
 
-  List<Widget> _upNext(
-    List<PlannedExercise> planned,
-    PlannedExercise? current,
+  /// Whether [entry] still has planned working sets to do.
+  static bool _shortOfTarget(
+    SessionExerciseEntry entry,
     Map<String, List<LoggedSet>> setsByExercise,
   ) {
-    final rest = planned
-        .where((p) => p.exercise.id != current?.exercise.id)
-        .toList();
-    if (rest.isEmpty) return const [];
+    final done = (setsByExercise[entry.exercise.id] ?? const [])
+        .where((s) => !s.isWarmup)
+        .length;
+    return done < entry.targets.defaultSets;
+  }
+
+  /// The other exercises in [entry]'s superset, in order. Empty when it
+  /// stands alone.
+  static List<SessionExerciseEntry> _partnersOf(
+    List<SessionExerciseEntry> planned,
+    SessionExerciseEntry entry,
+  ) {
+    for (final block in supersetBlocks(planned, (e) => e.supersetGroup)) {
+      if (block.contains(entry)) {
+        return [
+          for (final e in block)
+            if (e != entry) e,
+        ];
+      }
+    }
+    return const [];
+  }
+
+  /// Everything but the card, in running order. A superset's members are
+  /// drawn as one group, so you can see what is done back to back before you
+  /// get there.
+  List<Widget> _upNext(
+    List<SessionExerciseEntry> planned,
+    SessionExerciseEntry? current,
+    Map<String, List<LoggedSet>> setsByExercise,
+  ) {
+    if (planned.length < 2) return const [];
+
+    Widget row(SessionExerciseEntry entry) => _UpNextRow(
+      planned: entry,
+      loggedSets: setsByExercise[entry.exercise.id] ?? const [],
+      onTap: () => setState(() => _picked = entry.exercise.id),
+    );
+
+    // One block's rows, minus whatever is on the card. A superset keeps its
+    // grouping even with one member showing, so it still reads as "next, and
+    // straight after the card".
+    List<Widget> rows(List<SessionExerciseEntry> block) {
+      final rest = [
+        for (final e in block)
+          if (e != current) e,
+      ];
+      if (rest.isEmpty) return const [];
+      if (block.length == 1) return [row(rest.single)];
+      return [
+        _SupersetGroup(children: [for (final e in rest) row(e)]),
+      ];
+    }
 
     return [
       const SizedBox(height: 28),
-      const _SectionLabel('UP NEXT'),
-      const SizedBox(height: 12),
-      for (final entry in rest)
-        _UpNextRow(
-          planned: entry,
-          loggedSets: setsByExercise[entry.exercise.id] ?? const [],
-          onTap: () => setState(() => _picked = entry.exercise.id),
-        ),
+      Row(
+        children: [
+          const Expanded(child: _SectionLabel('UP NEXT')),
+          // Beside the list it changes. Tucked behind a menu it would be
+          // undiscoverable; in the app bar it would crowd Finish.
+          TextButton.icon(
+            onPressed: () => reorderSessionExercises(
+              context,
+              ref,
+              sessionId: widget.session.id,
+              entries: planned,
+            ),
+            icon: const Icon(Icons.swap_vert, size: 18),
+            label: const Text('Reorder'),
+          ),
+        ],
+      ),
+      const SizedBox(height: 4),
+      for (final block in supersetBlocks(planned, (e) => e.supersetGroup))
+        ...rows(block),
     ];
+  }
+
+  /// Adds exercises from the picker, and puts the card on the first of them
+  /// when the workout had none to be on.
+  Future<void> _addExercises(
+    BuildContext context,
+    List<SessionExerciseEntry> entries,
+  ) async {
+    final added = await addExercisesToSession(
+      context,
+      ref,
+      sessionId: widget.session.id,
+      entries: entries,
+    );
+    if (added.isNotEmpty && entries.isEmpty && mounted) {
+      setState(() => _picked = added.first);
+    }
+  }
+
+  /// The menu on the card: swap the exercise, or take it out of today's list.
+  Future<void> _exerciseActions(
+    BuildContext context,
+    SessionExerciseEntry entry,
+    List<SessionExerciseEntry> entries, {
+    required bool hasSets,
+  }) async {
+    final action = await showOptionPicker<_EntryAction>(
+      context: context,
+      title: entry.exercise.name,
+      options: [
+        (
+          value: _EntryAction.swap,
+          label: 'Swap exercise',
+          subtitle: 'Do something else in its place',
+        ),
+        // Only offered while nothing is logged for it: the sets you did are
+        // removed with the delete button on each row, not by a list edit.
+        if (!hasSets)
+          (
+            value: _EntryAction.remove,
+            label: 'Remove from workout',
+            subtitle: 'Your plan stays as it is',
+          ),
+      ],
+      selected: null,
+    );
+    if (action == null || !context.mounted) return;
+
+    switch (action) {
+      case _EntryAction.swap:
+        final swapped = await swapSessionExercise(
+          context,
+          ref,
+          entry: entry,
+          entries: entries,
+        );
+        if (swapped != null && mounted) setState(() => _picked = swapped);
+      case _EntryAction.remove:
+        await ref.read(sessionRepositoryProvider).removeExercise(entry.row.id);
+        if (mounted && _picked == entry.exercise.id) {
+          setState(() => _picked = null);
+        }
+    }
+  }
+
+  /// Where the card goes after a set of [entry] that does *not* start the rest
+  /// timer, or after one that does — see the superset branch in [_log].
+  ///
+  /// Mid-superset that is the next member, because you go straight to it.
+  /// After the last member it is back to the first, if that one still has sets
+  /// to do; otherwise wherever the default rule lands.
+  void _advanceSuperset(SessionExerciseEntry entry, {required bool rests}) {
+    final entries =
+        ref.read(sessionExercisesProvider(widget.session.id)).value ??
+        const <SessionExerciseEntry>[];
+    final sets =
+        ref.read(sessionSetsProvider(widget.session.id)).value ??
+        const <LoggedSet>[];
+    final index = entries.indexWhere((e) => e.row.id == entry.row.id);
+    if (index == -1 || !mounted) return;
+
+    if (!rests && index + 1 < entries.length) {
+      setState(() => _picked = entries[index + 1].exercise.id);
+      return;
+    }
+
+    final block = supersetBlocks(
+      entries,
+      (e) => e.supersetGroup,
+    ).firstWhere((b) => b.contains(entries[index]));
+    if (block.length < 2) return;
+
+    final setsByExercise = <String, List<LoggedSet>>{};
+    for (final set in sets) {
+      setsByExercise.putIfAbsent(set.exerciseId, () => []).add(set);
+    }
+    final first = block.first;
+    setState(
+      () => _picked = _shortOfTarget(first, setsByExercise)
+          ? first.exercise.id
+          : null,
+    );
   }
 
   Future<void> _log(
     BuildContext context,
-    PlannedExercise planned, {
+    SessionExerciseEntry planned, {
     required SetType type,
   }) async {
     final isWarmup = type.isWarmupPhase;
@@ -321,7 +509,7 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
         ? null
         : await ref.read(
             overloadSuggestionProvider((
-              entry: planned.entry,
+              entry: planned.targets,
               exercise: planned.exercise,
             )).future,
           );
@@ -335,7 +523,7 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
       exercise: planned.exercise,
       setType: type,
       initialWeight: last?.weight ?? suggestion?.weight ?? 0,
-      initialReps: last?.reps ?? planned.entry.defaultReps,
+      initialReps: last?.reps ?? planned.targets.defaultReps,
       unit: ref.read(weightUnitProvider),
       suggestion: suggestion,
       phaseLabel: isWarmup
@@ -394,6 +582,26 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
       }
     }
 
+    // Mid-superset there is no rest: you go straight to the next exercise of
+    // the group, so the card moves there instead. The rest comes after the
+    // last one, and the card goes back to the top of the group for the next
+    // round.
+    final entries =
+        ref.read(sessionExercisesProvider(widget.session.id)).value ??
+        const <SessionExerciseEntry>[];
+    final rests = restsAfter(
+      entries,
+      // The same entry from the current list: restsAfter matches by identity,
+      // and the list may have been re-read since the card was built.
+      entries.firstWhere(
+        (e) => e.row.id == planned.row.id,
+        orElse: () => planned,
+      ),
+      (e) => e.supersetGroup,
+    );
+    _advanceSuperset(planned, rests: rests);
+    if (!rests) return;
+
     // Logging a set is exactly when rest starts, so the timer needs no button
     // of its own — one less thing to do between sets.
     final exercise = planned.exercise;
@@ -419,7 +627,7 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
   /// weight of the last session, or nothing (the sheet then asks for one).
   Future<void> _openWarmupCalculator(
     BuildContext context,
-    PlannedExercise planned,
+    SessionExerciseEntry planned,
   ) async {
     final exercise = planned.exercise;
     final logged = ref.read(sessionSetsProvider(widget.session.id)).value ?? [];
@@ -431,7 +639,7 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
     if (working <= 0) {
       final suggestion = await ref.read(
         overloadSuggestionProvider((
-          entry: planned.entry,
+          entry: planned.targets,
           exercise: exercise,
         )).future,
       );
@@ -524,12 +732,18 @@ class _CurrentExerciseCard extends ConsumerWidget {
   const _CurrentExerciseCard({
     super.key,
     required this.planned,
+    required this.supersetPartners,
     required this.loggedSets,
     required this.onLog,
     required this.onWarmupCalculator,
+    required this.onMore,
   });
 
-  final PlannedExercise planned;
+  final SessionExerciseEntry planned;
+
+  /// The rest of its superset, in order; empty when it stands alone.
+  final List<SessionExerciseEntry> supersetPartners;
+
   final List<LoggedSet> loggedSets;
 
   /// Takes the set type the pressed button starts the sheet on. The sheet can
@@ -539,11 +753,14 @@ class _CurrentExerciseCard extends ConsumerWidget {
   /// Opens the ramp calculator for this exercise.
   final VoidCallback onWarmupCalculator;
 
+  /// Opens the swap / remove menu.
+  final VoidCallback onMore;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final accent = ref.watch(accentColorProvider);
-    final entry = planned.entry;
+    final entry = planned.targets;
     final exercise = planned.exercise;
     final working = loggedSets.where((s) => !s.isWarmup).length;
 
@@ -587,8 +804,23 @@ class _CurrentExerciseCard extends ConsumerWidget {
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
+              // Swap and remove: things you do to the list, not to a set, so
+              // they sit behind one quiet button rather than beside Log set.
+              SizedBox(
+                width: 32,
+                height: 24,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  iconSize: 20,
+                  icon: const Icon(Icons.more_vert),
+                  tooltip: 'Exercise options',
+                  onPressed: onMore,
+                ),
+              ),
             ],
           ),
+          if (supersetPartners.isNotEmpty)
+            _SupersetLine(partners: supersetPartners, accent: accent),
           _SuggestionLine(planned: planned),
           // The reason the feature exists. A seat height is worth nothing in a
           // library you have to go and find — it is worth something in the
@@ -652,14 +884,14 @@ class _UpNextRow extends StatelessWidget {
     required this.onTap,
   });
 
-  final PlannedExercise planned;
+  final SessionExerciseEntry planned;
   final List<LoggedSet> loggedSets;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final entry = planned.entry;
+    final entry = planned.targets;
     final done = loggedSets.where((s) => !s.isWarmup).length;
 
     return AppCard(
@@ -733,6 +965,93 @@ class _SetDots extends StatelessWidget {
   }
 }
 
+/// What the card's options menu can do to an exercise.
+enum _EntryAction { swap, remove }
+
+/// "Superset with …" under the card's title: what you go to straight after
+/// this set, with no rest in between.
+class _SupersetLine extends StatelessWidget {
+  const _SupersetLine({required this.partners, required this.accent});
+
+  final List<SessionExerciseEntry> partners;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 9),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.link, size: 15, color: accent),
+          const SizedBox(width: 7),
+          Expanded(
+            child: Text(
+              'Superset with '
+              '${partners.map((p) => p.exercise.name).join(' and ')}'
+              ' — rest after the last one',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Up-next rows that belong to one superset, held together by a rule down
+/// their left edge and a label.
+///
+/// A rule rather than a box around them: the rows are already panes, and a
+/// pane around panes is a heavier frame than "these go together" needs.
+class _SupersetGroup extends ConsumerWidget {
+  const _SupersetGroup({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final accent = ref.watch(accentColorProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 6, bottom: 6, top: 2),
+          child: Row(
+            children: [
+              Icon(Icons.link, size: 14, color: accent),
+              const SizedBox(width: 5),
+              Text(
+                'SUPERSET',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1.1,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.only(left: 10),
+          decoration: BoxDecoration(
+            border: Border(
+              left: BorderSide(color: accent.withValues(alpha: 0.55), width: 2),
+            ),
+          ),
+          child: Column(children: children),
+        ),
+      ],
+    );
+  }
+}
+
 /// A caps heading over a run of rows.
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel(this.text);
@@ -765,14 +1084,14 @@ class _WarmupButton extends StatelessWidget {
     required this.onPressed,
   });
 
-  final PlannedExercise planned;
+  final SessionExerciseEntry planned;
   final List<LoggedSet> loggedSets;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final expected = planned.entry.warmupSets;
+    final expected = planned.targets.warmupSets;
     final done = loggedSets.where((s) => s.isWarmup).length;
     final label = done < expected
         ? 'Warm-up ${done + 1} of $expected'
@@ -816,7 +1135,7 @@ class _WarmupButton extends StatelessWidget {
 class _SuggestionLine extends ConsumerWidget {
   const _SuggestionLine({required this.planned});
 
-  final PlannedExercise planned;
+  final SessionExerciseEntry planned;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -825,7 +1144,7 @@ class _SuggestionLine extends ConsumerWidget {
     final suggestion = ref
         .watch(
           overloadSuggestionProvider((
-            entry: planned.entry,
+            entry: planned.targets,
             exercise: planned.exercise,
           )),
         )
@@ -1056,8 +1375,15 @@ class _SetTypeBadge extends StatelessWidget {
   }
 }
 
+/// A workout with nothing in it yet: a free workout just started, or a day
+/// whose plan was empty. Either way the way forward is the same button.
 class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+  const _EmptyState({required this.isFree, required this.onAdd});
+
+  /// True for a free workout, which is *meant* to start empty — so it is
+  /// greeted, not apologised for.
+  final bool isFree;
+  final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -1075,13 +1401,25 @@ class _EmptyState extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 16),
-            Text('Nothing to log', style: theme.textTheme.titleLarge),
+            Text(
+              isFree ? 'Free workout' : 'Nothing to log',
+              style: theme.textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
             Text(
-              'This day has no exercises. Add some to its plan first, then '
-              'start the workout again.',
+              isFree
+                  ? 'Add exercises as you go. Nothing here changes your plan.'
+                  : 'This day has no exercises. Add some for today — your '
+                        'plan stays as it is.',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 24),
+            AppButton(
+              label: 'Add exercise',
+              icon: Icons.add,
+              expand: false,
+              onPressed: onAdd,
             ),
           ],
         ),

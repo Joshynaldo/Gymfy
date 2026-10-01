@@ -204,4 +204,51 @@ void main() {
     expect(find.text('Upper'), findsOneWidget);
     expect(find.text('Push'), findsNothing);
   });
+
+  testWidgets('a rest day still offers an empty workout', (tester) async {
+    // Resting is the plan, but some days you train anyway — and with no day
+    // to start, a free workout is the only way in.
+    final splitId = await repo.createSplit('PPL');
+    final push = await repo.createDay(splitId, 'Push');
+    await repo.assignWeekday(dayId: push, weekday: 1);
+
+    await pump(tester, today: tuesday);
+
+    expect(find.text('Rest day'), findsOneWidget);
+    expect(find.text('Start empty workout'), findsOneWidget);
+  });
+
+  testWidgets('so does having no split at all', (tester) async {
+    await pump(tester, today: monday);
+
+    expect(find.text('Choose a split'), findsOneWidget);
+    expect(find.text('Start empty workout'), findsOneWidget);
+  });
+
+  testWidgets('a free workout left running is resumed from a rest day', (
+    tester,
+  ) async {
+    // Without this, a free workout started on a rest day had no way back from
+    // Home: the resume button only lived on the workout-day card.
+    final splitId = await repo.createSplit('PPL');
+    final push = await repo.createDay(splitId, 'Push');
+    await repo.assignWeekday(dayId: push, weekday: 1);
+    await SessionRepository(db).startFreeSession(name: 'Free workout');
+
+    await pump(tester, today: tuesday);
+
+    expect(find.text('Resume Free workout'), findsOneWidget);
+    expect(find.text('Start empty workout'), findsNothing);
+  });
+
+  testWidgets('and from a scheduled day too', (tester) async {
+    final splitId = await repo.createSplit('PPL');
+    final push = await repo.createDay(splitId, 'Push');
+    await repo.assignWeekday(dayId: push, weekday: 1);
+    await SessionRepository(db).startFreeSession(name: 'Free workout');
+
+    await pump(tester, today: monday);
+
+    expect(find.text('Resume Free workout'), findsOneWidget);
+  });
 }

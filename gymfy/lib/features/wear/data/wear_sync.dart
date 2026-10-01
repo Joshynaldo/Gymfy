@@ -9,6 +9,7 @@ import '../../exercises/data/exercise_repository.dart';
 import '../../workout/data/rest_timer_controller.dart';
 import '../../workout/data/rest_timer_repository.dart';
 import '../../workout/data/session_repository.dart';
+import '../../workout/data/supersets.dart';
 import 'wear_bridge.dart';
 
 part 'wear_sync.g.dart';
@@ -223,12 +224,39 @@ class WearCommands extends _$WearCommands {
     // you actually wanted from the wrist — not having to touch the phone
     // between sets — still needed the phone. A set logged from the watch has
     // to behave like a set logged anywhere else.
-    final exercise = await ref.read(exerciseProvider(last.exerciseId).future);
+    //
+    // Including supersets: mid-superset a set logged on the phone starts no
+    // rest, because you go straight to the next exercise of the group, so a
+    // set repeated from the wrist must not start one either. Read from the
+    // repository rather than a provider, which nothing may be listening to
+    // while the phone is in a pocket.
+    final order = await ref
+        .read(sessionRepositoryProvider)
+        .watchSessionExercises(session.id)
+        .first;
+    final entry = order
+        .where((e) => e.exercise.id == last.exerciseId)
+        .firstOrNull;
+    if (entry != null && !restsAfter(order, entry, (e) => e.supersetGroup)) {
+      return;
+    }
+
+    // The name from the running order when the exercise is in it, and from
+    // the repository otherwise — never a bare read of `exerciseProvider`,
+    // which nothing listens to with the phone in a pocket, so its stream
+    // stays paused and the read never completes (the rest never started).
+    final name =
+        entry?.exercise.name ??
+        (await ref
+                .read(exerciseRepositoryProvider)
+                .watchExercise(last.exerciseId)
+                .first)
+            ?.name;
     await ref
         .read(restTimerProvider.notifier)
         .start(
           exerciseId: last.exerciseId,
-          exerciseName: exercise?.name ?? '',
+          exerciseName: name ?? '',
           seconds: ref.read(restForExerciseProvider(last.exerciseId)),
         );
   }

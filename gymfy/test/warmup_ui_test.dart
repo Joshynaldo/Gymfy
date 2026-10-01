@@ -20,6 +20,7 @@ import 'package:gymfy/features/workout/screens/day_builder_screen.dart';
 import 'package:gymfy/shared/database/app_database.dart';
 
 import 'support/default_accent.dart';
+import 'support/session_entries.dart';
 
 const _sessionId = 1;
 const _dayId = 10;
@@ -130,10 +131,12 @@ void main() {
             sessionRepositoryProvider.overrideWithValue(repository),
             sessionProvider.overrideWith((ref, id) => Stream.value(_session)),
             sessionSetsProvider.overrideWith((ref, id) => Stream.value(sets)),
-            dayExercisesProvider.overrideWith(
-              (ref, dayId) => Stream.value([
-                PlannedExercise(entry: entry, exercise: _bench),
-              ]),
+            sessionExercisesProvider.overrideWith(
+              (ref, id) => Stream.value(
+                sessionEntriesFor([
+                  PlannedExercise(entry: entry, exercise: _bench),
+                ]),
+              ),
             ),
             // No history, so no suggestion — this test is about the phases.
             overloadSuggestionProvider.overrideWith((ref, key) async => null),

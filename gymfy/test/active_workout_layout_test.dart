@@ -22,6 +22,7 @@ import 'package:gymfy/shared/database/app_database.dart';
 import 'package:gymfy/shared/widgets/app_card.dart';
 
 import 'support/default_accent.dart';
+import 'support/session_entries.dart';
 
 const _sessionId = 1;
 const _dayId = 10;
@@ -87,12 +88,14 @@ void main() {
           sessionRepositoryProvider.overrideWithValue(SessionRepository(db)),
           sessionProvider.overrideWith((ref, id) => Stream.value(_session)),
           sessionSetsProvider.overrideWith((ref, id) => Stream.value(sets)),
-          dayExercisesProvider.overrideWith(
-            (ref, dayId) => Stream.value([
-              _planned(_bench, 0),
-              _planned(_incline, 1),
-              _planned(_fly, 2),
-            ]),
+          sessionExercisesProvider.overrideWith(
+            (ref, id) => Stream.value(
+              sessionEntriesFor([
+                _planned(_bench, 0),
+                _planned(_incline, 1),
+                _planned(_fly, 2),
+              ]),
+            ),
           ),
           overloadSuggestionProvider.overrideWith((ref, key) async => null),
         ],

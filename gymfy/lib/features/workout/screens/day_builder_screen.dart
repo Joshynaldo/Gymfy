@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/theme/accent_color.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_chip.dart';
+import '../../../shared/widgets/app_picker.dart';
 import '../../../shared/widgets/exercise_thumbnail.dart';
 import '../../../shared/widgets/number_wheel.dart';
 import '../data/session_repository.dart';
+import '../data/supersets.dart';
 import '../data/workout_repository.dart';
 import 'widgets/exercise_picker.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
@@ -17,7 +20,7 @@ import '../../../shared/widgets/glass_dialog.dart';
 
 /// The day builder: the exercises planned for one day, each with default
 /// sets × reps. You can add exercises from the library, edit their targets,
-/// and remove them.
+/// drag them into order, pair neighbours into supersets, and remove them.
 class DayBuilderScreen extends ConsumerWidget {
   const DayBuilderScreen({super.key, required this.dayId});
 
@@ -47,34 +50,62 @@ class DayBuilderScreen extends ConsumerWidget {
           if (planned.isEmpty) {
             return const _EmptyState();
           }
-          return ListView.separated(
+          // Where each exercise sits within its superset, if it is in one.
+          final blocks = supersetBlocks(planned, (p) => p.entry.supersetGroup);
+          final placeOf = <int, _SupersetPlace>{
+            for (final block in blocks)
+              if (block.length > 1)
+                for (final (i, p) in block.indexed)
+                  p.entry.id: (first: i == 0, last: i == block.length - 1),
+          };
+
+          // Reorderable, with the drag on a handle rather than a long press
+          // on the whole row: a tap on the row already opens its targets, and
+          // a long press that sometimes edits and sometimes drags is a
+          // gesture nobody can predict.
+          return ReorderableListView.builder(
             // It had no padding at all: on a glass theme the list now runs the
             // full height of the screen, so it has to clear the bars itself.
             // The extra at the foot is room for the floating Add button.
             padding: const EdgeInsets.only(bottom: 80) + barInsets(context),
-            // One extra row at the top for the Start button.
-            itemCount: planned.length + 1,
-            // No rule under the Start button: it is not one of the rows.
-            separatorBuilder: (_, index) =>
-                index == 0 ? const SizedBox.shrink() : const Divider(height: 1),
+            buildDefaultDragHandles: false,
+            // At the top, full width, in the accent — the shape the design
+            // gives the one thing a screen is for. It was a text button in
+            // the app bar, which is where you put an action you are not
+            // sure anyone wants; this is the whole point of the screen.
+            header: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: AppButton(
+                label: 'Start workout',
+                icon: Icons.play_arrow,
+                onPressed: () => _startWorkout(context, ref, title),
+              ),
+            ),
+            itemCount: planned.length,
+            onReorderItem: (from, to) {
+              final ids = [for (final p in planned) p.entry.id];
+              ids.insert(to, ids.removeAt(from));
+              ref
+                  .read(workoutRepositoryProvider)
+                  .reorderDayExercises(dayId, ids);
+            },
             itemBuilder: (context, index) {
-              if (index == 0) {
-                // At the top, full width, in the accent — the shape the design
-                // gives the one thing a screen is for. It was a text button in
-                // the app bar, which is where you put an action you are not
-                // sure anyone wants; this is the whole point of the screen.
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                  child: AppButton(
-                    label: 'Start workout',
-                    icon: Icons.play_arrow,
-                    onPressed: () => _startWorkout(context, ref, title),
-                  ),
-                );
-              }
+              final item = planned[index];
               return _PlannedExerciseTile(
-                planned: planned[index - 1],
+                key: ValueKey(item.entry.id),
+                index: index,
+                planned: item,
                 dayExercises: planned.length,
+                superset: placeOf[item.entry.id],
+                hasPrevious: index > 0,
+                hasNext: index < planned.length - 1,
+                linkedToPrevious:
+                    index > 0 &&
+                    placeOf.containsKey(item.entry.id) &&
+                    !placeOf[item.entry.id]!.first,
+                linkedToNext:
+                    placeOf.containsKey(item.entry.id) &&
+                    !placeOf[item.entry.id]!.last,
               );
             },
           );
@@ -125,11 +156,27 @@ class DayBuilderScreen extends ConsumerWidget {
   }
 }
 
+/// Where an exercise sits in its superset.
+typedef _SupersetPlace = ({bool first, bool last});
+
+/// What the superset button on a row can do.
+enum _SupersetAction { withPrevious, withNext, leave }
+
 class _PlannedExerciseTile extends ConsumerWidget {
   const _PlannedExerciseTile({
+    super.key,
+    required this.index,
     required this.planned,
     required this.dayExercises,
+    required this.superset,
+    required this.hasPrevious,
+    required this.hasNext,
+    required this.linkedToPrevious,
+    required this.linkedToNext,
   });
+
+  /// Position in the list, which the drag handle reports.
+  final int index;
 
   final PlannedExercise planned;
 
@@ -138,12 +185,27 @@ class _PlannedExerciseTile extends ConsumerWidget {
   /// and a per-row watch would be the same query once per row.
   final int dayExercises;
 
+  /// Null when the exercise stands alone.
+  final _SupersetPlace? superset;
+
+  final bool hasPrevious;
+  final bool hasNext;
+
+  /// Already in one superset with the exercise above / below.
+  final bool linkedToPrevious;
+  final bool linkedToNext;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final accent = ref.watch(accentColorProvider);
     final entry = planned.entry;
     final exercise = planned.exercise;
+    final place = superset;
+    final canLink =
+        (hasPrevious && !linkedToPrevious) || (hasNext && !linkedToNext);
 
-    return ListTile(
+    final tile = ListTile(
       leading: ExerciseThumbnail(gifPath: exercise.gifPath),
       title: Text(exercise.name),
       subtitle: Text(
@@ -158,14 +220,122 @@ class _PlannedExerciseTile extends ConsumerWidget {
                 : '${entry.warmupSets} warm-ups',
         ].join(' • '),
       ),
-      trailing: IconButton(
-        icon: const Icon(Icons.delete_outline),
-        tooltip: 'Remove exercise',
-        onPressed: () =>
-            ref.read(workoutRepositoryProvider).removePlannedExercise(entry.id),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Hidden on a one-exercise day, where there is nothing to pair with.
+          if (canLink || place != null)
+            IconButton(
+              icon: Icon(Icons.link, color: place != null ? accent : null),
+              tooltip: 'Superset',
+              visualDensity: VisualDensity.compact,
+              onPressed: () => _editSuperset(context, ref),
+            ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            tooltip: 'Remove exercise',
+            visualDensity: VisualDensity.compact,
+            onPressed: () => ref
+                .read(workoutRepositoryProvider)
+                .removePlannedExercise(entry.id),
+          ),
+          ReorderableDragStartListener(
+            index: index,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: Icon(
+                Icons.drag_handle,
+                semanticLabel: 'Drag to reorder',
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
       ),
       onTap: () => _editSetsReps(context, ref),
     );
+
+    // A superset's rows share a rule down their left edge and a label over
+    // the first, and lose the divider between them — the same "these go
+    // together" the active workout draws, so a plan and the session it
+    // becomes look alike.
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (place != null && place.first)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+            child: Row(
+              children: [
+                Icon(Icons.link, size: 14, color: accent),
+                const SizedBox(width: 5),
+                Text(
+                  'SUPERSET · REST AFTER THE LAST',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        if (place == null)
+          tile
+        else
+          Container(
+            margin: const EdgeInsets.only(left: 12),
+            decoration: BoxDecoration(
+              border: Border(
+                left: BorderSide(
+                  color: accent.withValues(alpha: 0.55),
+                  width: 2,
+                ),
+              ),
+            ),
+            child: tile,
+          ),
+        if (hasNext && !linkedToNext) const Divider(height: 1),
+      ],
+    );
+  }
+
+  /// Offers the superset edits that make sense for this row.
+  Future<void> _editSuperset(BuildContext context, WidgetRef ref) async {
+    final action = await showOptionPicker<_SupersetAction>(
+      context: context,
+      title: 'Superset',
+      options: [
+        if (hasPrevious && !linkedToPrevious)
+          (
+            value: _SupersetAction.withPrevious,
+            label: 'Superset with the exercise above',
+            subtitle: null,
+          ),
+        if (hasNext && !linkedToNext)
+          (
+            value: _SupersetAction.withNext,
+            label: 'Superset with the exercise below',
+            subtitle: null,
+          ),
+        if (superset != null)
+          (
+            value: _SupersetAction.leave,
+            label: 'Remove from superset',
+            subtitle: null,
+          ),
+      ],
+      selected: null,
+    );
+    if (action == null) return;
+
+    final repository = ref.read(workoutRepositoryProvider);
+    final id = planned.entry.id;
+    await switch (action) {
+      _SupersetAction.withPrevious => repository.supersetWithPrevious(id),
+      _SupersetAction.withNext => repository.supersetWithNext(id),
+      _SupersetAction.leave => repository.leaveSuperset(id),
+    };
   }
 
   Future<void> _editSetsReps(BuildContext context, WidgetRef ref) async {
