@@ -36,7 +36,7 @@ void main() {
       // Seed data declares `.gif` for every exercise, but what ships is an
       // animated WebP — the same loop at a sixteenth of the size. Resolving
       // the extension at load is what lets that choice change without
-      // rewriting 78 seed entries.
+      // rewriting every seed entry.
       expect(previewCandidates('assets/exercises/squat.gif'), [
         'assets/exercises/squat.webp',
         'assets/exercises/squat.gif',
@@ -67,7 +67,7 @@ void main() {
     });
 
     test('each one is a real animated image, not an error page', () {
-      // These are fetched over HTTP by tool/fetch_exercise_gifs.dart. A 404
+      // These are fetched over HTTP by tool/sync_exercise_db.dart. A 404
       // body or a truncated download writes a file that exists, has a
       // plausible size, and renders as nothing.
       for (final entry in bundled().entries) {
@@ -101,10 +101,10 @@ void main() {
 
     test('stays within the size budget', () {
       // All of it lands in the download; there is no server to stream from.
-      // 22.5MB of 360px GIFs is a deliberate call — sharpness was worth it —
-      // so this isn't a limit to creep up against, it's a tripwire for
-      // something going wrong: a re-fetch at a larger size, or someone adding
-      // a handful of multi-megabyte files without noticing the total.
+      // ~1,270 128px WebPs come to about 23MB, so this isn't a limit to creep
+      // up against, it's a tripwire for something going wrong: a re-fetch at
+      // the 360px GIF size (hundreds of MB), or someone adding a handful of
+      // multi-megabyte files without noticing the total.
       final total = bundled().values.fold<int>(
         0,
         (sum, file) => sum + file.lengthSync(),

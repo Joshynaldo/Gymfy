@@ -102,8 +102,9 @@ over the Wearable Data Layer, not through the internet.
   train it.
 - **Export everything** to CSV or JSON at any time. Because there's no cloud copy,
   export before you switch phones.
-- **78 built-in exercises** covering 18 muscle groups, each with an animated
-  preview, plus as many of your own as you like.
+- **About 1,270 built-in exercises** covering 18 muscle groups, including
+  cardio and plyometrics, each with an animated preview. Add as many of your
+  own as you like.
 
 ---
 
@@ -249,7 +250,7 @@ Scripts in `gymfy/tool/`, run with `dart run tool/<name>.dart`:
 |---|---|
 | `build_muscle_map.dart` | Generates the tagged body SVGs from the licensed source pack. |
 | `check_exercise_gifs.dart` | Reports which seeded exercises are still missing a GIF. |
-| `fetch_exercise_gifs.dart` | Fetches and names GIFs to match the seed ids. |
+| `sync_exercise_db.dart` | Generates the built-in exercise list from ExerciseGymGifsDB and downloads a preview for each one. |
 | `generate_icon.dart` | Produces the launcher-icon and splash source artwork. |
 
 Icons and the splash screen are regenerated with `dart run flutter_launcher_icons`

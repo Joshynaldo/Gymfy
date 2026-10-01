@@ -34,8 +34,8 @@ void main() {
 
     test('downsamples rather than decoding at full size', () async {
       // The whole reason targetWidth is passed into the decoder instead of
-      // scaling afterwards. The source is 360×360; 78 rows of that in RGBA
-      // would be about 40MB of image cache.
+      // scaling afterwards. A scrolling list of ~1,270 exercises decoded at
+      // source size would fill the image cache for nothing.
       const provider = FirstFrame(_realAsset, pixelWidth: 64);
       final info = await provider.decodeForTest();
       addTearDown(info.dispose);

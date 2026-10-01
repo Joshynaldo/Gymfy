@@ -3,7 +3,7 @@
 /// Seed data declares one path per exercise, `assets/exercises/<id>.gif`, but
 /// what actually ships can be an animated WebP instead — the same loop at a
 /// fraction of the size, and all of it lands in the download because there is
-/// no server to stream from. Rather than rewrite 78 seed entries every time
+/// no server to stream from. Rather than rewrite ~1,270 seed entries every time
 /// that choice is revisited, the declared path is treated as the *convention*
 /// and the extension is resolved at load.
 ///

@@ -89,8 +89,8 @@ class ExerciseThumbnail extends ConsumerWidget {
             path,
             // Decoded at the size it is drawn at, in device pixels. Passing
             // this to the decoder rather than scaling afterwards means the
-            // 360px source is resampled once, properly, and never held in
-            // memory at full size — 78 rows of 360×360 RGBA would be 40MB.
+            // source is resampled once, properly, and never held in memory
+            // at a larger size than the row needs.
             pixelWidth: (size * MediaQuery.devicePixelRatioOf(context)).round(),
           ),
           fit: BoxFit.cover,

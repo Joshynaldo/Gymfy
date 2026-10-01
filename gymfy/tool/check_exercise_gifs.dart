@@ -17,18 +17,22 @@ import 'dart:io';
 /// Where the GIFs live, and the naming convention the app expects.
 const _dir = 'assets/exercises';
 
-/// Pulls exercise ids straight out of the seed data source.
+/// Pulls exercise ids straight out of the seed data sources: the hand-written
+/// list and the generated catalogue.
 ///
 /// Read as text rather than imported: this file is plain Dart with no Flutter
-/// binding, and `exercise_seed_data.dart` pulls in Drift, which needs one.
+/// binding, and the seed files pull in Drift, which needs one.
 Set<String> _seedIds() {
-  final source = File(
-    'lib/features/exercises/data/exercise_seed_data.dart',
-  ).readAsStringSync();
-  return RegExp(r"id: Value\('([a-z_0-9]+)'\)")
-      .allMatches(source)
-      .map((m) => m.group(1)!)
-      .toSet();
+  final pattern = RegExp(r"id: Value\('([a-z_0-9]+)'\)");
+  return {
+    for (final path in const [
+      'lib/features/exercises/data/exercise_seed_data.dart',
+      'lib/features/exercises/data/exercise_catalog_data.dart',
+    ])
+      ...pattern
+          .allMatches(File(path).readAsStringSync())
+          .map((m) => m.group(1)!),
+  };
 }
 
 void main() {

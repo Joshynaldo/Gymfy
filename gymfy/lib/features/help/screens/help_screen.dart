@@ -25,7 +25,7 @@ const developerGitHub = 'https://github.com/Joshynaldo';
 /// author states he does not hold copyright in the images themselves — they
 /// are used here with his written permission — so naming the source is the
 /// least the app can do, and it is the trail anyone would need to follow if
-/// the real rights holder ever asks. See `tool/fetch_exercise_gifs.dart` for
+/// the real rights holder ever asks. See `tool/sync_exercise_db.dart` for
 /// the full provenance note.
 const exerciseAnimationCredit =
     'https://github.com/JahelCuadrado/ExerciseGymGifsDB';

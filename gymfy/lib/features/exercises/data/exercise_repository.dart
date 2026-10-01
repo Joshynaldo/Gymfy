@@ -84,17 +84,65 @@ class ExerciseRepository {
   ///
   /// Idempotent: this is an upsert keyed on each exercise's `id`, so running
   /// it on every launch never creates duplicates, and editing the seed list
-  /// updates the stored rows on the next launch. Cheap enough (~78 rows in a
-  /// single batched transaction) to run at startup even on older phones — it's
-  /// one round trip, not one per exercise. Worth re-checking if the library
-  /// ever grows into the hundreds.
+  /// updates the stored rows on the next launch.
+  ///
+  /// With ~1,270 built-in exercises the upsert is no longer free — tens of
+  /// milliseconds on a desktop, several times that on an older phone, and it
+  /// runs before the first frame. So it is skipped when the seed list is
+  /// byte-for-byte what was written last time, which is every launch except
+  /// the first one after an app update. [_seedFingerprint] is stored in
+  /// `app_settings` once the batch has committed; a crash mid-seed leaves the
+  /// old fingerprint and the next launch simply seeds again.
   ///
   /// Custom exercises are untouched by this: their ids carry a `custom_` prefix
   /// that no seed row uses, so there is nothing for the upsert to conflict with.
   Future<void> seed() async {
+    final fingerprint = _seedFingerprint();
+    final stored = await (_db.select(
+      _db.appSettings,
+    )..where((s) => s.name.equals(_seedFingerprintKey))).getSingleOrNull();
+    if (stored?.value == fingerprint) return;
+
     await _db.batch((batch) {
       batch.insertAllOnConflictUpdate(_db.exercises, exerciseSeedData);
+      batch.insert(
+        _db.appSettings,
+        AppSettingsCompanion.insert(
+          name: _seedFingerprintKey,
+          value: fingerprint,
+        ),
+        mode: InsertMode.insertOrReplace,
+      );
     });
+  }
+
+  static const _seedFingerprintKey = 'exercise_seed_fingerprint';
+
+  /// A 64-bit FNV-1a hash over every column the seed writes.
+  ///
+  /// Hand-rolled rather than `hashCode`, which Dart does not promise is
+  /// stable between runs. A changed entry changes the hash, so the next launch
+  /// seeds again.
+  static String _seedFingerprint() {
+    var hash = 0xcbf29ce484222325;
+    const prime = 0x100000001b3;
+    void mix(String s) {
+      for (final unit in s.codeUnits) {
+        hash = (hash ^ unit) * prime;
+      }
+      hash = (hash ^ 0x1f) * prime;
+    }
+
+    for (final e in exerciseSeedData) {
+      mix(e.id.value);
+      mix(e.name.value);
+      mix(e.equipment.present ? e.equipment.value : '');
+      mix(e.muscleIds.value.join(','));
+      mix(e.gifPath.present ? '${e.gifPath.value}' : '');
+      mix(e.isPlateLoaded.present ? '${e.isPlateLoaded.value}' : '');
+      mix(e.isTimed.present ? '${e.isTimed.value}' : '');
+    }
+    return hash.toUnsigned(64).toRadixString(16);
   }
 
   /// Streams the exercises a user should be offered — everything except the

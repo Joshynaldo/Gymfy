@@ -453,6 +453,9 @@ void main() {
       await (db.update(db.exercises)..where((t) => t.id.equals('plank'))).write(
         const ExercisesCompanion(isTimed: Value(false)),
       );
+      // The wrong value stands for one written by an older version, and an
+      // older version left a different seed fingerprint behind.
+      await db.delete(db.appSettings).go();
 
       await ExerciseRepository(db).seed();
 

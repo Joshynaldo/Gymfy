@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/features/exercises/data/exercise_repository.dart';
+import 'package:gymfy/features/exercises/data/exercise_seed_data.dart';
 import 'package:gymfy/shared/database/app_database.dart';
 import 'package:gymfy/shared/models/equipment.dart';
 import 'package:gymfy/features/exercises/widgets/equipment_filter_sheet.dart';
@@ -42,12 +43,7 @@ final _library = [
     muscles: ['chest'],
     equipment: Equipment.barbell,
   ),
-  _exercise(
-    'fly',
-    'Cable Fly',
-    muscles: ['chest'],
-    equipment: Equipment.cable,
-  ),
+  _exercise('fly', 'Cable Fly', muscles: ['chest'], equipment: Equipment.cable),
   _exercise(
     'pushup',
     'Push-Up',
@@ -195,11 +191,11 @@ void main() {
       // picked — and you could never pick a second.
       final options = optionsWith(muscles: {'chest'});
 
-      expect(
-        options.muscles,
-        ['biceps', 'chest', 'quads'],
-        reason: 'the other muscles must stay pickable',
-      );
+      expect(options.muscles, [
+        'biceps',
+        'chest',
+        'quads',
+      ], reason: 'the other muscles must stay pickable');
     });
 
     test('the same holds for equipment', () {
@@ -395,13 +391,29 @@ void main() {
           .map((e) => e.name)
           .toList();
 
-      expect(all, hasLength(78));
+      expect(all, hasLength(exerciseSeedData.length));
+
+      // Kettlebells and bands have no chip of their own, which is what the
+      // bucket is for, along with the ab wheel and a few upstream entries
+      // whose equipment is genuinely "other". Anything else appearing here is
+      // an exercise that was missed.
+      const knownOther = {
+        'Ab Wheel Rollout',
+        'Battling Ropes',
+        'Elevator',
+        'Standing Archer',
+        'Standing Single Leg Curl',
+      };
+      final unexpected = unclassified.where((name) {
+        final lower = name.toLowerCase();
+        return !lower.contains('kettlebell') &&
+            !lower.contains('band') &&
+            !knownOther.contains(name);
+      }).toList();
       expect(
-        unclassified,
-        // The ab wheel and the kettlebell swing, which is what the bucket is
-        // for. Anything else appearing here is an exercise that was missed.
-        hasLength(2),
-        reason: 'unexpectedly unclassified: $unclassified',
+        unexpected,
+        isEmpty,
+        reason: 'unexpectedly unclassified: $unexpected',
       );
     });
 
@@ -432,6 +444,9 @@ void main() {
       await (db.update(db.exercises)
             ..where((t) => t.id.equals('barbell_bench_press')))
           .write(const ExercisesCompanion(equipment: Value('other')));
+      // The wrong value stands for one written by an older version, and an
+      // older version left a different seed fingerprint behind.
+      await db.delete(db.appSettings).go();
 
       await ExerciseRepository(db).seed();
 
