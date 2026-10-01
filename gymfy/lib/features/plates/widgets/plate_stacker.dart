@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
 import '../../exercises/data/exercise_repository.dart';
@@ -62,6 +63,7 @@ class _PlateStackerState extends ConsumerState<PlateStacker> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final unit = ref.watch(weightUnitProvider);
     final available = ref.watch(availablePlatesProvider);
     final id = widget.exerciseId;
@@ -99,7 +101,7 @@ class _PlateStackerState extends ConsumerState<PlateStacker> {
           textBaseline: TextBaseline.alphabetic,
           children: [
             Text(
-              formatWeight(total),
+              formatWeight(total, l10n: l10n),
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -110,7 +112,7 @@ class _PlateStackerState extends ConsumerState<PlateStacker> {
             if (perSide.isNotEmpty)
               TextButton(
                 onPressed: () => _update(const []),
-                child: const Text('Clear'),
+                child: Text(l10n.platesClear),
               ),
           ],
         ),
@@ -121,9 +123,13 @@ class _PlateStackerState extends ConsumerState<PlateStacker> {
                 // The bar is stated because it's the part you can't see on the
                 // screen and the part people forget.
                 bar == 0
-                    ? '${formatWeight(total)} ${unit.label} in plates, no bar'
-                    : 'Bar ${formatPlate(bar)} ${unit.label} + '
-                          '${formatWeight(total - bar)} in plates',
+                    ? l10n.platesInPlatesNoBar(
+                        '${formatWeight(total, l10n: l10n)} ${unit.label}',
+                      )
+                    : l10n.platesBarPlusPlates(
+                        '${formatPlate(bar, l10n: l10n)} ${unit.label}',
+                        formatWeight(total - bar, l10n: l10n),
+                      ),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -142,7 +148,7 @@ class _PlateStackerState extends ConsumerState<PlateStacker> {
         ),
         const SizedBox(height: 12),
         Text(
-          'Tap to add a plate to each side',
+          l10n.platesTapToAdd,
           style: theme.textTheme.labelSmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -250,12 +256,16 @@ class _PlateButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final color = plateColor(weight, unit);
     final onColor = plateNeedsDarkLabel(color) ? Colors.black87 : Colors.white;
 
     return Semantics(
       button: true,
-      label: '${formatPlate(weight)} ${unit.label}, $count on the bar',
+      label: l10n.platesPlateSemantics(
+        '${formatPlate(weight, l10n: l10n)} ${unit.label}',
+        count,
+      ),
       child: InkWell(
         onTap: onAdd,
         onLongPress: count > 0 ? onRemove : null,
@@ -278,7 +288,7 @@ class _PlateButton extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                formatPlate(weight),
+                formatPlate(weight, l10n: l10n),
                 style: theme.textTheme.titleSmall?.copyWith(
                   color: onColor,
                   fontWeight: FontWeight.w700,
@@ -321,8 +331,10 @@ class _BarButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+
     return PopupMenuButton<double>(
-      tooltip: 'Change the bar',
+      tooltip: l10n.platesChangeBarTooltip,
       onSelected: (bar) => ref
           .read(exerciseRepositoryProvider)
           // Stored in kilograms like every other weight, so switching the
@@ -339,7 +351,7 @@ class _BarButton extends ConsumerWidget {
               children: [
                 Icon(bar == current ? Icons.check : null, size: 18),
                 const SizedBox(width: 8),
-                Text(formatBar(bar, unit)),
+                Text(formatBar(bar, unit, l10n: l10n)),
               ],
             ),
           ),
@@ -350,7 +362,7 @@ class _BarButton extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              formatBar(current, unit),
+              formatBar(current, unit, l10n: l10n),
               style: Theme.of(context).textTheme.labelLarge,
             ),
             const Icon(Icons.arrow_drop_down, size: 18),

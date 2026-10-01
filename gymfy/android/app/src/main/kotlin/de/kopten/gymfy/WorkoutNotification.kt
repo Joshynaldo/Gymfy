@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Icon
 import android.os.Build
+import android.os.Bundle
 
 /**
  * The running workout as one ongoing notification: the exercise, the set,
@@ -21,9 +22,11 @@ import android.os.Build
  * them to [WearBridge.deliver] — the same door, and on the Dart side the same
  * handler, as a command from the watch.
  *
- * Same rule as the watch, too: Dart decides every word. This side draws what
- * it is given and knows nothing about sets or units — the only words it owns
- * are the button labels and the line it shows once the app is gone.
+ * Same rule as the watch, too: Dart decides every word, in the app's language
+ * — the button labels and the channel's name included. This side draws what
+ * it is given and knows nothing about sets or units; the English it holds is
+ * only a fallback for a field that did not arrive, and "+30 s", which reads
+ * the same in every language the app speaks.
  */
 object WorkoutNotification {
     /** Method names on the channel. Must match `WorkoutNotificationBridge` in Dart. */
@@ -43,6 +46,13 @@ object WorkoutNotification {
     const val COMMAND_ADD_THIRTY = "rest.add30"
     const val COMMAND_SKIP_REST = "rest.skip"
 
+    /**
+     * Where the "tap to open" line rides along on the notification itself, so
+     * [detach] can still say it in the app's language once nothing in Dart is
+     * running to ask.
+     */
+    private const val EXTRA_TAP_TO_OPEN = "de.kopten.gymfy.TAP_TO_OPEN"
+
     // One request code per button, so their PendingIntents are three distinct
     // ones rather than one that each re-post overwrites.
     private const val REQUEST_LOG = 1
@@ -52,7 +62,9 @@ object WorkoutNotification {
 
     /**
      * Posts or updates the notification from the fields Dart sent: `title`,
-     * `text`, `bigText`, `subText`, `restEndsAtMs` and `logCommand`.
+     * `text`, `bigText`, `subText`, `restEndsAtMs` and `logCommand`, plus the
+     * fixed words — `logLabel`, `skipRestLabel`, `tapToOpenLabel`,
+     * `channelName` and `channelDescription`.
      *
      * Does nothing without notification permission, or with this one channel
      * switched off in the system settings. The app works the same without it,
@@ -65,7 +77,12 @@ object WorkoutNotification {
     fun show(context: Context, fields: Map<String, Any?>): Boolean {
         val manager = context.getSystemService(NotificationManager::class.java) ?: return false
         if (!manager.areNotificationsEnabled()) return false
-        ensureChannel(context, manager)
+        ensureChannel(
+            manager,
+            name = fields["channelName"] as? String ?: "Workout in progress",
+            description = fields["channelDescription"] as? String
+                ?: "The current set and rest, with buttons to log and skip",
+        )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
             manager.getNotificationChannel(CHANNEL_ID)?.importance ==
             NotificationManager.IMPORTANCE_NONE
@@ -80,6 +97,9 @@ object WorkoutNotification {
         // Number, not Long: the codec sends a small value as an Int.
         val restEndsAtMs = (fields["restEndsAtMs"] as? Number)?.toLong() ?: 0L
         val logCommand = fields["logCommand"] as? String ?: ""
+        val logLabel = fields["logLabel"] as? String ?: "Log set"
+        val skipRestLabel = fields["skipRestLabel"] as? String ?: "Skip rest"
+        val tapToOpenLabel = fields["tapToOpenLabel"] as? String ?: "Tap to open Gymfy"
         val resting = restEndsAtMs > 0
 
         val builder = newBuilder(context)
@@ -97,6 +117,7 @@ object WorkoutNotification {
             // are worth most — the phone on the bench, locked, between sets.
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setShowWhen(false)
+            .addExtras(Bundle().apply { putString(EXTRA_TAP_TO_OPEN, tapToOpenLabel) })
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             builder.setCategory(Notification.CATEGORY_WORKOUT)
         }
@@ -117,7 +138,7 @@ object WorkoutNotification {
         }
 
         if (logCommand.isNotEmpty()) {
-            builder.addAction(action(context, "Log set", command(context, REQUEST_LOG, logCommand)))
+            builder.addAction(action(context, logLabel, command(context, REQUEST_LOG, logCommand)))
         }
         // Only while there is a rest to extend or skip: a dead button is
         // worse than an absent one — the same call the watch makes.
@@ -126,7 +147,7 @@ object WorkoutNotification {
                 action(context, "+30 s", command(context, REQUEST_ADD_THIRTY, COMMAND_ADD_THIRTY)),
             )
             builder.addAction(
-                action(context, "Skip rest", command(context, REQUEST_SKIP, COMMAND_SKIP_REST)),
+                action(context, skipRestLabel, command(context, REQUEST_SKIP, COMMAND_SKIP_REST)),
             )
         }
 
@@ -164,23 +185,28 @@ object WorkoutNotification {
             .toTypedArray()
         val builder = Notification.Builder.recoverBuilder(context, showing)
             .setActions(*actions)
-            // The one line this side writes itself: nothing in Dart is
-            // running to write it.
-            .setSubText("Tap to open Gymfy")
+            // The one line Dart cannot write at the time, since nothing in
+            // Dart is running: worded when the notification was last posted.
+            .setSubText(showing.extras.getString(EXTRA_TAP_TO_OPEN) ?: "Tap to open Gymfy")
         manager.notify(NOTIFICATION_ID, builder.build())
     }
 
-    private fun ensureChannel(context: Context, manager: NotificationManager) {
+    /**
+     * Creates the channel, or renames it. Android keeps everything else the
+     * user changed about an existing channel and only takes the new name and
+     * description — which is what lets it follow the app's language.
+     */
+    private fun ensureChannel(manager: NotificationManager, name: String, description: String) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val channel = NotificationChannel(
             CHANNEL_ID,
-            "Workout in progress",
+            name,
             // Low: it sits in the shade and on the lock screen without ever
             // making a sound. The rest timer's "rest over" alert is the one
             // that interrupts, on its own channel.
             NotificationManager.IMPORTANCE_LOW,
         ).apply {
-            description = "The current set and rest, with buttons to log and skip"
+            this.description = description
             setShowBadge(false)
         }
         manager.createNotificationChannel(channel)

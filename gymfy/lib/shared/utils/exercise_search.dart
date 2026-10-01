@@ -85,11 +85,15 @@ List<Equipment> equipmentIn(Iterable<Exercise> exercises) {
 /// What it buys is the promise in the feature's name: every chip on screen
 /// has results behind it. Tap Cable and the machine-only muscles go; there is
 /// no combination you can reach that shows an empty list.
+///
+/// Pass the same [l10n] the list is filtered with, so a query in the app's
+/// language ("Brust") narrows the chips exactly as it narrows the list.
 ({List<String> muscles, List<Equipment> equipment}) filterOptionsFor(
   Iterable<Exercise> exercises, {
   required String query,
   required Set<String> muscleFilters,
   required Set<Equipment> equipmentFilters,
+  AppLocalizations? l10n,
 }) {
   final forMuscles = exercises.where(
     (e) => matchesExerciseSearch(
@@ -97,6 +101,7 @@ List<Equipment> equipmentIn(Iterable<Exercise> exercises) {
       query: query,
       muscleFilters: const {},
       equipmentFilters: equipmentFilters,
+      l10n: l10n,
     ),
   );
   final forEquipment = exercises.where(
@@ -105,6 +110,7 @@ List<Equipment> equipmentIn(Iterable<Exercise> exercises) {
       query: query,
       muscleFilters: muscleFilters,
       equipmentFilters: const {},
+      l10n: l10n,
     ),
   );
 

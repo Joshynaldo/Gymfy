@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/units.dart';
 import '../../../shared/widgets/app_chip.dart';
@@ -35,25 +36,26 @@ class PercentTargetPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final options = {...percentTargetChoices, ?value}.toList()..sort();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('% of 1RM', style: theme.textTheme.labelLarge),
+        Text(l10n.programsPercentOfMax, style: theme.textTheme.labelLarge),
         const SizedBox(height: 8),
         Wrap(
           spacing: 6,
           runSpacing: 6,
           children: [
             AppChip(
-              label: 'Off',
+              label: l10n.commonOff,
               selected: value == null,
               onTap: () => onChanged(null),
             ),
             for (final percent in options)
               AppChip(
-                label: formatPercent(percent),
+                label: formatPercent(percent, l10n: l10n),
                 selected: value == percent,
                 onTap: () => onChanged(percent),
               ),
@@ -82,6 +84,7 @@ class PercentTargetPreview extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final unit = ref.watch(weightUnitProvider);
     final oneRm = ref.watch(workingOneRmProvider(exercise.id)).value;
 
@@ -89,9 +92,7 @@ class PercentTargetPreview extends ConsumerWidget {
     if (oneRm == null) {
       // Said plainly, because the alternative is a percentage that silently
       // does nothing and a user who thinks the feature is broken.
-      text =
-          'No 1RM yet. Log a set or enter a tested max and the weight '
-          'appears in your workout.';
+      text = l10n.programsPercentNoMax;
     } else {
       final weight = nearestLoadable(
         kilograms: percentOfMaxKg(oneRmKg: oneRm, percent: percent),
@@ -104,9 +105,10 @@ class PercentTargetPreview extends ConsumerWidget {
           unit,
         ),
       );
-      text =
-          '≈ ${formatWeightUnit(weight, unit)} today, from your 1RM of '
-          '${formatWeightUnit(oneRm, unit)}.';
+      text = l10n.programsPercentPreview(
+        formatWeightUnit(weight, unit, l10n: l10n),
+        formatWeightUnit(oneRm, unit, l10n: l10n),
+      );
     }
 
     return Text(

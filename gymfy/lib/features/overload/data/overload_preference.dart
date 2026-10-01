@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/data/settings_repository.dart';
 
 // Progressive overload is configured once for the whole app, not per exercise.
@@ -34,7 +35,15 @@ enum OverloadMode {
 
   const OverloadMode(this.label);
 
+  /// The English name. On screen use [localizedLabel].
   final String label;
+
+  /// The name in the app's language, e.g. "Fest".
+  String localizedLabel(AppLocalizations l10n) => switch (this) {
+    OverloadMode.auto => l10n.overloadModeAuto,
+    OverloadMode.fixed => l10n.overloadModeFixed,
+    OverloadMode.percent => l10n.overloadModePercent,
+  };
 
   static OverloadMode parse(String? raw) => OverloadMode.values.firstWhere(
     (mode) => mode.name == raw,

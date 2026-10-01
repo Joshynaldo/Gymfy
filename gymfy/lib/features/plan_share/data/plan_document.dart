@@ -12,6 +12,8 @@
 
 import 'dart:convert';
 
+import '../../../l10n/l10n.dart';
+
 /// Marks the file as ours, so a wrong file picked by mistake fails with an
 /// explanation rather than a type error halfway through the import.
 const planFormatTag = 'gymfy.plan';
@@ -192,29 +194,21 @@ class PlanDocument {
     try {
       raw = jsonDecode(source);
     } on FormatException {
-      throw const PlanFormatException(
-        "That file isn't a Gymfy plan — it isn't even JSON.",
-      );
+      throw const PlanFormatException(PlanFormatProblem.notJson);
     }
 
     if (raw is! Map<String, dynamic>) {
-      throw const PlanFormatException("That file isn't a Gymfy plan.");
+      throw const PlanFormatException(PlanFormatProblem.notAPlan);
     }
     if (raw['format'] != planFormatTag) {
-      throw const PlanFormatException(
-        "That file isn't a Gymfy plan. Look for a file ending in "
-        '.$planFileExtension.',
-      );
+      throw const PlanFormatException(PlanFormatProblem.wrongFormat);
     }
 
     final version = raw['version'];
     if (version is! num || version > planFormatVersion) {
       // Refusing beats guessing: a newer file may describe things this build
       // has no column for, and a half-imported plan is worse than none.
-      throw const PlanFormatException(
-        'That plan was made by a newer version of Gymfy. Update the app and '
-        'try again.',
-      );
+      throw const PlanFormatException(PlanFormatProblem.tooNew);
     }
 
     final splits = [
@@ -223,9 +217,7 @@ class PlanDocument {
     ];
 
     if (splits.isEmpty) {
-      throw const PlanFormatException(
-        "That plan file doesn't contain a split.",
-      );
+      throw const PlanFormatException(PlanFormatProblem.noSplits);
     }
 
     return PlanDocument(
@@ -235,11 +227,47 @@ class PlanDocument {
   }
 }
 
-/// A plan file that can't be read, carrying a message meant for the user.
-class PlanFormatException implements Exception {
-  const PlanFormatException(this.message);
+/// Why a plan file could not be read.
+enum PlanFormatProblem {
+  /// Not JSON at all — a photo, a PDF, a zip picked by mistake.
+  notJson,
 
-  final String message;
+  /// JSON, but not an object.
+  notAPlan,
+
+  /// An object, without Gymfy's format tag.
+  wrongFormat,
+
+  /// Written by a newer build than this one.
+  tooNew,
+
+  /// A plan file with nothing in it.
+  noSplits,
+}
+
+/// A plan file that can't be read, carrying what went wrong.
+///
+/// The reason rather than a sentence, because the file is read in the data
+/// layer, which has no language: [describe] words it for the screen that
+/// shows it, and [message] is the English, for logs and tests.
+class PlanFormatException implements Exception {
+  const PlanFormatException(this.problem);
+
+  final PlanFormatProblem problem;
+
+  /// What to tell the user, in [l10n]'s language.
+  String describe(AppLocalizations l10n) => switch (problem) {
+    PlanFormatProblem.notJson => l10n.planShareErrorNotJson,
+    PlanFormatProblem.notAPlan => l10n.planShareErrorNotPlan,
+    PlanFormatProblem.wrongFormat => l10n.planShareErrorWrongFormat(
+      planFileExtension,
+    ),
+    PlanFormatProblem.tooNew => l10n.planShareErrorTooNew,
+    PlanFormatProblem.noSplits => l10n.planShareErrorNoSplits,
+  };
+
+  /// The message in English.
+  String get message => describe(englishLocalizations);
 
   @override
   String toString() => message;

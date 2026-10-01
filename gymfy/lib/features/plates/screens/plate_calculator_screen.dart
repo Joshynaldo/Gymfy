@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/data/settings_repository.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
@@ -60,12 +61,13 @@ class _PlateCalculatorScreenState extends ConsumerState<PlateCalculatorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final unit = ref.watch(weightUnitProvider);
     final plates = ref.watch(availablePlatesProvider);
     final bar = ref.watch(barWeightProvider);
 
     return GlassScaffold(
-      appBar: GlassAppBar(title: const Text('Plate calculator')),
+      appBar: GlassAppBar(title: Text(l10n.platesTitle)),
       body: (context) => ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32) + barInsets(context),
         children: [
@@ -75,7 +77,7 @@ class _PlateCalculatorScreenState extends ConsumerState<PlateCalculatorScreen> {
           // and configure.
           AppPanel(
             icon: Icons.tune,
-            title: 'What are you loading?',
+            title: l10n.platesLoadingTitle,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -83,7 +85,7 @@ class _PlateCalculatorScreenState extends ConsumerState<PlateCalculatorScreen> {
                   key: ValueKey(unit),
                   initialWeight: _target,
                   unit: unit,
-                  label: 'Target weight',
+                  label: l10n.platesTargetWeight,
                   onChanged: (value) => setState(() => _target = value),
                 ),
                 const SizedBox(height: 20),
@@ -92,9 +94,7 @@ class _PlateCalculatorScreenState extends ConsumerState<PlateCalculatorScreen> {
             ),
           ),
           if (_target <= 0)
-            const _Hint(
-              text: 'Dial in a target weight to see what goes on the bar.',
-            )
+            _Hint(text: l10n.platesHint)
           else
             _Result(
               load: calculatePlates(target: _target, bar: bar, plates: plates),
@@ -118,6 +118,7 @@ class _BarPicker extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     // Includes "None". Plate-loaded does not mean barbell: a hack squat or a
     // leg press takes plates onto a carriage, and adding a bar that isn't
     // there made every total wrong by exactly one bar.
@@ -128,7 +129,7 @@ class _BarPicker extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Bar',
+          l10n.platesBar,
           style: theme.textTheme.labelLarge?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -139,7 +140,10 @@ class _BarPicker extends ConsumerWidget {
           child: SegmentedButton<double>(
             segments: [
               for (final bar in bars)
-                ButtonSegment(value: bar, label: Text(formatBar(bar, unit))),
+                ButtonSegment(
+                  value: bar,
+                  label: Text(formatBar(bar, unit, l10n: l10n)),
+                ),
             ],
             selected: {selected},
             showSelectedIcon: false,
@@ -167,12 +171,14 @@ class _Result extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     if (load.belowBar) {
       return _Hint(
-        text:
-            '${formatWeight(load.target)} ${unit.label} is lighter than the '
-            'bar itself (${formatPlate(load.bar)} ${unit.label}).',
+        text: l10n.platesBelowBar(
+          '${formatWeight(load.target, l10n: l10n)} ${unit.label}',
+          '${formatPlate(load.bar, l10n: l10n)} ${unit.label}',
+        ),
       );
     }
 
@@ -186,7 +192,7 @@ class _Result extends StatelessWidget {
         _TotalPanel(load: load, unit: unit),
         AppPanel(
           icon: Icons.fitness_center,
-          title: 'Each side',
+          title: l10n.platesEachSide,
           // No "nothing to load" subtitle here: the diagram already says
           // "Just the bar", and saying it twice on one card reads as a bug.
           child: Column(
@@ -202,8 +208,8 @@ class _Result extends StatelessWidget {
                     for (final entry in grouped)
                       AppChip(
                         label:
-                            '${formatPlate(entry.plate)} ${unit.label} '
-                            '× ${entry.count}',
+                            '${formatPlate(entry.plate, l10n: l10n)} '
+                            '${unit.label} × ${entry.count}',
                         selected: false,
                         onTap: null,
                       ),
@@ -220,15 +226,19 @@ class _Result extends StatelessWidget {
             load.isExact
                 // Naming the bar separately makes the total checkable at a
                 // glance — the commonest mistake is forgetting the bar.
-                ? 'Bar ${formatPlate(load.bar)} + plates '
-                      '${formatWeight(load.achieved - load.bar)} ${unit.label}'
+                ? l10n.platesExact(
+                    formatPlate(load.bar, l10n: l10n),
+                    '${formatWeight(load.achieved - load.bar, l10n: l10n)} '
+                    '${unit.label}',
+                  )
                 // The shortfall is stated rather than silently rounding,
                 // because "closest I can load" is a different fact from "your
                 // target".
-                : 'Closest loadable — '
-                      '${formatWeight(load.target - load.achieved)} '
-                      '${unit.label} under your target of '
-                      '${formatWeight(load.target)}',
+                : l10n.platesClosest(
+                    '${formatWeight(load.target - load.achieved, l10n: l10n)} '
+                    '${unit.label}',
+                    formatWeight(load.target, l10n: l10n),
+                  ),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -256,15 +266,20 @@ class _TotalPanel extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.baseline,
         textBaseline: TextBaseline.alphabetic,
         children: [
-          Text(
-            'Total',
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+          // The label gives way, not the number: at a large text size a
+          // four-digit total and "Gesamt" no longer share the row whole.
+          Expanded(
+            child: Text(
+              context.l10n.platesTotal,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
-          const Spacer(),
           Text(
-            formatWeight(load.achieved),
+            formatWeight(load.achieved, l10n: context.l10n),
             key: plateTotalKey,
             style: theme.textTheme.displaySmall?.copyWith(
               color: accent,

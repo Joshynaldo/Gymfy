@@ -38,6 +38,18 @@ const _sameInGerman = {
   'helpVersionTitle',
   'onboardingNameHint',
   'homeGreeting',
+  // Gym words German lifters borrow as they are.
+  'workoutSplitsTitle',
+  'workoutSplitFallbackTitle',
+  'overloadModeAuto',
+  'overloadDeloadTitle',
+  // "@ 75 % 1RM" — only the number inside changes.
+  'workoutPlannedPercent',
+  // D for Dropsatz, MIN for Minuten.
+  'workoutBadgeDrop',
+  'workoutLogMinutes',
+  'planSharePdf',
+  'exercisesNameLabel',
 };
 
 void main() {

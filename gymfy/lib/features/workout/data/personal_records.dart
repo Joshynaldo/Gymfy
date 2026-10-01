@@ -25,6 +25,7 @@ import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/models/set_type.dart';
 import '../../calculator/data/one_rm_math.dart';
@@ -50,7 +51,17 @@ enum RecordKind {
 
   const RecordKind(this.label);
 
+  /// The English name. On screen use [localizedLabel].
   final String label;
+
+  /// The name in the app's language, e.g. "Höchstes Gewicht".
+  String localizedLabel(AppLocalizations l10n) => switch (this) {
+    RecordKind.weight => l10n.workoutRecordKindWeight,
+    RecordKind.oneRm => l10n.workoutRecordKindOneRm,
+    RecordKind.reps => l10n.workoutRecordKindReps,
+    RecordKind.hold => l10n.workoutRecordKindHold,
+    RecordKind.volume => l10n.workoutRecordKindVolume,
+  };
 }
 
 /// One record broken: what kind, the new best and the one it beat.

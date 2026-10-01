@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../programs/widgets/training_block_settings.dart';
 import '../data/workout_repository.dart';
@@ -40,12 +41,12 @@ class WorkoutScreen extends ConsumerWidget {
     final error = splitsAsync.error ?? activeAsync.error;
     if (error != null) {
       return GlassScaffold(
-        appBar: GlassAppBar(title: const Text('Workout')),
+        appBar: GlassAppBar(title: Text(context.l10n.workoutTitle)),
         body: (context) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              'Could not load your splits.\n$error',
+              context.l10n.workoutSplitsLoadFailed('$error'),
               textAlign: TextAlign.center,
             ),
           ),
@@ -59,7 +60,7 @@ class WorkoutScreen extends ConsumerWidget {
     if (splits.isEmpty) {
       return GlassScaffold(
         appBar: GlassAppBar(
-          title: const Text('Workout'),
+          title: Text(context.l10n.workoutTitle),
           actions: const [_FreeWorkoutAction()],
         ),
         body: (context) => _NoSplitsYet(
@@ -76,7 +77,7 @@ class WorkoutScreen extends ConsumerWidget {
     if (active == null) {
       return GlassScaffold(
         appBar: GlassAppBar(
-          title: const Text('Workout'),
+          title: Text(context.l10n.workoutTitle),
           actions: [
             const _FreeWorkoutAction(),
             _SwitcherAction(splits: splits, activeId: null),
@@ -103,7 +104,7 @@ class WorkoutScreen extends ConsumerWidget {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: AppButton(
-        label: 'Add day',
+        label: context.l10n.workoutAddDay,
         icon: Icons.add,
         expand: false,
         onPressed: () => addDayTo(context, ref, active.id),
@@ -124,7 +125,7 @@ class _FreeWorkoutAction extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return IconButton(
       icon: const Icon(Icons.bolt_outlined),
-      tooltip: 'Start empty workout',
+      tooltip: context.l10n.workoutStartEmptyTooltip,
       onPressed: () => startFreeWorkout(context, ref),
     );
   }
@@ -145,7 +146,7 @@ class _SwitcherAction extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return IconButton(
       icon: const Icon(Icons.swap_horiz),
-      tooltip: 'Switch split',
+      tooltip: context.l10n.workoutSwitchSplitTooltip,
       onPressed: () => _openSwitcher(context, ref, splits, activeId),
     );
   }
@@ -222,7 +223,10 @@ class _SwitcherSheet extends ConsumerWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: Text('Your splits', style: theme.textTheme.titleLarge),
+            child: Text(
+              context.l10n.workoutSwitcherTitle,
+              style: theme.textTheme.titleLarge,
+            ),
           ),
           // Bounded so a long list scrolls inside the sheet instead of pushing
           // the two actions below off the screen.
@@ -253,19 +257,19 @@ class _SwitcherSheet extends ConsumerWidget {
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.add),
-            title: const Text('New split'),
+            title: Text(context.l10n.workoutNewSplit),
             onTap: () =>
                 Navigator.of(context).pop(const _SwitcherChoice.create()),
           ),
           ListTile(
             leading: const Icon(Icons.event_note_outlined),
-            title: const Text('Browse programs'),
+            title: Text(context.l10n.workoutBrowsePrograms),
             onTap: () =>
                 Navigator.of(context).pop(const _SwitcherChoice.programs()),
           ),
           ListTile(
             leading: const Icon(Icons.tune),
-            title: const Text('Manage splits'),
+            title: Text(context.l10n.workoutManageSplits),
             onTap: () =>
                 Navigator.of(context).pop(const _SwitcherChoice.manage()),
           ),
@@ -294,6 +298,7 @@ class _NoSplitsYet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return Center(
       child: Padding(
@@ -307,10 +312,10 @@ class _NoSplitsYet extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 16),
-            Text('No splits yet', style: theme.textTheme.titleLarge),
+            Text(l10n.workoutNoSplitsTitle, style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),
             Text(
-              'Create your first split to start planning your training.',
+              l10n.workoutNoSplitsMessage,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
             ),
@@ -318,19 +323,19 @@ class _NoSplitsYet extends StatelessWidget {
             FilledButton.icon(
               onPressed: onCreate,
               icon: const Icon(Icons.add),
-              label: const Text('New split'),
+              label: Text(l10n.workoutNewSplit),
             ),
             const SizedBox(height: 8),
             TextButton.icon(
               onPressed: onBrowse,
               icon: const Icon(Icons.event_note_outlined),
-              label: const Text('Start from a program'),
+              label: Text(l10n.workoutNoSplitsFromProgram),
             ),
             // Last, and quietest: someone opening the app for the first time
             // at the gym wants to log today's session before planning a week.
             TextButton(
               onPressed: onFreeWorkout,
-              child: const Text('Or start an empty workout'),
+              child: Text(l10n.workoutNoSplitsFreeWorkout),
             ),
           ],
         ),
@@ -349,6 +354,7 @@ class _NoActiveSplit extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return Center(
       child: Padding(
@@ -362,11 +368,13 @@ class _NoActiveSplit extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 16),
-            Text('No active split', style: theme.textTheme.titleLarge),
+            Text(
+              l10n.workoutNoActiveSplitTitle,
+              style: theme.textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
             Text(
-              'Pick the programme you are following and its days will show up '
-              'here.',
+              l10n.workoutNoActiveSplitMessage,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
             ),
@@ -374,7 +382,7 @@ class _NoActiveSplit extends StatelessWidget {
             FilledButton.icon(
               onPressed: onChoose,
               icon: const Icon(Icons.swap_horiz),
-              label: const Text('Choose a split'),
+              label: Text(l10n.workoutNoActiveSplitAction),
             ),
           ],
         ),

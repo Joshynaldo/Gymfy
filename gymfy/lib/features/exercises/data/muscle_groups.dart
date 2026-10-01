@@ -10,6 +10,7 @@
 // Lives in the exercises feature rather than in `shared` because only the
 // library browses this way. Worth promoting if a second screen ever needs it.
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/models/muscle_ids.dart';
 
 /// A region of the body, used as a section heading in the exercise library.
@@ -24,8 +25,19 @@ enum MuscleGroup {
 
   const MuscleGroup(this.label);
 
-  /// Shown as the section header.
+  /// The English name. The section header shows [localizedLabel].
   final String label;
+
+  /// The region's name in the app's language, e.g. "Rücken".
+  String localizedLabel(AppLocalizations l10n) => switch (this) {
+    MuscleGroup.chest => l10n.exercisesGroupChest,
+    MuscleGroup.back => l10n.exercisesGroupBack,
+    MuscleGroup.shoulders => l10n.exercisesGroupShoulders,
+    MuscleGroup.arms => l10n.exercisesGroupArms,
+    MuscleGroup.legs => l10n.exercisesGroupLegs,
+    MuscleGroup.core => l10n.exercisesGroupCore,
+    MuscleGroup.neck => l10n.exercisesGroupNeck,
+  };
 }
 
 /// Which region each muscle belongs to.

@@ -68,11 +68,47 @@ English strings verbatim, so English widget tests keep finding them) and
 **Translated so far:** `lib/main.dart`, `lib/app`, `lib/shared` (widgets,
 format/units/weekday helpers, enum and muscle labels, rest-timer
 notifications), and the features `settings`, `more`, `help`, `onboarding`,
-`home`, `muscle_map`. **Still English:** every other feature folder —
-including the panels other features put on the Settings screen (plates,
-overload, logging, rest-length picker, Health Connect) and onboarding's
-overload page, which `german_layout_test.dart` already lays out in German
-once they are translated.
+`home`, `muscle_map`, `workout`, `workout_notification`, `overload`,
+`plates`, `plan_share`, `programs` and `exercises` (screens and widgets —
+not the exercise names in the seed and catalogue data). That includes the
+panels those features put on Settings (plates, overload, logging, rest
+length) and onboarding's overload page. **Still English:** `backup`,
+`calculator`, `calendar`, `calories`, `data_export`, `goals`,
+`health_connect`, `import`, `progress`, `reviews`, `stats`, `wear`.
+
+What the second batch added, for whoever translates the rest:
+- More helpers take an optional `l10n:` and print the old English without
+  it: `formatPercent` (German "72,5 %", with a no-break space),
+  `formatPlate`/`formatBar` (leave `formatPlate` English for storage —
+  `encodePlates` joins with commas), `formatRecordValue`/`describeRecord`,
+  `describeSetPosition`/`describeNextNumbers` (the watch payload in
+  `wear_sync.dart` still calls them without one), `programFacts`,
+  `blockWeekLabel`, `exerciseTarget`, `filterOptionsFor` (pass the same
+  `l10n` as `matchesExerciseSearch`, or a German query empties the chips),
+  `buildPlanPdf`, `workoutNotificationFrom`.
+- More enums gained `localizedLabel`: `RecordKind`, `OverloadMode`,
+  `EffortRatingMode`, `ProgramLevel`, `MuscleGroup`. Bundled programmes have
+  `localizedSummary`/`localizedDescription`; their names (which are also the
+  split names inside the files) and the day names in the files stay English,
+  like exercise names.
+- `PlanFormatException` carries a `PlanFormatProblem` and words it with
+  `describe(l10n)`; `message` is the English.
+- The ongoing workout notification gets every word from Dart, button labels
+  and channel name included (`WorkoutNotificationLabels`); Kotlin keeps only
+  an English fallback. `WorkoutNotificationSync` watches
+  `appLocalizationsProvider`, so a test container without a database must
+  override it (`overrideWithValue(englishLocalizations)`).
+- The keypad in the log sheet and the warm-up field show the language's
+  decimal separator; the value typed stays a point internally.
+- The printed plan uses the PDF's built-in Helvetica, which has Latin-1
+  only: `planSharePdf…` messages may use umlauts and ß but no en dash or
+  curly quotes (`localized_workout_test.dart` checks).
+- German layout tests for these screens: `german_workout_layout_test.dart`.
+  The test font draws every glyph a full em wide, so it overstates German
+  widths — but four rows it flagged were fixed anyway rather than worked
+  around: the warm-up button is capped so Log set keeps its room, the day
+  builder's superset caption wraps, the plate total's label gives way to the
+  number, and the training block sheet's buttons sit in an `OverflowBar`.
 
 **German glossary** — du-form, the words German lifters use, the same word
 everywhere: workout → Training (pl. Trainings) · set → Satz/Sätze · rep →
@@ -84,9 +120,16 @@ Plan/Trainingsplan · weight → Gewicht · bodyweight → Körpergewicht · vol
 Volumen · PR → PR/Bestleistung · 1RM → 1RM · progressive overload →
 Progressive Overload · deload → Deload · strength rank → Kraftlevel ·
 strength standards → Kraftstandards · muscle map → Muskelkarte · body diagram
-→ Körperdiagramm · plates → Hantelscheiben · log (verb) → loggen · theme →
-Design · accent → Akzentfarbe · not set → Nicht angegeben. English's spaced
-em dash becomes a spaced en dash (" – ").
+→ Körperdiagramm · plates → Hantelscheiben (short: Scheiben) · plate
+calculator → Scheibenrechner · bar → Stange · log (verb) → loggen · theme →
+Design · accent → Akzentfarbe · not set → Nicht angegeben · superset →
+Supersatz · top set → Topsatz · rep range → Wiederholungsbereich · warm-up
+ramp → Aufwärmschema · working weight → Arbeitsgewicht · RPE/RIR → RPE/RIR
+· training block → Trainingsblock · deload week → Deload-Woche · beginner /
+intermediate → Einsteiger / Fortgeschritten · equipment → Ausrüstung ·
+custom (exercise) → Eigene · personal record → Bestleistung. Set-type
+badges: A (Aufwärmsatz), D (Dropsatz), V (Versagen). English's spaced em
+dash becomes a spaced en dash (" – ").
 
 # Schema v26: what it added and the rules around it
 

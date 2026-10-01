@@ -12,6 +12,7 @@ import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/dates.dart';
 import '../../../shared/utils/format.dart';
@@ -47,7 +48,7 @@ class TrainingBlockAction extends ConsumerWidget {
         Icons.event_repeat,
         color: hasBlock ? ref.watch(accentColorProvider) : null,
       ),
-      tooltip: 'Training block',
+      tooltip: context.l10n.programsBlockTitle,
       onPressed: () => editTrainingBlock(context, ref, split),
     );
   }
@@ -61,7 +62,7 @@ Future<void> editTrainingBlock(
 ) async {
   final choice = await showGlassSheet<TrainingBlockChoice>(
     context: context,
-    title: 'Training block',
+    title: context.l10n.programsBlockTitle,
     child: TrainingBlockSheet(split: split),
   );
   if (choice == null) return;
@@ -135,7 +136,7 @@ class _TrainingBlockSheetState extends State<TrainingBlockSheet> {
       // tell the app"; a month ahead covers "next block starts Monday".
       firstDate: DateTime(today.year - 1, today.month, today.day),
       lastDate: DateTime(today.year, today.month, today.day + 28),
-      helpText: 'Week 1 began on',
+      helpText: context.l10n.programsBlockPickerHelp,
     );
     if (picked != null) setState(() => _startedAt = dateOnly(picked));
   }
@@ -155,6 +156,7 @@ class _TrainingBlockSheetState extends State<TrainingBlockSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final muted = theme.textTheme.bodySmall?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
     );
@@ -164,15 +166,10 @@ class _TrainingBlockSheetState extends State<TrainingBlockSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Train for a set number of weeks, then take one lighter deload '
-            'week, then start again. During the deload week the suggested '
-            'weights drop to the deload load.',
-            style: muted,
-          ),
+          Text(l10n.programsBlockIntro, style: muted),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Run in training blocks'),
+            title: Text(l10n.programsBlockSwitch),
             value: _enabled,
             onChanged: (value) => setState(() => _enabled = value),
           ),
@@ -181,35 +178,45 @@ class _TrainingBlockSheetState extends State<TrainingBlockSheet> {
               children: [
                 Expanded(
                   child: Text(
-                    'Training weeks',
+                    l10n.programsBlockWeeksLabel,
                     style: theme.textTheme.labelLarge,
                   ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.remove),
-                  tooltip: 'Fewer weeks',
+                  tooltip: l10n.programsBlockFewerWeeks,
                   onPressed: _weeks > 1 ? () => setState(() => _weeks--) : null,
                 ),
+                // Wide enough for "10 Wochen", and scaled down rather than
+                // wrapped past that: a two-line count between the buttons
+                // would push them apart every time the number changed.
                 SizedBox(
-                  width: 72,
-                  child: Text(
-                    _weeks == 1 ? '1 week' : '$_weeks weeks',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.titleSmall,
+                  width: 84,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      l10n.programsBlockWeeks(_weeks),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      style: theme.textTheme.titleSmall,
+                    ),
                   ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.add),
-                  tooltip: 'More weeks',
+                  tooltip: l10n.programsBlockMoreWeeks,
                   onPressed: _weeks < maxBlockWeeks
                       ? () => setState(() => _weeks++)
                       : null,
                 ),
               ],
             ),
-            Text('then 1 deload week', style: muted),
+            Text(l10n.programsBlockThenDeload, style: muted),
             const SizedBox(height: 16),
-            Text('Deload load', style: theme.textTheme.labelLarge),
+            Text(
+              l10n.programsBlockDeloadLoad,
+              style: theme.textTheme.labelLarge,
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 6,
@@ -217,35 +224,39 @@ class _TrainingBlockSheetState extends State<TrainingBlockSheet> {
               children: [
                 for (final percent in _deloadOptions)
                   AppChip(
-                    label: formatPercent(percent),
+                    label: formatPercent(percent, l10n: l10n),
                     selected: _deload == percent,
                     onTap: () => setState(() => _deload = percent),
                   ),
               ],
             ),
             const SizedBox(height: 4),
-            Text('of your usual working weights', style: muted),
+            Text(l10n.programsBlockOfWorkingWeights, style: muted),
             const SizedBox(height: 8),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Week 1 began'),
-              subtitle: Text(_preview()),
+              title: Text(l10n.programsBlockWeekOneBegan),
+              subtitle: Text(_preview(l10n)),
               trailing: TextButton(
                 onPressed: _pickStart,
-                child: Text(formatShortDate(_startedAt)),
+                child: Text(formatShortDate(_startedAt, l10n: l10n)),
               ),
             ),
           ],
           const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+          // An OverflowBar, like a dialog's actions: side by side while they
+          // fit, stacked when a longer language or a large text size makes
+          // them not.
+          OverflowBar(
+            alignment: MainAxisAlignment.end,
+            overflowAlignment: OverflowBarAlignment.end,
+            spacing: 8,
             children: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
+                child: Text(l10n.commonCancel),
               ),
-              const SizedBox(width: 8),
-              FilledButton(onPressed: _save, child: const Text('Save')),
+              FilledButton(onPressed: _save, child: Text(l10n.commonSave)),
             ],
           ),
         ],
@@ -255,22 +266,25 @@ class _TrainingBlockSheetState extends State<TrainingBlockSheet> {
 
   /// Where today falls under the settings as they stand in the sheet, so the
   /// effect of moving the start date is visible before saving.
-  String _preview() {
+  String _preview(AppLocalizations l10n) {
     final week = trainingBlockWeek(
       blockWeeks: _weeks,
       startedAt: _startedAt,
       on: clock.now(),
     );
-    if (week == null) return 'Starts ${formatShortDate(_startedAt)}';
-    return 'Today: ${blockWeekLabel(week)}';
+    if (week == null) {
+      return l10n.programsBlockStarts(formatShortDate(_startedAt, l10n: l10n));
+    }
+    return l10n.programsBlockToday(blockWeekLabel(week, l10n: l10n));
   }
 }
 
-/// "Week 2 of 4", or "Deload week".
-String blockWeekLabel(TrainingBlockWeek week) {
+/// "Week 2 of 4", or "Deload week". In [l10n]'s language when given.
+String blockWeekLabel(TrainingBlockWeek week, {AppLocalizations? l10n}) {
+  final strings = l10n ?? englishLocalizations;
   return week.isDeload
-      ? 'Deload week'
-      : 'Week ${week.week} of ${week.blockWeeks}';
+      ? strings.programsBlockDeloadWeek
+      : strings.programsBlockWeekOf(week.week, week.blockWeeks);
 }
 
 /// The line under a split's title saying which week of the block this is.
@@ -289,15 +303,16 @@ class TrainingBlockBanner extends ConsumerWidget {
     if (week == null) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
-    final deload = formatPercent(deloadPercentFor(split));
+    final deload = formatPercent(deloadPercentFor(split), l10n: l10n);
     final weeksToDeload = week.blockWeeks - week.week + 1;
 
     final detail = week.isDeload
-        ? 'Suggested weights at $deload. A new block starts next week.'
+        ? l10n.programsBlockBannerDeload(deload)
         : weeksToDeload == 1
-        ? 'Deload week at $deload next week · block ${week.cycle}'
-        : 'Deload at $deload in $weeksToDeload weeks · block ${week.cycle}';
+        ? l10n.programsBlockBannerNextWeek(deload, week.cycle)
+        : l10n.programsBlockBannerInWeeks(deload, weeksToDeload, week.cycle);
 
     return AppCard(
       margin: const EdgeInsets.symmetric(vertical: 6),
@@ -317,7 +332,7 @@ class TrainingBlockBanner extends ConsumerWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  blockWeekLabel(week),
+                  blockWeekLabel(week, l10n: l10n),
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),

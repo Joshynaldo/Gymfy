@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/glass_dialog.dart';
 import '../data/plan_document.dart';
 import '../data/plan_share_repository.dart';
@@ -81,11 +82,11 @@ class _PlanRenameDialogState extends State<PlanRenameDialog> {
   void _submit() {
     final name = _controller.text.trim();
     if (name.isEmpty) {
-      setState(() => _error = 'Give it a name.');
+      setState(() => _error = context.l10n.planShareRenameEmpty);
       return;
     }
     if (widget.taken.contains(name)) {
-      setState(() => _error = 'You already have a plan called that.');
+      setState(() => _error = context.l10n.planShareRenameTaken);
       return;
     }
     Navigator.of(context).pop(name);
@@ -93,16 +94,15 @@ class _PlanRenameDialogState extends State<PlanRenameDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return GlassDialog(
-      title: const Text('Name already used'),
+      title: Text(l10n.planShareRenameTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'You already have a plan called "${widget.clashing}". Give the '
-            'imported one a different name — your own plan is kept either way.',
-          ),
+          Text(l10n.planShareRenameMessage(widget.clashing)),
           const SizedBox(height: 16),
           TextField(
             controller: _controller,
@@ -113,7 +113,7 @@ class _PlanRenameDialogState extends State<PlanRenameDialog> {
               if (_error != null) setState(() => _error = null);
             },
             decoration: InputDecoration(
-              labelText: 'Plan name',
+              labelText: l10n.planShareRenameLabel,
               errorText: _error,
               border: const OutlineInputBorder(),
             ),
@@ -123,9 +123,12 @@ class _PlanRenameDialogState extends State<PlanRenameDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Skip this one'),
+          child: Text(l10n.planShareRenameSkip),
         ),
-        FilledButton(onPressed: _submit, child: const Text('Import')),
+        FilledButton(
+          onPressed: _submit,
+          child: Text(l10n.planShareRenameImport),
+        ),
       ],
     );
   }

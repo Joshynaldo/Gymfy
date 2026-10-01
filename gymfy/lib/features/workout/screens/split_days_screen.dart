@@ -4,6 +4,7 @@ import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/name_prompt_dialog.dart';
@@ -31,7 +32,7 @@ class SplitDaysScreen extends ConsumerWidget {
     // Title follows the split's name; falls back gracefully while loading or
     // if the split was deleted out from under us.
     final split = splitAsync.value;
-    final title = split?.name ?? 'Split';
+    final title = split?.name ?? context.l10n.workoutSplitFallbackTitle;
 
     return GlassScaffold(
       appBar: GlassAppBar(
@@ -52,7 +53,7 @@ class SplitDaysScreen extends ConsumerWidget {
       // between them read as something that had been left there.
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: AppButton(
-        label: 'Add day',
+        label: context.l10n.workoutAddDay,
         icon: Icons.add,
         expand: false,
         onPressed: () => addDayTo(context, ref, splitId),
@@ -68,10 +69,10 @@ class SplitDaysScreen extends ConsumerWidget {
 Future<void> addDayTo(BuildContext context, WidgetRef ref, int splitId) async {
   final name = await showNamePromptDialog(
     context,
-    title: 'Add day',
-    label: 'Day name',
-    hint: 'e.g. Push',
-    confirmLabel: 'Add',
+    title: context.l10n.workoutAddDay,
+    label: context.l10n.workoutDayNameLabel,
+    hint: context.l10n.workoutDayNameHint,
+    confirmLabel: context.l10n.commonAdd,
   );
   if (name == null) return;
 
@@ -100,7 +101,7 @@ class ActiveSplitAction extends ConsumerWidget {
               Icon(Icons.check_circle, size: 18, color: accent),
               const SizedBox(width: 6),
               Text(
-                'Active',
+                context.l10n.commonActive,
                 style: Theme.of(
                   context,
                 ).textTheme.labelLarge?.copyWith(color: accent),
@@ -114,12 +115,13 @@ class ActiveSplitAction extends ConsumerWidget {
     return TextButton(
       onPressed: () async {
         final messenger = ScaffoldMessenger.of(context);
+        final l10n = context.l10n;
         await ref.read(workoutRepositoryProvider).setActiveSplit(split.id);
         messenger.showSnackBar(
-          SnackBar(content: Text('Now following ${split.name}')),
+          SnackBar(content: Text(l10n.workoutNowFollowing(split.name))),
         );
       },
-      child: const Text('Set active'),
+      child: Text(context.l10n.workoutSetActive),
     );
   }
 }

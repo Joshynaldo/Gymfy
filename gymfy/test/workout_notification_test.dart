@@ -6,6 +6,7 @@
 // button writes the right set exactly once when it comes back in.
 
 import 'dart:async';
+import 'dart:ui' show Locale;
 
 import 'package:drift/native.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -20,6 +21,8 @@ import 'package:gymfy/features/workout/data/rest_timer_controller.dart';
 import 'package:gymfy/features/workout/data/session_repository.dart';
 import 'package:gymfy/features/workout/data/workout_repository.dart';
 import 'package:gymfy/features/workout_notification/data/workout_notification.dart';
+import 'package:gymfy/l10n/app_language.dart';
+import 'package:gymfy/l10n/l10n.dart';
 import 'package:gymfy/shared/data/notification_service.dart';
 // RestTimer is also a Drift row class in here — the controller is the one
 // this test means.
@@ -220,6 +223,9 @@ void main() {
           ),
           restTimerProvider.overrideWith(_FakeTimer.new),
           weightUnitProvider.overrideWithValue(WeightUnit.kg),
+          // The language comes from the settings table, and there is no
+          // database here.
+          appLocalizationsProvider.overrideWithValue(englishLocalizations),
         ],
       );
       addTearDown(container.dispose);
@@ -285,6 +291,40 @@ void main() {
         expect(bridge.shown.last.restEndsAtMs, 0);
       },
     );
+
+    test('switching the app to German re-posts it in German', () async {
+      // The language is watched like everything else here, so the words in
+      // the shade follow a switch in Settings without waiting for a set.
+      final container = ProviderContainer(
+        overrides: [
+          workoutNotificationBridgeProvider.overrideWithValue(bridge),
+          workoutNotificationProvider.overrideWith((ref) => setting.stream),
+          inProgressSessionProvider.overrideWith((ref) => sessions.stream),
+          nextSetProvider.overrideWith(
+            (ref, id) async => ref.watch(_nextProvider),
+          ),
+          restTimerProvider.overrideWith(_FakeTimer.new),
+          weightUnitProvider.overrideWithValue(WeightUnit.kg),
+          appLocalizationsProvider.overrideWith(
+            (ref) => ref.watch(_languageProvider),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.listen(workoutNotificationSyncProvider, (_, _) {});
+      container.read(_nextProvider.notifier).value = _next(number: 1);
+      await start();
+      expect(bridge.shown.last.labels.logSet, 'Log set');
+
+      container.read(_languageProvider.notifier).value = lookupAppLocalizations(
+        const Locale('de'),
+      );
+      await until(() => bridge.shown.last.labels.logSet != 'Log set');
+
+      expect(bridge.shown.last.text, 'Bench Press · Satz 1 von 3');
+      expect(bridge.shown.last.labels.logSet, 'Satz loggen');
+      expect(bridge.shown.last.labels.channelName, 'Laufendes Training');
+    });
 
     test('an unchanged state is not sent again', () async {
       final container = containerWith();
@@ -647,6 +687,7 @@ class _ShowingSync extends WorkoutNotificationSync {
     subText: '',
     restEndsAtMs: 0,
     logCommand: '',
+    labels: workoutNotificationLabels(englishLocalizations),
   );
 
   @override
@@ -688,3 +729,15 @@ class _RecordingNotifications extends NotificationService {
   @override
   Future<void> cancelRestOver() async => calls.add('cancel');
 }
+
+/// The app's language, switchable from a test.
+class _Language extends Notifier<AppLocalizations> {
+  @override
+  AppLocalizations build() => englishLocalizations;
+
+  set value(AppLocalizations l10n) => state = l10n;
+}
+
+final _languageProvider = NotifierProvider<_Language, AppLocalizations>(
+  _Language.new,
+);

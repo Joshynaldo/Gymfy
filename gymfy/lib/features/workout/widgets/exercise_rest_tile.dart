@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../data/rest_timer_repository.dart';
 import 'rest_length_picker.dart';
 
@@ -18,6 +19,7 @@ class ExerciseRestTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
     final override = ref.watch(exerciseRestOverrideProvider(exerciseId)).value;
     final effective = ref.watch(restForExerciseProvider(exerciseId));
@@ -31,8 +33,8 @@ class ExerciseRestTile extends ConsumerWidget {
           final chosen = await showRestLengthPicker(
             context,
             current: effective,
-            title: 'Rest between sets',
-            clearLabel: override == null ? null : 'Use the default instead',
+            title: l10n.workoutRestBetweenSets,
+            clearLabel: override == null ? null : l10n.workoutRestUseDefault,
           );
           if (chosen == null) return;
 
@@ -54,14 +56,16 @@ class ExerciseRestTile extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Rest between sets',
+                      l10n.workoutRestBetweenSets,
                       style: theme.textTheme.titleSmall,
                     ),
                     const SizedBox(height: 2),
                     Text(
                       override == null
-                          ? '${formatRest(effective)} — following the default'
-                          : '${formatRest(effective)} — set for this exercise',
+                          ? l10n.workoutRestFollowingDefault(
+                              formatRest(effective),
+                            )
+                          : l10n.workoutRestOwn(formatRest(effective)),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),

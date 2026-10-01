@@ -15,6 +15,22 @@
   },
   "commonToday": "Today",
   "commonYesterday": "Yesterday",
+  "commonDelete": "Delete",
+  "commonAdd": "Add",
+  "commonEdit": "Edit",
+  "commonOff": "Off",
+  "commonActive": "Active",
+  "@commonActive": {
+    "description": "Marks the split that is currently being followed."
+  },
+  "commonListAnd": "{first} and {second}",
+  "@commonListAnd": {
+    "description": "Joins two names in a list. Applied pairwise, so three names read 'A and B and C'.",
+    "placeholders": {
+      "first": { "type": "String" },
+      "second": { "type": "String" }
+    }
+  },
 
   "shellNavHome": "Home",
   "shellNavWorkout": "Workout",
@@ -351,5 +367,885 @@
       "error": { "type": "String" }
     }
   },
-  "muscleMapContrastCaption": "Each muscle has its own colour. Brighter still means more volume."
+  "muscleMapContrastCaption": "Each muscle has its own colour. Brighter still means more volume.",
+
+  "workoutTitle": "Workout",
+  "workoutSplitsLoadFailed": "Could not load your splits.\n{error}",
+  "@workoutSplitsLoadFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "workoutAddDay": "Add day",
+  "workoutStartEmptyTooltip": "Start empty workout",
+  "workoutSwitchSplitTooltip": "Switch split",
+  "workoutSwitcherTitle": "Your splits",
+  "workoutNewSplit": "New split",
+  "workoutBrowsePrograms": "Browse programs",
+  "workoutManageSplits": "Manage splits",
+  "workoutNoSplitsTitle": "No splits yet",
+  "workoutNoSplitsMessage": "Create your first split to start planning your training.",
+  "workoutNoSplitsFromProgram": "Start from a program",
+  "workoutNoSplitsFreeWorkout": "Or start an empty workout",
+  "workoutNoActiveSplitTitle": "No active split",
+  "workoutNoActiveSplitMessage": "Pick the programme you are following and its days will show up here.",
+  "workoutNoActiveSplitAction": "Choose a split",
+  "workoutFreeWorkoutName": "Free workout",
+  "@workoutFreeWorkoutName": {
+    "description": "Saved as the name of a workout started without a planned day, and shown as its heading."
+  },
+  "workoutSplitsTitle": "Splits",
+  "workoutSplitNameLabel": "Split name",
+  "workoutSplitNameHint": "e.g. Push / Pull / Legs",
+  "workoutDeleteSplitTooltip": "Delete split",
+  "workoutDeleteTitle": "Delete \"{name}\"?",
+  "@workoutDeleteTitle": {
+    "description": "Confirming the deletion of a split or a day. name is what the user called it.",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "workoutDeleteSplitMessage": "This removes the split and everything inside it. This cannot be undone.",
+  "workoutSplitFallbackTitle": "Split",
+  "workoutDayNameLabel": "Day name",
+  "workoutDayNameHint": "e.g. Push",
+  "workoutNowFollowing": "Now following {split}",
+  "@workoutNowFollowing": {
+    "placeholders": {
+      "split": { "type": "String" }
+    }
+  },
+  "workoutSetActive": "Set active",
+  "workoutSplitLoadFailed": "Could not load this split.\n{error}",
+  "@workoutSplitLoadFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "workoutDayCardSubtitle": "{count, plural, =1{1 exercise} other{{count} exercises}} • {schedule}",
+  "@workoutDayCardSubtitle": {
+    "description": "Under a day's name. schedule is its weekdays, e.g. 'Mon, Thu', or workoutDayNotScheduled.",
+    "placeholders": {
+      "count": { "type": "int" },
+      "schedule": { "type": "String" }
+    }
+  },
+  "workoutDayNotScheduled": "Not scheduled",
+  "workoutDeleteDayTooltip": "Delete day",
+  "workoutDayNoExercises": "No exercises yet — tap to add some.",
+  "workoutDeleteDayMessage": "This removes the day and its exercises. This cannot be undone.",
+  "workoutNoDaysTitle": "No days yet",
+  "workoutNoDaysMessage": "Add a training day (like \"Push\" or \"Legs\") to start building this split.",
+  "workoutDayFallbackTitle": "Day",
+  "workoutDayLoadFailed": "Could not load this day.\n{error}",
+  "@workoutDayLoadFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "workoutStartWorkout": "Start workout",
+  "workoutAddExercises": "Add exercises",
+  "workoutPlannedSetsReps": "{sets, plural, other{{sets} sets}} × {reps} reps",
+  "@workoutPlannedSetsReps": {
+    "description": "A planned exercise's target in the day builder. reps is already formatted: 10, or a range like 8–12.",
+    "placeholders": {
+      "sets": { "type": "int" },
+      "reps": { "type": "String" }
+    }
+  },
+  "workoutPlannedWarmups": "{count, plural, =1{1 warm-up} other{{count} warm-ups}}",
+  "@workoutPlannedWarmups": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "workoutPlannedPercent": "@ {percent} 1RM",
+  "@workoutPlannedPercent": {
+    "description": "A planned percentage of the one-rep max. percent is already formatted, e.g. 75%.",
+    "placeholders": {
+      "percent": { "type": "String" }
+    }
+  },
+  "workoutSuperset": "Superset",
+  "workoutRemoveExerciseTooltip": "Remove exercise",
+  "workoutDragToReorder": "Drag to reorder",
+  "workoutSupersetRestAfterLast": "SUPERSET · REST AFTER THE LAST",
+  "workoutSupersetWithAbove": "Superset with the exercise above",
+  "workoutSupersetWithBelow": "Superset with the exercise below",
+  "workoutSupersetLeave": "Remove from superset",
+  "workoutUpdatedExercises": "{count, plural, =1{Updated 1 exercise} other{Updated all {count} exercises}}",
+  "@workoutUpdatedExercises": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "workoutSetsRepsTitle": "Sets & reps",
+  "workoutWheelSets": "Sets",
+  "workoutWheelReps": "Reps",
+  "workoutWheelFrom": "From",
+  "workoutWheelTo": "To",
+  "workoutRepRange": "Rep range",
+  "workoutWarmupSets": "Warm-up sets",
+  "workoutSaveToAll": "Save to all {count}",
+  "@workoutSaveToAll": {
+    "description": "Saves the same targets on every exercise of the day. count is how many that is.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "workoutDayEmptyTitle": "No exercises yet",
+  "workoutDayEmptyMessage": "Add exercises from the library and set their sets and reps.",
+  "workoutPickerClear": "Clear",
+  "workoutPickerNoMatches": "No exercises match your filters.",
+  "workoutPickerSelected": "{count, plural, =0{Nothing selected} =1{1 selected} other{{count} selected}}",
+  "@workoutPickerSelected": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "workoutPickerAddCount": "Add {count}",
+  "@workoutPickerAddCount": {
+    "description": "The picker's confirm button once more than one exercise is ticked; with one it says commonAdd.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "workoutLoadFailed": "Could not load this workout.\n{error}",
+  "@workoutLoadFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "workoutNotFound": "Workout not found.",
+  "workoutFinish": "Finish",
+  "workoutAddExercise": "Add exercise",
+  "workoutUpNext": "UP NEXT",
+  "workoutReorder": "Reorder",
+  "workoutSwapExercise": "Swap exercise",
+  "workoutSwapExerciseSubtitle": "Do something else in its place",
+  "workoutRemoveFromWorkout": "Remove from workout",
+  "workoutPlanUnchanged": "Your plan stays as it is",
+  "workoutPhaseWarmup": "Warm-up {number}",
+  "@workoutPhaseWarmup": {
+    "description": "Heading of the log sheet for a ramp-up set.",
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "workoutPhaseWorking": "Set {number} · working set",
+  "@workoutPhaseWorking": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "workoutExerciseOptionsTooltip": "Exercise options",
+  "workoutWarmupCalculator": "Warm-up calculator",
+  "workoutLogSet": "Log set {number}",
+  "@workoutLogSet": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "workoutSupersetWith": "Superset with {partners} — rest after the last one",
+  "@workoutSupersetWith": {
+    "description": "partners are the other exercise names of the superset, joined with commonListAnd.",
+    "placeholders": {
+      "partners": { "type": "String" }
+    }
+  },
+  "workoutSupersetCaps": "SUPERSET",
+  "workoutWarmupProgress": "Warm-up {number} of {expected}",
+  "@workoutWarmupProgress": {
+    "description": "The warm-up button while the plan still expects ramp-up sets.",
+    "placeholders": {
+      "number": { "type": "int" },
+      "expected": { "type": "int" }
+    }
+  },
+  "workoutWarmup": "Warm-up",
+  "workoutSuggestionEarned": "You hit every set last time — going up to {weight}",
+  "@workoutSuggestionEarned": {
+    "description": "Overload suggestions on the exercise card. weight is formatted with its unit.",
+    "placeholders": {
+      "weight": { "type": "String" }
+    }
+  },
+  "workoutSuggestionDeload": "Several increases in a row — a lighter {weight} is suggested",
+  "@workoutSuggestionDeload": {
+    "placeholders": {
+      "weight": { "type": "String" }
+    }
+  },
+  "workoutSuggestionAtLimit": "Top set was a limit effort last time — holding at {weight}",
+  "@workoutSuggestionAtLimit": {
+    "placeholders": {
+      "weight": { "type": "String" }
+    }
+  },
+  "workoutSuggestionPercent": "{percent} of your 1RM — {weight}",
+  "@workoutSuggestionPercent": {
+    "placeholders": {
+      "percent": { "type": "String" },
+      "weight": { "type": "String" }
+    }
+  },
+  "workoutSuggestionBlockDeload": "Deload week at {percent} — {weight}",
+  "@workoutSuggestionBlockDeload": {
+    "placeholders": {
+      "percent": { "type": "String" },
+      "weight": { "type": "String" }
+    }
+  },
+  "workoutSuggestionSame": "Same {weight} as last time",
+  "@workoutSuggestionSame": {
+    "placeholders": {
+      "weight": { "type": "String" }
+    }
+  },
+  "workoutChangeSetTypeTooltip": "Change set type",
+  "workoutSetTypeTitle": "Set type",
+  "workoutDeleteSetTooltip": "Delete set",
+  "workoutBadgeWarmup": "W",
+  "@workoutBadgeWarmup": {
+    "description": "One letter on a logged warm-up set."
+  },
+  "workoutBadgeDrop": "D",
+  "@workoutBadgeDrop": {
+    "description": "One letter on a logged drop set."
+  },
+  "workoutBadgeFailure": "F",
+  "@workoutBadgeFailure": {
+    "description": "One letter on a logged set taken to failure."
+  },
+  "workoutEmptyFreeMessage": "Add exercises as you go. Nothing here changes your plan.",
+  "workoutEmptyNothingTitle": "Nothing to log",
+  "workoutEmptyNothingMessage": "This day has no exercises. Add some for today — your plan stays as it is.",
+  "workoutLogWarmupCaption": "Warm-up · ramping up",
+  "workoutLogDropCaption": "Drop set · lighter, straight after",
+  "workoutLogFailureCaption": "{phase} · to failure",
+  "@workoutLogFailureCaption": {
+    "description": "phase is workoutPhaseWorking or workoutWorkingSet.",
+    "placeholders": {
+      "phase": { "type": "String" }
+    }
+  },
+  "workoutWorkingSet": "Working set",
+  "workoutLogRepsUnit": "reps",
+  "workoutLogStepWeight": "STEP 1 — WEIGHT",
+  "workoutLogStepReps": "STEP 2 — REPS",
+  "workoutLogStepTime": "STEP 2 — TIME",
+  "workoutLogTypeWeight": "Type a weight",
+  "workoutLogStackPlates": "Stack plates",
+  "workoutLogRepeat": "Repeat last set",
+  "workoutLogNextTime": "Next: time",
+  "workoutLogNextReps": "Next: reps",
+  "workoutLogSaveSet": "Save set",
+  "workoutLogHolding": "HOLDING",
+  "workoutLogMinutes": "MIN",
+  "workoutLogSeconds": "SEC",
+  "workoutTimerStop": "Stop",
+  "workoutTimerStart": "Start timer",
+  "workoutEffortRpeLabel": "HOW HARD · RPE",
+  "workoutEffortRirLabel": "REPS LEFT · RIR",
+  "workoutNoteEarned": "You hit every set last time — going up to {weight}.",
+  "@workoutNoteEarned": {
+    "description": "Why the log sheet prefilled the weight it did. weight is formatted with its unit.",
+    "placeholders": {
+      "weight": { "type": "String" }
+    }
+  },
+  "workoutNoteDeload": "Several increases in a row. A lighter week at {weight} is suggested.",
+  "@workoutNoteDeload": {
+    "placeholders": {
+      "weight": { "type": "String" }
+    }
+  },
+  "workoutNoteAtLimit": "You hit every set, but the top set was a limit effort — staying at {weight}.",
+  "@workoutNoteAtLimit": {
+    "placeholders": {
+      "weight": { "type": "String" }
+    }
+  },
+  "workoutNotePercent": "Planned at {percent} of your 1RM — {weight}.",
+  "@workoutNotePercent": {
+    "placeholders": {
+      "percent": { "type": "String" },
+      "weight": { "type": "String" }
+    }
+  },
+  "workoutNoteBlockDeload": "Deload week: {percent} of your working weight — {weight}.",
+  "@workoutNoteBlockDeload": {
+    "placeholders": {
+      "percent": { "type": "String" },
+      "weight": { "type": "String" }
+    }
+  },
+  "workoutNoteSame": "Same weight as last time — the rep target wasn't met yet.",
+  "workoutRestOverCaps": "REST OVER",
+  "workoutRestingCaps": "RESTING",
+  "workoutRestAddTooltip": "Add 30 seconds",
+  "workoutRestDismissTooltip": "Dismiss",
+  "workoutRestSkipTooltip": "Skip rest",
+  "workoutRestOver": "Rest over",
+  "workoutReps": "{count, plural, other{{count} reps}}",
+  "@workoutReps": {
+    "description": "A rep count on its own, e.g. a bodyweight set or a rep record.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "workoutRecordLine": "{kind} · {value}, was {previous}",
+  "@workoutRecordLine": {
+    "description": "One beaten record. kind is a workoutRecordKind… label; value and previous are formatted.",
+    "placeholders": {
+      "kind": { "type": "String" },
+      "value": { "type": "String" },
+      "previous": { "type": "String" }
+    }
+  },
+  "workoutRecordNew": "New personal record",
+  "workoutRecordCount": "{count, plural, =1{1 personal record} other{{count} personal records}}",
+  "@workoutRecordCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "workoutRecordKindWeight": "Heaviest weight",
+  "workoutRecordKindOneRm": "Best estimated 1RM",
+  "workoutRecordKindReps": "Most reps",
+  "workoutRecordKindHold": "Longest hold",
+  "workoutRecordKindVolume": "Best session volume",
+  "workoutSwapTitle": "Swap {exercise}",
+  "@workoutSwapTitle": {
+    "placeholders": {
+      "exercise": { "type": "String" }
+    }
+  },
+  "workoutSwapScopeTitle": "Swap for how long?",
+  "workoutSwapScopeSession": "Just this workout",
+  "workoutSwapScopePlan": "This workout and the plan",
+  "workoutSwapScopePlanSubtitle": "Future workouts of this day use it too",
+  "workoutSwapPlanClash": "That exercise is already in this day's plan, so the swap is for this workout only.",
+  "workoutReorderTitle": "Reorder exercises",
+  "workoutWarmupRampCaption": "{exercise} · ramp {ramp}",
+  "@workoutWarmupRampCaption": {
+    "description": "ramp is the warm-up percentages, e.g. 40 · 60 · 80 %.",
+    "placeholders": {
+      "exercise": { "type": "String" },
+      "ramp": { "type": "String" }
+    }
+  },
+  "workoutWarmupWorkingWeight": "WORKING WEIGHT",
+  "workoutWarmupLighter": "Lighter",
+  "workoutWarmupHeavier": "Heavier",
+  "workoutWarmupEnterWeight": "Enter the weight you are working up to.",
+  "workoutWarmupTooLight": "Too light to need a ramp — go straight to work.",
+  "workoutWarmupLogSets": "{count, plural, =1{Log 1 warm-up set} other{Log {count} warm-up sets}}",
+  "@workoutWarmupLogSets": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "workoutWarmupEmptyBar": "Empty bar",
+  "workoutWarmupStepPlates": "{percent} % · {plates} per side",
+  "@workoutWarmupStepPlates": {
+    "description": "One warm-up step. plates is what goes on each side, e.g. 20 + 5.",
+    "placeholders": {
+      "percent": { "type": "int" },
+      "plates": { "type": "String" }
+    }
+  },
+  "workoutSummaryTitle": "Workout complete",
+  "workoutSummaryLoadFailed": "Could not load the summary.\n{error}",
+  "@workoutSummaryLoadFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "workoutSummaryNoSets": "No sets were logged in this workout.",
+  "workoutSummaryExercises": "Exercises",
+  "workoutSummaryMusclesWorked": "Muscles worked",
+  "workoutSummaryNoMuscles": "No muscles to show for this workout.",
+  "workoutSummaryDuration": "Duration",
+  "workoutSummarySets": "Sets",
+  "workoutSummaryVolume": "Volume",
+  "workoutSummaryExerciseSets": "{count, plural, =1{1 set} other{{count} sets}}",
+  "@workoutSummaryExerciseSets": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "workoutSummaryTopSet": "Top set {set}",
+  "@workoutSummaryTopSet": {
+    "description": "set is one logged set, e.g. 80 kg × 8 reps.",
+    "placeholders": {
+      "set": { "type": "String" }
+    }
+  },
+  "workoutSummaryTopSetTotal": "Top set {set}  •  {volume} total",
+  "@workoutSummaryTopSetTotal": {
+    "placeholders": {
+      "set": { "type": "String" },
+      "volume": { "type": "String" }
+    }
+  },
+  "workoutLoggingRateTitle": "Rate how hard each set was",
+  "workoutLoggingOffCaption": "Off: the log sheet asks for weight and reps only.",
+  "workoutLoggingRpeCaption": "RPE 6–10, optional on every working set. A top set rated 9.5 or 10 holds the overload suggestion at the same weight next time.",
+  "workoutLoggingRirCaption": "Reps left in the tank, optional on every working set. A top set with none left holds the overload suggestion at the same weight next time.",
+  "workoutWarmupRampTitle": "Warm-up ramp",
+  "workoutWarmupRampSubtitle": "{ramp} of your working weight, after the bar",
+  "@workoutWarmupRampSubtitle": {
+    "placeholders": {
+      "ramp": { "type": "String" }
+    }
+  },
+  "workoutWarmupRampSteps": "{count, plural, other{{count} steps}}",
+  "@workoutWarmupRampSteps": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "workoutRestBetweenSets": "Rest between sets",
+  "workoutRestUseDefault": "Use the default instead",
+  "workoutRestFollowingDefault": "{rest} — following the default",
+  "@workoutRestFollowingDefault": {
+    "placeholders": {
+      "rest": { "type": "String" }
+    }
+  },
+  "workoutRestOwn": "{rest} — set for this exercise",
+  "@workoutRestOwn": {
+    "placeholders": {
+      "rest": { "type": "String" }
+    }
+  },
+  "workoutSetPositionOf": "Set {number} of {planned}",
+  "@workoutSetPositionOf": {
+    "placeholders": {
+      "number": { "type": "int" },
+      "planned": { "type": "int" }
+    }
+  },
+  "workoutSetPosition": "Set {number}",
+  "@workoutSetPosition": {
+    "description": "A set past the plan's count, where 'of' would read like a bug.",
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+
+  "workoutNotificationNoExercises": "No exercises yet",
+  "workoutNotificationNext": "Next: {set}",
+  "@workoutNotificationNext": {
+    "description": "Expanded notification: what one tap on Log set will log, e.g. 80 kg × 8 reps.",
+    "placeholders": {
+      "set": { "type": "String" }
+    }
+  },
+  "workoutNotificationResting": "Resting",
+  "workoutNotificationLogSet": "Log set",
+  "workoutNotificationSkipRest": "Skip rest",
+  "workoutNotificationTapToOpen": "Tap to open Gymfy",
+  "@workoutNotificationTapToOpen": {
+    "description": "Shown on the notification once the app is no longer running."
+  },
+  "workoutNotificationChannel": "Workout in progress",
+  "workoutNotificationChannelDescription": "The current set and rest, with buttons to log and skip",
+
+  "overloadModeAuto": "Auto",
+  "overloadModeFixed": "Fixed",
+  "overloadModePercent": "Percent",
+  "overloadPercentValue": "{percent}%",
+  "@overloadPercentValue": {
+    "description": "A percentage. percent is the number, already formatted for the language.",
+    "placeholders": {
+      "percent": { "type": "String" }
+    }
+  },
+  "overloadSuggestTitle": "Suggest heavier weights",
+  "overloadSuggestSubtitle": "When you hit every set at the top of your rep range, the next session opens with a bit more on the bar.",
+  "overloadHowMuchTitle": "How much to add",
+  "overloadDeloadTitle": "Deload",
+  "overloadDeloadCaption": "After a run of increases, suggest dropping 10%. Only ever a suggestion — nothing changes on its own.",
+  "overloadDeloadNever": "Never",
+  "overloadDeloadInARow": "{weeks} in a row",
+  "@overloadDeloadInARow": {
+    "description": "How many increases in a row before a deload is suggested.",
+    "placeholders": {
+      "weeks": { "type": "int" }
+    }
+  },
+  "overloadAutoCaption": "Bigger jumps on big lifts: {legs} on legs, {backChest} on back and chest, {armsShoulders} on arms and shoulders. Core exercises are never auto-progressed.",
+  "@overloadAutoCaption": {
+    "description": "Each placeholder is a weight with its unit, e.g. 5 kg.",
+    "placeholders": {
+      "legs": { "type": "String" },
+      "backChest": { "type": "String" },
+      "armsShoulders": { "type": "String" }
+    }
+  },
+  "overloadFixedCaption": "The same jump on every exercise.",
+  "overloadPercentExample": "Adds {lightStep} to a {light} lift and {heavyStep} to a {heavy} one.",
+  "@overloadPercentExample": {
+    "description": "Every placeholder is a weight with its unit.",
+    "placeholders": {
+      "lightStep": { "type": "String" },
+      "light": { "type": "String" },
+      "heavyStep": { "type": "String" },
+      "heavy": { "type": "String" }
+    }
+  },
+
+  "platesTitle": "Plate calculator",
+  "platesLoadingTitle": "What are you loading?",
+  "platesTargetWeight": "Target weight",
+  "platesHint": "Dial in a target weight to see what goes on the bar.",
+  "platesBar": "Bar",
+  "platesNoBar": "None",
+  "@platesNoBar": {
+    "description": "The bar choice for plates loaded onto a machine with no barbell."
+  },
+  "platesBelowBar": "{target} is lighter than the bar itself ({bar}).",
+  "@platesBelowBar": {
+    "description": "Both are weights with their unit.",
+    "placeholders": {
+      "target": { "type": "String" },
+      "bar": { "type": "String" }
+    }
+  },
+  "platesEachSide": "Each side",
+  "platesExact": "Bar {bar} + plates {plates}",
+  "@platesExact": {
+    "description": "bar is the bar's weight without a unit; plates is the plates' weight with its unit.",
+    "placeholders": {
+      "bar": { "type": "String" },
+      "plates": { "type": "String" }
+    }
+  },
+  "platesClosest": "Closest loadable — {shortfall} under your target of {target}",
+  "@platesClosest": {
+    "description": "shortfall is a weight with its unit, target the target weight without one.",
+    "placeholders": {
+      "shortfall": { "type": "String" },
+      "target": { "type": "String" }
+    }
+  },
+  "platesTotal": "Total",
+  "platesClear": "Clear",
+  "platesInPlatesNoBar": "{total} in plates, no bar",
+  "@platesInPlatesNoBar": {
+    "placeholders": {
+      "total": { "type": "String" }
+    }
+  },
+  "platesBarPlusPlates": "Bar {bar} + {plates} in plates",
+  "@platesBarPlusPlates": {
+    "description": "bar is the bar's weight with its unit; plates is the plates' weight without one.",
+    "placeholders": {
+      "bar": { "type": "String" },
+      "plates": { "type": "String" }
+    }
+  },
+  "platesTapToAdd": "Tap to add a plate to each side",
+  "platesPlateSemantics": "{plate}, {count} on the bar",
+  "@platesPlateSemantics": {
+    "description": "Screen reader label of a plate button. plate is its weight with the unit.",
+    "placeholders": {
+      "plate": { "type": "String" },
+      "count": { "type": "int" }
+    }
+  },
+  "platesChangeBarTooltip": "Change the bar",
+  "platesJustTheBar": "Just the bar",
+  "platesInventoryCaption": "The plates your gym has, in {unit}. The calculator only suggests these.",
+  "@platesInventoryCaption": {
+    "placeholders": {
+      "unit": { "type": "String" }
+    }
+  },
+
+  "planShareTitle": "Share a plan",
+  "planShareNoSplits": "You have no splits to save yet — but you can still import one from someone else.",
+  "planShareSend": "Send",
+  "planShareReceive": "Receive",
+  "planShareImportTitle": "Import a plan",
+  "planShareImportSubtitle": "Open a .gymfy file someone sent you",
+  "planShareSaveDialogTitle": "Save your plan",
+  "planShareSaved": "Plan saved — send it from your files app.",
+  "planShareSaveFailed": "Could not save that plan.\n{error}",
+  "@planShareSaveFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "planSharePdfFailed": "Could not build that PDF.\n{error}",
+  "@planSharePdfFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "planShareReadFailed": "Could not read that file.\n{error}",
+  "@planShareReadFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "planShareImported": "{count, plural, =0{Nothing imported} =1{Plan imported} other{{count} plans imported}}",
+  "@planShareImported": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "planShareExplainer": "A plan file holds your splits, their days and the exercises in them. It never includes your workouts, your weights, your measurements or your photos.",
+  "planShareSaveFile": "Save file",
+  "planSharePdf": "PDF",
+  "planShareErrorNotJson": "That file isn't a Gymfy plan — it isn't even JSON.",
+  "planShareErrorNotPlan": "That file isn't a Gymfy plan.",
+  "planShareErrorWrongFormat": "That file isn't a Gymfy plan. Look for a file ending in .{extension}.",
+  "@planShareErrorWrongFormat": {
+    "placeholders": {
+      "extension": { "type": "String" }
+    }
+  },
+  "planShareErrorTooNew": "That plan was made by a newer version of Gymfy. Update the app and try again.",
+  "planShareErrorNoSplits": "That plan file doesn't contain a split.",
+  "planShareRenameEmpty": "Give it a name.",
+  "planShareRenameTaken": "You already have a plan called that.",
+  "planShareRenameTitle": "Name already used",
+  "planShareRenameMessage": "You already have a plan called \"{name}\". Give the imported one a different name — your own plan is kept either way.",
+  "@planShareRenameMessage": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "planShareRenameLabel": "Plan name",
+  "planShareRenameSkip": "Skip this one",
+  "planShareRenameImport": "Import",
+  "planSharePdfPage": "Page {page} of {pages}",
+  "@planSharePdfPage": {
+    "description": "Footer of the printed plan. The PDF font only has Latin-1: no en dashes or curly quotes in any planSharePdf… message.",
+    "placeholders": {
+      "page": { "type": "int" },
+      "pages": { "type": "int" }
+    }
+  },
+  "planSharePdfNotScheduled": "Not scheduled",
+  "planSharePdfNoExercises": "No exercises",
+  "planSharePdfExercise": "Exercise",
+  "planSharePdfSetsReps": "Sets × reps",
+  "planSharePdfWarmup": "Warm-up",
+  "planSharePdfWeight": "Weight",
+
+  "programsTitle": "Programs",
+  "programsFacts": "{days, plural, =1{1 day a week} other{{days} days a week}} · {level}",
+  "@programsFacts": {
+    "description": "level is programsLevelBeginner or programsLevelIntermediate.",
+    "placeholders": {
+      "days": { "type": "int" },
+      "level": { "type": "String" }
+    }
+  },
+  "programsLevelBeginner": "Beginner",
+  "programsLevelIntermediate": "Intermediate",
+  "programsIntro": "Each programme is added as a new split you can edit like any other. Your own splits are never changed.",
+  "programsFallbackTitle": "Program",
+  "programsNotFound": "Program not found.",
+  "programsOpenFailed": "Could not open this program.\n{error}",
+  "@programsOpenFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "programsAddToSplits": "Add to my splits",
+  "programsAdded": "Added {program}. Set it active to follow it.",
+  "@programsAdded": {
+    "placeholders": {
+      "program": { "type": "String" }
+    }
+  },
+  "programsAddFailed": "Could not add that program.\n{error}",
+  "@programsAddFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "programsSupersetNote": "Marked exercises are done back to back as a superset.",
+  "programsBeginnerFullBodySummary": "One machine-and-dumbbell session, three times a week",
+  "programsBeginnerFullBodyDescription": "A gentle first programme built on machines, cables and dumbbells, so there is no barbell technique to learn before you start. The same full-body session three times a week, with rep ranges: once you hit the top of the range on every set, add a little weight.",
+  "programsFullBody5x5Summary": "Two alternating barbell workouts, five sets of five",
+  "programsFullBody5x5Description": "A classic linear-progression programme for building a strength base on the big barbell lifts. Alternate workout A and workout B three days a week and add a small amount of weight each time you complete every rep. Simple, fast, and it works for months before it stops.",
+  "programsUpperLowerSummary": "Four days, each muscle trained twice a week",
+  "programsUpperLowerDescription": "Two upper-body and two lower-body days. Each opens with a heavy compound in a low rep range, then moves to higher-rep accessories, with arm and shoulder work paired as supersets to save time. A good next step once three full-body days stop being enough.",
+  "programsPushPullLegsSummary": "Six days, the classic bodybuilding rotation",
+  "programsPushPullLegsDescription": "Pressing muscles, pulling muscles and legs on their own days, run twice through the week. Lots of volume for building muscle, with arm work done as supersets. Demanding on time: if six days is too many, run each day once and take the weekend off.",
+  "programsPercentageStrengthSummary": "Four days, main lifts planned as a percentage of your 1RM",
+  "programsPercentageStrengthDescription": "One day each for squat, bench, deadlift and overhead press. The main lift is planned as a percentage of your one-rep max, and Gymfy works out the weight from your tested or estimated 1RM, rounded to plates you can load. Pairs well with a training block on the split, such as three weeks of training and a deload week.",
+  "programsBodyPartSplitSummary": "Five days, one muscle group per day",
+  "programsBodyPartSplitDescription": "Chest, back, shoulders, arms and legs, each with a day to itself. Every muscle is trained hard once a week with plenty of exercises, and arm day runs as two supersets. Suits people who like long, focused sessions and can train five days in a row.",
+  "programsBlockTitle": "Training block",
+  "programsBlockIntro": "Train for a set number of weeks, then take one lighter deload week, then start again. During the deload week the suggested weights drop to the deload load.",
+  "programsBlockSwitch": "Run in training blocks",
+  "programsBlockWeeksLabel": "Training weeks",
+  "programsBlockFewerWeeks": "Fewer weeks",
+  "programsBlockMoreWeeks": "More weeks",
+  "programsBlockWeeks": "{count, plural, =1{1 week} other{{count} weeks}}",
+  "@programsBlockWeeks": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "programsBlockThenDeload": "then 1 deload week",
+  "programsBlockDeloadLoad": "Deload load",
+  "programsBlockOfWorkingWeights": "of your usual working weights",
+  "programsBlockWeekOneBegan": "Week 1 began",
+  "programsBlockPickerHelp": "Week 1 began on",
+  "programsBlockStarts": "Starts {date}",
+  "@programsBlockStarts": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "programsBlockToday": "Today: {week}",
+  "@programsBlockToday": {
+    "description": "week is programsBlockWeekOf or programsBlockDeloadWeek.",
+    "placeholders": {
+      "week": { "type": "String" }
+    }
+  },
+  "programsBlockDeloadWeek": "Deload week",
+  "programsBlockWeekOf": "Week {week} of {weeks}",
+  "@programsBlockWeekOf": {
+    "placeholders": {
+      "week": { "type": "int" },
+      "weeks": { "type": "int" }
+    }
+  },
+  "programsBlockBannerDeload": "Suggested weights at {percent}. A new block starts next week.",
+  "@programsBlockBannerDeload": {
+    "placeholders": {
+      "percent": { "type": "String" }
+    }
+  },
+  "programsBlockBannerNextWeek": "Deload week at {percent} next week · block {cycle}",
+  "@programsBlockBannerNextWeek": {
+    "placeholders": {
+      "percent": { "type": "String" },
+      "cycle": { "type": "int" }
+    }
+  },
+  "programsBlockBannerInWeeks": "Deload at {percent} in {weeks} weeks · block {cycle}",
+  "@programsBlockBannerInWeeks": {
+    "description": "weeks is always 2 or more; one week away is programsBlockBannerNextWeek.",
+    "placeholders": {
+      "percent": { "type": "String" },
+      "weeks": { "type": "int" },
+      "cycle": { "type": "int" }
+    }
+  },
+  "programsPercentOfMax": "% of 1RM",
+  "programsPercentNoMax": "No 1RM yet. Log a set or enter a tested max and the weight appears in your workout.",
+  "programsPercentPreview": "≈ {weight} today, from your 1RM of {max}.",
+  "@programsPercentPreview": {
+    "description": "Both are weights with their unit.",
+    "placeholders": {
+      "weight": { "type": "String" },
+      "max": { "type": "String" }
+    }
+  },
+
+  "exercisesTitle": "Exercises",
+  "exercisesCancelSelection": "Cancel selection",
+  "exercisesSelected": "{count, plural, other{{count} selected}}",
+  "@exercisesSelected": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "exercisesAddToDayTooltip": "Add to day",
+  "exercisesLoadFailed": "Could not load exercises.\n{error}",
+  "@exercisesLoadFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "exercisesAddExercise": "Add exercise",
+  "exercisesSearchHint": "Search by name or muscle",
+  "exercisesClearSearch": "Clear search",
+  "exercisesGroupChest": "Chest",
+  "exercisesGroupBack": "Back",
+  "exercisesGroupShoulders": "Shoulders",
+  "exercisesGroupArms": "Arms",
+  "exercisesGroupLegs": "Legs",
+  "exercisesGroupCore": "Core",
+  "exercisesGroupNeck": "Neck",
+  "exercisesNoMatchesTitle": "Nothing matches",
+  "exercisesNoMatchesMessage": "Try a different word, or clear a muscle filter.",
+  "exercisesCustomBadge": "Custom",
+  "@exercisesCustomBadge": {
+    "description": "Marks an exercise the user made themselves."
+  },
+  "exercisesDetailTitle": "Exercise",
+  "exercisesDetailLoadFailed": "Could not load this exercise.\n{error}",
+  "@exercisesDetailLoadFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "exercisesNotFound": "Exercise not found.",
+  "exercisesDeleteTitle": "Delete {name}?",
+  "@exercisesDeleteTitle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "exercisesDeleteWithHistory": "It will be removed from your library and from every picker. Workouts you already logged with it keep their sets.",
+  "exercisesDeleteNoHistory": "It has never been logged, so it will be removed completely.",
+  "exercisesArchived": "{name} removed — past workouts kept it",
+  "@exercisesArchived": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "exercisesDeleted": "{name} deleted",
+  "@exercisesDeleted": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "exercisesMusclesWorked": "Muscles worked",
+  "exercisesPreviewSoon": "Preview coming soon",
+  "exercisesEditTitle": "Edit exercise",
+  "exercisesNewTitle": "New exercise",
+  "exercisesNameLabel": "Name",
+  "exercisesNameHint": "e.g. Cable Fly",
+  "exercisesMusclesHelp": "Drives the muscle map, so pick everything this lift actually hits.",
+  "exercisesEquipment": "Equipment",
+  "exercisesPlateLoaded": "Loaded with plates",
+  "exercisesPlateLoadedSubtitle": "Log sets by tapping plates instead of typing a weight. For barbell and EZ-bar lifts.",
+  "exercisesImage": "Image",
+  "exercisesImageHelp": "Optional. A GIF from your gallery animates just like the built-in ones.",
+  "exercisesChooseImage": "Choose image",
+  "exercisesReplaceImage": "Replace",
+  "exercisesRemoveImage": "Remove",
+  "exercisesAddToDayTitle": "{count, plural, =1{Add to day} other{Add {count} exercises to day}}",
+  "@exercisesAddToDayTitle": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "exercisesNoDaysTitle": "No workout days yet",
+  "exercisesNoDaysMessage": "Create a split with at least one day in the Workout tab, then come back here.",
+  "exercisesNoteLabel": "Note",
+  "exercisesNoteHint": "Seat height, pin, grip width, which machine…",
+  "exercisesNoteClear": "Clear",
+  "exercisesNoteEmpty": "Add a note — seat height, pin, grip…",
+  "exercisesEquipmentFilterActive": "Equipment ({count})",
+  "@exercisesEquipmentFilterActive": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "exercisesEquipmentFilter": "Filter by equipment",
+  "exercisesAllEquipment": "All equipment"
 }

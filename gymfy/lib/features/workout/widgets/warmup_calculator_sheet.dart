@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
@@ -71,6 +72,9 @@ class WarmupCalculatorPanel extends StatefulWidget {
 
 class _WarmupCalculatorPanelState extends State<WarmupCalculatorPanel> {
   late double _workingKg = widget.workingKg;
+
+  /// Late, so it is made on the first build rather than with the State: its
+  /// text is spelled in the app's language, and that needs a context.
   late final _controller = TextEditingController(text: _shown(_workingKg));
 
   /// Steps the user unticked, by position in the current ramp. Cleared
@@ -84,13 +88,16 @@ class _WarmupCalculatorPanelState extends State<WarmupCalculatorPanel> {
     super.dispose();
   }
 
+  /// The working weight as the field spells it: no thousands grouping, which
+  /// [parseWeight] would misread, but the language's decimal separator —
+  /// "62,5" in German, which it reads back fine.
   String _shown(double kg) {
     if (kg <= 0) return '';
     final value = weightIn(kg, widget.unit);
     final rounded = (value * 100).round() / 100;
     return rounded == rounded.roundToDouble()
         ? '${rounded.round()}'
-        : '$rounded';
+        : '$rounded'.replaceAll('.', decimalSeparator(l10n: context.l10n));
   }
 
   /// One tap's worth of change: a pair of the smallest plates on a bar,
@@ -129,6 +136,7 @@ class _WarmupCalculatorPanelState extends State<WarmupCalculatorPanel> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final muted = theme.colorScheme.onSurfaceVariant;
     final steps = _steps;
     final chosen = [
@@ -146,21 +154,24 @@ class _WarmupCalculatorPanelState extends State<WarmupCalculatorPanel> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Warm-up calculator',
+              l10n.workoutWarmupCalculator,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 3),
             Text(
-              '${widget.exercise.name} · ramp ${formatWarmupRamp(widget.ramp)}',
+              l10n.workoutWarmupRampCaption(
+                widget.exercise.name,
+                formatWarmupRamp(widget.ramp),
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodySmall?.copyWith(color: muted),
             ),
             const SizedBox(height: 18),
             Text(
-              'WORKING WEIGHT',
+              l10n.workoutWarmupWorkingWeight,
               style: theme.textTheme.labelSmall?.copyWith(
                 color: muted,
                 fontWeight: FontWeight.w600,
@@ -172,7 +183,7 @@ class _WarmupCalculatorPanelState extends State<WarmupCalculatorPanel> {
               children: [
                 IconButton(
                   icon: const Icon(Icons.remove),
-                  tooltip: 'Lighter',
+                  tooltip: l10n.workoutWarmupLighter,
                   onPressed: _workingKg > 0 ? () => _nudge(-1) : null,
                 ),
                 Expanded(
@@ -205,7 +216,7 @@ class _WarmupCalculatorPanelState extends State<WarmupCalculatorPanel> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.add),
-                  tooltip: 'Heavier',
+                  tooltip: l10n.workoutWarmupHeavier,
                   onPressed: () => _nudge(1),
                 ),
               ],
@@ -216,8 +227,8 @@ class _WarmupCalculatorPanelState extends State<WarmupCalculatorPanel> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Text(
                   _workingKg <= 0
-                      ? 'Enter the weight you are working up to.'
-                      : 'Too light to need a ramp — go straight to work.',
+                      ? l10n.workoutWarmupEnterWeight
+                      : l10n.workoutWarmupTooLight,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(color: muted),
                 ),
@@ -238,9 +249,7 @@ class _WarmupCalculatorPanelState extends State<WarmupCalculatorPanel> {
                 ),
             const SizedBox(height: 14),
             AppButton(
-              label: chosen.length == 1
-                  ? 'Log 1 warm-up set'
-                  : 'Log ${chosen.length} warm-up sets',
+              label: l10n.workoutWarmupLogSets(chosen.length),
               icon: Icons.check,
               height: 52,
               onPressed: chosen.isEmpty
@@ -271,12 +280,13 @@ class _StepRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final muted = theme.colorScheme.onSurfaceVariant;
     final plates = groupPlates(step.perSide)
         .map(
           (p) => p.count == 1
-              ? formatPlate(p.plate)
-              : '${formatPlate(p.plate)} × ${p.count}',
+              ? formatPlate(p.plate, l10n: l10n)
+              : '${formatPlate(p.plate, l10n: l10n)} × ${p.count}',
         )
         .join(' + ');
 
@@ -287,19 +297,16 @@ class _StepRow extends StatelessWidget {
       controlAffinity: ListTileControlAffinity.leading,
       dense: true,
       title: Text(
-        '${formatWeightUnit(step.weightKg, unit)} × ${step.reps}',
+        '${formatWeightUnit(step.weightKg, unit, l10n: l10n)} × ${step.reps}',
         style: theme.textTheme.bodyLarge?.copyWith(
           fontFeatures: const [FontFeature.tabularFigures()],
         ),
       ),
-      subtitle: Text(
-        step.isEmptyBar
-            ? 'Empty bar'
-            : plates.isEmpty
-            ? '${step.percent} %'
-            : '${step.percent} % · $plates per side',
-        style: theme.textTheme.bodySmall?.copyWith(color: muted),
-      ),
+      subtitle: Text(switch (step.percent) {
+        null => l10n.workoutWarmupEmptyBar,
+        final percent when plates.isEmpty => '$percent %',
+        final percent => l10n.workoutWarmupStepPlates(percent, plates),
+      }, style: theme.textTheme.bodySmall?.copyWith(color: muted)),
     );
   }
 }

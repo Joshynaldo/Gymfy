@@ -9,8 +9,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/accent_color.dart';
 import '../../../app/theme/glass.dart';
 import '../../../app/theme/motion.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/models/set_type.dart';
+import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_segmented.dart';
@@ -373,6 +375,7 @@ class _LogSetSheetState extends ConsumerState<_LogSetSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final onWeight = _step == _Step.weight;
 
     return SingleChildScrollView(
@@ -400,11 +403,13 @@ class _LogSetSheetState extends ConsumerState<_LogSetSheet> {
                       const SizedBox(height: 3),
                       Text(
                         switch (_type) {
-                          SetType.warmup => 'Warm-up · ramping up',
-                          SetType.drop => 'Drop set · lighter, straight after',
-                          SetType.failure =>
-                            '${widget.phaseLabel ?? 'Working set'} · to failure',
-                          SetType.normal => widget.phaseLabel ?? 'Working set',
+                          SetType.warmup => l10n.workoutLogWarmupCaption,
+                          SetType.drop => l10n.workoutLogDropCaption,
+                          SetType.failure => l10n.workoutLogFailureCaption(
+                            widget.phaseLabel ?? l10n.workoutWorkingSet,
+                          ),
+                          SetType.normal =>
+                            widget.phaseLabel ?? l10n.workoutWorkingSet,
                         },
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
@@ -423,7 +428,11 @@ class _LogSetSheetState extends ConsumerState<_LogSetSheet> {
             AppSegmented<SetType>(
               segments: [
                 for (final type in _typeOptions)
-                  (value: type, label: type.label, leading: null),
+                  (
+                    value: type,
+                    label: type.localizedLabel(l10n),
+                    leading: null,
+                  ),
               ],
               selected: _type,
               onChanged: (type) => setState(() => _type = type),
@@ -478,18 +487,28 @@ class _LogSetSheetState extends ConsumerState<_LogSetSheet> {
                 )
               else
                 _Readout(
+                  // The text being typed keeps its point for parsing; only
+                  // what is shown takes the language's separator, so German
+                  // reads "102,5" exactly as the keypad spells it.
                   value: _step == _Step.weight
-                      ? (_weight.isEmpty ? '0' : _weight)
+                      ? (_weight.isEmpty
+                            ? '0'
+                            : _weight.replaceAll(
+                                '.',
+                                decimalSeparator(l10n: l10n),
+                              ))
                       : (_reps.isEmpty ? '—' : _reps),
-                  unit: _step == _Step.weight ? widget.unit.label : 'reps',
+                  unit: _step == _Step.weight
+                      ? widget.unit.label
+                      : l10n.workoutLogRepsUnit,
                   dimmed: _step == _Step.reps && _reps.isEmpty,
                 ),
               const SizedBox(height: 8),
               Text(
                 switch (_step) {
-                  _Step.weight => 'STEP 1 — WEIGHT',
-                  _Step.reps => 'STEP 2 — REPS',
-                  _Step.time => 'STEP 2 — TIME',
+                  _Step.weight => l10n.workoutLogStepWeight,
+                  _Step.reps => l10n.workoutLogStepReps,
+                  _Step.time => l10n.workoutLogStepTime,
                 },
                 textAlign: TextAlign.center,
                 style: theme.textTheme.labelSmall?.copyWith(
@@ -527,7 +546,11 @@ class _LogSetSheetState extends ConsumerState<_LogSetSheet> {
                     _plates ? Icons.dialpad : Icons.donut_large_outlined,
                     size: 18,
                   ),
-                  label: Text(_plates ? 'Type a weight' : 'Stack plates'),
+                  label: Text(
+                    _plates
+                        ? l10n.workoutLogTypeWeight
+                        : l10n.workoutLogStackPlates,
+                  ),
                 ),
               ),
             ],
@@ -552,7 +575,7 @@ class _LogSetSheetState extends ConsumerState<_LogSetSheet> {
                 if (widget.repeatable != null) ...[
                   Expanded(
                     child: AppButton(
-                      label: 'Repeat last set',
+                      label: l10n.workoutLogRepeat,
                       kind: AppButtonKind.secondary,
                       height: 52,
                       onPressed: _repeat,
@@ -566,9 +589,9 @@ class _LogSetSheetState extends ConsumerState<_LogSetSheet> {
                     // never moves, so the thumb goes to the same spot twice.
                     label: onWeight
                         ? (widget.exercise.isTimed
-                              ? 'Next: time'
-                              : 'Next: reps')
-                        : 'Save set',
+                              ? l10n.workoutLogNextTime
+                              : l10n.workoutLogNextReps)
+                        : l10n.workoutLogSaveSet,
                     icon: onWeight ? Icons.chevron_right : Icons.check,
                     // The chevron points at the step after this one; the tick
                     // describes the tap itself.
@@ -642,6 +665,7 @@ class _TimeReadout extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
     final muted = theme.colorScheme.onSurfaceVariant;
 
@@ -710,7 +734,11 @@ class _TimeReadout extends ConsumerWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        half(_TimeField.minutes, '$minutes', running ? 'HOLDING' : 'MIN'),
+        half(
+          _TimeField.minutes,
+          '$minutes',
+          running ? l10n.workoutLogHolding : l10n.workoutLogMinutes,
+        ),
         Padding(
           // Nudged up so the colon sits on the digits' centre line rather
           // than on the baseline of the labels underneath them.
@@ -720,7 +748,7 @@ class _TimeReadout extends ConsumerWidget {
         half(
           _TimeField.seconds,
           seconds.toString().padLeft(2, '0'),
-          running ? '' : 'SEC',
+          running ? '' : l10n.workoutLogSeconds,
         ),
       ],
     );
@@ -742,7 +770,9 @@ class _WorkTimerButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppButton(
-      label: running ? 'Stop' : 'Start timer',
+      label: running
+          ? context.l10n.workoutTimerStop
+          : context.l10n.workoutTimerStart,
       icon: running ? Icons.stop_rounded : Icons.play_arrow_rounded,
       // Stopping is the destructive-looking half only in the sense that it
       // ends something; it is still the primary action while running, since
@@ -839,7 +869,14 @@ class _Keypad extends StatelessWidget {
         for (final key in keys)
           key.isEmpty
               ? const SizedBox.shrink()
-              : _Key(label: key, onPressed: () => onKey(key)),
+              : _Key(
+                  // The key sends a point whatever it shows, so the value
+                  // parses the same in every language; German sees a comma.
+                  label: key == '.'
+                      ? decimalSeparator(l10n: context.l10n)
+                      : key,
+                  onPressed: () => onKey(key),
+                ),
       ],
     );
   }
@@ -921,6 +958,7 @@ class _EffortPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final isRpe = mode == EffortRatingMode.rpe;
 
     final chips = isRpe
@@ -928,7 +966,9 @@ class _EffortPicker extends StatelessWidget {
             for (final value in rpeOptions)
               _EffortChip(
                 key: ValueKey('effort-${_rpeLabel(value)}'),
-                label: _rpeLabel(value),
+                label: _rpeLabel(
+                  value,
+                ).replaceAll('.', decimalSeparator(l10n: l10n)),
                 selected: rpe == value,
                 onTap: () => onRpe(rpe == value ? null : value),
               ),
@@ -948,7 +988,7 @@ class _EffortPicker extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          isRpe ? 'HOW HARD · RPE' : 'REPS LEFT · RIR',
+          isRpe ? l10n.workoutEffortRpeLabel : l10n.workoutEffortRirLabel,
           style: theme.textTheme.labelSmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w600,
@@ -1050,37 +1090,34 @@ class _SuggestionNote extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
+    final weight = formatWeightUnit(suggestion.weight, unit, l10n: l10n);
 
     final (icon, text) = switch (suggestion.reason) {
       OverloadReason.earned => (
         Icons.trending_up,
-        'You hit every set last time — going up to '
-            '${formatWeightUnit(suggestion.weight, unit)}.',
+        l10n.workoutNoteEarned(weight),
       ),
       OverloadReason.deload => (
         Icons.trending_down,
-        'Several increases in a row. A lighter week at '
-            '${formatWeightUnit(suggestion.weight, unit)} is suggested.',
+        l10n.workoutNoteDeload(weight),
       ),
-      OverloadReason.atLimit => (
-        Icons.pause,
-        'You hit every set, but the top set was a limit effort — staying at '
-            '${formatWeightUnit(suggestion.weight, unit)}.',
-      ),
+      OverloadReason.atLimit => (Icons.pause, l10n.workoutNoteAtLimit(weight)),
       OverloadReason.percentOfMax => (
         Icons.percent,
-        'Planned at ${formatPercent(suggestion.targetPercent ?? 0)} of your '
-            '1RM — ${formatWeightUnit(suggestion.weight, unit)}.',
+        l10n.workoutNotePercent(
+          formatPercent(suggestion.targetPercent ?? 0, l10n: l10n),
+          weight,
+        ),
       ),
       OverloadReason.blockDeload => (
         Icons.trending_down,
-        'Deload week: ${formatPercent(suggestion.deloadPercent ?? 0)} of your '
-            'working weight — ${formatWeightUnit(suggestion.weight, unit)}.',
+        l10n.workoutNoteBlockDeload(
+          formatPercent(suggestion.deloadPercent ?? 0, l10n: l10n),
+          weight,
+        ),
       ),
-      _ => (
-        Icons.remove,
-        "Same weight as last time — the rep target wasn't met yet.",
-      ),
+      _ => (Icons.remove, l10n.workoutNoteSame),
     };
 
     return GlassSurface(

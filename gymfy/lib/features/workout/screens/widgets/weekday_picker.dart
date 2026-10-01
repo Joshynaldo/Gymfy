@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/accent_color.dart';
+import '../../../../l10n/l10n.dart';
 import '../../../../shared/utils/weekday.dart';
 
 /// Seven toggles, Monday to Sunday, for putting a workout day on the calendar.
@@ -59,11 +60,12 @@ class _WeekdayToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return Semantics(
       button: true,
       selected: selected,
-      label: weekdayName(weekday),
+      label: weekdayName(weekday, l10n: l10n),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
@@ -80,7 +82,7 @@ class _WeekdayToggle extends StatelessWidget {
               ),
             ),
             child: Text(
-              weekdayInitial(weekday),
+              weekdayInitial(weekday, l10n: l10n),
               style: theme.textTheme.labelMedium?.copyWith(
                 color: selected
                     ? theme.colorScheme.onPrimary

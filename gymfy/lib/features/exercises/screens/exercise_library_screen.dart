@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/models/equipment.dart';
 import '../../../shared/utils/exercise_display.dart';
@@ -57,6 +58,7 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final exercisesAsync = ref.watch(exerciseListProvider);
 
     // Computed here rather than inside the list's data callback: the app bar
@@ -71,6 +73,7 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
       query: _query,
       muscleFilters: _muscleFilters,
       equipmentFilters: _equipmentFilters,
+      l10n: l10n,
     );
 
     return GlassScaffold(
@@ -79,19 +82,19 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
               leading: IconButton(
                 icon: const Icon(Icons.close),
                 onPressed: () => setState(_selected.clear),
-                tooltip: 'Cancel selection',
+                tooltip: l10n.exercisesCancelSelection,
               ),
-              title: Text('${_selected.length} selected'),
+              title: Text(l10n.exercisesSelected(_selected.length)),
               actions: [
                 IconButton(
                   icon: const Icon(Icons.playlist_add),
                   onPressed: _addSelectedToDay,
-                  tooltip: 'Add to day',
+                  tooltip: l10n.exercisesAddToDayTooltip,
                 ),
               ],
             )
           : GlassAppBar(
-              title: const Text('Exercises'),
+              title: Text(l10n.exercisesTitle),
               // In the bar, not at the top of the body. Two things follow from
               // that: the scrim that fades in on scroll covers the search field
               // too, so the list passes *under* one surface rather than under
@@ -129,7 +132,7 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              'Could not load exercises.\n$error',
+              l10n.exercisesLoadFailed('$error'),
               textAlign: TextAlign.center,
             ),
           ),
@@ -152,7 +155,7 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
       floatingActionButton: _selecting
           ? null
           : AppButton(
-              label: 'Add exercise',
+              label: l10n.exercisesAddExercise,
               icon: Icons.add,
               expand: false,
               onPressed: () => context.go('/exercises/new'),
@@ -182,6 +185,7 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
     query: _query,
     muscleFilters: _muscleFilters,
     equipmentFilters: _equipmentFilters,
+    l10n: context.l10n,
   );
 
   void _toggle(String id) {
@@ -212,6 +216,7 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
     if (dayId == null || !mounted) return;
 
     final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
     final added = await ref
         .read(workoutRepositoryProvider)
         .addExercisesToDay(dayId, ids);
@@ -219,7 +224,9 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
     setState(_selected.clear);
     messenger.showSnackBar(
       SnackBar(
-        content: Text(addedToDayMessage(added: added, asked: ids.length)),
+        content: Text(
+          addedToDayMessage(added: added, asked: ids.length, l10n: l10n),
+        ),
       ),
     );
   }
@@ -341,7 +348,7 @@ class _SearchFieldState extends State<_SearchField> {
                     // Names the second thing it searches, which is otherwise
                     // invisible: "chest" finding the bench press looks like
                     // magic or a bug.
-                    hintText: 'Search by name or muscle',
+                    hintText: context.l10n.exercisesSearchHint,
                     hintStyle: theme.textTheme.bodyMedium?.copyWith(
                       color: muted,
                     ),
@@ -361,7 +368,7 @@ class _SearchFieldState extends State<_SearchField> {
                 IconButton(
                   icon: Icon(Icons.close, size: 17, color: muted),
                   visualDensity: VisualDensity.compact,
-                  tooltip: 'Clear search',
+                  tooltip: context.l10n.exercisesClearSearch,
                   onPressed: _clear,
                 ),
               const SizedBox(width: 6),
@@ -407,6 +414,8 @@ class _CategorisedList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return ListView.builder(
       // Room to scroll the last card clear of the FAB, plus whatever the
       // floating navigation pill covers. Only the bottom: the screen has
@@ -421,7 +430,7 @@ class _CategorisedList extends StatelessWidget {
         return FadeSlideIn(
           child: switch (row) {
             _HeaderRow() => AppSectionHeader(
-              title: row.group.label,
+              title: row.group.localizedLabel(l10n),
               count: row.count,
               first: index == 0,
             ),
@@ -438,7 +447,9 @@ class _CategorisedList extends StatelessWidget {
                 heroTag: exerciseHeroTag(row.exercise.id),
               ),
               title: row.exercise.name,
-              subtitle: row.exercise.muscleIds.map(muscleLabel).join(' · '),
+              subtitle: row.exercise.muscleIds
+                  .map((id) => muscleLabel(id, l10n: l10n))
+                  .join(' · '),
               titleTrailing: row.exercise.isCustom
                   ? const _CustomBadge()
                   : null,
@@ -478,10 +489,13 @@ class _NoMatches extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 12),
-            Text('Nothing matches', style: theme.textTheme.titleMedium),
+            Text(
+              context.l10n.exercisesNoMatchesTitle,
+              style: theme.textTheme.titleMedium,
+            ),
             const SizedBox(height: 6),
             Text(
-              'Try a different word, or clear a muscle filter.',
+              context.l10n.exercisesNoMatchesMessage,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
@@ -510,7 +524,7 @@ class _CustomBadge extends ConsumerWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        'Custom',
+        context.l10n.exercisesCustomBadge,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(color: accent),
       ),
     );

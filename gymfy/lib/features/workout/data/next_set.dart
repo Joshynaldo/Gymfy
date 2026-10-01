@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/models/equipment.dart';
 import '../../../shared/utils/units.dart';
@@ -179,20 +180,33 @@ NextSet nextSetFor(
 
 /// "Set 3 of 4" — or "Set 5" once the plan's sets are behind you, because
 /// "Set 5 of 4" reads like a bug.
-String describeSetPosition(NextSet next) => next.setNumber <= next.plannedSets
-    ? 'Set ${next.setNumber} of ${next.plannedSets}'
-    : 'Set ${next.setNumber}';
+///
+/// In [l10n]'s language when given ("Satz 3 von 4"), else English — the
+/// notification and the watch have no context to read one from.
+String describeSetPosition(NextSet next, {AppLocalizations? l10n}) {
+  final strings = l10n ?? englishLocalizations;
+  return next.setNumber <= next.plannedSets
+      ? strings.workoutSetPositionOf(next.setNumber, next.plannedSets)
+      : strings.workoutSetPosition(next.setNumber);
+}
 
 /// The numbers of [next], as one line: `80 kg × 8 reps`, `12 reps` with
 /// nothing on the bar, `1:30` for a hold.
-String describeNextNumbers(NextSet next, WeightUnit unit) {
+String describeNextNumbers(
+  NextSet next,
+  WeightUnit unit, {
+  AppLocalizations? l10n,
+}) {
   final seconds = next.seconds;
-  if (seconds == null && next.weightKg <= 0) return '${next.reps} reps';
+  if (seconds == null && next.weightKg <= 0) {
+    return (l10n ?? englishLocalizations).workoutReps(next.reps);
+  }
   return formatLoggedSet(
     weightKg: next.weightKg,
     reps: next.reps,
     seconds: seconds,
     unit: unit,
+    l10n: l10n,
   );
 }
 

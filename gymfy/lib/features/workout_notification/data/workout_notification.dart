@@ -2,6 +2,8 @@ import 'package:clock/clock.dart';
 import 'package:flutter/services.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../l10n/app_language.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/units.dart';
 import '../../settings/data/notification_preferences.dart';
@@ -22,6 +24,10 @@ part 'workout_notification.g.dart';
 // strings the watch sends, into the same handler (WearCommands) — so a set
 // logged from the shade and one logged from the wrist cannot behave
 // differently, and neither can behave differently from the app.
+//
+// Every word includes the buttons' and the channel's, so they follow the
+// app's language rather than the phone's: Kotlin only has an English
+// fallback for the moment before Dart has sent anything.
 
 /// What the notification says. Null content means "no notification".
 typedef WorkoutNotificationContent = ({
@@ -48,7 +54,29 @@ typedef WorkoutNotificationContent = ({
 
   /// What "Log set" sends, or empty for no button. See [WearBridge.logSetCommand].
   String logCommand,
+
+  /// The words Kotlin puts on the buttons, on the notification once the app
+  /// has gone, and on the channel in the system settings.
+  WorkoutNotificationLabels labels,
 });
+
+/// The notification's fixed words, in one language.
+typedef WorkoutNotificationLabels = ({
+  String logSet,
+  String skipRest,
+  String tapToOpen,
+  String channelName,
+  String channelDescription,
+});
+
+/// The fixed words in [l10n]'s language.
+WorkoutNotificationLabels workoutNotificationLabels(AppLocalizations l10n) => (
+  logSet: l10n.workoutNotificationLogSet,
+  skipRest: l10n.workoutNotificationSkipRest,
+  tapToOpen: l10n.workoutNotificationTapToOpen,
+  channelName: l10n.workoutNotificationChannel,
+  channelDescription: l10n.workoutNotificationChannelDescription,
+);
 
 /// Builds the notification for the workout that is running, or null for none.
 ///
@@ -56,6 +84,8 @@ typedef WorkoutNotificationContent = ({
 /// platform channel. [logId] goes into the "Log set" command and is what
 /// makes a double tap one set; the caller mints a new one whenever the rest
 /// of the content changes.
+///
+/// Worded in [l10n]'s language, English without it.
 WorkoutNotificationContent? workoutNotificationFrom({
   required WorkoutSession? session,
   required NextSet? next,
@@ -63,15 +93,17 @@ WorkoutNotificationContent? workoutNotificationFrom({
   required DateTime now,
   required WeightUnit unit,
   required String logId,
+  AppLocalizations? l10n,
 }) {
   if (session == null) return null;
 
+  final strings = l10n ?? englishLocalizations;
   final endsAt = restDeadlineMs(rest, now);
   final text = next == null
       // A free workout before its first exercise: nothing to log yet, and
       // the notification says so rather than showing a blank line.
-      ? 'No exercises yet'
-      : '${next.exerciseName} · ${describeSetPosition(next)}';
+      ? strings.workoutNotificationNoExercises
+      : '${next.exerciseName} · ${describeSetPosition(next, l10n: l10n)}';
 
   // Only a set worth logging blind gets the button, and only then are its
   // numbers spelled out: "Next: 0 kg × 10 reps" for a squat you have never
@@ -81,8 +113,11 @@ WorkoutNotificationContent? workoutNotificationFrom({
   return (
     title: session.name,
     text: text,
-    bigText: loggable ? '$text\nNext: ${describeNextNumbers(next, unit)}' : '',
-    subText: endsAt > 0 ? 'Resting' : '',
+    bigText: loggable
+        ? '$text\n'
+              '${strings.workoutNotificationNext(describeNextNumbers(next, unit, l10n: l10n))}'
+        : '',
+    subText: endsAt > 0 ? strings.workoutNotificationResting : '',
     restEndsAtMs: endsAt,
     logCommand: loggable
         ? WearBridge.logSetCommand(
@@ -95,6 +130,7 @@ WorkoutNotificationContent? workoutNotificationFrom({
             seconds: next.seconds,
           )
         : '',
+    labels: workoutNotificationLabels(strings),
   );
 }
 
@@ -132,6 +168,11 @@ class WorkoutNotificationBridge {
             'subText': content.subText,
             'restEndsAtMs': content.restEndsAtMs,
             'logCommand': content.logCommand,
+            'logLabel': content.labels.logSet,
+            'skipRestLabel': content.labels.skipRest,
+            'tapToOpenLabel': content.labels.tapToOpen,
+            'channelName': content.labels.channelName,
+            'channelDescription': content.labels.channelDescription,
           }) ??
           false;
     } on PlatformException {
@@ -216,6 +257,9 @@ class WorkoutNotificationSync extends _$WorkoutNotificationSync {
 
     final rest = ref.watch(restTimerProvider);
     final unit = ref.watch(weightUnitProvider);
+    // Watched, so switching the app's language re-posts the notification in
+    // the new one instead of leaving the old words in the shade.
+    final l10n = ref.watch(appLocalizationsProvider);
     final now = clock.now();
 
     WorkoutNotificationContent? contentWith(String logId) =>
@@ -226,6 +270,7 @@ class WorkoutNotificationSync extends _$WorkoutNotificationSync {
           now: now,
           unit: unit,
           logId: logId,
+          l10n: l10n,
         );
 
     // A new log id for every new state, and only then. The button's

@@ -10,12 +10,22 @@ import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/weekday.dart';
 import 'plan_document.dart';
 
-/// Builds a printable version of [document].
-Future<Uint8List> buildPlanPdf(PlanDocument document) async {
+/// Builds a printable version of [document], worded in [l10n]'s language
+/// (English without it).
+///
+/// Every word on the page has to be in Latin-1: the built-in Helvetica draws
+/// nothing else. German's umlauts and ß are in it; an en dash or curly
+/// quotes are not, which is why the `planSharePdf…` messages avoid them.
+Future<Uint8List> buildPlanPdf(
+  PlanDocument document, {
+  AppLocalizations? l10n,
+}) async {
+  final strings = l10n ?? englishLocalizations;
   final pdf = pw.Document();
 
   pdf.addPage(
@@ -26,13 +36,13 @@ Future<Uint8List> buildPlanPdf(PlanDocument document) async {
       // runs past one sheet, and silently cropping the last day would be the
       // worst possible failure for a page you take to the gym.
       build: (context) => [
-        for (final split in document.splits) ..._splitSection(split),
+        for (final split in document.splits) ..._splitSection(split, strings),
       ],
       footer: (context) => pw.Container(
         alignment: pw.Alignment.centerRight,
         margin: const pw.EdgeInsets.only(top: 12),
         child: pw.Text(
-          'Page ${context.pageNumber} of ${context.pagesCount}',
+          strings.planSharePdfPage(context.pageNumber, context.pagesCount),
           style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
         ),
       ),
@@ -42,7 +52,7 @@ Future<Uint8List> buildPlanPdf(PlanDocument document) async {
   return pdf.save();
 }
 
-List<pw.Widget> _splitSection(SharedSplit split) {
+List<pw.Widget> _splitSection(SharedSplit split, AppLocalizations l10n) {
   return [
     pw.Header(
       level: 0,
@@ -64,7 +74,8 @@ List<pw.Widget> _splitSection(SharedSplit split) {
           ),
           pw.SizedBox(width: 8),
           pw.Text(
-            weekdaySummary(day.weekdays) ?? 'Not scheduled',
+            weekdaySummary(day.weekdays, l10n: l10n) ??
+                l10n.planSharePdfNotScheduled,
             style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
           ),
         ],
@@ -72,17 +83,17 @@ List<pw.Widget> _splitSection(SharedSplit split) {
       pw.SizedBox(height: 4),
       if (day.exercises.isEmpty)
         pw.Text(
-          'No exercises',
+          l10n.planSharePdfNoExercises,
           style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
         )
       else
-        _exerciseTable(day),
+        _exerciseTable(day, l10n),
     ],
     pw.SizedBox(height: 20),
   ];
 }
 
-pw.Widget _exerciseTable(SharedDay day) {
+pw.Widget _exerciseTable(SharedDay day, AppLocalizations l10n) {
   return pw.TableHelper.fromTextArray(
     cellAlignment: pw.Alignment.centerLeft,
     headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
@@ -90,7 +101,12 @@ pw.Widget _exerciseTable(SharedDay day) {
     cellStyle: const pw.TextStyle(fontSize: 10),
     // A printed plan is something you write on. The last column is left empty
     // on purpose: it's where the weights go in pencil.
-    headers: const ['Exercise', 'Sets × reps', 'Warm-up', 'Weight'],
+    headers: [
+      l10n.planSharePdfExercise,
+      l10n.planSharePdfSetsReps,
+      l10n.planSharePdfWarmup,
+      l10n.planSharePdfWeight,
+    ],
     columnWidths: const {
       0: pw.FlexColumnWidth(4),
       1: pw.FlexColumnWidth(1.6),

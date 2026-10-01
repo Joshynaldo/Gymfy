@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/weekday.dart';
@@ -40,7 +41,7 @@ class SplitDayList extends ConsumerWidget {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            'Could not load this split.\n$error',
+            context.l10n.workoutSplitLoadFailed('$error'),
             textAlign: TextAlign.center,
           ),
         ),
@@ -77,7 +78,8 @@ class DayCard extends ConsumerWidget {
     final accent = ref.watch(accentColorProvider);
     final exercisesAsync = ref.watch(dayExercisesProvider(day.id));
     final exercises = exercisesAsync.value ?? const [];
-    final schedule = weekdaySummary(scheduled.weekdays);
+    final l10n = context.l10n;
+    final schedule = weekdaySummary(scheduled.weekdays, l10n: l10n);
 
     return AppCard(
       margin: const EdgeInsets.symmetric(vertical: 6),
@@ -98,19 +100,17 @@ class DayCard extends ConsumerWidget {
               ),
             ),
             subtitle: Text(
-              [
-                exercises.length == 1
-                    ? '1 exercise'
-                    : '${exercises.length} exercises',
+              l10n.workoutDayCardSubtitle(
+                exercises.length,
                 // Named explicitly rather than left blank: "not scheduled" is a
                 // state worth noticing, since the day won't appear on any
                 // weekday until it's fixed.
-                schedule ?? 'Not scheduled',
-              ].join(' • '),
+                schedule ?? l10n.workoutDayNotScheduled,
+              ),
             ),
             trailing: IconButton(
               icon: const Icon(Icons.delete_outline),
-              tooltip: 'Delete day',
+              tooltip: l10n.workoutDeleteDayTooltip,
               onPressed: () => _confirmDelete(context, ref),
             ),
             onTap: () => context.go('/workout/split/$splitId/day/${day.id}'),
@@ -126,7 +126,7 @@ class DayCard extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Text(
-                'No exercises yet — tap to add some.',
+                l10n.workoutDayNoExercises,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -159,18 +159,16 @@ class DayCard extends ConsumerWidget {
       context: context,
       builder: (context) {
         return GlassDialog(
-          title: Text('Delete "${day.name}"?'),
-          content: const Text(
-            'This removes the day and its exercises. This cannot be undone.',
-          ),
+          title: Text(context.l10n.workoutDeleteTitle(day.name)),
+          content: Text(context.l10n.workoutDeleteDayMessage),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: Text(context.l10n.commonCancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Delete'),
+              child: Text(context.l10n.commonDelete),
             ),
           ],
         );
@@ -243,11 +241,13 @@ class NoDaysYet extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 16),
-            Text('No days yet', style: theme.textTheme.titleLarge),
+            Text(
+              context.l10n.workoutNoDaysTitle,
+              style: theme.textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
             Text(
-              'Add a training day (like "Push" or "Legs") to start building '
-              'this split.',
+              context.l10n.workoutNoDaysMessage,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
             ),

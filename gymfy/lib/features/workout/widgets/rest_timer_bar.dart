@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/accent_color.dart';
 import '../../../app/theme/glass.dart';
 import '../../../app/theme/motion.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/pressable.dart';
 import '../data/rest_timer_controller.dart';
 
@@ -86,7 +87,9 @@ class RestTimerBar extends ConsumerWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            done ? 'REST OVER' : 'RESTING',
+                            done
+                                ? context.l10n.workoutRestOverCaps
+                                : context.l10n.workoutRestingCaps,
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                               fontWeight: FontWeight.w600,
@@ -117,7 +120,7 @@ class RestTimerBar extends ConsumerWidget {
                       // than one that is not there.
                       _PaneButton(
                         onTap: () => controller.adjust(30),
-                        tooltip: 'Add 30 seconds',
+                        tooltip: context.l10n.workoutRestAddTooltip,
                         child: Text(
                           '+30s',
                           style: theme.textTheme.labelLarge?.copyWith(
@@ -129,7 +132,9 @@ class RestTimerBar extends ConsumerWidget {
                     ],
                     _PaneButton(
                       onTap: controller.stop,
-                      tooltip: done ? 'Dismiss' : 'Skip rest',
+                      tooltip: done
+                          ? context.l10n.workoutRestDismissTooltip
+                          : context.l10n.workoutRestSkipTooltip,
                       square: true,
                       child: Icon(
                         Icons.close,
@@ -249,7 +254,7 @@ class _Countdown extends StatelessWidget {
 
     if (done) {
       return Text(
-        'Rest over',
+        context.l10n.workoutRestOver,
         style: theme.textTheme.headlineMedium?.copyWith(
           fontSize: 34,
           height: 1.05,

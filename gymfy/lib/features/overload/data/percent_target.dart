@@ -9,6 +9,7 @@ import 'dart:math' as math;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
@@ -57,7 +58,13 @@ Future<double?> readWorkingOneRm(Ref ref, String exerciseId) async {
 }
 
 /// How a 0–100 percentage reads on screen: "75%", "72.5%".
-String formatPercent(double percent) => '${formatWeight(percent)}%';
+///
+/// Pass [l10n] for the language's way of writing it — German puts a space
+/// before the sign and a comma in the number: "72,5 %". Without it, English.
+String formatPercent(double percent, {AppLocalizations? l10n}) =>
+    (l10n ?? englishLocalizations).overloadPercentValue(
+      formatWeight(percent, l10n: l10n),
+    );
 
 /// [percent] of [oneRmKg], both on the 0–100 scale the app uses everywhere.
 ///

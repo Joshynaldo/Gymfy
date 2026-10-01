@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/data/settings_repository.dart';
 
 // How a set is logged, beyond its weight and reps.
@@ -30,7 +31,13 @@ enum EffortRatingMode {
 
   const EffortRatingMode(this.label);
 
+  /// The English name. On screen use [localizedLabel].
   final String label;
+
+  /// The name in the app's language. RPE and RIR are the same abbreviations
+  /// in German; only "Off" changes.
+  String localizedLabel(AppLocalizations l10n) =>
+      this == EffortRatingMode.off ? l10n.commonOff : label;
 
   /// Reads a stored value. Anything unrecognised is [off]: a feature that
   /// adds controls should never switch itself on because of junk in a row.

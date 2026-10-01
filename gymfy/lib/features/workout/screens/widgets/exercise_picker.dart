@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/accent_color.dart';
+import '../../../../l10n/l10n.dart';
 import '../../../../shared/database/app_database.dart';
 import '../../../../shared/utils/exercise_display.dart';
 import '../../../../shared/utils/exercise_search.dart';
@@ -84,6 +85,7 @@ class _ExercisePickerSheetState extends ConsumerState<_ExercisePickerSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final exercisesAsync = ref.watch(exerciseListProvider);
 
     // Take up most of the screen so the list is comfortable to scroll, and sit
@@ -102,14 +104,14 @@ class _ExercisePickerSheetState extends ConsumerState<_ExercisePickerSheet> {
                 children: [
                   Expanded(
                     child: Text(
-                      widget.singleTitle ?? 'Add exercises',
+                      widget.singleTitle ?? l10n.workoutAddExercises,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                   ),
                   if (_selected.isNotEmpty && !_single)
                     TextButton(
                       onPressed: () => setState(_selected.clear),
-                      child: const Text('Clear'),
+                      child: Text(l10n.workoutPickerClear),
                     ),
                 ],
               ),
@@ -123,7 +125,7 @@ class _ExercisePickerSheetState extends ConsumerState<_ExercisePickerSheet> {
                   // Names the second thing it searches, which is otherwise
                   // invisible: "chest" finding the bench press looks like magic
                   // or a bug.
-                  hintText: 'Search by name or muscle',
+                  hintText: l10n.exercisesSearchHint,
                   prefixIcon: const Icon(Icons.search),
                   filled: true,
                   isDense: true,
@@ -141,7 +143,7 @@ class _ExercisePickerSheetState extends ConsumerState<_ExercisePickerSheet> {
                   child: Padding(
                     padding: const EdgeInsets.all(24),
                     child: Text(
-                      'Could not load exercises.\n$error',
+                      l10n.exercisesLoadFailed('$error'),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -160,6 +162,7 @@ class _ExercisePickerSheetState extends ConsumerState<_ExercisePickerSheet> {
                           query: _query,
                           muscleFilters: _muscleFilters,
                           equipmentFilters: _equipmentFilters,
+                          l10n: l10n,
                         ),
                       )
                       .toList();
@@ -172,6 +175,7 @@ class _ExercisePickerSheetState extends ConsumerState<_ExercisePickerSheet> {
                     query: _query,
                     muscleFilters: _muscleFilters,
                     equipmentFilters: _equipmentFilters,
+                    l10n: l10n,
                   );
 
                   return Column(
@@ -198,9 +202,7 @@ class _ExercisePickerSheetState extends ConsumerState<_ExercisePickerSheet> {
                       const SizedBox(height: 4),
                       Expanded(
                         child: filtered.isEmpty
-                            ? const Center(
-                                child: Text('No exercises match your filters.'),
-                              )
+                            ? Center(child: Text(l10n.workoutPickerNoMatches))
                             : ListView.separated(
                                 itemCount: filtered.length,
                                 separatorBuilder: (_, _) =>
@@ -289,7 +291,9 @@ class _PickerTile extends ConsumerWidget {
       leading: ExerciseThumbnail(gifPath: exercise.gifPath, selected: selected),
       title: Text(exercise.name),
       subtitle: Text(
-        exercise.muscleIds.map(muscleLabel).join(', '),
+        exercise.muscleIds
+            .map((id) => muscleLabel(id, l10n: context.l10n))
+            .join(', '),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
@@ -321,11 +325,7 @@ class _ConfirmBar extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                count == 0
-                    ? 'Nothing selected'
-                    : count == 1
-                    ? '1 selected'
-                    : '$count selected',
+                context.l10n.workoutPickerSelected(count),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -334,7 +334,11 @@ class _ConfirmBar extends StatelessWidget {
             FilledButton.icon(
               onPressed: onConfirm,
               icon: const Icon(Icons.playlist_add),
-              label: Text(count <= 1 ? 'Add' : 'Add $count'),
+              label: Text(
+                count <= 1
+                    ? context.l10n.commonAdd
+                    : context.l10n.workoutPickerAddCount(count),
+              ),
             ),
           ],
         ),

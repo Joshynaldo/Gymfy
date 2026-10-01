@@ -7,6 +7,7 @@ import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:printing/printing.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../workout/data/workout_repository.dart';
@@ -38,17 +39,18 @@ class _SharePlanScreenState extends ConsumerState<SharePlanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final splitsAsync = ref.watch(splitListProvider);
 
     return GlassScaffold(
-      appBar: GlassAppBar(title: const Text('Share a plan')),
+      appBar: GlassAppBar(title: Text(l10n.planShareTitle)),
       body: (context) => splitsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              'Could not load your splits.\n$error',
+              l10n.workoutSplitsLoadFailed('$error'),
               textAlign: TextAlign.center,
             ),
           ),
@@ -59,16 +61,13 @@ class _SharePlanScreenState extends ConsumerState<SharePlanScreen> {
           children: [
             const _Explainer(),
             if (splits.isEmpty)
-              const Padding(
-                padding: EdgeInsets.fromLTRB(20, 8, 20, 16),
-                child: Text(
-                  'You have no splits to save yet — but you can still '
-                  'import one from someone else.',
-                ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                child: Text(l10n.planShareNoSplits),
               )
             else ...[
               AppSectionHeader(
-                title: 'Send',
+                title: l10n.planShareSend,
                 // Counts what is ticked, not how many exist: the number that
                 // matters here is how many are about to leave the phone.
                 count: _selected.isEmpty ? null : _selected.length,
@@ -88,11 +87,11 @@ class _SharePlanScreenState extends ConsumerState<SharePlanScreen> {
                 onPrint: _printPdf,
               ),
             ],
-            const AppSectionHeader(title: 'Receive'),
+            AppSectionHeader(title: l10n.planShareReceive),
             AppTile(
               icon: Icons.download,
-              title: 'Import a plan',
-              subtitle: 'Open a .gymfy file someone sent you',
+              title: l10n.planShareImportTitle,
+              subtitle: l10n.planShareImportSubtitle,
               trailing: null,
               onTap: _busy ? null : _import,
             ),
@@ -116,17 +115,18 @@ class _SharePlanScreenState extends ConsumerState<SharePlanScreen> {
   /// share sheet leaves them nothing to send twice.
   Future<void> _saveFile() async {
     setState(() => _busy = true);
+    final l10n = context.l10n;
     try {
       final document = await _document();
       final saved = await FilePicker.saveFile(
-        dialogTitle: 'Save your plan',
+        dialogTitle: l10n.planShareSaveDialogTitle,
         fileName: planFileName(document),
         bytes: utf8.encode(document.encode()),
       );
       if (saved == null) return; // Cancelled.
-      _say('Plan saved — send it from your files app.');
+      _say(l10n.planShareSaved);
     } catch (error) {
-      _complain('Could not save that plan.\n$error');
+      _complain(l10n.planShareSaveFailed('$error'));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -134,9 +134,10 @@ class _SharePlanScreenState extends ConsumerState<SharePlanScreen> {
 
   Future<void> _printPdf() async {
     setState(() => _busy = true);
+    final l10n = context.l10n;
     try {
       final document = await _document();
-      final bytes = await buildPlanPdf(document);
+      final bytes = await buildPlanPdf(document, l10n: l10n);
       // The system sheet handles printing *and* "save as PDF" / share, so one
       // button covers both without us guessing which one was meant.
       await Printing.layoutPdf(
@@ -144,7 +145,7 @@ class _SharePlanScreenState extends ConsumerState<SharePlanScreen> {
         name: planFileName(document).replaceAll('.$planFileExtension', ''),
       );
     } catch (error) {
-      _complain('Could not build that PDF.\n$error');
+      _complain(l10n.planSharePdfFailed('$error'));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -152,6 +153,7 @@ class _SharePlanScreenState extends ConsumerState<SharePlanScreen> {
 
   Future<void> _import() async {
     setState(() => _busy = true);
+    final l10n = context.l10n;
     try {
       final file = await FilePicker.pickFile();
       if (file == null) return;
@@ -162,10 +164,10 @@ class _SharePlanScreenState extends ConsumerState<SharePlanScreen> {
       if (!mounted) return;
       await _merge(document);
     } on PlanFormatException catch (error) {
-      // Its message is already written for a person to read.
-      _complain(error.message);
+      // It knows what went wrong; this screen knows the language.
+      _complain(error.describe(l10n));
     } catch (error) {
-      _complain('Could not read that file.\n$error');
+      _complain(l10n.planShareReadFailed('$error'));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -179,13 +181,7 @@ class _SharePlanScreenState extends ConsumerState<SharePlanScreen> {
     final imported = (await importPlanDocument(context, ref, document)).length;
 
     if (!mounted) return;
-    _say(
-      imported == 0
-          ? 'Nothing imported'
-          : imported == 1
-          ? 'Plan imported'
-          : '$imported plans imported',
-    );
+    _say(context.l10n.planShareImported(imported));
   }
 
   void _complain(String message) {
@@ -210,9 +206,7 @@ class _Explainer extends StatelessWidget {
       child: Text(
         // Says what is *not* in the file. Someone about to send their programme
         // to a stranger deserves to know that before they tap, not after.
-        'A plan file holds your splits, their days and the exercises in them. '
-        'It never includes your workouts, your weights, your measurements or '
-        'your photos.',
+        context.l10n.planShareExplainer,
         style: theme.textTheme.bodyMedium?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,
         ),
@@ -241,7 +235,7 @@ class _SplitCheckbox extends ConsumerWidget {
     return AppTile(
       icon: Icons.calendar_view_week,
       title: split.name,
-      subtitle: split.isActive ? 'Active' : null,
+      subtitle: split.isActive ? context.l10n.commonActive : null,
       trailing: null,
       selected: selected,
       onTap: () => onChanged(!selected),
@@ -270,7 +264,7 @@ class _Actions extends StatelessWidget {
             child: FilledButton.icon(
               onPressed: enabled ? onSave : null,
               icon: const Icon(Icons.save_alt),
-              label: const Text('Save file'),
+              label: Text(context.l10n.planShareSaveFile),
             ),
           ),
           const SizedBox(width: 12),
@@ -278,7 +272,7 @@ class _Actions extends StatelessWidget {
             child: OutlinedButton.icon(
               onPressed: enabled ? onPrint : null,
               icon: const Icon(Icons.picture_as_pdf),
-              label: const Text('PDF'),
+              label: Text(context.l10n.planSharePdf),
             ),
           ),
         ],
