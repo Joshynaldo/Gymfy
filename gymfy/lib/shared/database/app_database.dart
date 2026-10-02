@@ -6,6 +6,7 @@ import '../models/app_setting.dart';
 import '../models/body_measurement.dart';
 import '../models/calorie_entry.dart';
 import '../models/exercise.dart';
+import '../models/goal.dart';
 import '../models/progress_photo.dart';
 import '../models/rest_timer.dart';
 import '../models/tested_one_rm.dart';
@@ -34,6 +35,7 @@ part 'app_database.g.dart';
     TestedOneRms,
     AppSettings,
     RestTimers,
+    Goals,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -44,7 +46,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 26;
+  int get schemaVersion => 27;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -313,6 +315,18 @@ class AppDatabase extends _$AppDatabase {
               'WHERE s.completed_at IS NULL',
             );
           }
+        });
+      }
+      // v27 adds goals. A new table and nothing else: no existing row changes,
+      // and an upgrading device simply has no goals yet.
+      //
+      // Written like v26 — one transaction, and safe to run twice — for the
+      // same reason: `user_version` is only written after `onUpgrade`
+      // returns, so an app killed in that gap runs this step again against a
+      // database that already has the table.
+      if (from < 27) {
+        await transaction(() async {
+          if (!await _hasTable('goals')) await m.createTable(goals);
         });
       }
     },

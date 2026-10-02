@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/glass.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/utils/exercise_display.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_segmented.dart';
@@ -11,6 +12,9 @@ import '../../../shared/widgets/fade_slide_in.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_icon_button.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
+import '../../calendar/widgets/training_calendar.dart';
+import '../../goals/widgets/goals_link.dart';
+import '../../reviews/widgets/review_links.dart';
 import '../../stats/widgets/stats_sections.dart';
 import '../data/progress_repository.dart';
 import '../widgets/activity_heatmap.dart';
@@ -34,7 +38,15 @@ enum ProgressView {
 
   const ProgressView(this.label);
 
+  /// The English name. On screen use [localizedLabel].
   final String label;
+
+  /// The name in the app's language, e.g. "Verlauf".
+  String localizedLabel(AppLocalizations l10n) => switch (this) {
+    ProgressView.body => l10n.progressViewBody,
+    ProgressView.trends => l10n.progressViewTrends,
+    ProgressView.allTime => l10n.progressViewAllTime,
+  };
 }
 
 /// The Progress tab: three answers to "how is it going", behind one control.
@@ -61,20 +73,21 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return GlassScaffold(
       appBar: GlassAppBar(
-        title: const Text('Progress'),
+        title: Text(l10n.progressTitle),
         actions: [
           // Actions rather than list entries, so they are reachable even when
           // a segment shows its empty state.
           GlassIconButton(
             icon: Icons.photo_library_outlined,
-            tooltip: 'Progress photos',
+            tooltip: l10n.progressPhotosTitle,
             onPressed: () => context.go('/progress/photos'),
           ),
           GlassIconButton(
             icon: Icons.straighten,
-            tooltip: 'Measurements',
+            tooltip: l10n.progressMeasurementsTitle,
             onPressed: () => context.go('/progress/measurements'),
           ),
         ],
@@ -83,7 +96,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
           onChanged: (value) => setState(() => _view = value),
           segments: [
             for (final view in ProgressView.values)
-              (value: view, label: view.label, leading: null),
+              (value: view, label: view.localizedLabel(l10n), leading: null),
           ],
         ),
       ),
@@ -114,8 +127,13 @@ class _Trends extends ConsumerWidget {
       padding: const EdgeInsets.only(top: 4, bottom: 24) + barInsets(context),
       children: [
         const RecapSection(),
+        // The recap's long form: a calendar month or year written up.
+        const ReviewLinks(),
         if (exercises.isNotEmpty) ...[
-          AppSectionHeader(title: 'Per exercise', count: exercises.length),
+          AppSectionHeader(
+            title: context.l10n.progressPerExercise,
+            count: exercises.length,
+          ),
           for (final exercise in exercises)
             AppTile(
               icon: exerciseIcon,
@@ -144,6 +162,10 @@ class _AllTime extends StatelessWidget {
       children: const [
         TotalsSection(),
         ActivityHeatmap(),
+        // Beside the year grid: the grid says how the year went, the
+        // calendar what happened on a given day.
+        TrainingCalendar(),
+        GoalsLink(),
         RankSection(),
         StreakCard(),
       ],
@@ -170,20 +192,21 @@ class _BodyLinks extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const AppSectionHeader(title: 'Tracked by hand'),
+        AppSectionHeader(title: l10n.progressTrackedByHand),
         AppTile(
           icon: Icons.straighten,
-          title: 'Measurements',
-          subtitle: 'Weight, waist, arms — and how they have moved',
+          title: l10n.progressMeasurementsTitle,
+          subtitle: l10n.progressMeasurementsSubtitle,
           onTap: () => context.go('/progress/measurements'),
         ),
         AppTile(
           icon: Icons.photo_library_outlined,
-          title: 'Progress photos',
-          subtitle: 'Compare two dates side by side',
+          title: l10n.progressPhotosTitle,
+          subtitle: l10n.progressPhotosSubtitle,
           onTap: () => context.go('/progress/photos'),
         ),
       ],
@@ -208,11 +231,13 @@ class _NoHistory extends StatelessWidget {
             color: theme.colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: 16),
-          Text('Nothing logged yet', style: theme.textTheme.titleSmall),
+          Text(
+            context.l10n.progressNoHistoryTitle,
+            style: theme.textTheme.titleSmall,
+          ),
           const SizedBox(height: 8),
           Text(
-            'Finish a workout and its exercises appear here, each with its own '
-            'chart.',
+            context.l10n.progressNoHistoryMessage,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodySmall,
           ),

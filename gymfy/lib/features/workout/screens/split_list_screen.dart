@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/widgets/name_prompt_dialog.dart';
 import '../data/workout_repository.dart';
@@ -29,11 +30,11 @@ class SplitListScreen extends ConsumerWidget {
 
     return GlassScaffold(
       appBar: GlassAppBar(
-        title: const Text('Splits'),
+        title: Text(context.l10n.workoutSplitsTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.event_note_outlined),
-            tooltip: 'Browse programs',
+            tooltip: context.l10n.workoutBrowsePrograms,
             onPressed: () => context.go('/workout/programs'),
           ),
         ],
@@ -44,7 +45,7 @@ class SplitListScreen extends ConsumerWidget {
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              'Could not load your splits.\n$error',
+              context.l10n.workoutSplitsLoadFailed('$error'),
               textAlign: TextAlign.center,
             ),
           ),
@@ -62,7 +63,7 @@ class SplitListScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => createSplit(context, ref),
         icon: const Icon(Icons.add),
-        label: const Text('New split'),
+        label: Text(context.l10n.workoutNewSplit),
       ),
     );
   }
@@ -75,9 +76,9 @@ class SplitListScreen extends ConsumerWidget {
 Future<void> createSplit(BuildContext context, WidgetRef ref) async {
   final name = await showNamePromptDialog(
     context,
-    title: 'New split',
-    label: 'Split name',
-    hint: 'e.g. Push / Pull / Legs',
+    title: context.l10n.workoutNewSplit,
+    label: context.l10n.workoutSplitNameLabel,
+    hint: context.l10n.workoutSplitNameHint,
   );
   if (name == null) return;
 
@@ -112,7 +113,7 @@ class _SplitTile extends ConsumerWidget {
       ),
       trailing: IconButton(
         icon: const Icon(Icons.delete_outline),
-        tooltip: 'Delete split',
+        tooltip: context.l10n.workoutDeleteSplitTooltip,
         onPressed: () => _confirmDelete(context, ref, split),
       ),
       onTap: () => context.go('/workout/split/${split.id}'),
@@ -135,7 +136,7 @@ class _ActiveBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        'Active',
+        context.l10n.commonActive,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(color: accent),
       ),
     );
@@ -152,19 +153,16 @@ Future<void> _confirmDelete(
     context: context,
     builder: (context) {
       return GlassDialog(
-        title: Text('Delete "${split.name}"?'),
-        content: const Text(
-          'This removes the split and everything inside it. This cannot be '
-          'undone.',
-        ),
+        title: Text(context.l10n.workoutDeleteTitle(split.name)),
+        content: Text(context.l10n.workoutDeleteSplitMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete'),
+            child: Text(context.l10n.commonDelete),
           ),
         ],
       );
@@ -195,10 +193,13 @@ class _EmptyState extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 16),
-            Text('No splits yet', style: theme.textTheme.titleLarge),
+            Text(
+              context.l10n.workoutNoSplitsTitle,
+              style: theme.textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
             Text(
-              'Create your first split to start planning your training.',
+              context.l10n.workoutNoSplitsMessage,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
             ),

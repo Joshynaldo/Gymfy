@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/glass.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/widgets/glass_dialog.dart';
 import '../../../shared/widgets/pressable.dart';
@@ -59,6 +60,7 @@ class _NoteDialogState extends State<_NoteDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final hadNote = widget.exercise.notes != null;
 
     return GlassDialog(
@@ -72,27 +74,30 @@ class _NoteDialogState extends State<_NoteDialog> {
         maxLines: 5,
         minLines: 3,
         textCapitalization: TextCapitalization.sentences,
-        decoration: const InputDecoration(
-          labelText: 'Note',
-          hintText: 'Seat height, pin, grip width, which machine…',
+        decoration: InputDecoration(
+          labelText: l10n.exercisesNoteLabel,
+          hintText: l10n.exercisesNoteHint,
           // Room for the text to breathe; a multi-line field with the default
           // dense padding reads as a box that has been sat on.
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 14,
+          ),
         ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.commonCancel),
         ),
         // Only offered when there is something to delete. A Clear button on an
         // empty field does nothing and still has to be understood.
         if (hadNote)
           TextButton(
             onPressed: () => Navigator.of(context).pop((text: null)),
-            child: const Text('Clear'),
+            child: Text(l10n.exercisesNoteClear),
           ),
-        FilledButton(onPressed: _save, child: const Text('Save')),
+        FilledButton(onPressed: _save, child: Text(l10n.commonSave)),
       ],
     );
   }
@@ -163,7 +168,7 @@ class ExerciseNoteTile extends ConsumerWidget {
                   // The empty state says what to write, not "No note". A
                   // labelled blank is a thing to wonder about; an example is
                   // an instruction.
-                  note ?? 'Add a note — seat height, pin, grip…',
+                  note ?? context.l10n.exercisesNoteEmpty,
                   style:
                       (dense
                               ? theme.textTheme.bodySmall

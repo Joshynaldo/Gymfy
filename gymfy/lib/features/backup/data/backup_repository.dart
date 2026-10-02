@@ -10,24 +10,48 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/models/exercise.dart' show isBundledAsset;
 import '../../exercises/data/exercise_repository.dart' show exerciseImageDir;
+import '../../health_connect/data/health_connect_sync.dart'
+    show
+        healthConnectLastErrorKey,
+        healthConnectReadKey,
+        healthConnectWeightCheckedKey,
+        healthConnectWeightImportsKey,
+        healthConnectWriteKey,
+        healthConnectWriteSinceKey,
+        healthConnectWrittenKey;
 import '../../progress/data/photo_repository.dart';
 import 'backup_format.dart';
 
 part 'backup_repository.g.dart';
 
 /// Settings that describe *this phone*, not your training: where its automatic
-/// backups go and when the last one ran.
+/// backups go and when the last one ran, and everything about Health Connect.
 ///
 /// A restore keeps the device's own values for these, and leaves them unset
 /// when the device has none — the file's values never come back. Moving
 /// to a new phone would otherwise point its automatic backup at the old
 /// phone's folder, which may not exist here, and stamp "last backup" with a
 /// date that was never true on this device.
+///
+/// Health Connect is this phone's too. Its switches are a promise ("off until
+/// you turn it on", "turn it off and Gymfy stops at once") that a restore
+/// must not quietly undo: switching off revokes nothing, so a file from when
+/// a switch was on would start writing workouts and reading weigh-ins again.
+/// And its ledgers describe this phone's Health Connect — a new phone given
+/// the old one's would believe every workout already written there, and never
+/// write them.
 const deviceLocalSettingKeys = [
   'auto_backup_mode',
   'auto_backup_folder',
   'auto_backup_last_at',
   'auto_backup_last_error',
+  healthConnectWriteKey,
+  healthConnectWriteSinceKey,
+  healthConnectWrittenKey,
+  healthConnectReadKey,
+  healthConnectWeightImportsKey,
+  healthConnectWeightCheckedKey,
+  healthConnectLastErrorKey,
 ];
 
 /// What a backup file holds, for the confirmation before restoring it.
@@ -319,25 +343,23 @@ class BackupRepository {
     final known = {for (final t in _db.allTables) t.actualTableName: t};
     for (final name in migrated.tables.keys) {
       if (!known.containsKey(name)) {
-        throw BackupException(
-          'That backup is damaged and cannot be read (unknown table "$name").',
-        );
+        throw BackupException(BackupProblem.damaged, 'unknown table "$name"');
       }
     }
     for (final table in known.values) {
       final data = migrated.tables[table.actualTableName];
       if (data == null) {
         throw BackupException(
-          'That backup is damaged and cannot be read '
-          '(table "${table.actualTableName}" is missing).',
+          BackupProblem.damaged,
+          'table "${table.actualTableName}" is missing',
         );
       }
       final columns = {for (final c in table.$columns) c.name};
       for (final column in data.columns) {
         if (!columns.contains(column)) {
           throw BackupException(
-            'That backup is damaged and cannot be read '
-            '(unknown column "$column" in "${table.actualTableName}").',
+            BackupProblem.damaged,
+            'unknown column "$column" in "${table.actualTableName}"',
           );
         }
       }
@@ -386,7 +408,8 @@ class BackupRepository {
       // This phone's values, or none at all. A key this phone never had must
       // not come back from the file either: on a new phone that would point
       // its automatic backup at the old phone's folder and claim a "last
-      // backup" that never happened here, so no backup would be due for days.
+      // backup" that never happened here, so no backup would be due for days
+      // — or switch Health Connect on without anyone touching the switch.
       await _db.customStatement(
         'DELETE FROM "app_settings" WHERE "name" IN '
         '(${deviceLocalSettingKeys.map((_) => '?').join(', ')})',
@@ -408,8 +431,8 @@ class BackupRepository {
       final broken = await _db.customSelect('PRAGMA foreign_key_check').get();
       if (broken.isNotEmpty) {
         throw const BackupException(
-          'That backup is damaged and cannot be read (some rows point at '
-          'data that is not in it).',
+          BackupProblem.damaged,
+          'some rows point at data that is not in it',
         );
       }
     });
@@ -422,13 +445,13 @@ class BackupRepository {
   BackupPayload _payloadOf(Archive archive) {
     final entry = archive.find(backupJsonEntry);
     if (entry == null || !entry.isFile) {
-      throw const BackupException('That file is not a Gymfy backup.');
+      throw const BackupException(BackupProblem.notABackup);
     }
     final String source;
     try {
       source = utf8.decode(entry.content);
     } on FormatException {
-      throw const BackupException('That file is not a Gymfy backup.');
+      throw const BackupException(BackupProblem.notABackup);
     }
     return BackupPayload.decode(source);
   }
@@ -445,7 +468,7 @@ class BackupRepository {
         archive = ZipDecoder().decodeStream(input);
       } catch (_) {
         // Not a zip at all — a plan file, a CSV, a photo picked by mistake.
-        throw const BackupException('That file is not a Gymfy backup.');
+        throw const BackupException(BackupProblem.notABackup);
       }
       return await body(archive);
     } finally {

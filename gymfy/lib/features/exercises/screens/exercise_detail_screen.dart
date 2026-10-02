@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/models/exercise.dart' show isBundledAsset;
 import '../../../shared/utils/exercise_display.dart';
@@ -58,7 +59,7 @@ class ExerciseDetailScreen extends ConsumerWidget {
 
     return GlassScaffold(
       appBar: GlassAppBar(
-        title: const Text('Exercise'),
+        title: Text(context.l10n.exercisesDetailTitle),
         actions: [
           // Built-in exercises are re-seeded from code on every launch, so an
           // edit to one would silently vanish on the next start. Offering the
@@ -73,14 +74,14 @@ class ExerciseDetailScreen extends ConsumerWidget {
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              'Could not load this exercise.\n$error',
+              context.l10n.exercisesDetailLoadFailed('$error'),
               textAlign: TextAlign.center,
             ),
           ),
         ),
         data: (exercise) {
           if (exercise == null) {
-            return const Center(child: Text('Exercise not found.'));
+            return Center(child: Text(context.l10n.exercisesNotFound));
           }
           return _ExerciseDetailBody(exercise: exercise);
         },
@@ -101,9 +102,9 @@ class _CustomExerciseMenu extends ConsumerWidget {
       onSelected: (value) => value == 'edit'
           ? context.go('/exercises/${exercise.id}/edit')
           : _confirmDelete(context, ref),
-      itemBuilder: (context) => const [
-        PopupMenuItem(value: 'edit', child: Text('Edit')),
-        PopupMenuItem(value: 'delete', child: Text('Delete')),
+      itemBuilder: (context) => [
+        PopupMenuItem(value: 'edit', child: Text(context.l10n.commonEdit)),
+        PopupMenuItem(value: 'delete', child: Text(context.l10n.commonDelete)),
       ],
     );
   }
@@ -118,21 +119,20 @@ class _CustomExerciseMenu extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => GlassDialog(
-        title: Text('Delete ${exercise.name}?'),
+        title: Text(context.l10n.exercisesDeleteTitle(exercise.name)),
         content: Text(
           hasHistory
-              ? 'It will be removed from your library and from every picker. '
-                    'Workouts you already logged with it keep their sets.'
-              : 'It has never been logged, so it will be removed completely.',
+              ? context.l10n.exercisesDeleteWithHistory
+              : context.l10n.exercisesDeleteNoHistory,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete'),
+            child: Text(context.l10n.commonDelete),
           ),
         ],
       ),
@@ -141,14 +141,15 @@ class _CustomExerciseMenu extends ConsumerWidget {
 
     final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
+    final l10n = context.l10n;
     final archived = await repository.deleteCustom(exercise);
     router.go('/exercises');
     messenger.showSnackBar(
       SnackBar(
         content: Text(
           archived
-              ? '${exercise.name} removed — past workouts kept it'
-              : '${exercise.name} deleted',
+              ? l10n.exercisesArchived(exercise.name)
+              : l10n.exercisesDeleted(exercise.name),
         ),
       ),
     );
@@ -163,6 +164,7 @@ class _ExerciseDetailBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
 
     return ListView(
@@ -200,7 +202,9 @@ class _ExerciseDetailBody extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(22, 6, 22, 0),
           child: Text(
-            exercise.muscleIds.map(muscleLabel).join(' · '),
+            exercise.muscleIds
+                .map((id) => muscleLabel(id, l10n: l10n))
+                .join(' · '),
             style: theme.textTheme.bodySmall,
           ),
         ),
@@ -225,14 +229,14 @@ class _ExerciseDetailBody extends ConsumerWidget {
         ),
         AppPanel(
           icon: Icons.accessibility_new,
-          title: 'Muscles worked',
+          title: l10n.exercisesMusclesWorked,
           child: Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
               for (final muscleId in exercise.muscleIds)
                 AppChip(
-                  label: muscleLabel(muscleId),
+                  label: muscleLabel(muscleId, l10n: l10n),
                   selected: false,
                   onTap: null,
                 ),
@@ -370,7 +374,7 @@ class _Placeholder extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Preview coming soon',
+            context.l10n.exercisesPreviewSoon,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),

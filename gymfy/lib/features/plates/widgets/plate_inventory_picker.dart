@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/data/settings_repository.dart';
 import '../../../shared/utils/units.dart';
 import '../../../shared/widgets/app_chip.dart';
@@ -18,6 +19,7 @@ class PlateInventoryPicker extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final unit = ref.watch(weightUnitProvider);
     final selected = ref.watch(availablePlatesProvider).toSet();
     final options = unit == WeightUnit.kg
@@ -31,8 +33,7 @@ class PlateInventoryPicker extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'The plates your gym has, in ${unit.label}. The calculator only '
-            'suggests these.',
+            l10n.platesInventoryCaption(unit.label),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -44,7 +45,7 @@ class PlateInventoryPicker extends ConsumerWidget {
             children: [
               for (final plate in options)
                 AppChip(
-                  label: formatPlate(plate),
+                  label: formatPlate(plate, l10n: l10n),
                   selected: selected.contains(plate),
                   onTap: () => _toggle(
                     ref,

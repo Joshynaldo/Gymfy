@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/data/lifter_sex.dart';
 import '../data/muscle_colors.dart';
 import '../../../app/theme/glass.dart';
@@ -170,7 +171,7 @@ class MuscleMap extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: Text(
-            'Could not load the body map.\n$error',
+            context.l10n.muscleMapBodyLoadFailed('$error'),
             textAlign: TextAlign.center,
           ),
         ),

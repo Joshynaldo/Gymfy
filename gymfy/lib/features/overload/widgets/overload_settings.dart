@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../shared/utils/format.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/app_chip.dart';
 import '../../../shared/utils/units.dart';
 import '../data/overload_math.dart';
 import '../data/overload_preference.dart';
+import '../data/percent_target.dart';
 
 /// The whole progressive-overload configuration, in one panel.
 ///
@@ -22,6 +23,7 @@ class OverloadSettingsPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final unit = ref.watch(weightUnitProvider);
     final config = ref.watch(overloadConfigProvider);
 
@@ -32,11 +34,8 @@ class OverloadSettingsPanel extends ConsumerWidget {
       children: [
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          title: const Text('Suggest heavier weights'),
-          subtitle: const Text(
-            'When you hit every set at the top of your rep range, the next '
-            'session opens with a bit more on the bar.',
-          ),
+          title: Text(l10n.overloadSuggestTitle),
+          subtitle: Text(l10n.overloadSuggestSubtitle),
           value: config.enabled,
           onChanged: (value) => update(config.copyWith(enabled: value)),
         ),
@@ -44,14 +43,17 @@ class OverloadSettingsPanel extends ConsumerWidget {
         // greyed-out wall of controls is worse than none.
         if (config.enabled) ...[
           const SizedBox(height: 12),
-          Text('How much to add', style: theme.textTheme.titleSmall),
+          Text(l10n.overloadHowMuchTitle, style: theme.textTheme.titleSmall),
           const SizedBox(height: 8),
           SegmentedButton<OverloadMode>(
             showSelectedIcon: false,
             style: const ButtonStyle(visualDensity: VisualDensity.compact),
             segments: [
               for (final mode in OverloadMode.values)
-                ButtonSegment(value: mode, label: Text(mode.label)),
+                ButtonSegment(
+                  value: mode,
+                  label: Text(mode.localizedLabel(l10n)),
+                ),
             ],
             selected: {config.mode},
             onSelectionChanged: (selection) =>
@@ -61,11 +63,10 @@ class OverloadSettingsPanel extends ConsumerWidget {
           _ModeDetail(config: config, unit: unit, onChanged: update),
           if (showDeload) ...[
             const SizedBox(height: 20),
-            Text('Deload', style: theme.textTheme.titleSmall),
+            Text(l10n.overloadDeloadTitle, style: theme.textTheme.titleSmall),
             const SizedBox(height: 4),
             Text(
-              'After a run of increases, suggest dropping 10%. Only ever a '
-              'suggestion — nothing changes on its own.',
+              l10n.overloadDeloadCaption,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -75,13 +76,13 @@ class OverloadSettingsPanel extends ConsumerWidget {
               spacing: 8,
               children: [
                 AppChip(
-                  label: 'Never',
+                  label: l10n.overloadDeloadNever,
                   selected: config.deloadWeeks == null,
                   onTap: () => update(config.copyWith(clearDeload: true)),
                 ),
                 for (final weeks in overloadDeloadOptions)
                   AppChip(
-                    label: '$weeks in a row',
+                    label: l10n.overloadDeloadInARow(weeks),
                     selected: config.deloadWeeks == weeks,
                     onTap: () => update(config.copyWith(deloadWeeks: weeks)),
                   ),
@@ -109,6 +110,7 @@ class _ModeDetail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final caption = theme.textTheme.bodySmall?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
     );
@@ -117,11 +119,11 @@ class _ModeDetail extends StatelessWidget {
       // Nothing to choose — the point of Auto is that the app already knows a
       // squat isn't a lateral raise.
       OverloadMode.auto => Text(
-        'Bigger jumps on big lifts: '
-        '${formatWeightUnit(5, unit)} on legs, '
-        '${formatWeightUnit(2.5, unit)} on back and chest, '
-        '${formatWeightUnit(1.25, unit)} on arms and shoulders. '
-        'Core exercises are never auto-progressed.',
+        l10n.overloadAutoCaption(
+          formatWeightUnit(5, unit, l10n: l10n),
+          formatWeightUnit(2.5, unit, l10n: l10n),
+          formatWeightUnit(1.25, unit, l10n: l10n),
+        ),
         style: caption,
       ),
       OverloadMode.fixed => Column(
@@ -132,14 +134,14 @@ class _ModeDetail extends StatelessWidget {
             children: [
               for (final step in overloadFixedSteps)
                 AppChip(
-                  label: formatWeightUnit(step, unit),
+                  label: formatWeightUnit(step, unit, l10n: l10n),
                   selected: config.fixedKg == step,
                   onTap: () => onChanged(config.copyWith(fixedKg: step)),
                 ),
             ],
           ),
           const SizedBox(height: 6),
-          Text('The same jump on every exercise.', style: caption),
+          Text(l10n.overloadFixedCaption, style: caption),
         ],
       ),
       OverloadMode.percent => Column(
@@ -150,7 +152,7 @@ class _ModeDetail extends StatelessWidget {
             children: [
               for (final step in overloadPercentSteps)
                 AppChip(
-                  label: '${formatWeight(step)}%',
+                  label: formatPercent(step, l10n: l10n),
                   selected: config.percent == step,
                   onTap: () => onChanged(config.copyWith(percent: step)),
                 ),
@@ -160,7 +162,7 @@ class _ModeDetail extends StatelessWidget {
           Text(
             // Concrete beats abstract: "2.5%" means nothing until you see what
             // it does to a weight you actually lift.
-            _percentExample(config.percent, unit),
+            _percentExample(config.percent, unit, l10n),
             style: caption,
           ),
         ],
@@ -170,13 +172,15 @@ class _ModeDetail extends StatelessWidget {
 }
 
 /// Spells a percentage out against two real weights.
-String _percentExample(double percent, WeightUnit unit) {
+String _percentExample(double percent, WeightUnit unit, AppLocalizations l10n) {
   final light = weightToKilograms(40, unit);
   final heavy = weightToKilograms(100, unit);
-  return 'Adds ${formatWeightUnit(light * percent / 100, unit)} to a '
-      '${formatWeightUnit(light, unit)} lift and '
-      '${formatWeightUnit(heavy * percent / 100, unit)} to a '
-      '${formatWeightUnit(heavy, unit)} one.';
+  return l10n.overloadPercentExample(
+    formatWeightUnit(light * percent / 100, unit, l10n: l10n),
+    formatWeightUnit(light, unit, l10n: l10n),
+    formatWeightUnit(heavy * percent / 100, unit, l10n: l10n),
+    formatWeightUnit(heavy, unit, l10n: l10n),
+  );
 }
 
 /// Kept here so the panel and the maths stay in step: both need to know that

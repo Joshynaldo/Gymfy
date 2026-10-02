@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="idle_no_workout">Kein Training aktiv</string>
+    <string name="rest_over">Pause vorbei</string>
+    <string name="rest_add_thirty">+30 s</string>
+    <!-- Short for "Pause überspringen": two chips share the round screen. -->
+    <string name="rest_skip">Weiter</string>
+    <string name="log_set">Loggen</string>
+    <plurals name="reps_count">
+        <item quantity="one">%d Wdh.</item>
+        <item quantity="other">%d Wdh.</item>
+    </plurals>
+    <string name="rest_channel_name">Pausentimer</string>
+    <string name="rest_channel_description">Der Countdown zwischen den Sätzen</string>
+    <string name="rest_notification_title">Pause</string>
+</resources>

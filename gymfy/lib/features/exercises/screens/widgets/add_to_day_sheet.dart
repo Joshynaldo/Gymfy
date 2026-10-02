@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/l10n.dart';
 import '../../../workout/data/workout_repository.dart';
 
 /// Asks which workout day some exercises should be added to, and returns the
@@ -42,7 +43,7 @@ class _AddToDaySheet extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Text(
-                count == 1 ? 'Add to day' : 'Add $count exercises to day',
+                context.l10n.exercisesAddToDayTitle(count),
                 style: theme.textTheme.titleLarge,
               ),
             ),
@@ -54,7 +55,7 @@ class _AddToDaySheet extends ConsumerWidget {
                 ),
                 error: (error, _) => Padding(
                   padding: const EdgeInsets.all(24),
-                  child: Text('Could not load your splits.\n$error'),
+                  child: Text(context.l10n.workoutSplitsLoadFailed('$error')),
                 ),
                 data: (days) =>
                     days.isEmpty ? const _NoDays() : _DayList(days: days),
@@ -132,14 +133,13 @@ class _NoDays extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'No workout days yet',
+            context.l10n.exercisesNoDaysTitle,
             style: theme.textTheme.titleMedium,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 4),
           Text(
-            'Create a split with at least one day in the Workout tab, then come '
-            'back here.',
+            context.l10n.exercisesNoDaysMessage,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),

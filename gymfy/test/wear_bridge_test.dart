@@ -11,6 +11,7 @@ import 'package:clock/clock.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/features/wear/data/wear_bridge.dart';
 import 'package:gymfy/features/wear/data/wear_sync.dart';
+import 'package:gymfy/features/workout_notification/data/workout_notification.dart';
 import 'package:gymfy/shared/database/app_database.dart';
 
 WorkoutSession _session({String name = 'Push A'}) => WorkoutSession(
@@ -263,6 +264,8 @@ void main() {
       for (final command in const [
         WearBridge.commandAddThirty,
         WearBridge.commandSkipRest,
+        WearBridge.commandRepeatSet,
+        WearBridge.commandLogSet,
       ]) {
         expect(
           kotlinWatch,
@@ -271,6 +274,79 @@ void main() {
               'it has no effect',
         );
       }
+    });
+
+    test('on every field of a log command', () {
+      // The watch writes the JSON, Dart reads it. A key spelled differently
+      // makes every log from the wrist malformed — refused, silently.
+      final watch = read(
+        'android/wear/src/main/kotlin/de/kopten/gymfy/wear/WorkoutState.kt',
+      );
+      for (final field in const [
+        WearBridge.logFieldId,
+        WearBridge.logFieldExercise,
+        WearBridge.logFieldWeight,
+        WearBridge.logFieldUnit,
+      ]) {
+        expect(
+          watch,
+          contains('.put("$field"'),
+          reason: 'the watch never writes "$field" into a log command',
+        );
+      }
+      // Reps and seconds are chosen between, never both written — the
+      // phone refuses a command carrying both.
+      expect(
+        watch,
+        contains(
+          '.put(if (state.nextTimed) "${WearBridge.logFieldSeconds}" '
+          'else "${WearBridge.logFieldReps}"',
+        ),
+        reason: 'the watch never writes reps or seconds into a log command',
+      );
+    });
+
+    test('on how a weight is written', () {
+      // The watch steps the weight with + and -, so it formats the number
+      // itself. With a dot always, a German phone's "82,5 kg" read
+      // "82.5 kg" on the wrist; and printed raw, a converted pound value
+      // read "149.99999999999997".
+      final state = read(
+        'android/wear/src/main/kotlin/de/kopten/gymfy/wear/WorkoutState.kt',
+      );
+      final activity = read(
+        'android/wear/src/main/kotlin/de/kopten/gymfy/wear/MainActivity.kt',
+      );
+
+      expect(
+        state,
+        contains('fun formatWeight(value: Double, separator: String'),
+      );
+      expect(state, contains('.replace(".", separator)'));
+      expect(state, contains('.setScale(2, RoundingMode.HALF_UP)'));
+      expect(
+        activity,
+        contains('formatWeight(weight, state.decimalSeparator)'),
+        reason: 'the stepper must use the separator the phone sent',
+      );
+      expect(
+        RegExp(r'formatWeight\(weight\)').hasMatch(activity),
+        isFalse,
+        reason: 'a weight written with the default dot',
+      );
+    });
+
+    test('on the method a command is delivered to', () {
+      // The watch's commands and the notification's buttons both arrive
+      // through this one method.
+      final kotlin = read(
+        'android/app/src/main/kotlin/de/kopten/gymfy/WearBridge.kt',
+      );
+      final method = RegExp(
+        r'COMMAND_METHOD\s*=\s*"([^"]+)"',
+      ).firstMatch(kotlin)?.group(1);
+
+      expect(method, WearBridge.commandMethod);
     });
 
     test('on the method channel name', () {
@@ -289,23 +365,204 @@ void main() {
       final watch = read(
         'android/wear/src/main/kotlin/de/kopten/gymfy/wear/WorkoutState.kt',
       );
-      for (final field in const [
-        'active',
-        'workout',
-        'exercise',
-        'sets',
-        'restEndsAtMs',
-        'restTotalSeconds',
-        'lastSet',
-        'updatedAtMs',
-      ]) {
+      final sent = _mapKeys(
+        read('lib/features/wear/data/wear_bridge.dart'),
+        after: "'pushWorkout', {",
+      );
+      final readByWatch = {
+        for (final match in RegExp(
+          r'map\.(?:getString|getBoolean|getDouble|getLong|getInt|number)'
+          r'\("(\w+)"',
+        ).allMatches(watch))
+          match.group(1)!,
+      };
+
+      // Read from the Dart source rather than listed here, so a field added
+      // to the payload is checked without anyone remembering to add it.
+      expect(
+        sent,
+        containsAll(const [
+          'active',
+          'workout',
+          'exercise',
+          'sets',
+          'restEndsAtMs',
+          'restTotalSeconds',
+          'lastSet',
+          'updatedAtMs',
+          'nextExercise',
+          'nextExerciseId',
+          'nextSet',
+          'nextWeight',
+          'nextReps',
+          'nextTimed',
+          'weightUnit',
+          'weightStep',
+          'decimalSeparator',
+        ]),
+        reason: 'the push map could not be read out of wear_bridge.dart',
+      );
+      for (final field in sent) {
         expect(
-          watch,
-          contains('"$field"'),
+          readByWatch,
+          contains(field),
           reason: 'the watch never reads "$field", so the phone sending it '
               'has no effect',
         );
       }
+      // And the other way: a key the watch reads that the phone never sends
+      // is a typo on the Kotlin side, and reads as a default forever.
+      for (final field in readByWatch) {
+        expect(
+          sent,
+          contains(field),
+          reason: 'the watch reads "$field", which the phone never sends',
+        );
+      }
     });
   });
+
+  group('the workout notification', () {
+    String read(String path) => File(path).readAsStringSync();
+    final kotlin = read(
+      'android/app/src/main/kotlin/de/kopten/gymfy/WorkoutNotification.kt',
+    );
+
+    test('is shown and cleared by the same method names', () {
+      String? constant(String name) =>
+          RegExp('$name\\s*=\\s*"([^"]+)"').firstMatch(kotlin)?.group(1);
+
+      expect(constant('SHOW_METHOD'), WorkoutNotificationBridge.showMethod);
+      expect(constant('CLEAR_METHOD'), WorkoutNotificationBridge.clearMethod);
+      // Routed to by the bridge, which owns the channel.
+      final bridge = read(
+        'android/app/src/main/kotlin/de/kopten/gymfy/WearBridge.kt',
+      );
+      expect(bridge, contains('WorkoutNotification.SHOW_METHOD ->'));
+      expect(bridge, contains('WorkoutNotification.CLEAR_METHOD ->'));
+    });
+
+    test('reads every field Dart sends, and nothing else', () {
+      final sent = _mapKeys(
+        read(
+          'lib/features/workout_notification/data/workout_notification.dart',
+        ),
+        after: 'showMethod, {',
+      );
+      final readByKotlin = {
+        for (final match in RegExp(r'fields\["(\w+)"\]').allMatches(kotlin))
+          match.group(1)!,
+      };
+
+      expect(
+        sent,
+        containsAll(const [
+          'title',
+          'text',
+          'bigText',
+          'subText',
+          'restEndsAtMs',
+          'logCommand',
+        ]),
+      );
+      expect(readByKotlin, sent);
+    });
+
+    test('sends the rest commands Dart handles', () {
+      // A misspelt command here is a button that does nothing.
+      expect(
+        kotlin,
+        contains('COMMAND_ADD_THIRTY = "${WearBridge.commandAddThirty}"'),
+      );
+      expect(
+        kotlin,
+        contains('COMMAND_SKIP_REST = "${WearBridge.commandSkipRest}"'),
+      );
+    });
+
+    test(
+      'hides the workout on a lock screen set to hide sensitive content',
+      () {
+        // PUBLIC with no public version would show the workout, the exercise
+        // and "Next: 80 kg × 8 reps" — and working buttons — to anyone holding
+        // the locked phone, whatever the user chose in Android's settings.
+        expect(kotlin, isNot(contains('VISIBILITY_PUBLIC')));
+        expect(
+          kotlin,
+          contains('.setVisibility(Notification.VISIBILITY_PRIVATE)'),
+        );
+        expect(kotlin, contains('.setPublicVersion(publicVersion('));
+
+        // The public version: a generic title and the countdown, nothing
+        // else. Read out of its own function so a field or button added to it
+        // later shows up here.
+        final start = kotlin.indexOf('private fun publicVersion(');
+        expect(start, isNot(-1));
+        final end = kotlin.indexOf('return builder.build()', start);
+        final body = kotlin.substring(start, end);
+        for (final leak in const [
+          '"title"',
+          '"text"',
+          '"bigText"',
+          '"subText"',
+          '"logCommand"',
+          'addAction',
+          'setContentText',
+          'setStyle',
+        ]) {
+          expect(body, isNot(contains(leak)), reason: leak);
+        }
+        expect(body, contains('setContentTitle(channelName(fields))'));
+      },
+    );
+
+    test('has a receiver for its buttons', () {
+      // Without the manifest entry the broadcast goes nowhere and the
+      // buttons silently do nothing.
+      final manifest = read('android/app/src/main/AndroidManifest.xml');
+      expect(manifest, contains('android:name=".WorkoutActionReceiver"'));
+      expect(
+        read(
+          'android/app/src/main/kotlin/de/kopten/gymfy/WorkoutActionReceiver.kt',
+        ),
+        contains('class WorkoutActionReceiver : BroadcastReceiver()'),
+      );
+    });
+  });
+
+  test('neither app can reach the internet', () {
+    // Offline-only is a promise, not an accident: everything here is
+    // on-device IPC (the Data Layer, a local broadcast). The debug and
+    // profile manifests keep Flutter's own INTERNET entry for the tooling;
+    // the shipped ones must never gain it.
+    for (final path in const [
+      'android/app/src/main/AndroidManifest.xml',
+      'android/wear/src/main/AndroidManifest.xml',
+    ]) {
+      expect(
+        File(path).readAsStringSync(),
+        isNot(contains('android.permission.INTERNET')),
+        reason: path,
+      );
+    }
+  });
+}
+
+/// The string keys of the map literal that follows [after] in [source].
+///
+/// Good enough for the two hand-written maps it reads — flat, one
+/// `'key': value` per line, no braces inside — and it fails loudly (an empty
+/// set) if either ever stops looking like that.
+Set<String> _mapKeys(String source, {required String after}) {
+  final start = source.indexOf(after);
+  if (start == -1) return const {};
+  final end = source.indexOf('}', start + after.length);
+  final body = source.substring(start + after.length, end);
+  return {
+    for (final match in RegExp(
+      r"^\s*'(\w+)':",
+      multiLine: true,
+    ).allMatches(body))
+      match.group(1)!,
+  };
 }

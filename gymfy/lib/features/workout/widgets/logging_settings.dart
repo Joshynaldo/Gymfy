@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/app_picker.dart';
 import '../data/logging_preferences.dart';
 
@@ -15,6 +16,7 @@ class LoggingSettingsPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final mode =
         ref.watch(effortRatingModeProvider).value ?? EffortRatingMode.off;
     final ramp = ref.watch(warmupRampProvider).value ?? defaultWarmupRamp;
@@ -28,14 +30,17 @@ class LoggingSettingsPanel extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Rate how hard each set was',
+                l10n.workoutLoggingRateTitle,
                 style: theme.textTheme.bodyLarge,
               ),
               const SizedBox(height: 10),
               SegmentedButton<EffortRatingMode>(
                 segments: [
                   for (final option in EffortRatingMode.values)
-                    ButtonSegment(value: option, label: Text(option.label)),
+                    ButtonSegment(
+                      value: option,
+                      label: Text(option.localizedLabel(l10n)),
+                    ),
                 ],
                 selected: {mode},
                 showSelectedIcon: false,
@@ -45,16 +50,9 @@ class LoggingSettingsPanel extends ConsumerWidget {
               const SizedBox(height: 10),
               Text(
                 switch (mode) {
-                  EffortRatingMode.off =>
-                    'Off: the log sheet asks for weight and reps only.',
-                  EffortRatingMode.rpe =>
-                    'RPE 6–10, optional on every working set. A top set rated '
-                        '9.5 or 10 holds the overload suggestion at the same '
-                        'weight next time.',
-                  EffortRatingMode.rir =>
-                    'Reps left in the tank, optional on every working set. A '
-                        'top set with none left holds the overload suggestion '
-                        'at the same weight next time.',
+                  EffortRatingMode.off => l10n.workoutLoggingOffCaption,
+                  EffortRatingMode.rpe => l10n.workoutLoggingRpeCaption,
+                  EffortRatingMode.rir => l10n.workoutLoggingRirCaption,
                 },
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
@@ -65,21 +63,21 @@ class LoggingSettingsPanel extends ConsumerWidget {
         ),
         ListTile(
           leading: const Icon(Icons.stairs_outlined),
-          title: const Text('Warm-up ramp'),
+          title: Text(l10n.workoutWarmupRampTitle),
           subtitle: Text(
-            '${formatWarmupRamp(ramp)} of your working weight, after the bar',
+            l10n.workoutWarmupRampSubtitle(formatWarmupRamp(ramp)),
           ),
           trailing: const Icon(Icons.chevron_right),
           onTap: () async {
             final picked = await showOptionPicker<String>(
               context: context,
-              title: 'Warm-up ramp',
+              title: l10n.workoutWarmupRampTitle,
               options: [
                 for (final preset in warmupRampPresets)
                   (
                     value: encodeWarmupRamp(preset),
                     label: formatWarmupRamp(preset),
-                    subtitle: '${preset.length} steps',
+                    subtitle: l10n.workoutWarmupRampSteps(preset.length),
                   ),
               ],
               selected: encodeWarmupRamp(ramp),

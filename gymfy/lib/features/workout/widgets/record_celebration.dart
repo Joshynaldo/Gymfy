@@ -4,26 +4,45 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/accent_color.dart';
 import '../../../app/theme/glass.dart';
 import '../../../app/theme/motion.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
 import '../../../shared/widgets/pressable.dart';
 import '../data/personal_records.dart';
 
 /// A record's value as it reads on screen, in the record's own unit.
-String formatRecordValue(RecordKind kind, double value, WeightUnit unit) {
+///
+/// In [l10n]'s language when given ("12 Wdh.", "102,5 kg"), else English.
+String formatRecordValue(
+  RecordKind kind,
+  double value,
+  WeightUnit unit, {
+  AppLocalizations? l10n,
+}) {
   return switch (kind) {
     RecordKind.weight ||
     RecordKind.oneRm ||
-    RecordKind.volume => formatWeightUnit(value, unit),
-    RecordKind.reps => '${value.round()} reps',
+    RecordKind.volume => formatWeightUnit(value, unit, l10n: l10n),
+    RecordKind.reps => (l10n ?? englishLocalizations).workoutReps(
+      value.round(),
+    ),
     RecordKind.hold => formatSetDuration(value.round()),
   };
 }
 
 /// "Heaviest weight · 102.5 kg, was 100 kg".
-String describeRecord(BrokenRecord record, WeightUnit unit) =>
-    '${record.kind.label} · ${formatRecordValue(record.kind, record.value, unit)}'
-    ', was ${formatRecordValue(record.kind, record.previous, unit)}';
+String describeRecord(
+  BrokenRecord record,
+  WeightUnit unit, {
+  AppLocalizations? l10n,
+}) {
+  final strings = l10n ?? englishLocalizations;
+  return strings.workoutRecordLine(
+    record.kind.localizedLabel(strings),
+    formatRecordValue(record.kind, record.value, unit, l10n: l10n),
+    formatRecordValue(record.kind, record.previous, unit, l10n: l10n),
+  );
+}
 
 /// The moment a set beats your best.
 ///
@@ -90,7 +109,7 @@ class RecordCelebration extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'New personal record',
+                          context.l10n.workoutRecordNew,
                           style: theme.textTheme.titleSmall?.copyWith(
                             color: accent,
                             fontWeight: FontWeight.w700,
@@ -108,7 +127,7 @@ class RecordCelebration extends ConsumerWidget {
                         const SizedBox(height: 4),
                         for (final record in records)
                           Text(
-                            describeRecord(record, unit),
+                            describeRecord(record, unit, l10n: context.l10n),
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -159,7 +178,7 @@ class SessionRecordsList extends ConsumerWidget {
             Icon(Icons.emoji_events, color: accent, size: 20),
             const SizedBox(width: 8),
             Text(
-              count == 1 ? '1 personal record' : '$count personal records',
+              context.l10n.workoutRecordCount(count),
               style: theme.textTheme.titleMedium,
             ),
           ],
@@ -178,7 +197,7 @@ class SessionRecordsList extends ConsumerWidget {
                 const SizedBox(height: 2),
                 for (final record in exercise.records)
                   Text(
-                    describeRecord(record, unit),
+                    describeRecord(record, unit, l10n: context.l10n),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),

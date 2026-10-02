@@ -30,7 +30,8 @@ void main() {
     expect(
       file.existsSync(),
       isTrue,
-      reason: 'the listing copy is the deliverable; without it there is '
+      reason:
+          'the listing copy is the deliverable; without it there is '
           'nothing to submit',
     );
     final text = file.readAsStringSync();
@@ -74,7 +75,8 @@ void main() {
       expect(
         block.body.length,
         lessThanOrEqualTo(_limits[name]!),
-        reason: '"$name" is ${block.body.length} characters, '
+        reason:
+            '"$name" is ${block.body.length} characters, '
             '${block.body.length - _limits[name]!} over Play\'s limit',
       );
     }
@@ -106,13 +108,15 @@ void main() {
       expect(
         published.existsSync(),
         isTrue,
-        reason: 'the website serves docs/privacy-policy.html; copy it from '
+        reason:
+            'the website serves docs/privacy-policy.html; copy it from '
             'store/ rather than deleting this test',
       );
       expect(
         published.readAsStringSync(),
         source.readAsStringSync(),
-        reason: 'docs/privacy-policy.html is a copy of '
+        reason:
+            'docs/privacy-policy.html is a copy of '
             'store/privacy-policy.html — re-copy it after editing',
       );
     });
@@ -122,10 +126,59 @@ void main() {
       // analytics or crash reporting, this test is the thing that should stop
       // the old policy going out with it. The Data safety form answers, the
       // store description and this file all rest on the same sentence.
-      final policy = File('store/privacy-policy.md').readAsStringSync();
-      expect(policy, contains('ever leaves your phone'));
+      //
+      // The sentence used to be "Nothing you enter into Gymfy ever leaves your
+      // phone", which stopped being true once export, backup, review sharing
+      // and the watch app existed. It now says nothing leaves unless you send
+      // it, and the next test holds it to listing every way you can.
+      final policy = File(
+        'store/privacy-policy.md',
+      ).readAsStringSync().replaceAll(RegExp(r'\s+'), ' ');
+      expect(
+        policy,
+        contains('leaves your phone unless you send it somewhere'),
+      );
+      expect(policy, isNot(contains('ever leaves your phone')));
       expect(policy, contains('No analytics'));
       expect(policy, contains('No crash reporting'));
+    });
+
+    test('names every way data can leave the device', () {
+      // The policy once counted three ways out and said Gymfy had no
+      // backup, while the app could save backups and share a review as a
+      // picture. Each feature here hands data to a file or another app.
+      // Whitespace folded, so a phrase is found across a line break.
+      final policy = File(
+        'store/privacy-policy.md',
+      ).readAsStringSync().replaceAll(RegExp(r'\s+'), ' ');
+      for (final feature in const [
+        '**Export**',
+        '**Backup**',
+        '**Share a plan**',
+        '**Share a review**',
+        '**Send feedback**',
+        '**Wear OS watch**',
+      ]) {
+        expect(policy, contains(feature), reason: feature);
+      }
+      // The watch's data goes through Google Play services, and without
+      // Bluetooth through Google's servers. The policy has to say so rather
+      // than imply the phone talks to the watch privately.
+      expect(policy, contains("Google routes it through its own servers"));
+      expect(policy, contains('end-to-end encrypted'));
+      expect(policy, isNot(contains('Three features')));
+      expect(policy, isNot(contains('has no backup')));
+      // Backups are not encrypted, which is the thing to know about them.
+      expect(policy, contains('not encrypted'));
+    });
+
+    test('says what the workout notification shows on the lock screen', () {
+      final policy = File(
+        'store/privacy-policy.md',
+      ).readAsStringSync().replaceAll(RegExp(r'\s+'), ' ');
+      expect(policy, contains('workout notification'));
+      expect(policy, contains('lock screen'));
+      expect(policy, contains('hide sensitive notification content'));
     });
 
     test('and the app still has no networking code to contradict it', () {
@@ -136,17 +189,54 @@ void main() {
       for (final entity in Directory('lib').listSync(recursive: true)) {
         if (entity is! File || !entity.path.endsWith('.dart')) continue;
         final source = entity.readAsStringSync();
-        if (RegExp(r'\bHttpClient\b|package:http/|\bWebSocket\b|Socket\.connect')
-            .hasMatch(source)) {
+        if (RegExp(
+          r'\bHttpClient\b|package:http/|\bWebSocket\b|Socket\.connect',
+        ).hasMatch(source)) {
           offenders.add(entity.path);
         }
       }
       expect(
         offenders,
         isEmpty,
-        reason: 'the privacy policy and the Play Data safety form both say '
+        reason:
+            'the privacy policy and the Play Data safety form both say '
             'the app cannot transmit anything',
       );
+    });
+  });
+
+  group('the website and the README', () {
+    test('promise no watch button the phone never lets it show', () {
+      // The watch shows its logging screen whenever the phone sends a next
+      // set — which this phone does for any workout with an exercise in it —
+      // and returns before the repeat button is drawn. Repeat only appears
+      // beside a phone on an older build, so it is not something to offer.
+      final watch = File(
+        'android/wear/src/main/kotlin/de/kopten/gymfy/wear/MainActivity.kt',
+      ).readAsStringSync().replaceAll('\r\n', '\n');
+      expect(
+        watch,
+        contains('if (state.canLog) {\n        LogSet(state)\n        return'),
+        reason: 'if the watch can reach repeat again, this test can go',
+      );
+
+      final site = File('../docs/index.html').readAsStringSync();
+      final card = RegExp(
+        r'<h3>Wear OS companion</h3>\s*<p>(.*?)</p>',
+        dotAll: true,
+      ).firstMatch(site);
+      expect(card, isNotNull, reason: 'the Wear OS card on the website');
+      expect(card!.group(1)!.toLowerCase(), isNot(contains('repeat')));
+
+      final readme = File(
+        '../README.md',
+      ).readAsStringSync().replaceAll('\r\n', '\n');
+      final wrist = RegExp(
+        r'### On your wrist\s*(.*?)\n\n',
+        dotAll: true,
+      ).firstMatch(readme);
+      expect(wrist, isNotNull, reason: 'the "On your wrist" section');
+      expect(wrist!.group(1)!.toLowerCase(), isNot(contains('repeat')));
     });
   });
 }

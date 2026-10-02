@@ -19,6 +19,7 @@ import 'package:gymfy/app/theme/app_theme.dart';
 import 'package:gymfy/features/home/data/recap.dart';
 import 'package:gymfy/features/home/data/recap_repository.dart';
 import 'package:gymfy/features/home/widgets/week_card.dart';
+import 'package:gymfy/l10n/l10n.dart';
 import 'package:gymfy/shared/widgets/app_button.dart';
 import 'package:gymfy/shared/widgets/app_segmented.dart';
 import 'package:gymfy/shared/widgets/glass_nav_bar.dart';
@@ -26,10 +27,19 @@ import 'package:gymfy/shared/widgets/glass_nav_bar.dart';
 import 'support/default_accent.dart';
 
 /// A week's worth of logged sets, so the card has bars to draw.
+///
+/// Dated back from today rather than on fixed days: the week card recaps the
+/// last seven days by the real clock, and sets from a fixed week stop being
+/// "this week" seven days after the test is written — after which the card
+/// draws nothing and every test below passes without measuring anything.
 final _sets = <RecapSet>[
   for (var day = 0; day < 5; day++)
     (
-      date: DateTime(2026, 9, 7 + day),
+      date: DateTime(
+        DateTime.now().year,
+        DateTime.now().month,
+        DateTime.now().day - day,
+      ),
       sessionId: day,
       exerciseId: 'barbell_bench_press',
       weight: 100.0 + day * 10,
@@ -40,10 +50,15 @@ final _sets = <RecapSet>[
 
 /// Builds [child] at [scale] and hands back whatever the framework complained
 /// about — an overflow is reported as an exception, so this catches it.
+///
+/// [locale] switches the localisations on. Without it the app's widgets fall
+/// back to English, as they do in every test that doesn't ask.
 Future<Object?> _layout(
   WidgetTester tester,
   Widget child, {
   required double scale,
+  Locale? locale,
+  AppTheme theme = AppTheme.hyper,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -52,7 +67,14 @@ Future<Object?> _layout(
         recapSetsProvider.overrideWith((ref) => Stream.value(_sets)),
       ],
       child: MaterialApp(
-        theme: buildAppTheme(AppTheme.hyper, AccentPalette.blue),
+        theme: buildAppTheme(theme, AccentPalette.blue),
+        locale: locale,
+        localizationsDelegates: locale == null
+            ? null
+            : AppLocalizations.localizationsDelegates,
+        supportedLocales: locale == null
+            ? const [Locale('en', 'US')]
+            : AppLocalizations.supportedLocales,
         home: MediaQuery(
           data: MediaQueryData(textScaler: TextScaler.linear(scale)),
           child: Scaffold(
@@ -84,10 +106,12 @@ void main() {
         expect(
           await _layout(
             tester,
-            GlassNavBar(
-              selectedIndex: 0,
-              onDestinationSelected: (_) {},
-              destinations: mainDestinations,
+            Builder(
+              builder: (context) => GlassNavBar(
+                selectedIndex: 0,
+                onDestinationSelected: (_) {},
+                destinations: mainDestinations(context),
+              ),
             ),
             scale: scale,
           ),
@@ -124,6 +148,64 @@ void main() {
               ],
             ),
             scale: scale,
+          ),
+          isNull,
+        );
+      });
+    });
+
+    // German runs about a third longer than English, and these are the
+    // pieces that sit at a fixed width: seven bars, four tabs, one button.
+    group('in German at text scale $scale', () {
+      const german = Locale('de');
+
+      testWidgets('the week card fits its bars and their labels', (
+        tester,
+      ) async {
+        expect(
+          await _layout(tester, const WeekCard(), scale: scale, locale: german),
+          isNull,
+        );
+        expect(find.text('Diese Woche'), findsOneWidget);
+      });
+
+      testWidgets('the flat navigation bar fits "Fortschritt"', (tester) async {
+        // The flat themes are the ones that show the labels; the glass pill
+        // only keeps them for screen readers.
+        expect(
+          await _layout(
+            tester,
+            Builder(
+              builder: (context) => GlassNavBar(
+                selectedIndex: 2,
+                onDestinationSelected: (_) {},
+                destinations: mainDestinations(context),
+              ),
+            ),
+            scale: scale,
+            locale: german,
+            theme: AppTheme.darkDefault,
+          ),
+          isNull,
+        );
+        expect(find.text('Fortschritt'), findsOneWidget);
+      });
+
+      testWidgets('a primary button fits the longest Home label', (
+        tester,
+      ) async {
+        expect(
+          await _layout(
+            tester,
+            Builder(
+              builder: (context) => AppButton(
+                label: context.l10n.homeTodayStartEmpty,
+                icon: Icons.bolt_outlined,
+                onPressed: () {},
+              ),
+            ),
+            scale: scale,
+            locale: german,
           ),
           isNull,
         );

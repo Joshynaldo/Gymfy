@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/models/equipment.dart';
 import '../../../app/theme/glass.dart';
 import '../../../shared/widgets/glass_sheet.dart';
@@ -73,7 +74,9 @@ class EquipmentFilterButton extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(right: 4),
       child: Tooltip(
-        message: active ? 'Equipment ($count)' : 'Filter by equipment',
+        message: active
+            ? context.l10n.exercisesEquipmentFilterActive(count)
+            : context.l10n.exercisesEquipmentFilter,
         child: Pressable(
           borderRadius: radius,
           onTap: onPressed,
@@ -155,7 +158,7 @@ class _EquipmentSheetState extends State<_EquipmentSheet> {
   @override
   Widget build(BuildContext context) {
     return GlassSheet(
-      title: 'Equipment',
+      title: context.l10n.exercisesEquipment,
       handle: false,
       child: SingleChildScrollView(
         child: Column(
@@ -193,7 +196,7 @@ class _AllRow extends ConsumerWidget {
     final accent = ref.watch(accentColorProvider);
 
     return ListTile(
-      title: const Text('All equipment'),
+      title: Text(context.l10n.exercisesAllEquipment),
       trailing: active ? Icon(Icons.check, color: accent) : null,
       selected: active,
       selectedTileColor: accent.withValues(alpha: 0.10),
@@ -219,7 +222,7 @@ class _EquipmentRow extends ConsumerWidget {
     final accent = ref.watch(accentColorProvider);
 
     return ListTile(
-      title: Text(equipment.label),
+      title: Text(equipment.localizedLabel(context.l10n)),
       // A tick rather than a checkbox: the rows already behave like a
       // multi-select, and a column of empty boxes is louder than the five
       // words it decorates.

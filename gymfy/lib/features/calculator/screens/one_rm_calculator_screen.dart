@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/utils/units.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/weight_wheel.dart';
+import '../../overload/data/percent_target.dart';
 import '../../plates/screens/plate_calculator_screen.dart';
 import '../data/one_rm_math.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
@@ -31,6 +33,7 @@ class _OneRmCalculatorScreenState extends ConsumerState<OneRmCalculatorScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final unit = ref.watch(weightUnitProvider);
     // Picked in the display unit; the maths and the estimates are all kilograms.
     final weight = _weight <= 0 ? null : weightToKilograms(_weight, unit);
@@ -39,13 +42,13 @@ class _OneRmCalculatorScreenState extends ConsumerState<OneRmCalculatorScreen> {
         : estimateOneRm(weight: weight, reps: _reps);
 
     return GlassScaffold(
-      appBar: GlassAppBar(title: const Text('1RM calculator')),
+      appBar: GlassAppBar(title: Text(l10n.calculatorOneRmTitle)),
       body: (context) => ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32) + barInsets(context),
         children: [
           AppPanel(
             icon: Icons.fitness_center,
-            title: 'The set you did',
+            title: l10n.calculatorOneRmSetTitle,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -53,7 +56,7 @@ class _OneRmCalculatorScreenState extends ConsumerState<OneRmCalculatorScreen> {
                   key: ValueKey(unit),
                   initialWeight: _weight,
                   unit: unit,
-                  label: 'Weight lifted',
+                  label: l10n.calculatorOneRmWeightLabel,
                   // Rebuild on every notch so the estimate tracks the drum.
                   onChanged: (value) => setState(() => _weight = value),
                 ),
@@ -61,7 +64,7 @@ class _OneRmCalculatorScreenState extends ConsumerState<OneRmCalculatorScreen> {
                 Row(
                   children: [
                     Text(
-                      'Reps',
+                      l10n.calculatorOneRmReps,
                       style: theme.textTheme.labelLarge?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -89,8 +92,7 @@ class _OneRmCalculatorScreenState extends ConsumerState<OneRmCalculatorScreen> {
           if (estimates == null)
             AppPanel(
               child: Text(
-                'Enter the weight you lifted and how many reps you got, and '
-                'the estimate appears here.',
+                l10n.calculatorOneRmEmpty,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -118,19 +120,28 @@ class _Result extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
     final unit = ref.watch(weightUnitProvider);
     final oneRm = estimates.average;
     // Rounded in the display unit, so the spread reads as loadable weights.
-    final low = formatWeightIn(roundToLoadable(estimates.lowest, unit), unit);
-    final high = formatWeightIn(roundToLoadable(estimates.highest, unit), unit);
+    final low = formatWeightIn(
+      roundToLoadable(estimates.lowest, unit),
+      unit,
+      l10n: l10n,
+    );
+    final high = formatWeightIn(
+      roundToLoadable(estimates.highest, unit),
+      unit,
+      l10n: l10n,
+    );
 
     return AppPanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Estimated 1RM',
+            l10n.calculatorOneRmEstimated,
             style: theme.textTheme.labelLarge?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -141,7 +152,7 @@ class _Result extends ConsumerWidget {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
-                formatWeightIn(roundToLoadable(oneRm, unit), unit),
+                formatWeightIn(roundToLoadable(oneRm, unit), unit, l10n: l10n),
                 style: theme.textTheme.displaySmall?.copyWith(
                   color: accent,
                   fontWeight: FontWeight.w700,
@@ -154,11 +165,15 @@ class _Result extends ConsumerWidget {
           const SizedBox(height: 8),
           Text(
             reps == 1
-                ? 'A single rep is already your max — no estimating needed.'
+                ? l10n.calculatorOneRmSingleRep
                 : low == high
-                ? 'All three formulas agree.'
-                : 'Average of ${estimates.byFormula.length} formulas • '
-                      'they range $low–$high ${unit.label}',
+                ? l10n.calculatorOneRmFormulasAgree
+                : l10n.calculatorOneRmRange(
+                    estimates.byFormula.length,
+                    low,
+                    high,
+                    unit.label,
+                  ),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -174,17 +189,12 @@ class _Result extends ConsumerWidget {
                 weight: weightIn(roundToLoadable(oneRm, unit), unit),
               ),
               icon: const Icon(Icons.donut_large_outlined, size: 18),
-              label: const Text('What plates is that?'),
+              label: Text(l10n.calculatorOneRmPlates),
             ),
           ),
           if (reps > oneRmReliableReps) ...[
             const SizedBox(height: 14),
-            _Caveat(
-              text:
-                  'Above $oneRmReliableReps reps this is a rough guess — the '
-                  'formula was built from heavy sets, and high-rep sets say '
-                  'more about your endurance than your max.',
-            ),
+            _Caveat(text: l10n.calculatorOneRmRoughGuess(oneRmReliableReps)),
           ],
         ],
       ),
@@ -240,6 +250,7 @@ class _FormulaComparison extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
     final unit = ref.watch(weightUnitProvider);
     final entries = estimates.byFormula.entries.toList()
@@ -247,7 +258,7 @@ class _FormulaComparison extends ConsumerWidget {
 
     return AppPanel(
       icon: Icons.functions,
-      title: 'Formula comparison',
+      title: l10n.calculatorFormulaTitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -265,7 +276,7 @@ class _FormulaComparison extends ConsumerWidget {
                           style: theme.textTheme.bodyMedium,
                         ),
                         Text(
-                          entry.key.note,
+                          entry.key.localizedNote(l10n),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -274,7 +285,7 @@ class _FormulaComparison extends ConsumerWidget {
                     ),
                   ),
                   Text(
-                    formatWeightUnit(entry.value, unit),
+                    formatWeightUnit(entry.value, unit, l10n: l10n),
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -284,9 +295,7 @@ class _FormulaComparison extends ConsumerWidget {
             ),
           const SizedBox(height: 8),
           Text(
-            'All three are curve fits, not measurements. They line up on heavy '
-            'sets and drift apart as the reps climb — if you need the real '
-            'number, test it.',
+            l10n.calculatorFormulaCaveat,
             style: theme.textTheme.bodySmall?.copyWith(color: accent),
           ),
         ],
@@ -304,12 +313,13 @@ class _PercentageTable extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
 
     return AppPanel(
       icon: Icons.table_rows_outlined,
-      title: 'What to load',
-      subtitle: 'Weights you should manage for a given rep count.',
+      title: l10n.calculatorLoadTitle,
+      subtitle: l10n.calculatorLoadSubtitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -348,6 +358,7 @@ class _PercentageRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final unit = ref.watch(weightUnitProvider);
     final style = theme.textTheme.bodyMedium?.copyWith(
       color: highlight ? accent : null,
@@ -367,17 +378,17 @@ class _PercentageRow extends ConsumerWidget {
         children: [
           SizedBox(
             width: 64,
-            child: Text(reps == 1 ? '1 rep' : '$reps reps', style: style),
+            child: Text(l10n.calculatorLoadReps(reps), style: style),
           ),
           Expanded(
             child: Text(
-              '${(percent * 100).round()}%',
+              formatPercent((percent * 100).roundToDouble(), l10n: l10n),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ),
-          Text(formatWeightUnit(weight, unit), style: style),
+          Text(formatWeightUnit(weight, unit, l10n: l10n), style: style),
         ],
       ),
     );

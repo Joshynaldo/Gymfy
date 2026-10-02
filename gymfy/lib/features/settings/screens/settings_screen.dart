@@ -3,18 +3,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/app_language.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/data/body_profile.dart';
 import '../../../shared/data/lifter_sex.dart';
 import '../../../shared/data/settings_repository.dart';
 import '../../../shared/widgets/app_picker.dart';
 import '../../../shared/widgets/accent_swatch.dart';
 import '../../../shared/utils/units.dart';
+import '../../health_connect/data/health_connect_bridge.dart';
+import '../../health_connect/widgets/health_connect_settings_panel.dart';
 import '../../onboarding/data/onboarding_repository.dart';
 import '../../overload/widgets/overload_settings.dart';
 import '../../plates/widgets/plate_inventory_picker.dart';
 import '../../workout/data/rest_timer_repository.dart';
 import '../../workout/widgets/logging_settings.dart';
 import '../../workout/widgets/rest_length_picker.dart';
+import '../../workout_notification/data/workout_notification.dart';
 import '../data/notification_preferences.dart';
 import '../widgets/theme_picker.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
@@ -28,8 +33,9 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     return GlassScaffold(
-      appBar: GlassAppBar(title: const Text('Settings')),
+      appBar: GlassAppBar(title: Text(l10n.settingsTitle)),
       // No entrance of its own. The push already slides and fades this screen
       // in, and a settings list is read top to bottom in a glance — a second
       // animation underneath the first only made the content arrive late and
@@ -37,41 +43,66 @@ class SettingsScreen extends ConsumerWidget {
       // still: it draws the eye down the page instead of letting it land.
       body: (context) => ListView(
         padding: const EdgeInsets.only(bottom: 32) + barInsets(context),
-        children: const [
-          _SectionHeader('Theme'),
-          ThemePicker(),
-          Divider(height: 1),
-          _SectionHeader('Accent'),
-          _AccentPicker(),
-          Divider(height: 1),
-          _SectionHeader('Units'),
-          _UnitPicker(),
-          Divider(height: 1),
-          _SectionHeader('Plates'),
-          PlateInventoryPicker(),
-          Divider(height: 1),
-          _SectionHeader('Progressive overload'),
-          Padding(
+        children: [
+          _SectionHeader(l10n.settingsSectionTheme),
+          const ThemePicker(),
+          const Divider(height: 1),
+          _SectionHeader(l10n.settingsSectionAccent),
+          const _AccentPicker(),
+          const Divider(height: 1),
+          _SectionHeader(l10n.settingsSectionUnits),
+          const _UnitPicker(),
+          const Divider(height: 1),
+          // Beside the units: both are about where you are rather than how
+          // you train.
+          _SectionHeader(l10n.settingsSectionLanguage),
+          const _LanguageTile(),
+          const Divider(height: 1),
+          _SectionHeader(l10n.settingsSectionPlates),
+          const PlateInventoryPicker(),
+          const Divider(height: 1),
+          _SectionHeader(l10n.settingsSectionOverload),
+          const Padding(
             padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: OverloadSettingsPanel(),
           ),
-          Divider(height: 1),
-          _SectionHeader('Logging'),
-          LoggingSettingsPanel(),
-          Divider(height: 1),
-          _SectionHeader('You'),
-          _NameTile(),
-          _LifterSexTile(),
-          _BodyProfileTiles(),
-          Divider(height: 1),
-          _SectionHeader('Rest timer'),
-          _RestTimerPreferences(),
-          Divider(height: 1),
-          _SectionHeader('Data'),
-          _BackupTile(),
-          _ExportTile(),
+          const Divider(height: 1),
+          _SectionHeader(l10n.settingsSectionLogging),
+          const LoggingSettingsPanel(),
+          const Divider(height: 1),
+          _SectionHeader(l10n.settingsSectionYou),
+          const _NameTile(),
+          const _LifterSexTile(),
+          const _BodyProfileTiles(),
+          const Divider(height: 1),
+          _SectionHeader(l10n.settingsSectionRestTimer),
+          const _RestTimerPreferences(),
+          const Divider(height: 1),
+          _SectionHeader(l10n.settingsSectionData),
+          const _BackupTile(),
+          const _ExportTile(),
+          const _HealthConnectSection(),
         ],
       ),
+    );
+  }
+}
+
+/// Health Connect, last so it never pushes anything above it around, and only
+/// on Android — elsewhere there is no Health Connect to describe.
+class _HealthConnectSection extends StatelessWidget {
+  const _HealthConnectSection();
+
+  @override
+  Widget build(BuildContext context) {
+    if (!HealthConnectBridge.supported) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Divider(height: 1),
+        _SectionHeader(context.l10n.settingsSectionHealthConnect),
+        const HealthConnectSettingsPanel(),
+      ],
     );
   }
 }
@@ -83,10 +114,11 @@ class _BackupTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return ListTile(
       leading: const Icon(Icons.backup_outlined),
-      title: const Text('Backup & restore'),
-      subtitle: const Text('Everything in one file, plus automatic backups'),
+      title: Text(l10n.settingsBackupTitle),
+      subtitle: Text(l10n.settingsBackupSubtitle),
       trailing: const Icon(Icons.chevron_right),
       onTap: () => context.go('/more/settings/backup'),
     );
@@ -103,10 +135,11 @@ class _ExportTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return ListTile(
       leading: const Icon(Icons.save_alt),
-      title: const Text('Export data'),
-      subtitle: const Text('Save your whole log as a spreadsheet or JSON'),
+      title: Text(l10n.settingsExportTitle),
+      subtitle: Text(l10n.settingsExportSubtitle),
       trailing: const Icon(Icons.chevron_right),
       onTap: () => context.go('/more/settings/export'),
     );
@@ -150,7 +183,7 @@ class _AccentPicker extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Drives buttons, highlights and charts.',
+            context.l10n.settingsAccentCaption,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -208,14 +241,81 @@ class _UnitPicker extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Weights are always stored in kilograms, so switching back and '
-            'forth never changes what you logged.',
+            context.l10n.settingsUnitsCaption,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+/// The language the app is shown in: the phone's, or one picked here.
+///
+/// A row that opens a sheet rather than a segmented button: three options
+/// with "System default" among them don't fit across a phone in German, and
+/// the sheet has room to say what "system default" currently resolves to.
+/// Applies the moment it is picked, like the theme — the screen it is on
+/// re-renders in the new language under your finger.
+class _LanguageTile extends ConsumerWidget {
+  const _LanguageTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final current = ref.watch(appLanguageProvider);
+    final phone = AppLanguage.endonymFor(
+      resolveSystemLocale(View.of(context).platformDispatcher.locales),
+    );
+
+    String labelOf(AppLanguage language) => switch (language.locale) {
+      null => l10n.settingsLanguageSystem,
+      final locale => AppLanguage.endonymFor(locale),
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ListTile(
+          leading: const Icon(Icons.language),
+          title: Text(l10n.settingsLanguageTitle),
+          subtitle: Text(labelOf(current)),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () async {
+            final chosen = await showOptionPicker<AppLanguage>(
+              context: context,
+              title: l10n.settingsLanguageTitle,
+              selected: current,
+              options: [
+                for (final language in AppLanguage.values)
+                  (
+                    value: language,
+                    label: labelOf(language),
+                    subtitle: language == AppLanguage.system
+                        ? l10n.settingsLanguageSystemSubtitle(phone)
+                        : null,
+                  ),
+              ],
+            );
+            if (chosen != null) await setAppLanguage(ref, chosen);
+          },
+        ),
+        // Said once, here, so nobody files the English exercise names as a
+        // missed translation: the library is seed data with English names,
+        // and those are the words printed on gym equipment anyway.
+        if (l10n.localeName != 'en')
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: Text(
+              l10n.settingsLanguageExerciseNames,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -250,10 +350,11 @@ class _NameTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final name = ref.watch(userNameProvider).value;
 
+    final l10n = context.l10n;
     return ListTile(
       leading: const Icon(Icons.person_outline),
-      title: const Text('Name'),
-      subtitle: Text(name ?? 'Not set'),
+      title: Text(l10n.settingsNameTitle),
+      subtitle: Text(name ?? l10n.commonNotSet),
       trailing: const Icon(Icons.chevron_right),
       onTap: () => _edit(context, ref, name),
     );
@@ -286,26 +387,27 @@ class _NameDialogState extends State<_NameDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return GlassDialog(
-      title: const Text('Your name'),
+      title: Text(l10n.settingsNameDialogTitle),
       content: TextField(
         controller: _controller,
         autofocus: true,
         textCapitalization: TextCapitalization.words,
-        decoration: const InputDecoration(
-          hintText: 'Leave empty to remove',
-          border: OutlineInputBorder(),
+        decoration: InputDecoration(
+          hintText: l10n.settingsNameDialogHint,
+          border: const OutlineInputBorder(),
         ),
         onSubmitted: (value) => Navigator.of(context).pop(value),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.commonCancel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(_controller.text),
-          child: const Text('Save'),
+          child: Text(l10n.commonSave),
         ),
       ],
     );
@@ -323,17 +425,18 @@ class _DefaultRestTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final seconds = ref.watch(defaultRestProvider).value ?? defaultRestSeconds;
+    final l10n = context.l10n;
 
     return ListTile(
       leading: const Icon(Icons.timer_outlined),
-      title: const Text('Default rest'),
-      subtitle: Text('${formatRest(seconds)} between sets'),
+      title: Text(l10n.settingsDefaultRestTitle),
+      subtitle: Text(l10n.settingsDefaultRestSubtitle(formatRest(seconds))),
       trailing: const Icon(Icons.chevron_right),
       onTap: () async {
         final chosen = await showRestLengthPicker(
           context,
           current: seconds,
-          title: 'Default rest',
+          title: l10n.settingsDefaultRestTitle,
         );
         if (chosen == null || chosen == clearRestLength) return;
         await setDefaultRest(ref, chosen);
@@ -342,7 +445,7 @@ class _DefaultRestTile extends ConsumerWidget {
   }
 }
 
-/// Rest timer alert preferences.
+/// Rest timer alert preferences, and the ongoing workout notification.
 ///
 /// Stored here and read by the rest timer itself, which is the next thing built.
 /// Vibration is nested under alerts because it has no meaning on its own — with
@@ -355,29 +458,42 @@ class _RestTimerPreferences extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final alerts = ref.watch(restTimerAlertsProvider).value ?? true;
     final vibrate = ref.watch(restTimerVibrateProvider).value ?? true;
+    final workout = ref.watch(workoutNotificationProvider).value ?? true;
+    final l10n = context.l10n;
 
     return Column(
       children: [
         const _DefaultRestTile(),
         SwitchListTile(
           secondary: const Icon(Icons.notifications_outlined),
-          title: const Text('Rest timer notifications'),
-          subtitle: const Text(
-            'Show the countdown in the notification shade and alert you when '
-            'it runs out',
-          ),
+          title: Text(l10n.settingsRestAlertsTitle),
+          subtitle: Text(l10n.settingsRestAlertsSubtitle),
           value: alerts,
           onChanged: (value) => setFlag(ref, restTimerAlertsSetting, value),
         ),
         SwitchListTile(
           secondary: const Icon(Icons.vibration),
-          title: const Text('Vibrate'),
-          subtitle: const Text('Useful with the phone in a pocket'),
+          title: Text(l10n.settingsVibrateTitle),
+          subtitle: Text(l10n.settingsVibrateSubtitle),
           value: vibrate,
           onChanged: alerts
               ? (value) => setFlag(ref, restTimerVibrateSetting, value)
               : null,
         ),
+        // Beside the rest switches because it takes over part of their job:
+        // while it is up, the rest countdown is drawn inside it, and the
+        // first switch above only decides the alert at the end. Independent
+        // of them otherwise — it is about the workout, not the rest. Android
+        // only, so nowhere else offers a switch that does nothing.
+        if (WorkoutNotificationBridge.supported)
+          SwitchListTile(
+            secondary: const Icon(Icons.fitness_center),
+            title: Text(l10n.settingsWorkoutNotificationTitle),
+            subtitle: Text(l10n.settingsWorkoutNotificationSubtitle),
+            value: workout,
+            onChanged: (value) =>
+                setFlag(ref, workoutNotificationSetting, value),
+          ),
       ],
     );
   }
@@ -389,34 +505,50 @@ class _RestTimerPreferences extends ConsumerWidget {
 /// Asked during onboarding, but changeable here — and it has to be, because
 /// every install that predates the onboarding question has it unset, and
 /// because "rather not say" is an answer someone may want to revise.
+///
+/// The choice sits under the text rather than beside it. As a trailing
+/// widget it took whatever width "Male | Female" needed, and in German at a
+/// larger text size "Männlich | Weiblich" needed the whole row.
 class _LifterSexTile extends ConsumerWidget {
   const _LifterSexTile();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sex = ref.watch(lifterSexProvider).value;
+    final l10n = context.l10n;
 
     return ListTile(
       leading: const Icon(Icons.accessibility_new),
-      title: const Text('Body diagram'),
-      subtitle: Text(
-        sex == null
-            // Named as the consequence rather than as "not set": the map is
-            // drawing something either way, and this says which.
-            ? 'Not set — showing the male diagram, no strength ranks'
-            : '${sex.label} diagram and strength standards',
-      ),
-      trailing: SegmentedButton<LifterSex?>(
-        segments: [
-          for (final option in LifterSex.values)
-            ButtonSegment(value: option, label: Text(option.label)),
+      title: Text(l10n.settingsBodyDiagramTitle),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            sex == null
+                // Named as the consequence rather than as "not set": the map
+                // is drawing something either way, and this says which.
+                ? l10n.settingsBodyDiagramNotSet
+                // One whole sentence per sex rather than the label spliced
+                // in: German declines the adjective ("Weibliches Diagramm").
+                : l10n.settingsBodyDiagramSubtitle(sex.name),
+          ),
+          const SizedBox(height: 8),
+          SegmentedButton<LifterSex?>(
+            segments: [
+              for (final option in LifterSex.values)
+                ButtonSegment(
+                  value: option,
+                  label: Text(option.localizedLabel(l10n)),
+                ),
+            ],
+            selected: {sex},
+            emptySelectionAllowed: true,
+            showSelectedIcon: false,
+            onSelectionChanged: (selection) => ref
+                .read(settingsRepositoryProvider)
+                .write(lifterSexSetting, selection.first!.name),
+          ),
         ],
-        selected: {sex},
-        emptySelectionAllowed: true,
-        showSelectedIcon: false,
-        onSelectionChanged: (selection) => ref
-            .read(settingsRepositoryProvider)
-            .write(lifterSexSetting, selection.first!.name),
       ),
     );
   }
@@ -437,20 +569,21 @@ class _BodyProfileTiles extends ConsumerWidget {
     final height = ref.watch(heightCmProvider).value;
     final age = ref.watch(ageProvider);
     final settings = ref.read(settingsRepositoryProvider);
+    final l10n = context.l10n;
 
     return Column(
       children: [
         ListTile(
           leading: const Icon(Icons.height),
-          title: const Text('Height'),
+          title: Text(l10n.bodyProfileHeightLabel),
           subtitle: Text(
-            height == null ? 'Not set' : formatHeight(height, unit),
+            height == null ? l10n.commonNotSet : formatHeight(height, unit),
           ),
           trailing: const Icon(Icons.chevron_right),
           onTap: () async {
             final picked = await showNumberPicker(
               context: context,
-              title: 'How tall are you?',
+              title: l10n.bodyProfileHeightQuestion,
               min: minHeightCm,
               max: maxHeightCm,
               initial: height ?? 175,
@@ -463,17 +596,17 @@ class _BodyProfileTiles extends ConsumerWidget {
         ),
         ListTile(
           leading: const Icon(Icons.cake_outlined),
-          title: const Text('Age'),
-          subtitle: Text(age == null ? 'Not set' : '$age'),
+          title: Text(l10n.bodyProfileAgeLabel),
+          subtitle: Text(age == null ? l10n.commonNotSet : '$age'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () async {
             final picked = await showNumberPicker(
               context: context,
-              title: 'How old are you?',
+              title: l10n.bodyProfileAgeQuestion,
               min: minAge,
               max: maxAge,
               initial: age ?? 30,
-              helper: 'Kept as your year of birth, so it stays correct.',
+              helper: l10n.bodyProfileAgeHelper,
             );
             if (picked != null) {
               // Stored as a year, never as an age: "31" would be wrong on the

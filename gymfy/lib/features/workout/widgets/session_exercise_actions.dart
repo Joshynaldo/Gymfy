@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_picker.dart';
 import '../../../shared/widgets/glass_sheet.dart';
@@ -52,9 +53,10 @@ Future<String?> swapSessionExercise(
 }) async {
   // Taken before any await, which the context may not outlive.
   final messenger = ScaffoldMessenger.maybeOf(context);
+  final l10n = context.l10n;
   final exerciseId = await showSingleExercisePicker(
     context,
-    title: 'Swap ${entry.exercise.name}',
+    title: l10n.workoutSwapTitle(entry.exercise.name),
     exclude: {for (final e in entries) e.exercise.id},
   );
   if (exerciseId == null || !context.mounted) return null;
@@ -64,17 +66,17 @@ Future<String?> swapSessionExercise(
   if (planned != null) {
     final picked = await showOptionPicker<SwapScope>(
       context: context,
-      title: 'Swap for how long?',
-      options: const [
+      title: l10n.workoutSwapScopeTitle,
+      options: [
         (
           value: SwapScope.session,
-          label: 'Just this workout',
-          subtitle: 'Your plan stays as it is',
+          label: l10n.workoutSwapScopeSession,
+          subtitle: l10n.workoutPlanUnchanged,
         ),
         (
           value: SwapScope.plan,
-          label: 'This workout and the plan',
-          subtitle: 'Future workouts of this day use it too',
+          label: l10n.workoutSwapScopePlan,
+          subtitle: l10n.workoutSwapScopePlanSubtitle,
         ),
       ],
       selected: null,
@@ -97,12 +99,7 @@ Future<String?> swapSessionExercise(
     // saved.
     if (!saved) {
       messenger?.showSnackBar(
-        const SnackBar(
-          content: Text(
-            "That exercise is already in this day's plan, so the swap is "
-            'for this workout only.',
-          ),
-        ),
+        SnackBar(content: Text(l10n.workoutSwapPlanClash)),
       );
     }
   }
@@ -149,7 +146,7 @@ class _SessionOrderSheetState extends State<SessionOrderSheet> {
     final theme = Theme.of(context);
 
     return GlassSheet(
-      title: 'Reorder exercises',
+      title: context.l10n.workoutReorderTitle,
       handle: false,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -176,7 +173,7 @@ class _SessionOrderSheetState extends State<SessionOrderSheet> {
                     index: index,
                     child: Icon(
                       Icons.drag_handle,
-                      semanticLabel: 'Drag to reorder',
+                      semanticLabel: context.l10n.workoutDragToReorder,
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
@@ -187,7 +184,7 @@ class _SessionOrderSheetState extends State<SessionOrderSheet> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: AppButton(
-              label: 'Done',
+              label: context.l10n.commonDone,
               onPressed: () => Navigator.of(
                 context,
               ).pop([for (final entry in _order) entry.row.id]),

@@ -4,25 +4,41 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/workout/data/session_repository.dart';
+import '../../l10n/l10n.dart';
 import '../../shared/widgets/glass_nav_bar.dart';
 import '../theme/glass.dart';
 import '../theme/motion.dart';
 
-/// The five main tabs, in bar order.
+/// The four main tabs, in bar order, labelled in the app's language.
 ///
 /// Public so the design harness can show the real bar rather than a copy of it.
 /// The last time a preview drew its own version of a control it quietly showed
 /// a combination the app could not produce, and the design was judged on it.
-const mainDestinations = [
-  NavigationDestination(
-    icon: Icon(Icons.home_outlined),
-    selectedIcon: Icon(Icons.home),
-    label: 'Home',
-  ),
-  NavigationDestination(icon: Icon(Icons.fitness_center), label: 'Workout'),
-  NavigationDestination(icon: Icon(Icons.insights), label: 'Progress'),
-  NavigationDestination(icon: Icon(Icons.apps), label: 'More'),
-];
+///
+/// A function of [context] rather than a constant list because the labels are
+/// words: the bar has to say "Training" on a German phone.
+List<NavigationDestination> mainDestinations(BuildContext context) {
+  final l10n = context.l10n;
+  return [
+    NavigationDestination(
+      icon: const Icon(Icons.home_outlined),
+      selectedIcon: const Icon(Icons.home),
+      label: l10n.shellNavHome,
+    ),
+    NavigationDestination(
+      icon: const Icon(Icons.fitness_center),
+      label: l10n.shellNavWorkout,
+    ),
+    NavigationDestination(
+      icon: const Icon(Icons.insights),
+      label: l10n.shellNavProgress,
+    ),
+    NavigationDestination(
+      icon: const Icon(Icons.apps),
+      label: l10n.shellNavMore,
+    ),
+  ];
+}
 
 /// The persistent shell that wraps the four main tabs.
 ///
@@ -101,7 +117,7 @@ class ScaffoldWithNavBar extends ConsumerWidget {
       bottomNavigationBar: GlassNavBar(
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: (index) => _onDestinationSelected(ref, index),
-        destinations: mainDestinations,
+        destinations: mainDestinations(context),
       ),
     );
   }

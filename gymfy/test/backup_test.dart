@@ -16,6 +16,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/features/backup/data/backup_format.dart';
 import 'package:gymfy/features/backup/data/backup_repository.dart';
+import 'package:gymfy/features/health_connect/data/health_connect_sync.dart';
 import 'package:gymfy/features/workout/data/logging_preferences.dart'
     show effortRatingModeSetting, warmupRampSetting;
 import 'package:gymfy/shared/database/app_database.dart';
@@ -189,6 +190,25 @@ Future<void> populate(AppDatabase db) async {
           seconds: 180,
         ),
       );
+  // v27. One goal with every nullable column filled, one with none, so a
+  // backup that drops either kind of value shows up in the round trip.
+  await db
+      .into(db.goals)
+      .insert(
+        GoalsCompanion.insert(
+          kind: 'lift',
+          exerciseId: const Value('barbell_bench_press'),
+          target: 110,
+          startValue: const Value(102.5),
+          deadline: Value(DateTime(2026, 12, 31)),
+          createdAt: Value(DateTime(2026, 9, 1, 8)),
+          celebratedAt: Value(DateTime(2026, 9, 20, 19)),
+          archivedAt: Value(DateTime(2026, 9, 21)),
+        ),
+      );
+  await db
+      .into(db.goals)
+      .insert(GoalsCompanion.insert(kind: 'frequency', target: 3));
 }
 
 /// Every row of every table, as comparable JSON.
@@ -289,7 +309,7 @@ void main() {
     test('records the schema it was taken from', () async {
       final payload = await repo.snapshot();
       expect(payload.schemaVersion, db.schemaVersion);
-      expect(payload.schemaVersion, 26);
+      expect(payload.schemaVersion, 27);
     });
   });
 
@@ -692,8 +712,20 @@ void main() {
   });
 
   group('older backups', () {
-    /// Rewrites a v26 snapshot into the shape a v25 database would have had.
-    BackupPayload asV25(BackupPayload v26) {
+    /// Rewrites a current snapshot into the shape a v26 database would have
+    /// had: everything but the goals.
+    BackupPayload asV26(BackupPayload current) {
+      return BackupPayload(
+        schemaVersion: 26,
+        createdAt: current.createdAt,
+        tables: Map.of(current.tables)..remove('goals'),
+      );
+    }
+
+    /// Rewrites a current snapshot into the shape a v25 database would have
+    /// had.
+    BackupPayload asV25(BackupPayload current) {
+      final v26 = asV26(current);
       final sets = v26.tables['logged_sets']!;
       final v25Columns = [
         for (final c in sets.columns)
@@ -755,6 +787,51 @@ void main() {
       final planned = await db.select(db.workoutExercises).getSingle();
       expect(planned.supersetGroup, isNull);
       expect(planned.targetPercent, isNull);
+      // And it passes through v27 on the way: no goals, but no complaint
+      // about the table being missing either.
+      expect(await db.select(db.goals).get(), isEmpty);
+    });
+
+    test('a v26 backup restores with no goals and everything else', () async {
+      await populate(db);
+      final everything = await repo.snapshot();
+      final v26 = asV26(everything);
+      expect(v26.tables.containsKey('goals'), isFalse);
+      await wipe(db);
+
+      await repo.restorePayload(v26);
+
+      expect(await db.select(db.goals).get(), isEmpty);
+      // Every other table came back exactly as it was.
+      final restored = await repo.snapshot();
+      for (final name in everything.tables.keys) {
+        if (name == 'goals') continue;
+        expect(
+          jsonEncode(restored.tables[name]!.toJson()),
+          jsonEncode(everything.tables[name]!.toJson()),
+          reason: name,
+        );
+      }
+    });
+
+    test('the v26 step adds the goals table with every current column', () {
+      // Built by hand in backup_format.dart, so it can fall out of step with
+      // the Dart table. A column missing here is harmless (the database fills
+      // it), but a column *named* wrong would make the restore refuse the
+      // file as damaged.
+      final migrated = migrateBackup(
+        BackupPayload(
+          schemaVersion: 26,
+          createdAt: DateTime(2026, 9, 1),
+          tables: const {},
+        ),
+        to: 27,
+      );
+      expect(migrated.schemaVersion, 27);
+      expect(migrated.tables['goals']!.rows, isEmpty);
+      expect(migrated.tables['goals']!.columns.toSet(), {
+        for (final column in db.goals.$columns) column.name,
+      });
     });
 
     test(
@@ -856,6 +933,98 @@ void main() {
       expect(names, contains('weight_unit'));
     });
 
+    test('a restore does not switch Health Connect back on', () async {
+      // Backed up while both switches were on. Switching off revokes no
+      // permission, so the file's "true" coming back would start writing
+      // workouts and reading weigh-ins with nobody touching a switch.
+      await populate(db);
+      Future<void> put(String name, String value) => db
+          .into(db.appSettings)
+          .insertOnConflictUpdate(
+            AppSettingsCompanion.insert(name: name, value: value),
+          );
+      await put(healthConnectWriteKey, 'true');
+      await put(healthConnectReadKey, 'true');
+      await put(healthConnectWriteSinceKey, '2026-09-01T08:00:00.000');
+      await put(healthConnectWrittenKey, '{"1":"gymfy-session-1-1"}');
+      final path = '${temp.path}/b.$backupFileExtension';
+      await repo.writeArchive(path);
+
+      // Then both switched off, and this phone's ledger moved on.
+      await put(healthConnectWriteKey, 'false');
+      await put(healthConnectReadKey, 'false');
+      await put(healthConnectWrittenKey, '{"2":"gymfy-session-2-2"}');
+      await repo.restore(path);
+
+      final rows = await db.select(db.appSettings).get();
+      String? valueOf(String key) =>
+          rows.where((r) => r.name == key).firstOrNull?.value;
+      expect(valueOf(healthConnectWriteKey), 'false');
+      expect(valueOf(healthConnectReadKey), 'false');
+      expect(valueOf(healthConnectWrittenKey), '{"2":"gymfy-session-2-2"}');
+      // Kept from this phone, where it was set when writing was switched on.
+      expect(valueOf(healthConnectWriteSinceKey), '2026-09-01T08:00:00.000');
+      expect(valueOf('weight_unit'), 'lb');
+    });
+
+    test(
+      "a new phone starts with Health Connect off and nothing written",
+      () async {
+        // The old phone's ledger says which workouts are in *its* Health
+        // Connect. Brought to a new phone it would make every past workout
+        // look written already, and "Write past workouts" would write none.
+        await populate(db);
+        for (final key in [healthConnectWriteKey, healthConnectReadKey]) {
+          await db
+              .into(db.appSettings)
+              .insert(AppSettingsCompanion.insert(name: key, value: 'true'));
+        }
+        final sessions = await db.select(db.workoutSessions).get();
+        await db
+            .into(db.appSettings)
+            .insert(
+              AppSettingsCompanion.insert(
+                name: healthConnectWrittenKey,
+                value: encodeWrittenSessions({
+                  for (final s in sessions) s.id: clientRecordIdFor(s),
+                }),
+              ),
+            );
+        final path = '${temp.path}/b.$backupFileExtension';
+        await repo.writeArchive(path);
+
+        await wipe(db);
+        await repo.restore(path);
+
+        final rows = await db.select(db.appSettings).get();
+        final names = {for (final row in rows) row.name};
+        for (final key in [
+          healthConnectWriteKey,
+          healthConnectReadKey,
+          healthConnectWrittenKey,
+          healthConnectWriteSinceKey,
+          healthConnectWeightImportsKey,
+          healthConnectWeightCheckedKey,
+          healthConnectLastErrorKey,
+        ]) {
+          expect(names, isNot(contains(key)), reason: key);
+        }
+        // So the backfill, once writing is switched on here, writes them all.
+        final restored = await db.select(db.workoutSessions).get();
+        final plan = planWorkoutSync(
+          sessions: restored,
+          written: decodeWrittenSessions(null),
+          writeSince: null,
+          backfill: true,
+        );
+        expect(
+          plan.write.length + plan.untimed,
+          restored.where((s) => s.completedAt != null).length,
+        );
+        expect(plan.write, isNotEmpty);
+      },
+    );
+
     test('logging preferences travel with the backup', () async {
       // These are about how you train, not about this phone, so unlike the
       // auto-backup keys they come back from the file.
@@ -899,7 +1068,7 @@ void main() {
       final summary = await repo.inspect(path);
 
       expect(summary.createdAt, DateTime(2026, 9, 5, 8, 30));
-      expect(summary.schemaVersion, 26);
+      expect(summary.schemaVersion, 27);
       expect(summary.workouts, 2);
       expect(summary.sets, 5);
     });

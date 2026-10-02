@@ -11,16 +11,47 @@
 // Weights are converted to kilograms here, once, because that is how the rest
 // of the app stores them.
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/models/set_type.dart';
 import '../../../shared/utils/units.dart';
 import 'csv_reader.dart';
 
+/// A column a workout export cannot do without.
+enum ImportField {
+  date,
+  exercise,
+  reps,
+  weight;
+
+  /// How the error names it, in [l10n]'s language: "an exercise name".
+  String localizedLabel(AppLocalizations l10n) => switch (this) {
+    ImportField.date => l10n.importFieldDate,
+    ImportField.exercise => l10n.importFieldExercise,
+    ImportField.reps => l10n.importFieldReps,
+    ImportField.weight => l10n.importFieldWeight,
+  };
+}
+
 /// Thrown when a file is readable as CSV but is not a workout export.
 class ImportFormatException implements Exception {
-  const ImportFormatException(this.message);
+  const ImportFormatException({required this.missing, required this.headers});
 
-  /// Written for a person. Names what was missing and what was found.
-  final String message;
+  /// The columns the file lacks.
+  final List<ImportField> missing;
+
+  /// The header names exactly as the file spells them, quoted back so the
+  /// user has something to forward.
+  final List<String> headers;
+
+  /// Written for a person, in [l10n]'s language. Names what was missing and
+  /// what was found.
+  String describe(AppLocalizations l10n) => l10n.importErrorNotWorkoutExport(
+    _list([for (final field in missing) field.localizedLabel(l10n)], l10n),
+    headers.join(', '),
+  );
+
+  /// The message in English.
+  String get message => describe(englishLocalizations);
 
   @override
   String toString() => message;
@@ -228,9 +259,14 @@ class WorkoutImport {
 ///
 /// [assumedUnit] is used only when the file does not name its unit in a column
 /// header. Files that say `weight_kg` are read as kilograms whatever is passed.
+///
+/// [untitledName] is what a workout the file gives no title is called — the
+/// name it is saved under, so the screen passes it in the app's language.
+/// Only the name: which column is which is read the same in every language.
 WorkoutImport parseWorkoutCsv(
   String source, {
   WeightUnit assumedUnit = WeightUnit.kg,
+  String untitledName = 'Imported workout',
 }) {
   final table = CsvTable.parse(source);
 
@@ -250,21 +286,17 @@ WorkoutImport parseWorkoutCsv(
       ? WeightUnit.kg
       : (lbsColumn != null ? WeightUnit.lbs : assumedUnit);
 
-  final missing = <String>[
-    if (dateColumn == null) 'a date',
-    if (exerciseColumn == null) 'an exercise name',
-    if (repsColumn == null) 'reps',
-    if (weightColumn == null) 'a weight',
+  final missing = [
+    if (dateColumn == null) ImportField.date,
+    if (exerciseColumn == null) ImportField.exercise,
+    if (repsColumn == null) ImportField.reps,
+    if (weightColumn == null) ImportField.weight,
   ];
   if (missing.isNotEmpty) {
     // Naming the headers found is the only genuinely useful thing to say: it
     // turns "it did not work" into something the user can forward, and into a
     // one-line fix here.
-    throw ImportFormatException(
-      "This does not look like a workout export — it has no "
-      "${_list(missing)} column.\n\nThe columns found were: "
-      "${table.headers.join(', ')}.",
-    );
+    throw ImportFormatException(missing: missing, headers: table.headers);
   }
 
   final workoutColumn = table.columnFor(ImportColumns.workout);
@@ -336,7 +368,7 @@ WorkoutImport parseWorkoutCsv(
       ends[key] = endColumn == null
           ? null
           : plausibleEnd(start, parseImportDate(cell(row, endColumn)));
-      names[key] = name.isEmpty ? 'Imported workout' : name;
+      names[key] = name.isEmpty ? untitledName : name;
       if (name.isNotEmpty) sawWorkoutName = true;
       grouped[key] = [];
     }
@@ -601,9 +633,12 @@ double? _number(String raw) {
   return double.tryParse(raw.replaceAll(',', '.'));
 }
 
-String _list(List<String> items) {
+String _list(List<String> items, AppLocalizations l10n) {
   if (items.length == 1) return items.single;
-  return '${items.sublist(0, items.length - 1).join(', ')} or ${items.last}';
+  return l10n.commonListOr(
+    items.sublist(0, items.length - 1).join(', '),
+    items.last,
+  );
 }
 
 /// Month names, folded to plain letters, for the dates Hevy writes.

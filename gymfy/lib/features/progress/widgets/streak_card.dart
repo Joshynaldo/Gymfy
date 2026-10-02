@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../workout/data/session_repository.dart';
 
@@ -21,16 +22,20 @@ class StreakCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final streaks = ref.watch(workoutStreaksProvider).value;
     if (streaks == null || streaks.best == 0) return const SizedBox.shrink();
+    final l10n = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const AppSectionHeader(title: 'Streak'),
+        AppSectionHeader(title: l10n.progressStreakTitle),
         AppPanel(
           child: Row(
             children: [
               Expanded(
-                child: _Figure(days: streaks.current, label: 'current'),
+                child: _Figure(
+                  days: streaks.current,
+                  label: l10n.progressStreakCurrent,
+                ),
               ),
               Container(
                 width: 1,
@@ -40,7 +45,10 @@ class StreakCard extends ConsumerWidget {
                 ).colorScheme.onSurface.withValues(alpha: 0.10),
               ),
               Expanded(
-                child: _Figure(days: streaks.best, label: 'best ever'),
+                child: _Figure(
+                  days: streaks.best,
+                  label: l10n.progressStreakBest,
+                ),
               ),
             ],
           ),
@@ -67,7 +75,7 @@ class _Figure extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            '$days ${days == 1 ? 'day' : 'days'}',
+            context.l10n.progressStreakDays(days),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.headlineSmall?.copyWith(

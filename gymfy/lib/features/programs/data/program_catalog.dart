@@ -8,10 +8,16 @@
 //
 // What the file can't carry — the paragraph that tells you who a programme is
 // for — lives in this catalogue instead, so the plan format stays plans only.
+//
+// The paragraph and the one-liner are translated (`programs…Summary` and
+// `programs…Description` in the ARB files); the programme's name is not. It is
+// also the name of the split it becomes, inside the file, and like the
+// exercise names in it, that stays the same in every language.
 
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../plan_share/data/plan_document.dart';
 
 /// Who a programme is pitched at.
@@ -21,7 +27,14 @@ enum ProgramLevel {
 
   const ProgramLevel(this.label);
 
+  /// The English name. On screen use [localizedLabel].
   final String label;
+
+  /// The name in the app's language, e.g. "Einsteiger".
+  String localizedLabel(AppLocalizations l10n) => switch (this) {
+    ProgramLevel.beginner => l10n.programsLevelBeginner,
+    ProgramLevel.intermediate => l10n.programsLevelIntermediate,
+  };
 }
 
 /// One programme shipped with the app.
@@ -54,6 +67,29 @@ class BundledProgram {
   final int daysPerWeek;
 
   String get assetPath => 'assets/programs/$id.$planFileExtension';
+
+  /// [summary] in the app's language. A programme added here without a
+  /// translation shows its English line rather than nothing.
+  String localizedSummary(AppLocalizations l10n) => switch (id) {
+    'beginner_full_body' => l10n.programsBeginnerFullBodySummary,
+    'full_body_5x5' => l10n.programsFullBody5x5Summary,
+    'upper_lower' => l10n.programsUpperLowerSummary,
+    'push_pull_legs' => l10n.programsPushPullLegsSummary,
+    'percentage_strength' => l10n.programsPercentageStrengthSummary,
+    'body_part_split' => l10n.programsBodyPartSplitSummary,
+    _ => summary,
+  };
+
+  /// [description] in the app's language, with the same fallback.
+  String localizedDescription(AppLocalizations l10n) => switch (id) {
+    'beginner_full_body' => l10n.programsBeginnerFullBodyDescription,
+    'full_body_5x5' => l10n.programsFullBody5x5Description,
+    'upper_lower' => l10n.programsUpperLowerDescription,
+    'push_pull_legs' => l10n.programsPushPullLegsDescription,
+    'percentage_strength' => l10n.programsPercentageStrengthDescription,
+    'body_part_split' => l10n.programsBodyPartSplitDescription,
+    _ => description,
+  };
 }
 
 /// Every bundled programme, in the order the browser lists them — easiest to

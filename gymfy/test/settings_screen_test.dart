@@ -410,6 +410,38 @@ void main() {
       expect(container.read(restTimerAlertsProvider).value, isTrue);
     });
 
+    testWidgets('the workout notification starts on', (tester) async {
+      await pump(tester);
+
+      expect(container.read(workoutNotificationProvider).value, isTrue);
+      expect(find.text('Workout notification'), findsOneWidget);
+    });
+
+    testWidgets('the workout notification can be switched off on its own', (
+      tester,
+    ) async {
+      await pump(tester);
+
+      await tester.tap(find.text('Workout notification'));
+      await settle(tester);
+
+      expect(container.read(workoutNotificationProvider).value, isFalse);
+      // It is about the workout, not the rest: the rest alerts stay on.
+      expect(container.read(restTimerAlertsProvider).value, isTrue);
+    });
+
+    testWidgets(
+      'the workout notification switch is not offered on iOS',
+      (tester) async {
+        // There is no workout notification there to switch.
+        await pump(tester);
+
+        expect(find.text('Workout notification'), findsNothing);
+        expect(find.text('Rest timer notifications'), findsOneWidget);
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+    );
+
     testWidgets('effort rating starts off', (tester) async {
       await pump(tester);
 

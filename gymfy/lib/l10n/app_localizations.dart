@@ -1,0 +1,6307 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations_de.dart';
+import 'app_localizations_en.dart';
+
+// ignore_for_file: type=lint
+
+/// Callers can lookup localized strings with an instance of AppLocalizations
+/// returned by `AppLocalizations.of(context)`.
+///
+/// Applications need to include `AppLocalizations.delegate()` in their app's
+/// `localizationDelegates` list, and the locales they support in the app's
+/// `supportedLocales` list. For example:
+///
+/// ```dart
+/// import 'l10n/app_localizations.dart';
+///
+/// return MaterialApp(
+///   localizationsDelegates: AppLocalizations.localizationsDelegates,
+///   supportedLocales: AppLocalizations.supportedLocales,
+///   home: MyApplicationHome(),
+/// );
+/// ```
+///
+/// ## Update pubspec.yaml
+///
+/// Please make sure to update your pubspec.yaml to include the following
+/// packages:
+///
+/// ```yaml
+/// dependencies:
+///   # Internationalization support.
+///   flutter_localizations:
+///     sdk: flutter
+///   intl: any # Use the pinned version from flutter_localizations
+///
+///   # Rest of dependencies
+/// ```
+///
+/// ## iOS Applications
+///
+/// iOS applications define key application metadata, including supported
+/// locales, in an Info.plist file that is built into the application bundle.
+/// To configure the locales supported by your app, you’ll need to edit this
+/// file.
+///
+/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// Then, in the Project Navigator, open the Info.plist file under the Runner
+/// project’s Runner folder.
+///
+/// Next, select the Information Property List item, select Add Item from the
+/// Editor menu, then select Localizations from the pop-up menu.
+///
+/// Select and expand the newly-created Localizations item then, for each
+/// locale your application supports, add a new item and select the locale
+/// you wish to add from the pop-up menu in the Value field. This list should
+/// be consistent with the languages listed in the AppLocalizations.supportedLocales
+/// property.
+abstract class AppLocalizations {
+  AppLocalizations(String locale)
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+
+  final String localeName;
+
+  static AppLocalizations? of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations);
+  }
+
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
+
+  /// A list of this localizations delegate along with the default localizations
+  /// delegates.
+  ///
+  /// Returns a list of localizations delegates containing this delegate along with
+  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
+  /// and GlobalWidgetsLocalizations.delegate.
+  ///
+  /// Additional delegates can be added by appending to this list in
+  /// MaterialApp. This list does not have to be used at all if a custom list
+  /// of delegates is preferred or required.
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
+
+  /// A list of this localizations delegate's supported locales.
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('en'),
+    Locale('de'),
+  ];
+
+  /// No description provided for @commonCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get commonCancel;
+
+  /// No description provided for @commonSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get commonSave;
+
+  /// No description provided for @commonDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get commonDone;
+
+  /// No description provided for @commonCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get commonCreate;
+
+  /// No description provided for @commonCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get commonCopy;
+
+  /// No description provided for @commonBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get commonBack;
+
+  /// No description provided for @commonNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get commonNext;
+
+  /// No description provided for @commonAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get commonAll;
+
+  /// A setting or profile value the user has not given yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get commonNotSet;
+
+  /// No description provided for @commonToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get commonToday;
+
+  /// No description provided for @commonYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get commonYesterday;
+
+  /// No description provided for @commonDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get commonDelete;
+
+  /// No description provided for @commonAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get commonAdd;
+
+  /// No description provided for @commonEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get commonEdit;
+
+  /// No description provided for @commonOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get commonOff;
+
+  /// Marks the split that is currently being followed.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get commonActive;
+
+  /// Joins two names in a list. Applied pairwise, so three names read 'A and B and C'.
+  ///
+  /// In en, this message translates to:
+  /// **'{first} and {second}'**
+  String commonListAnd(String first, String second);
+
+  /// No description provided for @shellNavHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get shellNavHome;
+
+  /// No description provided for @shellNavWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout'**
+  String get shellNavWorkout;
+
+  /// No description provided for @shellNavProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get shellNavProgress;
+
+  /// No description provided for @shellNavMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get shellNavMore;
+
+  /// No description provided for @sharedWeightWheelLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get sharedWeightWheelLabel;
+
+  /// One logged set. weight is already formatted with its unit, e.g. 80 kg.
+  ///
+  /// In en, this message translates to:
+  /// **'{weight} × {reps} reps'**
+  String sharedLoggedSetReps(String weight, int reps);
+
+  /// Adding exercises to a workout day added none, because the day had them all already.
+  ///
+  /// In en, this message translates to:
+  /// **'{asked, plural, =1{Already in that day} other{All {asked} were already in that day}}'**
+  String sharedAddedToDayNone(int asked);
+
+  /// No description provided for @sharedAddedToDayAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{added, plural, =1{1 exercise added} other{{added} exercises added}}'**
+  String sharedAddedToDayAdded(int added);
+
+  /// addedText is sharedAddedToDayAdded; skipped counts the exercises the day already had.
+  ///
+  /// In en, this message translates to:
+  /// **'{addedText} — {skipped} already there'**
+  String sharedAddedToDaySkipped(String addedText, int skipped);
+
+  /// No description provided for @muscleChest.
+  ///
+  /// In en, this message translates to:
+  /// **'Chest'**
+  String get muscleChest;
+
+  /// No description provided for @muscleFrontDeltoid.
+  ///
+  /// In en, this message translates to:
+  /// **'Front Deltoid'**
+  String get muscleFrontDeltoid;
+
+  /// No description provided for @muscleSideDeltoid.
+  ///
+  /// In en, this message translates to:
+  /// **'Side Deltoid'**
+  String get muscleSideDeltoid;
+
+  /// No description provided for @muscleBiceps.
+  ///
+  /// In en, this message translates to:
+  /// **'Biceps'**
+  String get muscleBiceps;
+
+  /// No description provided for @muscleForearms.
+  ///
+  /// In en, this message translates to:
+  /// **'Forearms'**
+  String get muscleForearms;
+
+  /// No description provided for @muscleAbs.
+  ///
+  /// In en, this message translates to:
+  /// **'Abs'**
+  String get muscleAbs;
+
+  /// No description provided for @muscleObliques.
+  ///
+  /// In en, this message translates to:
+  /// **'Obliques'**
+  String get muscleObliques;
+
+  /// No description provided for @muscleQuads.
+  ///
+  /// In en, this message translates to:
+  /// **'Quads'**
+  String get muscleQuads;
+
+  /// No description provided for @muscleAdductors.
+  ///
+  /// In en, this message translates to:
+  /// **'Adductors'**
+  String get muscleAdductors;
+
+  /// No description provided for @muscleTrapezius.
+  ///
+  /// In en, this message translates to:
+  /// **'Trapezius'**
+  String get muscleTrapezius;
+
+  /// No description provided for @muscleRearDeltoid.
+  ///
+  /// In en, this message translates to:
+  /// **'Rear Deltoid'**
+  String get muscleRearDeltoid;
+
+  /// No description provided for @muscleLats.
+  ///
+  /// In en, this message translates to:
+  /// **'Lats'**
+  String get muscleLats;
+
+  /// No description provided for @muscleLowerBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Lower Back'**
+  String get muscleLowerBack;
+
+  /// No description provided for @muscleTriceps.
+  ///
+  /// In en, this message translates to:
+  /// **'Triceps'**
+  String get muscleTriceps;
+
+  /// No description provided for @muscleGlutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Glutes'**
+  String get muscleGlutes;
+
+  /// No description provided for @muscleHamstrings.
+  ///
+  /// In en, this message translates to:
+  /// **'Hamstrings'**
+  String get muscleHamstrings;
+
+  /// No description provided for @muscleCalves.
+  ///
+  /// In en, this message translates to:
+  /// **'Calves'**
+  String get muscleCalves;
+
+  /// No description provided for @muscleNeck.
+  ///
+  /// In en, this message translates to:
+  /// **'Neck'**
+  String get muscleNeck;
+
+  /// No description provided for @equipmentBarbell.
+  ///
+  /// In en, this message translates to:
+  /// **'Barbell'**
+  String get equipmentBarbell;
+
+  /// No description provided for @equipmentDumbbell.
+  ///
+  /// In en, this message translates to:
+  /// **'Dumbbell'**
+  String get equipmentDumbbell;
+
+  /// No description provided for @equipmentMachine.
+  ///
+  /// In en, this message translates to:
+  /// **'Machine'**
+  String get equipmentMachine;
+
+  /// No description provided for @equipmentCable.
+  ///
+  /// In en, this message translates to:
+  /// **'Cable'**
+  String get equipmentCable;
+
+  /// No description provided for @equipmentBodyweight.
+  ///
+  /// In en, this message translates to:
+  /// **'Bodyweight'**
+  String get equipmentBodyweight;
+
+  /// No description provided for @equipmentOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get equipmentOther;
+
+  /// No description provided for @setTypeWarmup.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm-up'**
+  String get setTypeWarmup;
+
+  /// No description provided for @setTypeNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Working'**
+  String get setTypeNormal;
+
+  /// No description provided for @setTypeDrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop set'**
+  String get setTypeDrop;
+
+  /// No description provided for @setTypeFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Failure'**
+  String get setTypeFailure;
+
+  /// No description provided for @lifterSexMale.
+  ///
+  /// In en, this message translates to:
+  /// **'Male'**
+  String get lifterSexMale;
+
+  /// No description provided for @lifterSexFemale.
+  ///
+  /// In en, this message translates to:
+  /// **'Female'**
+  String get lifterSexFemale;
+
+  /// No description provided for @measurementFieldWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get measurementFieldWeight;
+
+  /// No description provided for @measurementFieldChest.
+  ///
+  /// In en, this message translates to:
+  /// **'Chest'**
+  String get measurementFieldChest;
+
+  /// No description provided for @measurementFieldWaist.
+  ///
+  /// In en, this message translates to:
+  /// **'Waist'**
+  String get measurementFieldWaist;
+
+  /// No description provided for @measurementFieldHips.
+  ///
+  /// In en, this message translates to:
+  /// **'Hips'**
+  String get measurementFieldHips;
+
+  /// No description provided for @measurementFieldArms.
+  ///
+  /// In en, this message translates to:
+  /// **'Arms'**
+  String get measurementFieldArms;
+
+  /// No description provided for @measurementFieldLegs.
+  ///
+  /// In en, this message translates to:
+  /// **'Legs'**
+  String get measurementFieldLegs;
+
+  /// No description provided for @goalKindLift.
+  ///
+  /// In en, this message translates to:
+  /// **'Lift'**
+  String get goalKindLift;
+
+  /// No description provided for @goalKindFrequency.
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts'**
+  String get goalKindFrequency;
+
+  /// No description provided for @goalKindBodyweight.
+  ///
+  /// In en, this message translates to:
+  /// **'Bodyweight'**
+  String get goalKindBodyweight;
+
+  /// No description provided for @bodyProfileHeightLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Height'**
+  String get bodyProfileHeightLabel;
+
+  /// No description provided for @bodyProfileHeightQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'How tall are you?'**
+  String get bodyProfileHeightQuestion;
+
+  /// No description provided for @bodyProfileAgeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Age'**
+  String get bodyProfileAgeLabel;
+
+  /// No description provided for @bodyProfileAgeQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'How old are you?'**
+  String get bodyProfileAgeQuestion;
+
+  /// No description provided for @bodyProfileAgeHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Kept as your year of birth, so it stays correct.'**
+  String get bodyProfileAgeHelper;
+
+  /// No description provided for @themeDarkDefaultLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDarkDefaultLabel;
+
+  /// No description provided for @themeDarkDefaultDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Near-black with soft grey cards.'**
+  String get themeDarkDefaultDescription;
+
+  /// No description provided for @themeAmoledLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'AMOLED black'**
+  String get themeAmoledLabel;
+
+  /// No description provided for @themeAmoledDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'True black. Saves power on OLED screens.'**
+  String get themeAmoledDescription;
+
+  /// No description provided for @themeHighContrastLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'High contrast'**
+  String get themeHighContrastLabel;
+
+  /// No description provided for @themeHighContrastDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Brighter text and visible borders.'**
+  String get themeHighContrastDescription;
+
+  /// No description provided for @themeTokyoNightDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep blue-grey with a soft indigo cast.'**
+  String get themeTokyoNightDescription;
+
+  /// No description provided for @themeDraculaDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark violet with high-saturation accents.'**
+  String get themeDraculaDescription;
+
+  /// No description provided for @themeCatppuccinMochaDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm, muted pastels on deep charcoal.'**
+  String get themeCatppuccinMochaDescription;
+
+  /// No description provided for @themeGruvboxDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm retro browns and greens.'**
+  String get themeGruvboxDescription;
+
+  /// No description provided for @themeHyperDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Translucent glass over a living backdrop.'**
+  String get themeHyperDescription;
+
+  /// No description provided for @notificationRestRunningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Resting'**
+  String get notificationRestRunningTitle;
+
+  /// No description provided for @notificationRestRunningChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest timer countdown'**
+  String get notificationRestRunningChannel;
+
+  /// No description provided for @notificationRestRunningChannelDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows the rest countdown while you are in another app.'**
+  String get notificationRestRunningChannelDescription;
+
+  /// No description provided for @notificationRestOverTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest over'**
+  String get notificationRestOverTitle;
+
+  /// No description provided for @notificationRestOverBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Next set of {exercise}'**
+  String notificationRestOverBody(String exercise);
+
+  /// No description provided for @notificationRestOverChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest timer'**
+  String get notificationRestOverChannel;
+
+  /// No description provided for @notificationRestOverChannelDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Tells you when a rest between sets is over.'**
+  String get notificationRestOverChannelDescription;
+
+  /// No description provided for @settingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsTitle;
+
+  /// No description provided for @settingsSectionTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get settingsSectionTheme;
+
+  /// No description provided for @settingsSectionAccent.
+  ///
+  /// In en, this message translates to:
+  /// **'Accent'**
+  String get settingsSectionAccent;
+
+  /// No description provided for @settingsSectionUnits.
+  ///
+  /// In en, this message translates to:
+  /// **'Units'**
+  String get settingsSectionUnits;
+
+  /// No description provided for @settingsSectionLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingsSectionLanguage;
+
+  /// No description provided for @settingsSectionPlates.
+  ///
+  /// In en, this message translates to:
+  /// **'Plates'**
+  String get settingsSectionPlates;
+
+  /// No description provided for @settingsSectionOverload.
+  ///
+  /// In en, this message translates to:
+  /// **'Progressive overload'**
+  String get settingsSectionOverload;
+
+  /// No description provided for @settingsSectionLogging.
+  ///
+  /// In en, this message translates to:
+  /// **'Logging'**
+  String get settingsSectionLogging;
+
+  /// No description provided for @settingsSectionYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get settingsSectionYou;
+
+  /// No description provided for @settingsSectionRestTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest timer'**
+  String get settingsSectionRestTimer;
+
+  /// No description provided for @settingsSectionData.
+  ///
+  /// In en, this message translates to:
+  /// **'Data'**
+  String get settingsSectionData;
+
+  /// No description provided for @settingsSectionHealthConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect'**
+  String get settingsSectionHealthConnect;
+
+  /// No description provided for @settingsAccentCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Drives buttons, highlights and charts.'**
+  String get settingsAccentCaption;
+
+  /// No description provided for @settingsUnitsCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Weights are always stored in kilograms, so switching back and forth never changes what you logged.'**
+  String get settingsUnitsCaption;
+
+  /// No description provided for @settingsLanguageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App language'**
+  String get settingsLanguageTitle;
+
+  /// No description provided for @settingsLanguageSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System default'**
+  String get settingsLanguageSystem;
+
+  /// language is the name of the language the phone's settings resolve to, in that language (English, Deutsch).
+  ///
+  /// In en, this message translates to:
+  /// **'Follows your phone: {language}'**
+  String settingsLanguageSystemSubtitle(String language);
+
+  /// Shown under the language picker while the app is not in English: the bundled exercise library is not translated.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise names stay in English.'**
+  String get settingsLanguageExerciseNames;
+
+  /// No description provided for @settingsBackupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup & restore'**
+  String get settingsBackupTitle;
+
+  /// No description provided for @settingsBackupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything in one file, plus automatic backups'**
+  String get settingsBackupSubtitle;
+
+  /// No description provided for @settingsExportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export data'**
+  String get settingsExportTitle;
+
+  /// No description provided for @settingsExportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save your whole log as a spreadsheet or JSON'**
+  String get settingsExportSubtitle;
+
+  /// No description provided for @settingsNameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get settingsNameTitle;
+
+  /// No description provided for @settingsNameDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name'**
+  String get settingsNameDialogTitle;
+
+  /// No description provided for @settingsNameDialogHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty to remove'**
+  String get settingsNameDialogHint;
+
+  /// No description provided for @settingsDefaultRestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Default rest'**
+  String get settingsDefaultRestTitle;
+
+  /// rest is an already formatted rest length, e.g. 2:00.
+  ///
+  /// In en, this message translates to:
+  /// **'{rest} between sets'**
+  String settingsDefaultRestSubtitle(String rest);
+
+  /// No description provided for @settingsRestAlertsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest timer notifications'**
+  String get settingsRestAlertsTitle;
+
+  /// No description provided for @settingsRestAlertsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the countdown in the notification shade and alert you when it runs out'**
+  String get settingsRestAlertsSubtitle;
+
+  /// No description provided for @settingsVibrateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vibrate'**
+  String get settingsVibrateTitle;
+
+  /// No description provided for @settingsVibrateSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Useful with the phone in a pocket'**
+  String get settingsVibrateSubtitle;
+
+  /// No description provided for @settingsWorkoutNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout notification'**
+  String get settingsWorkoutNotificationTitle;
+
+  /// No description provided for @settingsWorkoutNotificationSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the current set and rest in the notification shade, with buttons to log a set and control the rest'**
+  String get settingsWorkoutNotificationSubtitle;
+
+  /// No description provided for @settingsBodyDiagramTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Body diagram'**
+  String get settingsBodyDiagramTitle;
+
+  /// No description provided for @settingsBodyDiagramNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set — showing the male diagram, no strength ranks'**
+  String get settingsBodyDiagramNotSet;
+
+  /// sex is the stored lifter sex: male or female.
+  ///
+  /// In en, this message translates to:
+  /// **'{sex, select, female{Female diagram and strength standards} other{Male diagram and strength standards}}'**
+  String settingsBodyDiagramSubtitle(String sex);
+
+  /// No description provided for @settingsThemeAccentSuggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'{theme} was designed around its own accent.'**
+  String settingsThemeAccentSuggestion(String theme);
+
+  /// No description provided for @settingsThemeUseAccent.
+  ///
+  /// In en, this message translates to:
+  /// **'Use it'**
+  String get settingsThemeUseAccent;
+
+  /// No description provided for @moreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get moreTitle;
+
+  /// No description provided for @moreExerciseLibraryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise library'**
+  String get moreExerciseLibraryTitle;
+
+  /// No description provided for @moreExerciseLibrarySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Every movement, searchable by name or muscle'**
+  String get moreExerciseLibrarySubtitle;
+
+  /// No description provided for @moreCalorieLogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Calorie log'**
+  String get moreCalorieLogTitle;
+
+  /// No description provided for @moreCalorieLogSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track meals, calories and macros'**
+  String get moreCalorieLogSubtitle;
+
+  /// No description provided for @moreWeeklyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get moreWeeklyTitle;
+
+  /// No description provided for @moreWeeklySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories over the last 7 days'**
+  String get moreWeeklySubtitle;
+
+  /// No description provided for @moreOneRmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'1RM calculator'**
+  String get moreOneRmTitle;
+
+  /// No description provided for @moreOneRmSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimate your one-rep max from any set'**
+  String get moreOneRmSubtitle;
+
+  /// No description provided for @moreStrengthRankTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Strength rank'**
+  String get moreStrengthRankTitle;
+
+  /// No description provided for @moreStrengthRankSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How your big lifts compare to your bodyweight'**
+  String get moreStrengthRankSubtitle;
+
+  /// No description provided for @moreSharePlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share a plan'**
+  String get moreSharePlanTitle;
+
+  /// No description provided for @moreSharePlanSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send your splits to someone, or import theirs'**
+  String get moreSharePlanSubtitle;
+
+  /// No description provided for @moreImportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import a history'**
+  String get moreImportTitle;
+
+  /// No description provided for @moreImportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bring your workouts over from Hevy, Strong or similar'**
+  String get moreImportSubtitle;
+
+  /// No description provided for @moreHelpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Help'**
+  String get moreHelpTitle;
+
+  /// No description provided for @moreHelpSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'About Gymfy and who made it'**
+  String get moreHelpSubtitle;
+
+  /// No description provided for @moreSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get moreSettingsTitle;
+
+  /// No description provided for @moreSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accent colour, your name, rest timer alerts'**
+  String get moreSettingsSubtitle;
+
+  /// No description provided for @helpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Help'**
+  String get helpTitle;
+
+  /// No description provided for @helpIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Gymfy is made by one person. Everything you log stays on your phone — there is no account and no server.'**
+  String get helpIntro;
+
+  /// No description provided for @helpFeedbackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send feedback'**
+  String get helpFeedbackTitle;
+
+  /// No description provided for @helpFeedbackSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens your mail app · only the app version is attached'**
+  String get helpFeedbackSubtitle;
+
+  /// No description provided for @helpDeveloperTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Developer'**
+  String get helpDeveloperTitle;
+
+  /// No description provided for @helpDeveloperSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Joshynaldo on GitHub'**
+  String get helpDeveloperSubtitle;
+
+  /// No description provided for @helpAnimationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise animations'**
+  String get helpAnimationsTitle;
+
+  /// No description provided for @helpAnimationsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'ExerciseGymGifsDB · used with permission'**
+  String get helpAnimationsSubtitle;
+
+  /// No description provided for @helpVersionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get helpVersionTitle;
+
+  /// No description provided for @helpOpenLinkFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open {url}'**
+  String helpOpenLinkFailed(String url);
+
+  /// No description provided for @helpNoMailApp.
+  ///
+  /// In en, this message translates to:
+  /// **'No mail app found. Write to {address}'**
+  String helpNoMailApp(String address);
+
+  /// First attached line of a feedback mail. platform is e.g. android, osVersion the system's own version string.
+  ///
+  /// In en, this message translates to:
+  /// **'Gymfy {version} on {platform} {osVersion}'**
+  String helpFeedbackMailDevice(
+    String version,
+    String platform,
+    String osVersion,
+  );
+
+  /// No description provided for @helpFeedbackMailNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Only these two lines are attached. Delete them if you would rather not send them.'**
+  String get helpFeedbackMailNote;
+
+  /// No description provided for @onboardingSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get onboardingSaving;
+
+  /// No description provided for @onboardingFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Start lifting'**
+  String get onboardingFinish;
+
+  /// No description provided for @onboardingChangeLater.
+  ///
+  /// In en, this message translates to:
+  /// **'You can change any of this later in Settings.'**
+  String get onboardingChangeLater;
+
+  /// No description provided for @onboardingWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Gymfy'**
+  String get onboardingWelcomeTitle;
+
+  /// No description provided for @onboardingWelcomeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything you log stays on this phone — there is no account and nothing gets uploaded. What should we call you?'**
+  String get onboardingWelcomeBody;
+
+  /// No description provided for @onboardingNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name'**
+  String get onboardingNameLabel;
+
+  /// No description provided for @onboardingNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get onboardingNameHint;
+
+  /// No description provided for @onboardingSexTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Body diagram and strength standards'**
+  String get onboardingSexTitle;
+
+  /// No description provided for @onboardingSexBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Picks which body the muscle map draws, and which strength table your lifts are compared against. Optional — skip it and the app works the same, minus the ranks.'**
+  String get onboardingSexBody;
+
+  /// No description provided for @onboardingSexDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'Rather not say'**
+  String get onboardingSexDecline;
+
+  /// No description provided for @onboardingBodyweightTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How much do you weigh?'**
+  String get onboardingBodyweightTitle;
+
+  /// No description provided for @onboardingBodyweightBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Used to rank your lifts against your own bodyweight, and it becomes the first point on your weight chart. Leave it at zero to skip — nothing else depends on it.'**
+  String get onboardingBodyweightBody;
+
+  /// No description provided for @onboardingBodyweightLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Bodyweight'**
+  String get onboardingBodyweightLabel;
+
+  /// Shown as the value of the height and age fields while they are left out.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get onboardingSkipped;
+
+  /// No description provided for @onboardingOverloadTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Should Gymfy suggest heavier weights?'**
+  String get onboardingOverloadTitle;
+
+  /// No description provided for @onboardingOverloadBody.
+  ///
+  /// In en, this message translates to:
+  /// **'When you hit every set at the top of your rep range, the next session opens with a bit more on the bar. It only ever suggests — the weight stays yours to change.'**
+  String get onboardingOverloadBody;
+
+  /// No description provided for @onboardingAccentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick your colour'**
+  String get onboardingAccentTitle;
+
+  /// No description provided for @onboardingAccentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Drives buttons, highlights and charts across the app. Tap one to try it — the app changes as you go.'**
+  String get onboardingAccentBody;
+
+  /// No description provided for @homeGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi, {name}'**
+  String homeGreeting(String name);
+
+  /// No description provided for @homeFindExerciseTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Find an exercise'**
+  String get homeFindExerciseTooltip;
+
+  /// No description provided for @homeStreakSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, other{{days} day workout streak}}'**
+  String homeStreakSemantics(int days);
+
+  /// No description provided for @homeTodayNoSplitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No active split'**
+  String get homeTodayNoSplitTitle;
+
+  /// No description provided for @homeTodayNoSplitMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the programme you are following to plan your week.'**
+  String get homeTodayNoSplitMessage;
+
+  /// No description provided for @homeTodayNoSplitAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a split'**
+  String get homeTodayNoSplitAction;
+
+  /// No description provided for @homeTodayRestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest day'**
+  String get homeTodayRestTitle;
+
+  /// No description provided for @homeTodayRestMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing scheduled in {split}.'**
+  String homeTodayRestMessage(String split);
+
+  /// No description provided for @homeTodayNoExercises.
+  ///
+  /// In en, this message translates to:
+  /// **'No exercises yet — open the day to add some.'**
+  String get homeTodayNoExercises;
+
+  /// No description provided for @homeTodayResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume {workout}'**
+  String homeTodayResume(String workout);
+
+  /// No description provided for @homeTodayStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start workout'**
+  String get homeTodayStart;
+
+  /// No description provided for @homeTodayAddExercises.
+  ///
+  /// In en, this message translates to:
+  /// **'Add exercises'**
+  String get homeTodayAddExercises;
+
+  /// No description provided for @homeTodayStartEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Start empty workout'**
+  String get homeTodayStartEmpty;
+
+  /// No description provided for @homeNextUpTomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomorrow'**
+  String get homeNextUpTomorrow;
+
+  /// A training day exactly one week away. weekday is the full weekday name.
+  ///
+  /// In en, this message translates to:
+  /// **'Next {weekday}'**
+  String homeNextUpNextWeekday(String weekday);
+
+  /// No description provided for @homeLastWorkoutHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'LAST WORKOUT'**
+  String get homeLastWorkoutHeading;
+
+  /// volume is an already formatted weight with its unit, e.g. 4,200 kg.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 set} other{{count} sets}} • {volume}'**
+  String homeLastWorkoutSets(int count, String volume);
+
+  /// No description provided for @homeWeekTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get homeWeekTitle;
+
+  /// No description provided for @homeWeekWorkouts.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 workout} other{{count} workouts}}'**
+  String homeWeekWorkouts(int count);
+
+  /// Under the week's total volume. weekday is the full name of the first day counted.
+  ///
+  /// In en, this message translates to:
+  /// **'lifted since {weekday}'**
+  String homeWeekLiftedSince(String weekday);
+
+  /// No description provided for @homeRecapPeriodWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get homeRecapPeriodWeek;
+
+  /// No description provided for @homeRecapPeriodMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get homeRecapPeriodMonth;
+
+  /// No description provided for @homeRecapPeriodYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get homeRecapPeriodYear;
+
+  /// No description provided for @muscleMapFront.
+  ///
+  /// In en, this message translates to:
+  /// **'Front'**
+  String get muscleMapFront;
+
+  /// No description provided for @muscleMapBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get muscleMapBack;
+
+  /// No description provided for @muscleMapShowHeatmap.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to heatmap'**
+  String get muscleMapShowHeatmap;
+
+  /// No description provided for @muscleMapShowColours.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to per-muscle colours'**
+  String get muscleMapShowColours;
+
+  /// No description provided for @muscleMapLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the muscle map.\n{error}'**
+  String muscleMapLoadFailed(String error);
+
+  /// No description provided for @muscleMapBodyLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the body map.\n{error}'**
+  String muscleMapBodyLoadFailed(String error);
+
+  /// No description provided for @muscleMapContrastCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Each muscle has its own colour. Brighter still means more volume.'**
+  String get muscleMapContrastCaption;
+
+  /// No description provided for @workoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout'**
+  String get workoutTitle;
+
+  /// No description provided for @workoutSplitsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your splits.\n{error}'**
+  String workoutSplitsLoadFailed(String error);
+
+  /// No description provided for @workoutAddDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Add day'**
+  String get workoutAddDay;
+
+  /// No description provided for @workoutStartEmptyTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Start empty workout'**
+  String get workoutStartEmptyTooltip;
+
+  /// No description provided for @workoutSwitchSplitTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch split'**
+  String get workoutSwitchSplitTooltip;
+
+  /// No description provided for @workoutSwitcherTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your splits'**
+  String get workoutSwitcherTitle;
+
+  /// No description provided for @workoutNewSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'New split'**
+  String get workoutNewSplit;
+
+  /// No description provided for @workoutBrowsePrograms.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse programs'**
+  String get workoutBrowsePrograms;
+
+  /// No description provided for @workoutManageSplits.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage splits'**
+  String get workoutManageSplits;
+
+  /// No description provided for @workoutNoSplitsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No splits yet'**
+  String get workoutNoSplitsTitle;
+
+  /// No description provided for @workoutNoSplitsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first split to start planning your training.'**
+  String get workoutNoSplitsMessage;
+
+  /// No description provided for @workoutNoSplitsFromProgram.
+  ///
+  /// In en, this message translates to:
+  /// **'Start from a program'**
+  String get workoutNoSplitsFromProgram;
+
+  /// No description provided for @workoutNoSplitsFreeWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Or start an empty workout'**
+  String get workoutNoSplitsFreeWorkout;
+
+  /// No description provided for @workoutNoActiveSplitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No active split'**
+  String get workoutNoActiveSplitTitle;
+
+  /// No description provided for @workoutNoActiveSplitMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the programme you are following and its days will show up here.'**
+  String get workoutNoActiveSplitMessage;
+
+  /// No description provided for @workoutNoActiveSplitAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a split'**
+  String get workoutNoActiveSplitAction;
+
+  /// Saved as the name of a workout started without a planned day, and shown as its heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Free workout'**
+  String get workoutFreeWorkoutName;
+
+  /// No description provided for @workoutSplitsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Splits'**
+  String get workoutSplitsTitle;
+
+  /// No description provided for @workoutSplitNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Split name'**
+  String get workoutSplitNameLabel;
+
+  /// No description provided for @workoutSplitNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Push / Pull / Legs'**
+  String get workoutSplitNameHint;
+
+  /// No description provided for @workoutDeleteSplitTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete split'**
+  String get workoutDeleteSplitTooltip;
+
+  /// Confirming the deletion of a split or a day. name is what the user called it.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{name}\"?'**
+  String workoutDeleteTitle(String name);
+
+  /// No description provided for @workoutDeleteSplitMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes the split and everything inside it. This cannot be undone.'**
+  String get workoutDeleteSplitMessage;
+
+  /// No description provided for @workoutSplitFallbackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Split'**
+  String get workoutSplitFallbackTitle;
+
+  /// No description provided for @workoutDayNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Day name'**
+  String get workoutDayNameLabel;
+
+  /// No description provided for @workoutDayNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Push'**
+  String get workoutDayNameHint;
+
+  /// No description provided for @workoutNowFollowing.
+  ///
+  /// In en, this message translates to:
+  /// **'Now following {split}'**
+  String workoutNowFollowing(String split);
+
+  /// No description provided for @workoutSetActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Set active'**
+  String get workoutSetActive;
+
+  /// No description provided for @workoutSplitLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load this split.\n{error}'**
+  String workoutSplitLoadFailed(String error);
+
+  /// Under a day's name. schedule is its weekdays, e.g. 'Mon, Thu', or workoutDayNotScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 exercise} other{{count} exercises}} • {schedule}'**
+  String workoutDayCardSubtitle(int count, String schedule);
+
+  /// No description provided for @workoutDayNotScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'Not scheduled'**
+  String get workoutDayNotScheduled;
+
+  /// No description provided for @workoutDeleteDayTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete day'**
+  String get workoutDeleteDayTooltip;
+
+  /// No description provided for @workoutDayNoExercises.
+  ///
+  /// In en, this message translates to:
+  /// **'No exercises yet — tap to add some.'**
+  String get workoutDayNoExercises;
+
+  /// No description provided for @workoutDeleteDayMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes the day and its exercises. This cannot be undone.'**
+  String get workoutDeleteDayMessage;
+
+  /// No description provided for @workoutNoDaysTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No days yet'**
+  String get workoutNoDaysTitle;
+
+  /// No description provided for @workoutNoDaysMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a training day (like \"Push\" or \"Legs\") to start building this split.'**
+  String get workoutNoDaysMessage;
+
+  /// No description provided for @workoutDayFallbackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Day'**
+  String get workoutDayFallbackTitle;
+
+  /// No description provided for @workoutDayLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load this day.\n{error}'**
+  String workoutDayLoadFailed(String error);
+
+  /// No description provided for @workoutStartWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Start workout'**
+  String get workoutStartWorkout;
+
+  /// No description provided for @workoutAddExercises.
+  ///
+  /// In en, this message translates to:
+  /// **'Add exercises'**
+  String get workoutAddExercises;
+
+  /// A planned exercise's target in the day builder. reps is already formatted: 10, or a range like 8–12.
+  ///
+  /// In en, this message translates to:
+  /// **'{sets, plural, other{{sets} sets}} × {reps} reps'**
+  String workoutPlannedSetsReps(int sets, String reps);
+
+  /// No description provided for @workoutPlannedWarmups.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 warm-up} other{{count} warm-ups}}'**
+  String workoutPlannedWarmups(int count);
+
+  /// A planned percentage of the one-rep max. percent is already formatted, e.g. 75%.
+  ///
+  /// In en, this message translates to:
+  /// **'@ {percent} 1RM'**
+  String workoutPlannedPercent(String percent);
+
+  /// No description provided for @workoutSuperset.
+  ///
+  /// In en, this message translates to:
+  /// **'Superset'**
+  String get workoutSuperset;
+
+  /// No description provided for @workoutRemoveExerciseTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove exercise'**
+  String get workoutRemoveExerciseTooltip;
+
+  /// No description provided for @workoutDragToReorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reorder'**
+  String get workoutDragToReorder;
+
+  /// No description provided for @workoutSupersetRestAfterLast.
+  ///
+  /// In en, this message translates to:
+  /// **'SUPERSET · REST AFTER THE LAST'**
+  String get workoutSupersetRestAfterLast;
+
+  /// No description provided for @workoutSupersetWithAbove.
+  ///
+  /// In en, this message translates to:
+  /// **'Superset with the exercise above'**
+  String get workoutSupersetWithAbove;
+
+  /// No description provided for @workoutSupersetWithBelow.
+  ///
+  /// In en, this message translates to:
+  /// **'Superset with the exercise below'**
+  String get workoutSupersetWithBelow;
+
+  /// No description provided for @workoutSupersetLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from superset'**
+  String get workoutSupersetLeave;
+
+  /// No description provided for @workoutUpdatedExercises.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Updated 1 exercise} other{Updated all {count} exercises}}'**
+  String workoutUpdatedExercises(int count);
+
+  /// No description provided for @workoutSetsRepsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets & reps'**
+  String get workoutSetsRepsTitle;
+
+  /// No description provided for @workoutWheelSets.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets'**
+  String get workoutWheelSets;
+
+  /// No description provided for @workoutWheelReps.
+  ///
+  /// In en, this message translates to:
+  /// **'Reps'**
+  String get workoutWheelReps;
+
+  /// No description provided for @workoutWheelFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get workoutWheelFrom;
+
+  /// No description provided for @workoutWheelTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get workoutWheelTo;
+
+  /// No description provided for @workoutRepRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Rep range'**
+  String get workoutRepRange;
+
+  /// No description provided for @workoutWarmupSets.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm-up sets'**
+  String get workoutWarmupSets;
+
+  /// Saves the same targets on every exercise of the day. count is how many that is.
+  ///
+  /// In en, this message translates to:
+  /// **'Save to all {count}'**
+  String workoutSaveToAll(int count);
+
+  /// No description provided for @workoutDayEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No exercises yet'**
+  String get workoutDayEmptyTitle;
+
+  /// No description provided for @workoutDayEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add exercises from the library and set their sets and reps.'**
+  String get workoutDayEmptyMessage;
+
+  /// No description provided for @workoutPickerClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get workoutPickerClear;
+
+  /// No description provided for @workoutPickerNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No exercises match your filters.'**
+  String get workoutPickerNoMatches;
+
+  /// No description provided for @workoutPickerSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Nothing selected} =1{1 selected} other{{count} selected}}'**
+  String workoutPickerSelected(int count);
+
+  /// The picker's confirm button once more than one exercise is ticked; with one it says commonAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {count}'**
+  String workoutPickerAddCount(int count);
+
+  /// No description provided for @workoutLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load this workout.\n{error}'**
+  String workoutLoadFailed(String error);
+
+  /// No description provided for @workoutNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout not found.'**
+  String get workoutNotFound;
+
+  /// No description provided for @workoutFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish'**
+  String get workoutFinish;
+
+  /// No description provided for @workoutAddExercise.
+  ///
+  /// In en, this message translates to:
+  /// **'Add exercise'**
+  String get workoutAddExercise;
+
+  /// No description provided for @workoutUpNext.
+  ///
+  /// In en, this message translates to:
+  /// **'UP NEXT'**
+  String get workoutUpNext;
+
+  /// No description provided for @workoutReorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder'**
+  String get workoutReorder;
+
+  /// No description provided for @workoutSwapExercise.
+  ///
+  /// In en, this message translates to:
+  /// **'Swap exercise'**
+  String get workoutSwapExercise;
+
+  /// No description provided for @workoutSwapExerciseSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Do something else in its place'**
+  String get workoutSwapExerciseSubtitle;
+
+  /// No description provided for @workoutRemoveFromWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from workout'**
+  String get workoutRemoveFromWorkout;
+
+  /// No description provided for @workoutPlanUnchanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Your plan stays as it is'**
+  String get workoutPlanUnchanged;
+
+  /// Heading of the log sheet for a ramp-up set.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm-up {number}'**
+  String workoutPhaseWarmup(int number);
+
+  /// No description provided for @workoutPhaseWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Set {number} · working set'**
+  String workoutPhaseWorking(int number);
+
+  /// No description provided for @workoutExerciseOptionsTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise options'**
+  String get workoutExerciseOptionsTooltip;
+
+  /// No description provided for @workoutWarmupCalculator.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm-up calculator'**
+  String get workoutWarmupCalculator;
+
+  /// No description provided for @workoutLogSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Log set {number}'**
+  String workoutLogSet(int number);
+
+  /// partners are the other exercise names of the superset, joined with commonListAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Superset with {partners} — rest after the last one'**
+  String workoutSupersetWith(String partners);
+
+  /// No description provided for @workoutSupersetCaps.
+  ///
+  /// In en, this message translates to:
+  /// **'SUPERSET'**
+  String get workoutSupersetCaps;
+
+  /// The warm-up button while the plan still expects ramp-up sets.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm-up {number} of {expected}'**
+  String workoutWarmupProgress(int number, int expected);
+
+  /// No description provided for @workoutWarmup.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm-up'**
+  String get workoutWarmup;
+
+  /// Overload suggestions on the exercise card. weight is formatted with its unit.
+  ///
+  /// In en, this message translates to:
+  /// **'You hit every set last time — going up to {weight}'**
+  String workoutSuggestionEarned(String weight);
+
+  /// No description provided for @workoutSuggestionDeload.
+  ///
+  /// In en, this message translates to:
+  /// **'Several increases in a row — a lighter {weight} is suggested'**
+  String workoutSuggestionDeload(String weight);
+
+  /// No description provided for @workoutSuggestionAtLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Top set was a limit effort last time — holding at {weight}'**
+  String workoutSuggestionAtLimit(String weight);
+
+  /// No description provided for @workoutSuggestionPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent} of your 1RM — {weight}'**
+  String workoutSuggestionPercent(String percent, String weight);
+
+  /// No description provided for @workoutSuggestionBlockDeload.
+  ///
+  /// In en, this message translates to:
+  /// **'Deload week at {percent} — {weight}'**
+  String workoutSuggestionBlockDeload(String percent, String weight);
+
+  /// No description provided for @workoutSuggestionSame.
+  ///
+  /// In en, this message translates to:
+  /// **'Same {weight} as last time'**
+  String workoutSuggestionSame(String weight);
+
+  /// No description provided for @workoutChangeSetTypeTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Change set type'**
+  String get workoutChangeSetTypeTooltip;
+
+  /// No description provided for @workoutSetTypeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set type'**
+  String get workoutSetTypeTitle;
+
+  /// No description provided for @workoutDeleteSetTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete set'**
+  String get workoutDeleteSetTooltip;
+
+  /// One letter on a logged warm-up set.
+  ///
+  /// In en, this message translates to:
+  /// **'W'**
+  String get workoutBadgeWarmup;
+
+  /// One letter on a logged drop set.
+  ///
+  /// In en, this message translates to:
+  /// **'D'**
+  String get workoutBadgeDrop;
+
+  /// One letter on a logged set taken to failure.
+  ///
+  /// In en, this message translates to:
+  /// **'F'**
+  String get workoutBadgeFailure;
+
+  /// No description provided for @workoutEmptyFreeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add exercises as you go. Nothing here changes your plan.'**
+  String get workoutEmptyFreeMessage;
+
+  /// No description provided for @workoutEmptyNothingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to log'**
+  String get workoutEmptyNothingTitle;
+
+  /// No description provided for @workoutEmptyNothingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This day has no exercises. Add some for today — your plan stays as it is.'**
+  String get workoutEmptyNothingMessage;
+
+  /// No description provided for @workoutLogWarmupCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm-up · ramping up'**
+  String get workoutLogWarmupCaption;
+
+  /// No description provided for @workoutLogDropCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop set · lighter, straight after'**
+  String get workoutLogDropCaption;
+
+  /// phase is workoutPhaseWorking or workoutWorkingSet.
+  ///
+  /// In en, this message translates to:
+  /// **'{phase} · to failure'**
+  String workoutLogFailureCaption(String phase);
+
+  /// No description provided for @workoutWorkingSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Working set'**
+  String get workoutWorkingSet;
+
+  /// No description provided for @workoutLogRepsUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'reps'**
+  String get workoutLogRepsUnit;
+
+  /// No description provided for @workoutLogStepWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'STEP 1 — WEIGHT'**
+  String get workoutLogStepWeight;
+
+  /// No description provided for @workoutLogStepReps.
+  ///
+  /// In en, this message translates to:
+  /// **'STEP 2 — REPS'**
+  String get workoutLogStepReps;
+
+  /// No description provided for @workoutLogStepTime.
+  ///
+  /// In en, this message translates to:
+  /// **'STEP 2 — TIME'**
+  String get workoutLogStepTime;
+
+  /// No description provided for @workoutLogTypeWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Type a weight'**
+  String get workoutLogTypeWeight;
+
+  /// No description provided for @workoutLogStackPlates.
+  ///
+  /// In en, this message translates to:
+  /// **'Stack plates'**
+  String get workoutLogStackPlates;
+
+  /// No description provided for @workoutLogRepeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat last set'**
+  String get workoutLogRepeat;
+
+  /// No description provided for @workoutLogNextTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: time'**
+  String get workoutLogNextTime;
+
+  /// No description provided for @workoutLogNextReps.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: reps'**
+  String get workoutLogNextReps;
+
+  /// No description provided for @workoutLogSaveSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Save set'**
+  String get workoutLogSaveSet;
+
+  /// No description provided for @workoutLogHolding.
+  ///
+  /// In en, this message translates to:
+  /// **'HOLDING'**
+  String get workoutLogHolding;
+
+  /// No description provided for @workoutLogMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'MIN'**
+  String get workoutLogMinutes;
+
+  /// No description provided for @workoutLogSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'SEC'**
+  String get workoutLogSeconds;
+
+  /// No description provided for @workoutTimerStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get workoutTimerStop;
+
+  /// No description provided for @workoutTimerStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start timer'**
+  String get workoutTimerStart;
+
+  /// No description provided for @workoutEffortRpeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'HOW HARD · RPE'**
+  String get workoutEffortRpeLabel;
+
+  /// No description provided for @workoutEffortRirLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'REPS LEFT · RIR'**
+  String get workoutEffortRirLabel;
+
+  /// Why the log sheet prefilled the weight it did. weight is formatted with its unit.
+  ///
+  /// In en, this message translates to:
+  /// **'You hit every set last time — going up to {weight}.'**
+  String workoutNoteEarned(String weight);
+
+  /// No description provided for @workoutNoteDeload.
+  ///
+  /// In en, this message translates to:
+  /// **'Several increases in a row. A lighter week at {weight} is suggested.'**
+  String workoutNoteDeload(String weight);
+
+  /// No description provided for @workoutNoteAtLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You hit every set, but the top set was a limit effort — staying at {weight}.'**
+  String workoutNoteAtLimit(String weight);
+
+  /// No description provided for @workoutNotePercent.
+  ///
+  /// In en, this message translates to:
+  /// **'Planned at {percent} of your 1RM — {weight}.'**
+  String workoutNotePercent(String percent, String weight);
+
+  /// No description provided for @workoutNoteBlockDeload.
+  ///
+  /// In en, this message translates to:
+  /// **'Deload week: {percent} of your working weight — {weight}.'**
+  String workoutNoteBlockDeload(String percent, String weight);
+
+  /// No description provided for @workoutNoteSame.
+  ///
+  /// In en, this message translates to:
+  /// **'Same weight as last time — the rep target wasn\'t met yet.'**
+  String get workoutNoteSame;
+
+  /// No description provided for @workoutRestOverCaps.
+  ///
+  /// In en, this message translates to:
+  /// **'REST OVER'**
+  String get workoutRestOverCaps;
+
+  /// No description provided for @workoutRestingCaps.
+  ///
+  /// In en, this message translates to:
+  /// **'RESTING'**
+  String get workoutRestingCaps;
+
+  /// No description provided for @workoutRestAddTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Add 30 seconds'**
+  String get workoutRestAddTooltip;
+
+  /// No description provided for @workoutRestDismissTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get workoutRestDismissTooltip;
+
+  /// No description provided for @workoutRestSkipTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip rest'**
+  String get workoutRestSkipTooltip;
+
+  /// No description provided for @workoutRestOver.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest over'**
+  String get workoutRestOver;
+
+  /// A rep count on its own, e.g. a bodyweight set or a rep record.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{{count} reps}}'**
+  String workoutReps(int count);
+
+  /// One beaten record. kind is a workoutRecordKind… label; value and previous are formatted.
+  ///
+  /// In en, this message translates to:
+  /// **'{kind} · {value}, was {previous}'**
+  String workoutRecordLine(String kind, String value, String previous);
+
+  /// No description provided for @workoutRecordNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New personal record'**
+  String get workoutRecordNew;
+
+  /// No description provided for @workoutRecordCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 personal record} other{{count} personal records}}'**
+  String workoutRecordCount(int count);
+
+  /// No description provided for @workoutRecordKindWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Heaviest weight'**
+  String get workoutRecordKindWeight;
+
+  /// No description provided for @workoutRecordKindOneRm.
+  ///
+  /// In en, this message translates to:
+  /// **'Best estimated 1RM'**
+  String get workoutRecordKindOneRm;
+
+  /// No description provided for @workoutRecordKindReps.
+  ///
+  /// In en, this message translates to:
+  /// **'Most reps'**
+  String get workoutRecordKindReps;
+
+  /// No description provided for @workoutRecordKindHold.
+  ///
+  /// In en, this message translates to:
+  /// **'Longest hold'**
+  String get workoutRecordKindHold;
+
+  /// No description provided for @workoutRecordKindVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Best session volume'**
+  String get workoutRecordKindVolume;
+
+  /// No description provided for @workoutSwapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Swap {exercise}'**
+  String workoutSwapTitle(String exercise);
+
+  /// No description provided for @workoutSwapScopeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Swap for how long?'**
+  String get workoutSwapScopeTitle;
+
+  /// No description provided for @workoutSwapScopeSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Just this workout'**
+  String get workoutSwapScopeSession;
+
+  /// No description provided for @workoutSwapScopePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'This workout and the plan'**
+  String get workoutSwapScopePlan;
+
+  /// No description provided for @workoutSwapScopePlanSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Future workouts of this day use it too'**
+  String get workoutSwapScopePlanSubtitle;
+
+  /// No description provided for @workoutSwapPlanClash.
+  ///
+  /// In en, this message translates to:
+  /// **'That exercise is already in this day\'s plan, so the swap is for this workout only.'**
+  String get workoutSwapPlanClash;
+
+  /// No description provided for @workoutReorderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder exercises'**
+  String get workoutReorderTitle;
+
+  /// ramp is the warm-up percentages, e.g. 40 · 60 · 80 %.
+  ///
+  /// In en, this message translates to:
+  /// **'{exercise} · ramp {ramp}'**
+  String workoutWarmupRampCaption(String exercise, String ramp);
+
+  /// No description provided for @workoutWarmupWorkingWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'WORKING WEIGHT'**
+  String get workoutWarmupWorkingWeight;
+
+  /// No description provided for @workoutWarmupLighter.
+  ///
+  /// In en, this message translates to:
+  /// **'Lighter'**
+  String get workoutWarmupLighter;
+
+  /// No description provided for @workoutWarmupHeavier.
+  ///
+  /// In en, this message translates to:
+  /// **'Heavier'**
+  String get workoutWarmupHeavier;
+
+  /// No description provided for @workoutWarmupEnterWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the weight you are working up to.'**
+  String get workoutWarmupEnterWeight;
+
+  /// No description provided for @workoutWarmupTooLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Too light to need a ramp — go straight to work.'**
+  String get workoutWarmupTooLight;
+
+  /// No description provided for @workoutWarmupLogSets.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Log 1 warm-up set} other{Log {count} warm-up sets}}'**
+  String workoutWarmupLogSets(int count);
+
+  /// No description provided for @workoutWarmupEmptyBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty bar'**
+  String get workoutWarmupEmptyBar;
+
+  /// One warm-up step. plates is what goes on each side, e.g. 20 + 5.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent} % · {plates} per side'**
+  String workoutWarmupStepPlates(int percent, String plates);
+
+  /// No description provided for @workoutSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout complete'**
+  String get workoutSummaryTitle;
+
+  /// No description provided for @workoutSummaryLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the summary.\n{error}'**
+  String workoutSummaryLoadFailed(String error);
+
+  /// No description provided for @workoutSummaryNoSets.
+  ///
+  /// In en, this message translates to:
+  /// **'No sets were logged in this workout.'**
+  String get workoutSummaryNoSets;
+
+  /// No description provided for @workoutSummaryExercises.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercises'**
+  String get workoutSummaryExercises;
+
+  /// No description provided for @workoutSummaryMusclesWorked.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscles worked'**
+  String get workoutSummaryMusclesWorked;
+
+  /// No description provided for @workoutSummaryNoMuscles.
+  ///
+  /// In en, this message translates to:
+  /// **'No muscles to show for this workout.'**
+  String get workoutSummaryNoMuscles;
+
+  /// No description provided for @workoutSummaryDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get workoutSummaryDuration;
+
+  /// No description provided for @workoutSummarySets.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets'**
+  String get workoutSummarySets;
+
+  /// No description provided for @workoutSummaryVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume'**
+  String get workoutSummaryVolume;
+
+  /// No description provided for @workoutSummaryExerciseSets.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 set} other{{count} sets}}'**
+  String workoutSummaryExerciseSets(int count);
+
+  /// set is one logged set, e.g. 80 kg × 8 reps.
+  ///
+  /// In en, this message translates to:
+  /// **'Top set {set}'**
+  String workoutSummaryTopSet(String set);
+
+  /// No description provided for @workoutSummaryTopSetTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Top set {set}  •  {volume} total'**
+  String workoutSummaryTopSetTotal(String set, String volume);
+
+  /// No description provided for @workoutLoggingRateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate how hard each set was'**
+  String get workoutLoggingRateTitle;
+
+  /// No description provided for @workoutLoggingOffCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Off: the log sheet asks for weight and reps only.'**
+  String get workoutLoggingOffCaption;
+
+  /// No description provided for @workoutLoggingRpeCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'RPE 6–10, optional on every working set. A top set rated 9.5 or 10 holds the overload suggestion at the same weight next time.'**
+  String get workoutLoggingRpeCaption;
+
+  /// No description provided for @workoutLoggingRirCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Reps left in the tank, optional on every working set. A top set with none left holds the overload suggestion at the same weight next time.'**
+  String get workoutLoggingRirCaption;
+
+  /// No description provided for @workoutWarmupRampTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm-up ramp'**
+  String get workoutWarmupRampTitle;
+
+  /// No description provided for @workoutWarmupRampSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{ramp} of your working weight, after the bar'**
+  String workoutWarmupRampSubtitle(String ramp);
+
+  /// No description provided for @workoutWarmupRampSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{{count} steps}}'**
+  String workoutWarmupRampSteps(int count);
+
+  /// No description provided for @workoutRestBetweenSets.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest between sets'**
+  String get workoutRestBetweenSets;
+
+  /// No description provided for @workoutRestUseDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the default instead'**
+  String get workoutRestUseDefault;
+
+  /// No description provided for @workoutRestFollowingDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'{rest} — following the default'**
+  String workoutRestFollowingDefault(String rest);
+
+  /// No description provided for @workoutRestOwn.
+  ///
+  /// In en, this message translates to:
+  /// **'{rest} — set for this exercise'**
+  String workoutRestOwn(String rest);
+
+  /// No description provided for @workoutSetPositionOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Set {number} of {planned}'**
+  String workoutSetPositionOf(int number, int planned);
+
+  /// A set past the plan's count, where 'of' would read like a bug.
+  ///
+  /// In en, this message translates to:
+  /// **'Set {number}'**
+  String workoutSetPosition(int number);
+
+  /// No description provided for @workoutNotificationNoExercises.
+  ///
+  /// In en, this message translates to:
+  /// **'No exercises yet'**
+  String get workoutNotificationNoExercises;
+
+  /// Expanded notification: what one tap on Log set will log, e.g. 80 kg × 8 reps.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: {set}'**
+  String workoutNotificationNext(String set);
+
+  /// No description provided for @workoutNotificationResting.
+  ///
+  /// In en, this message translates to:
+  /// **'Resting'**
+  String get workoutNotificationResting;
+
+  /// No description provided for @workoutNotificationLogSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Log set'**
+  String get workoutNotificationLogSet;
+
+  /// No description provided for @workoutNotificationSkipRest.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip rest'**
+  String get workoutNotificationSkipRest;
+
+  /// Shown on the notification once the app is no longer running.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to open Gymfy'**
+  String get workoutNotificationTapToOpen;
+
+  /// No description provided for @workoutNotificationChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout in progress'**
+  String get workoutNotificationChannel;
+
+  /// No description provided for @workoutNotificationChannelDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The current set and rest, with buttons to log and skip'**
+  String get workoutNotificationChannelDescription;
+
+  /// No description provided for @overloadModeAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto'**
+  String get overloadModeAuto;
+
+  /// No description provided for @overloadModeFixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed'**
+  String get overloadModeFixed;
+
+  /// No description provided for @overloadModePercent.
+  ///
+  /// In en, this message translates to:
+  /// **'Percent'**
+  String get overloadModePercent;
+
+  /// A percentage. percent is the number, already formatted for the language.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}%'**
+  String overloadPercentValue(String percent);
+
+  /// No description provided for @overloadSuggestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggest heavier weights'**
+  String get overloadSuggestTitle;
+
+  /// No description provided for @overloadSuggestSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'When you hit every set at the top of your rep range, the next session opens with a bit more on the bar.'**
+  String get overloadSuggestSubtitle;
+
+  /// No description provided for @overloadHowMuchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How much to add'**
+  String get overloadHowMuchTitle;
+
+  /// No description provided for @overloadDeloadTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deload'**
+  String get overloadDeloadTitle;
+
+  /// No description provided for @overloadDeloadCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'After a run of increases, suggest dropping 10%. Only ever a suggestion — nothing changes on its own.'**
+  String get overloadDeloadCaption;
+
+  /// No description provided for @overloadDeloadNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get overloadDeloadNever;
+
+  /// How many increases in a row before a deload is suggested.
+  ///
+  /// In en, this message translates to:
+  /// **'{weeks} in a row'**
+  String overloadDeloadInARow(int weeks);
+
+  /// Each placeholder is a weight with its unit, e.g. 5 kg.
+  ///
+  /// In en, this message translates to:
+  /// **'Bigger jumps on big lifts: {legs} on legs, {backChest} on back and chest, {armsShoulders} on arms and shoulders. Core exercises are never auto-progressed.'**
+  String overloadAutoCaption(
+    String legs,
+    String backChest,
+    String armsShoulders,
+  );
+
+  /// No description provided for @overloadFixedCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'The same jump on every exercise.'**
+  String get overloadFixedCaption;
+
+  /// Every placeholder is a weight with its unit.
+  ///
+  /// In en, this message translates to:
+  /// **'Adds {lightStep} to a {light} lift and {heavyStep} to a {heavy} one.'**
+  String overloadPercentExample(
+    String lightStep,
+    String light,
+    String heavyStep,
+    String heavy,
+  );
+
+  /// No description provided for @platesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plate calculator'**
+  String get platesTitle;
+
+  /// No description provided for @platesLoadingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What are you loading?'**
+  String get platesLoadingTitle;
+
+  /// No description provided for @platesTargetWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Target weight'**
+  String get platesTargetWeight;
+
+  /// No description provided for @platesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Dial in a target weight to see what goes on the bar.'**
+  String get platesHint;
+
+  /// No description provided for @platesBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Bar'**
+  String get platesBar;
+
+  /// The bar choice for plates loaded onto a machine with no barbell.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get platesNoBar;
+
+  /// Both are weights with their unit.
+  ///
+  /// In en, this message translates to:
+  /// **'{target} is lighter than the bar itself ({bar}).'**
+  String platesBelowBar(String target, String bar);
+
+  /// No description provided for @platesEachSide.
+  ///
+  /// In en, this message translates to:
+  /// **'Each side'**
+  String get platesEachSide;
+
+  /// bar is the bar's weight without a unit; plates is the plates' weight with its unit.
+  ///
+  /// In en, this message translates to:
+  /// **'Bar {bar} + plates {plates}'**
+  String platesExact(String bar, String plates);
+
+  /// shortfall is a weight with its unit, target the target weight without one.
+  ///
+  /// In en, this message translates to:
+  /// **'Closest loadable — {shortfall} under your target of {target}'**
+  String platesClosest(String shortfall, String target);
+
+  /// No description provided for @platesTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get platesTotal;
+
+  /// No description provided for @platesClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get platesClear;
+
+  /// No description provided for @platesInPlatesNoBar.
+  ///
+  /// In en, this message translates to:
+  /// **'{total} in plates, no bar'**
+  String platesInPlatesNoBar(String total);
+
+  /// bar is the bar's weight with its unit; plates is the plates' weight without one.
+  ///
+  /// In en, this message translates to:
+  /// **'Bar {bar} + {plates} in plates'**
+  String platesBarPlusPlates(String bar, String plates);
+
+  /// No description provided for @platesTapToAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to add a plate to each side'**
+  String get platesTapToAdd;
+
+  /// Screen reader label of a plate button. plate is its weight with the unit.
+  ///
+  /// In en, this message translates to:
+  /// **'{plate}, {count} on the bar'**
+  String platesPlateSemantics(String plate, int count);
+
+  /// No description provided for @platesChangeBarTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the bar'**
+  String get platesChangeBarTooltip;
+
+  /// No description provided for @platesJustTheBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Just the bar'**
+  String get platesJustTheBar;
+
+  /// No description provided for @platesInventoryCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'The plates your gym has, in {unit}. The calculator only suggests these.'**
+  String platesInventoryCaption(String unit);
+
+  /// No description provided for @planShareTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share a plan'**
+  String get planShareTitle;
+
+  /// No description provided for @planShareNoSplits.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no splits to save yet — but you can still import one from someone else.'**
+  String get planShareNoSplits;
+
+  /// No description provided for @planShareSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get planShareSend;
+
+  /// No description provided for @planShareReceive.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive'**
+  String get planShareReceive;
+
+  /// No description provided for @planShareImportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import a plan'**
+  String get planShareImportTitle;
+
+  /// No description provided for @planShareImportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a .gymfy file someone sent you'**
+  String get planShareImportSubtitle;
+
+  /// No description provided for @planShareSaveDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save your plan'**
+  String get planShareSaveDialogTitle;
+
+  /// No description provided for @planShareSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan saved — send it from your files app.'**
+  String get planShareSaved;
+
+  /// No description provided for @planShareSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save that plan.\n{error}'**
+  String planShareSaveFailed(String error);
+
+  /// No description provided for @planSharePdfFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not build that PDF.\n{error}'**
+  String planSharePdfFailed(String error);
+
+  /// No description provided for @planShareReadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read that file.\n{error}'**
+  String planShareReadFailed(String error);
+
+  /// No description provided for @planShareImported.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Nothing imported} =1{Plan imported} other{{count} plans imported}}'**
+  String planShareImported(int count);
+
+  /// No description provided for @planShareExplainer.
+  ///
+  /// In en, this message translates to:
+  /// **'A plan file holds your splits, their days and the exercises in them. It never includes your workouts, your weights, your measurements or your photos.'**
+  String get planShareExplainer;
+
+  /// No description provided for @planShareSaveFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Save file'**
+  String get planShareSaveFile;
+
+  /// No description provided for @planSharePdf.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF'**
+  String get planSharePdf;
+
+  /// No description provided for @planShareErrorNotJson.
+  ///
+  /// In en, this message translates to:
+  /// **'That file isn\'t a Gymfy plan — it isn\'t even JSON.'**
+  String get planShareErrorNotJson;
+
+  /// No description provided for @planShareErrorNotPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'That file isn\'t a Gymfy plan.'**
+  String get planShareErrorNotPlan;
+
+  /// No description provided for @planShareErrorWrongFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'That file isn\'t a Gymfy plan. Look for a file ending in .{extension}.'**
+  String planShareErrorWrongFormat(String extension);
+
+  /// No description provided for @planShareErrorTooNew.
+  ///
+  /// In en, this message translates to:
+  /// **'That plan was made by a newer version of Gymfy. Update the app and try again.'**
+  String get planShareErrorTooNew;
+
+  /// No description provided for @planShareErrorNoSplits.
+  ///
+  /// In en, this message translates to:
+  /// **'That plan file doesn\'t contain a split.'**
+  String get planShareErrorNoSplits;
+
+  /// No description provided for @planShareRenameEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Give it a name.'**
+  String get planShareRenameEmpty;
+
+  /// No description provided for @planShareRenameTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'You already have a plan called that.'**
+  String get planShareRenameTaken;
+
+  /// No description provided for @planShareRenameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Name already used'**
+  String get planShareRenameTitle;
+
+  /// No description provided for @planShareRenameMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You already have a plan called \"{name}\". Give the imported one a different name — your own plan is kept either way.'**
+  String planShareRenameMessage(String name);
+
+  /// No description provided for @planShareRenameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan name'**
+  String get planShareRenameLabel;
+
+  /// No description provided for @planShareRenameSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip this one'**
+  String get planShareRenameSkip;
+
+  /// No description provided for @planShareRenameImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get planShareRenameImport;
+
+  /// Footer of the printed plan. The PDF font only has Latin-1: no en dashes or curly quotes in any planSharePdf… message.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page} of {pages}'**
+  String planSharePdfPage(int page, int pages);
+
+  /// No description provided for @planSharePdfNotScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'Not scheduled'**
+  String get planSharePdfNotScheduled;
+
+  /// No description provided for @planSharePdfNoExercises.
+  ///
+  /// In en, this message translates to:
+  /// **'No exercises'**
+  String get planSharePdfNoExercises;
+
+  /// No description provided for @planSharePdfExercise.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise'**
+  String get planSharePdfExercise;
+
+  /// No description provided for @planSharePdfSetsReps.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets × reps'**
+  String get planSharePdfSetsReps;
+
+  /// No description provided for @planSharePdfWarmup.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm-up'**
+  String get planSharePdfWarmup;
+
+  /// No description provided for @planSharePdfWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get planSharePdfWeight;
+
+  /// No description provided for @programsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Programs'**
+  String get programsTitle;
+
+  /// level is programsLevelBeginner or programsLevelIntermediate.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{1 day a week} other{{days} days a week}} · {level}'**
+  String programsFacts(int days, String level);
+
+  /// No description provided for @programsLevelBeginner.
+  ///
+  /// In en, this message translates to:
+  /// **'Beginner'**
+  String get programsLevelBeginner;
+
+  /// No description provided for @programsLevelIntermediate.
+  ///
+  /// In en, this message translates to:
+  /// **'Intermediate'**
+  String get programsLevelIntermediate;
+
+  /// No description provided for @programsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Each programme is added as a new split you can edit like any other. Your own splits are never changed.'**
+  String get programsIntro;
+
+  /// No description provided for @programsFallbackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Program'**
+  String get programsFallbackTitle;
+
+  /// No description provided for @programsNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Program not found.'**
+  String get programsNotFound;
+
+  /// No description provided for @programsOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open this program.\n{error}'**
+  String programsOpenFailed(String error);
+
+  /// No description provided for @programsAddToSplits.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to my splits'**
+  String get programsAddToSplits;
+
+  /// No description provided for @programsAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {program}. Set it active to follow it.'**
+  String programsAdded(String program);
+
+  /// No description provided for @programsAddFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not add that program.\n{error}'**
+  String programsAddFailed(String error);
+
+  /// No description provided for @programsSupersetNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Marked exercises are done back to back as a superset.'**
+  String get programsSupersetNote;
+
+  /// No description provided for @programsBeginnerFullBodySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'One machine-and-dumbbell session, three times a week'**
+  String get programsBeginnerFullBodySummary;
+
+  /// No description provided for @programsBeginnerFullBodyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'A gentle first programme built on machines, cables and dumbbells, so there is no barbell technique to learn before you start. The same full-body session three times a week, with rep ranges: once you hit the top of the range on every set, add a little weight.'**
+  String get programsBeginnerFullBodyDescription;
+
+  /// No description provided for @programsFullBody5x5Summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Two alternating barbell workouts, five sets of five'**
+  String get programsFullBody5x5Summary;
+
+  /// No description provided for @programsFullBody5x5Description.
+  ///
+  /// In en, this message translates to:
+  /// **'A classic linear-progression programme for building a strength base on the big barbell lifts. Alternate workout A and workout B three days a week and add a small amount of weight each time you complete every rep. Simple, fast, and it works for months before it stops.'**
+  String get programsFullBody5x5Description;
+
+  /// No description provided for @programsUpperLowerSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Four days, each muscle trained twice a week'**
+  String get programsUpperLowerSummary;
+
+  /// No description provided for @programsUpperLowerDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Two upper-body and two lower-body days. Each opens with a heavy compound in a low rep range, then moves to higher-rep accessories, with arm and shoulder work paired as supersets to save time. A good next step once three full-body days stop being enough.'**
+  String get programsUpperLowerDescription;
+
+  /// No description provided for @programsPushPullLegsSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Six days, the classic bodybuilding rotation'**
+  String get programsPushPullLegsSummary;
+
+  /// No description provided for @programsPushPullLegsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Pressing muscles, pulling muscles and legs on their own days, run twice through the week. Lots of volume for building muscle, with arm work done as supersets. Demanding on time: if six days is too many, run each day once and take the weekend off.'**
+  String get programsPushPullLegsDescription;
+
+  /// No description provided for @programsPercentageStrengthSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Four days, main lifts planned as a percentage of your 1RM'**
+  String get programsPercentageStrengthSummary;
+
+  /// No description provided for @programsPercentageStrengthDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'One day each for squat, bench, deadlift and overhead press. The main lift is planned as a percentage of your one-rep max, and Gymfy works out the weight from your tested or estimated 1RM, rounded to plates you can load. Pairs well with a training block on the split, such as three weeks of training and a deload week.'**
+  String get programsPercentageStrengthDescription;
+
+  /// No description provided for @programsBodyPartSplitSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Five days, one muscle group per day'**
+  String get programsBodyPartSplitSummary;
+
+  /// No description provided for @programsBodyPartSplitDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Chest, back, shoulders, arms and legs, each with a day to itself. Every muscle is trained hard once a week with plenty of exercises, and arm day runs as two supersets. Suits people who like long, focused sessions and can train five days in a row.'**
+  String get programsBodyPartSplitDescription;
+
+  /// No description provided for @programsBlockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Training block'**
+  String get programsBlockTitle;
+
+  /// No description provided for @programsBlockIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Train for a set number of weeks, then take one lighter deload week, then start again. During the deload week the suggested weights drop to the deload load.'**
+  String get programsBlockIntro;
+
+  /// No description provided for @programsBlockSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Run in training blocks'**
+  String get programsBlockSwitch;
+
+  /// No description provided for @programsBlockWeeksLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Training weeks'**
+  String get programsBlockWeeksLabel;
+
+  /// No description provided for @programsBlockFewerWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'Fewer weeks'**
+  String get programsBlockFewerWeeks;
+
+  /// No description provided for @programsBlockMoreWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'More weeks'**
+  String get programsBlockMoreWeeks;
+
+  /// No description provided for @programsBlockWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 week} other{{count} weeks}}'**
+  String programsBlockWeeks(int count);
+
+  /// No description provided for @programsBlockThenDeload.
+  ///
+  /// In en, this message translates to:
+  /// **'then 1 deload week'**
+  String get programsBlockThenDeload;
+
+  /// No description provided for @programsBlockDeloadLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Deload load'**
+  String get programsBlockDeloadLoad;
+
+  /// No description provided for @programsBlockOfWorkingWeights.
+  ///
+  /// In en, this message translates to:
+  /// **'of your usual working weights'**
+  String get programsBlockOfWorkingWeights;
+
+  /// No description provided for @programsBlockWeekOneBegan.
+  ///
+  /// In en, this message translates to:
+  /// **'Week 1 began'**
+  String get programsBlockWeekOneBegan;
+
+  /// No description provided for @programsBlockPickerHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Week 1 began on'**
+  String get programsBlockPickerHelp;
+
+  /// No description provided for @programsBlockStarts.
+  ///
+  /// In en, this message translates to:
+  /// **'Starts {date}'**
+  String programsBlockStarts(String date);
+
+  /// week is programsBlockWeekOf or programsBlockDeloadWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Today: {week}'**
+  String programsBlockToday(String week);
+
+  /// No description provided for @programsBlockDeloadWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Deload week'**
+  String get programsBlockDeloadWeek;
+
+  /// No description provided for @programsBlockWeekOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Week {week} of {weeks}'**
+  String programsBlockWeekOf(int week, int weeks);
+
+  /// No description provided for @programsBlockBannerDeload.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested weights at {percent}. A new block starts next week.'**
+  String programsBlockBannerDeload(String percent);
+
+  /// No description provided for @programsBlockBannerNextWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Deload week at {percent} next week · block {cycle}'**
+  String programsBlockBannerNextWeek(String percent, int cycle);
+
+  /// weeks is always 2 or more; one week away is programsBlockBannerNextWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Deload at {percent} in {weeks} weeks · block {cycle}'**
+  String programsBlockBannerInWeeks(String percent, int weeks, int cycle);
+
+  /// No description provided for @programsPercentOfMax.
+  ///
+  /// In en, this message translates to:
+  /// **'% of 1RM'**
+  String get programsPercentOfMax;
+
+  /// No description provided for @programsPercentNoMax.
+  ///
+  /// In en, this message translates to:
+  /// **'No 1RM yet. Log a set or enter a tested max and the weight appears in your workout.'**
+  String get programsPercentNoMax;
+
+  /// Both are weights with their unit.
+  ///
+  /// In en, this message translates to:
+  /// **'≈ {weight} today, from your 1RM of {max}.'**
+  String programsPercentPreview(String weight, String max);
+
+  /// No description provided for @exercisesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercises'**
+  String get exercisesTitle;
+
+  /// No description provided for @exercisesCancelSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel selection'**
+  String get exercisesCancelSelection;
+
+  /// No description provided for @exercisesSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{{count} selected}}'**
+  String exercisesSelected(int count);
+
+  /// No description provided for @exercisesAddToDayTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to day'**
+  String get exercisesAddToDayTooltip;
+
+  /// No description provided for @exercisesLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load exercises.\n{error}'**
+  String exercisesLoadFailed(String error);
+
+  /// No description provided for @exercisesAddExercise.
+  ///
+  /// In en, this message translates to:
+  /// **'Add exercise'**
+  String get exercisesAddExercise;
+
+  /// No description provided for @exercisesSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name or muscle'**
+  String get exercisesSearchHint;
+
+  /// No description provided for @exercisesClearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get exercisesClearSearch;
+
+  /// No description provided for @exercisesGroupChest.
+  ///
+  /// In en, this message translates to:
+  /// **'Chest'**
+  String get exercisesGroupChest;
+
+  /// No description provided for @exercisesGroupBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get exercisesGroupBack;
+
+  /// No description provided for @exercisesGroupShoulders.
+  ///
+  /// In en, this message translates to:
+  /// **'Shoulders'**
+  String get exercisesGroupShoulders;
+
+  /// No description provided for @exercisesGroupArms.
+  ///
+  /// In en, this message translates to:
+  /// **'Arms'**
+  String get exercisesGroupArms;
+
+  /// No description provided for @exercisesGroupLegs.
+  ///
+  /// In en, this message translates to:
+  /// **'Legs'**
+  String get exercisesGroupLegs;
+
+  /// No description provided for @exercisesGroupCore.
+  ///
+  /// In en, this message translates to:
+  /// **'Core'**
+  String get exercisesGroupCore;
+
+  /// No description provided for @exercisesGroupNeck.
+  ///
+  /// In en, this message translates to:
+  /// **'Neck'**
+  String get exercisesGroupNeck;
+
+  /// No description provided for @exercisesNoMatchesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing matches'**
+  String get exercisesNoMatchesTitle;
+
+  /// No description provided for @exercisesNoMatchesMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a different word, or clear a muscle filter.'**
+  String get exercisesNoMatchesMessage;
+
+  /// Marks an exercise the user made themselves.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get exercisesCustomBadge;
+
+  /// No description provided for @exercisesDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise'**
+  String get exercisesDetailTitle;
+
+  /// No description provided for @exercisesDetailLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load this exercise.\n{error}'**
+  String exercisesDetailLoadFailed(String error);
+
+  /// No description provided for @exercisesNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise not found.'**
+  String get exercisesNotFound;
+
+  /// No description provided for @exercisesDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {name}?'**
+  String exercisesDeleteTitle(String name);
+
+  /// No description provided for @exercisesDeleteWithHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'It will be removed from your library and from every picker. Workouts you already logged with it keep their sets.'**
+  String get exercisesDeleteWithHistory;
+
+  /// No description provided for @exercisesDeleteNoHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'It has never been logged, so it will be removed completely.'**
+  String get exercisesDeleteNoHistory;
+
+  /// No description provided for @exercisesArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} removed — past workouts kept it'**
+  String exercisesArchived(String name);
+
+  /// No description provided for @exercisesDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} deleted'**
+  String exercisesDeleted(String name);
+
+  /// No description provided for @exercisesMusclesWorked.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscles worked'**
+  String get exercisesMusclesWorked;
+
+  /// No description provided for @exercisesPreviewSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview coming soon'**
+  String get exercisesPreviewSoon;
+
+  /// No description provided for @exercisesEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit exercise'**
+  String get exercisesEditTitle;
+
+  /// No description provided for @exercisesNewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New exercise'**
+  String get exercisesNewTitle;
+
+  /// No description provided for @exercisesNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get exercisesNameLabel;
+
+  /// No description provided for @exercisesNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Cable Fly'**
+  String get exercisesNameHint;
+
+  /// No description provided for @exercisesMusclesHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Drives the muscle map, so pick everything this lift actually hits.'**
+  String get exercisesMusclesHelp;
+
+  /// No description provided for @exercisesEquipment.
+  ///
+  /// In en, this message translates to:
+  /// **'Equipment'**
+  String get exercisesEquipment;
+
+  /// No description provided for @exercisesPlateLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Loaded with plates'**
+  String get exercisesPlateLoaded;
+
+  /// No description provided for @exercisesPlateLoadedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log sets by tapping plates instead of typing a weight. For barbell and EZ-bar lifts.'**
+  String get exercisesPlateLoadedSubtitle;
+
+  /// No description provided for @exercisesImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get exercisesImage;
+
+  /// No description provided for @exercisesImageHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional. A GIF from your gallery animates just like the built-in ones.'**
+  String get exercisesImageHelp;
+
+  /// No description provided for @exercisesChooseImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose image'**
+  String get exercisesChooseImage;
+
+  /// No description provided for @exercisesReplaceImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get exercisesReplaceImage;
+
+  /// No description provided for @exercisesRemoveImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get exercisesRemoveImage;
+
+  /// No description provided for @exercisesAddToDayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Add to day} other{Add {count} exercises to day}}'**
+  String exercisesAddToDayTitle(int count);
+
+  /// No description provided for @exercisesNoDaysTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No workout days yet'**
+  String get exercisesNoDaysTitle;
+
+  /// No description provided for @exercisesNoDaysMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a split with at least one day in the Workout tab, then come back here.'**
+  String get exercisesNoDaysMessage;
+
+  /// No description provided for @exercisesNoteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get exercisesNoteLabel;
+
+  /// No description provided for @exercisesNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Seat height, pin, grip width, which machine…'**
+  String get exercisesNoteHint;
+
+  /// No description provided for @exercisesNoteClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get exercisesNoteClear;
+
+  /// No description provided for @exercisesNoteEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a note — seat height, pin, grip…'**
+  String get exercisesNoteEmpty;
+
+  /// No description provided for @exercisesEquipmentFilterActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Equipment ({count})'**
+  String exercisesEquipmentFilterActive(int count);
+
+  /// No description provided for @exercisesEquipmentFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by equipment'**
+  String get exercisesEquipmentFilter;
+
+  /// No description provided for @exercisesAllEquipment.
+  ///
+  /// In en, this message translates to:
+  /// **'All equipment'**
+  String get exercisesAllEquipment;
+
+  /// No description provided for @strengthTierBeginner.
+  ///
+  /// In en, this message translates to:
+  /// **'Beginner'**
+  String get strengthTierBeginner;
+
+  /// No description provided for @strengthTierNovice.
+  ///
+  /// In en, this message translates to:
+  /// **'Novice'**
+  String get strengthTierNovice;
+
+  /// No description provided for @strengthTierIntermediate.
+  ///
+  /// In en, this message translates to:
+  /// **'Intermediate'**
+  String get strengthTierIntermediate;
+
+  /// No description provided for @strengthTierAdvanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get strengthTierAdvanced;
+
+  /// No description provided for @strengthTierElite.
+  ///
+  /// In en, this message translates to:
+  /// **'Elite'**
+  String get strengthTierElite;
+
+  /// No description provided for @calculatorOneRmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'1RM calculator'**
+  String get calculatorOneRmTitle;
+
+  /// No description provided for @calculatorOneRmSetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The set you did'**
+  String get calculatorOneRmSetTitle;
+
+  /// No description provided for @calculatorOneRmWeightLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight lifted'**
+  String get calculatorOneRmWeightLabel;
+
+  /// No description provided for @calculatorOneRmReps.
+  ///
+  /// In en, this message translates to:
+  /// **'Reps'**
+  String get calculatorOneRmReps;
+
+  /// No description provided for @calculatorOneRmEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the weight you lifted and how many reps you got, and the estimate appears here.'**
+  String get calculatorOneRmEmpty;
+
+  /// No description provided for @calculatorOneRmEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated 1RM'**
+  String get calculatorOneRmEstimated;
+
+  /// No description provided for @calculatorOneRmSingleRep.
+  ///
+  /// In en, this message translates to:
+  /// **'A single rep is already your max — no estimating needed.'**
+  String get calculatorOneRmSingleRep;
+
+  /// No description provided for @calculatorOneRmFormulasAgree.
+  ///
+  /// In en, this message translates to:
+  /// **'All three formulas agree.'**
+  String get calculatorOneRmFormulasAgree;
+
+  /// Under the estimated 1RM. low and high are formatted weights, unit is kg or lbs.
+  ///
+  /// In en, this message translates to:
+  /// **'Average of {count} formulas • they range {low}–{high} {unit}'**
+  String calculatorOneRmRange(int count, String low, String high, String unit);
+
+  /// No description provided for @calculatorOneRmPlates.
+  ///
+  /// In en, this message translates to:
+  /// **'What plates is that?'**
+  String get calculatorOneRmPlates;
+
+  /// No description provided for @calculatorOneRmRoughGuess.
+  ///
+  /// In en, this message translates to:
+  /// **'Above {reps} reps this is a rough guess — the formula was built from heavy sets, and high-rep sets say more about your endurance than your max.'**
+  String calculatorOneRmRoughGuess(int reps);
+
+  /// No description provided for @calculatorFormulaTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Formula comparison'**
+  String get calculatorFormulaTitle;
+
+  /// No description provided for @calculatorFormulaEpleyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The common default'**
+  String get calculatorFormulaEpleyNote;
+
+  /// No description provided for @calculatorFormulaBrzyckiNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Conservative on high reps'**
+  String get calculatorFormulaBrzyckiNote;
+
+  /// No description provided for @calculatorFormulaLanderNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Close to Epley when heavy'**
+  String get calculatorFormulaLanderNote;
+
+  /// No description provided for @calculatorFormulaCaveat.
+  ///
+  /// In en, this message translates to:
+  /// **'All three are curve fits, not measurements. They line up on heavy sets and drift apart as the reps climb — if you need the real number, test it.'**
+  String get calculatorFormulaCaveat;
+
+  /// No description provided for @calculatorLoadTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What to load'**
+  String get calculatorLoadTitle;
+
+  /// No description provided for @calculatorLoadSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weights you should manage for a given rep count.'**
+  String get calculatorLoadSubtitle;
+
+  /// No description provided for @calculatorLoadReps.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 rep} other{{count} reps}}'**
+  String calculatorLoadReps(int count);
+
+  /// No description provided for @calculatorRankTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Strength rank'**
+  String get calculatorRankTitle;
+
+  /// No description provided for @calculatorYourLifts.
+  ///
+  /// In en, this message translates to:
+  /// **'Your lifts'**
+  String get calculatorYourLifts;
+
+  /// names is a comma-separated list of exercise names, which stay English.
+  ///
+  /// In en, this message translates to:
+  /// **'Not logged yet: {names}'**
+  String calculatorRankNotLogged(String names);
+
+  /// No description provided for @calculatorRankHowToReadTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How to read this'**
+  String get calculatorRankHowToReadTitle;
+
+  /// No description provided for @calculatorRankHowToReadMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Standards are population averages from published tables, not physics. Limb lengths and bodyweight both skew them — treat a rank as a rough bracket, not a verdict.'**
+  String get calculatorRankHowToReadMessage;
+
+  /// Which strength standards table the ranks use. sex is male or female.
+  ///
+  /// In en, this message translates to:
+  /// **'{sex, select, female{Female standards} other{Male standards}}'**
+  String calculatorRankStandards(String sex);
+
+  /// What the ranks are computed from. standards is calculatorRankStandards, bodyweight a formatted weight.
+  ///
+  /// In en, this message translates to:
+  /// **'{standards} • {bodyweight} bodyweight'**
+  String calculatorRankBasis(String standards, String bodyweight);
+
+  /// As calculatorRankBasis, with the day the bodyweight was measured.
+  ///
+  /// In en, this message translates to:
+  /// **'{standards} • {bodyweight} bodyweight ({date})'**
+  String calculatorRankBasisDated(
+    String standards,
+    String bodyweight,
+    String date,
+  );
+
+  /// Switches the standards table to the other sex. sex is the table switched to.
+  ///
+  /// In en, this message translates to:
+  /// **'{sex, select, female{Use female} other{Use male}}'**
+  String calculatorRankUseSex(String sex);
+
+  /// No description provided for @calculatorLiftTested.
+  ///
+  /// In en, this message translates to:
+  /// **'{weight} tested • {ratio}× bodyweight'**
+  String calculatorLiftTested(String weight, String ratio);
+
+  /// No description provided for @calculatorLiftEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'{weight} estimated • {ratio}× bodyweight'**
+  String calculatorLiftEstimated(String weight, String ratio);
+
+  /// No description provided for @calculatorLiftTopTier.
+  ///
+  /// In en, this message translates to:
+  /// **'Top tier — nothing above this'**
+  String get calculatorLiftTopTier;
+
+  /// How much more 1RM reaches the next strength tier. tier is a strengthTier label.
+  ///
+  /// In en, this message translates to:
+  /// **'{weight} to {tier}'**
+  String calculatorLiftToNext(String weight, String tier);
+
+  /// No description provided for @calculatorNothingRankedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No ranked lifts yet'**
+  String get calculatorNothingRankedTitle;
+
+  /// No description provided for @calculatorNothingRankedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Log a set of any barbell or cable lift — bench, squat, deadlift, press, row, curl, pulldown — and its rank appears here. Dumbbell, machine and bodyweight work is left out: there is no way to compare those numbers between two gyms.'**
+  String get calculatorNothingRankedMessage;
+
+  /// No description provided for @calculatorSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Before we can rank you'**
+  String get calculatorSetupTitle;
+
+  /// No description provided for @calculatorSetupMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'A rank compares your lifts to your own bodyweight, so it needs two things from you.'**
+  String get calculatorSetupMessage;
+
+  /// No description provided for @calculatorSetupSexTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Which standards should we use?'**
+  String get calculatorSetupSexTitle;
+
+  /// No description provided for @calculatorSetupSexMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Published strength standards differ by sex: a bodyweight bench press is intermediate for men and advanced for women. Picking the wrong table would just give you a wrong rank.'**
+  String get calculatorSetupSexMessage;
+
+  /// No description provided for @calculatorSetupBodyweightTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log your bodyweight'**
+  String get calculatorSetupBodyweightTitle;
+
+  /// No description provided for @calculatorSetupBodyweightMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Ranks are a ratio of what you lift to what you weigh. Add your weight under Progress → Measurements and it shows up here.'**
+  String get calculatorSetupBodyweightMessage;
+
+  /// No description provided for @calculatorSetupOpenMeasurements.
+  ///
+  /// In en, this message translates to:
+  /// **'Open measurements'**
+  String get calculatorSetupOpenMeasurements;
+
+  /// No description provided for @calculatorBadgeHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'STRENGTH RANK'**
+  String get calculatorBadgeHeading;
+
+  /// No description provided for @calculatorBadgeTested.
+  ///
+  /// In en, this message translates to:
+  /// **'{weight} tested · {ratio}× bodyweight'**
+  String calculatorBadgeTested(String weight, String ratio);
+
+  /// No description provided for @calculatorBadgeEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'{weight} estimated · {ratio}× bodyweight'**
+  String calculatorBadgeEstimated(String weight, String ratio);
+
+  /// No description provided for @calculatorBadgeTopTier.
+  ///
+  /// In en, this message translates to:
+  /// **'Top tier'**
+  String get calculatorBadgeTopTier;
+
+  /// No description provided for @calculatorBadgeToNext.
+  ///
+  /// In en, this message translates to:
+  /// **'+{weight} to {tier}'**
+  String calculatorBadgeToNext(String weight, String tier);
+
+  /// No description provided for @calculatorBadgeNudgeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This lift can be ranked'**
+  String get calculatorBadgeNudgeTitle;
+
+  /// No description provided for @calculatorBadgeNudgeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your bodyweight and pick a standards table to see where you sit.'**
+  String get calculatorBadgeNudgeMessage;
+
+  /// No description provided for @statsReadingVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume'**
+  String get statsReadingVolume;
+
+  /// No description provided for @statsReadingFatigue.
+  ///
+  /// In en, this message translates to:
+  /// **'Fatigue'**
+  String get statsReadingFatigue;
+
+  /// No description provided for @statsFatigueEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything is recovered — nothing you have trained recently is still weighing on you.'**
+  String get statsFatigueEmpty;
+
+  /// No description provided for @statsVolumeEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No training logged in the last 7 days — finish a workout to light up your muscle map.'**
+  String get statsVolumeEmpty;
+
+  /// No description provided for @statsFatigueCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Brighter means less recovered — recent work halves every two days.'**
+  String get statsFatigueCaption;
+
+  /// No description provided for @statsVolumeCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Brighter means more volume this week, relative to your hardest-hit muscle.'**
+  String get statsVolumeCaption;
+
+  /// No description provided for @statsFatigueContrastCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Each muscle has its own colour. Brighter still means less recovered.'**
+  String get statsFatigueContrastCaption;
+
+  /// No description provided for @statsRankNeedsSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Ranks compare your lifts to your own bodyweight, so they need your bodyweight and which standards table to use.'**
+  String get statsRankNeedsSetup;
+
+  /// No description provided for @statsRankSetUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Set it up'**
+  String get statsRankSetUp;
+
+  /// No description provided for @statsRankEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Log a barbell or cable lift — bench, squat, deadlift, press, row, curl — and its medal appears here.'**
+  String get statsRankEmpty;
+
+  /// No description provided for @statsRankFullBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'See the full breakdown'**
+  String get statsRankFullBreakdown;
+
+  /// No description provided for @statsOverallLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Overall'**
+  String get statsOverallLabel;
+
+  /// Under the overall strength tier, when every ranked lift has the same tier.
+  ///
+  /// In en, this message translates to:
+  /// **'Every ranked lift is {tier, select, beginner{beginner} novice{novice} intermediate{intermediate} advanced{advanced} other{elite}}.'**
+  String statsOverallEvery(String tier);
+
+  /// Under the overall strength tier, which is the weakest lift's; best is the strongest lift's tier.
+  ///
+  /// In en, this message translates to:
+  /// **'Your weakest ranked lift. Your best is {best, select, beginner{beginner} novice{novice} intermediate{intermediate} advanced{advanced} other{elite}}.'**
+  String statsOverallWeakest(String best);
+
+  /// No description provided for @statsRankRowTested.
+  ///
+  /// In en, this message translates to:
+  /// **'{tier} • {weight} tested'**
+  String statsRankRowTested(String tier, String weight);
+
+  /// No description provided for @statsRankRowEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'{tier} • {weight} est.'**
+  String statsRankRowEstimated(String tier, String weight);
+
+  /// No description provided for @statsRankRowTop.
+  ///
+  /// In en, this message translates to:
+  /// **'Top'**
+  String get statsRankRowTop;
+
+  /// No description provided for @statsAllTimeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All time'**
+  String get statsAllTimeTitle;
+
+  /// Label under the number of workouts; the number is shown above it.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{workout} other{workouts}}'**
+  String statsTotalsWorkouts(int count);
+
+  /// No description provided for @statsTotalsSets.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{set} other{sets}}'**
+  String statsTotalsSets(int count);
+
+  /// No description provided for @statsTotalsTrained.
+  ///
+  /// In en, this message translates to:
+  /// **'trained'**
+  String get statsTotalsTrained;
+
+  /// No description provided for @statsTotalsLifted.
+  ///
+  /// In en, this message translates to:
+  /// **'lifted'**
+  String get statsTotalsLifted;
+
+  /// No description provided for @statsTotalsDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{day} other{days}}'**
+  String statsTotalsDays(int count);
+
+  /// Label under the current streak in days; the number is shown above it.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{day streak}}'**
+  String statsTotalsStreak(int count);
+
+  /// Lifetime volume compared to something heavy. times is a formatted number like 2.3.
+  ///
+  /// In en, this message translates to:
+  /// **'That is {times}× a grand piano.'**
+  String statsComparisonPiano(String times);
+
+  /// No description provided for @statsComparisonCar.
+  ///
+  /// In en, this message translates to:
+  /// **'That is {times}× a small car.'**
+  String statsComparisonCar(String times);
+
+  /// No description provided for @statsComparisonRhino.
+  ///
+  /// In en, this message translates to:
+  /// **'That is {times}× a rhino.'**
+  String statsComparisonRhino(String times);
+
+  /// No description provided for @statsComparisonBus.
+  ///
+  /// In en, this message translates to:
+  /// **'That is {times}× a London bus.'**
+  String statsComparisonBus(String times);
+
+  /// No description provided for @statsComparisonWhale.
+  ///
+  /// In en, this message translates to:
+  /// **'That is {times}× a humpback whale.'**
+  String statsComparisonWhale(String times);
+
+  /// No description provided for @statsComparisonJumbo.
+  ///
+  /// In en, this message translates to:
+  /// **'That is {times}× a loaded 747.'**
+  String statsComparisonJumbo(String times);
+
+  /// No description provided for @caloriesLogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Calorie log'**
+  String get caloriesLogTitle;
+
+  /// No description provided for @caloriesLogLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the log.\n{error}'**
+  String caloriesLogLoadFailed(String error);
+
+  /// No description provided for @caloriesAddMeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Add meal'**
+  String get caloriesAddMeal;
+
+  /// No description provided for @commonPreviousDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous day'**
+  String get commonPreviousDay;
+
+  /// No description provided for @commonNextDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Next day'**
+  String get commonNextDay;
+
+  /// No description provided for @caloriesNoMeals.
+  ///
+  /// In en, this message translates to:
+  /// **'No meals logged for this day yet.'**
+  String get caloriesNoMeals;
+
+  /// No description provided for @caloriesMealsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Meals'**
+  String get caloriesMealsTitle;
+
+  /// Calories still left today under the goal.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} left'**
+  String caloriesLeft(int count);
+
+  /// Calories eaten today beyond the goal.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} over'**
+  String caloriesOver(int count);
+
+  /// A meal's macros in grams: protein, carbs, fat.
+  ///
+  /// In en, this message translates to:
+  /// **'P {protein}g • C {carbs}g • F {fat}g'**
+  String caloriesMacroLine(int protein, int carbs, int fat);
+
+  /// No description provided for @caloriesDeleteEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete entry'**
+  String get caloriesDeleteEntry;
+
+  /// No description provided for @caloriesMealLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal'**
+  String get caloriesMealLabel;
+
+  /// No description provided for @caloriesMealHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Chicken & rice'**
+  String get caloriesMealHint;
+
+  /// No description provided for @caloriesCaloriesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories (kcal)'**
+  String get caloriesCaloriesLabel;
+
+  /// No description provided for @caloriesProteinLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Protein g'**
+  String get caloriesProteinLabel;
+
+  /// No description provided for @caloriesCarbsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Carbs g'**
+  String get caloriesCarbsLabel;
+
+  /// No description provided for @caloriesFatLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat g'**
+  String get caloriesFatLabel;
+
+  /// No description provided for @caloriesWeekTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get caloriesWeekTitle;
+
+  /// No description provided for @caloriesWeekLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the week.\n{error}'**
+  String caloriesWeekLoadFailed(String error);
+
+  /// No description provided for @caloriesWeekCalories.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories'**
+  String get caloriesWeekCalories;
+
+  /// No description provided for @caloriesWeekNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing logged in the last 7 days.'**
+  String get caloriesWeekNothing;
+
+  /// No description provided for @caloriesWeekSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{average} kcal average • {onTarget} of {logged, plural, =1{1 logged day} other{{logged} logged days}} within goal'**
+  String caloriesWeekSummary(int average, int onTarget, int logged);
+
+  /// No description provided for @caloriesWeekGoalLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashed line = daily goal ({goal} kcal)'**
+  String caloriesWeekGoalLine(int goal);
+
+  /// No description provided for @caloriesMacrosTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Macros'**
+  String get caloriesMacrosTitle;
+
+  /// No description provided for @caloriesMacrosEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Add meals with macros to see your split.'**
+  String get caloriesMacrosEmpty;
+
+  /// No description provided for @caloriesMacroProtein.
+  ///
+  /// In en, this message translates to:
+  /// **'Protein'**
+  String get caloriesMacroProtein;
+
+  /// No description provided for @caloriesMacroCarbs.
+  ///
+  /// In en, this message translates to:
+  /// **'Carbs'**
+  String get caloriesMacroCarbs;
+
+  /// No description provided for @caloriesMacroFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat'**
+  String get caloriesMacroFat;
+
+  /// One macro in the legend: grams eaten and its share of the day's calories.
+  ///
+  /// In en, this message translates to:
+  /// **'{grams}g · {percent}%'**
+  String caloriesMacroShare(int grams, int percent);
+
+  /// No description provided for @calendarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar'**
+  String get calendarTitle;
+
+  /// No description provided for @calendarPreviousMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous month'**
+  String get calendarPreviousMonth;
+
+  /// No description provided for @calendarNextMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Next month'**
+  String get calendarNextMonth;
+
+  /// Screen-reader label of a calendar day with a finished workout.
+  ///
+  /// In en, this message translates to:
+  /// **'{date}, trained'**
+  String calendarDayTrainedSemantics(String date);
+
+  /// Under the calendar, for a tapped day with no workout. day is 'Today', 'Yesterday' or a date.
+  ///
+  /// In en, this message translates to:
+  /// **'{day} — rest day'**
+  String calendarRestDay(String day);
+
+  /// No description provided for @calendarDaySets.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 set} other{{count} sets}}'**
+  String calendarDaySets(int count);
+
+  /// No description provided for @goalsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Goals'**
+  String get goalsTitle;
+
+  /// No description provided for @goalsNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New goal'**
+  String get goalsNew;
+
+  /// No description provided for @goalsExercise.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise'**
+  String get goalsExercise;
+
+  /// A bodyweight goal's title. weight is the formatted target.
+  ///
+  /// In en, this message translates to:
+  /// **'Bodyweight · {weight}'**
+  String goalsTitleBodyweight(String weight);
+
+  /// No description provided for @goalsWorkoutsPerWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 workout a week} other{{count} workouts a week}}'**
+  String goalsWorkoutsPerWeek(int count);
+
+  /// Workouts done this week out of the weekly goal, e.g. 2 of 3.
+  ///
+  /// In en, this message translates to:
+  /// **'{current} of {target}'**
+  String goalsValueOf(int current, int target);
+
+  /// No description provided for @goalsCaptionWeekDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done this week'**
+  String get goalsCaptionWeekDone;
+
+  /// No description provided for @goalsCaptionWeekToGo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} to go this week'**
+  String goalsCaptionWeekToGo(int count);
+
+  /// Weeks in a row a weekly goal was met; only shown from 2 up.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} weeks in a row'**
+  String goalsCaptionWeeksInARow(int count);
+
+  /// No description provided for @goalsCaptionReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Reached {date}'**
+  String goalsCaptionReached(String date);
+
+  /// No description provided for @goalsCaptionWasDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Was due {date}'**
+  String goalsCaptionWasDue(String date);
+
+  /// No description provided for @goalsCaptionDueToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Due today'**
+  String get goalsCaptionDueToday;
+
+  /// No description provided for @goalsCaptionDaysLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day left} other{{count} days left}}'**
+  String goalsCaptionDaysLeft(int count);
+
+  /// No description provided for @goalsCaptionBy.
+  ///
+  /// In en, this message translates to:
+  /// **'By {date}'**
+  String goalsCaptionBy(String date);
+
+  /// No description provided for @goalsCaptionNotTrained.
+  ///
+  /// In en, this message translates to:
+  /// **'Not trained yet'**
+  String get goalsCaptionNotTrained;
+
+  /// No description provided for @goalsCaptionNoWeighIn.
+  ///
+  /// In en, this message translates to:
+  /// **'No weigh-in yet'**
+  String get goalsCaptionNoWeighIn;
+
+  /// No description provided for @goalsCaptionHeaviest.
+  ///
+  /// In en, this message translates to:
+  /// **'Heaviest working set'**
+  String get goalsCaptionHeaviest;
+
+  /// No description provided for @goalsCaptionLatestWeighIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest weigh-in'**
+  String get goalsCaptionLatestWeighIn;
+
+  /// No description provided for @goalsProblemPastDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a date that has not passed yet.'**
+  String get goalsProblemPastDate;
+
+  /// No description provided for @goalsProblemChooseExercise.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the exercise.'**
+  String get goalsProblemChooseExercise;
+
+  /// No description provided for @goalsProblemSetWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Set the weight to reach.'**
+  String get goalsProblemSetWeight;
+
+  /// No description provided for @goalsProblemAlreadyLifted.
+  ///
+  /// In en, this message translates to:
+  /// **'You have already lifted that — aim higher.'**
+  String get goalsProblemAlreadyLifted;
+
+  /// No description provided for @goalsProblemWorkoutsRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick between 1 and {max} workouts a week.'**
+  String goalsProblemWorkoutsRange(int max);
+
+  /// No description provided for @goalsProblemLogWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Log your current weight first.'**
+  String get goalsProblemLogWeight;
+
+  /// No description provided for @goalsProblemSameWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'That is the weight you are now — pick a different one.'**
+  String get goalsProblemSameWeight;
+
+  /// No description provided for @goalsSectionWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Working on'**
+  String get goalsSectionWorking;
+
+  /// No description provided for @goalsSectionReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Reached'**
+  String get goalsSectionReached;
+
+  /// No description provided for @goalsSectionArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived'**
+  String get goalsSectionArchived;
+
+  /// No description provided for @goalsActionsTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get goalsActionsTooltip;
+
+  /// No description provided for @goalsRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get goalsRestore;
+
+  /// No description provided for @goalsArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get goalsArchive;
+
+  /// No description provided for @goalsRestoreSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Back on Home and in the list'**
+  String get goalsRestoreSubtitle;
+
+  /// No description provided for @goalsArchiveSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Off Home, kept here for the record'**
+  String get goalsArchiveSubtitle;
+
+  /// No description provided for @goalsDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this goal?'**
+  String get goalsDeleteTitle;
+
+  /// No description provided for @goalsDeleteFrequencyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your workouts stay as they are. Only the goal goes.'**
+  String get goalsDeleteFrequencyMessage;
+
+  /// No description provided for @goalsDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your log stays as it is. Archive it instead to keep it on record.'**
+  String get goalsDeleteMessage;
+
+  /// No description provided for @goalsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No goals yet'**
+  String get goalsEmptyTitle;
+
+  /// No description provided for @goalsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'A weight on a lift by a date, a number of workouts every week, or a bodyweight to reach. Progress fills in from what you log.'**
+  String get goalsEmptyMessage;
+
+  /// No description provided for @goalsSetGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a goal'**
+  String get goalsSetGoal;
+
+  /// No description provided for @goalsCardActive.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} active'**
+  String goalsCardActive(int count);
+
+  /// Under the goals on Home: how many active goals are not listed.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} more'**
+  String goalsCardMore(int count);
+
+  /// No description provided for @goalsLinkYourGoals.
+  ///
+  /// In en, this message translates to:
+  /// **'Your goals'**
+  String get goalsLinkYourGoals;
+
+  /// No description provided for @goalsLinkEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'A lift, a weekly habit or a bodyweight to reach'**
+  String get goalsLinkEmpty;
+
+  /// No description provided for @goalsLinkReachedOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'{reached} reached — set the next one'**
+  String goalsLinkReachedOnly(int reached);
+
+  /// No description provided for @goalsLinkActiveOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'{active} in progress'**
+  String goalsLinkActiveOnly(int active);
+
+  /// No description provided for @goalsLinkBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'{active} in progress, {reached} reached'**
+  String goalsLinkBoth(int active, int reached);
+
+  /// No description provided for @goalsCelebrationWeekDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Week done'**
+  String get goalsCelebrationWeekDone;
+
+  /// No description provided for @goalsCelebrationReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal reached'**
+  String get goalsCelebrationReached;
+
+  /// No description provided for @goalsCelebrationNice.
+  ///
+  /// In en, this message translates to:
+  /// **'Nice'**
+  String get goalsCelebrationNice;
+
+  /// No description provided for @goalsFormEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit goal'**
+  String get goalsFormEditTitle;
+
+  /// No description provided for @goalsFormBy.
+  ///
+  /// In en, this message translates to:
+  /// **'By'**
+  String get goalsFormBy;
+
+  /// No description provided for @goalsFormNoDeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'No deadline'**
+  String get goalsFormNoDeadline;
+
+  /// No description provided for @goalsFormSaveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get goalsFormSaveChanges;
+
+  /// No description provided for @goalsFormSaveGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Save goal'**
+  String get goalsFormSaveGoal;
+
+  /// No description provided for @goalsFormChooseExercise.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an exercise'**
+  String get goalsFormChooseExercise;
+
+  /// No description provided for @goalsFormLiftHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Counts your heaviest working set — warm-ups and drop sets never do — or a tested max.'**
+  String get goalsFormLiftHint;
+
+  /// No description provided for @goalsFormLiftHintBest.
+  ///
+  /// In en, this message translates to:
+  /// **'Your best so far: {weight}. Counts your heaviest working set, or a tested max.'**
+  String goalsFormLiftHintBest(String weight);
+
+  /// No description provided for @goalsFormTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Target'**
+  String get goalsFormTarget;
+
+  /// No description provided for @goalsFormPickLift.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal for which lift?'**
+  String get goalsFormPickLift;
+
+  /// No description provided for @goalsFormHowOften.
+  ///
+  /// In en, this message translates to:
+  /// **'How often'**
+  String get goalsFormHowOften;
+
+  /// No description provided for @goalsFormWorkoutsAWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts a week'**
+  String get goalsFormWorkoutsAWeek;
+
+  /// No description provided for @goalsFormFrequencyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Counts finished workouts, free ones included. Weeks start on {weekday}.'**
+  String goalsFormFrequencyHint(String weekday);
+
+  /// No description provided for @goalsFormStartedFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Started from {weight}.'**
+  String goalsFormStartedFrom(String weight);
+
+  /// day is 'Today', 'Yesterday' or a short date.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting from {weight}, logged {day}.'**
+  String goalsFormStartingFrom(String weight, String day);
+
+  /// No description provided for @goalsFormNoWeighIn.
+  ///
+  /// In en, this message translates to:
+  /// **'No weigh-in yet. What do you weigh today? It is saved to your measurements too.'**
+  String get goalsFormNoWeighIn;
+
+  /// No description provided for @goalsFormNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Now'**
+  String get goalsFormNow;
+
+  /// No description provided for @goalsFormReachBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach it by'**
+  String get goalsFormReachBy;
+
+  /// A deadline offered in the picker; count is 4, 8 or 12.
+  ///
+  /// In en, this message translates to:
+  /// **'In {count} weeks'**
+  String goalsFormInWeeks(int count);
+
+  /// No description provided for @goalsFormInSixMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'In 6 months'**
+  String get goalsFormInSixMonths;
+
+  /// No description provided for @goalsFormPickDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a date'**
+  String get goalsFormPickDate;
+
+  /// No description provided for @goalsFormSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save that goal.\n{error}'**
+  String goalsFormSaveFailed(String error);
+
+  /// No description provided for @progressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get progressTitle;
+
+  /// No description provided for @progressViewBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Body'**
+  String get progressViewBody;
+
+  /// No description provided for @progressViewTrends.
+  ///
+  /// In en, this message translates to:
+  /// **'Trends'**
+  String get progressViewTrends;
+
+  /// No description provided for @progressViewAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'All-time'**
+  String get progressViewAllTime;
+
+  /// No description provided for @progressPerExercise.
+  ///
+  /// In en, this message translates to:
+  /// **'Per exercise'**
+  String get progressPerExercise;
+
+  /// No description provided for @progressTrackedByHand.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracked by hand'**
+  String get progressTrackedByHand;
+
+  /// No description provided for @progressMeasurementsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Measurements'**
+  String get progressMeasurementsTitle;
+
+  /// No description provided for @progressMeasurementsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight, waist, arms — and how they have moved'**
+  String get progressMeasurementsSubtitle;
+
+  /// No description provided for @progressPhotosTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress photos'**
+  String get progressPhotosTitle;
+
+  /// No description provided for @progressPhotosSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare two dates side by side'**
+  String get progressPhotosSubtitle;
+
+  /// No description provided for @progressNoHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing logged yet'**
+  String get progressNoHistoryTitle;
+
+  /// No description provided for @progressNoHistoryMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish a workout and its exercises appear here, each with its own chart.'**
+  String get progressNoHistoryMessage;
+
+  /// No description provided for @progressClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get progressClear;
+
+  /// No description provided for @progressExerciseLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load progress.\n{error}'**
+  String progressExerciseLoadFailed(String error);
+
+  /// No description provided for @progressExerciseNoSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'No logged sessions for this exercise yet.'**
+  String get progressExerciseNoSessions;
+
+  /// No description provided for @progressExerciseRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal records'**
+  String get progressExerciseRecords;
+
+  /// No description provided for @progressExerciseLongestHold.
+  ///
+  /// In en, this message translates to:
+  /// **'Longest hold'**
+  String get progressExerciseLongestHold;
+
+  /// No description provided for @progressExerciseTopSetWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Top-set weight'**
+  String get progressExerciseTopSetWeight;
+
+  /// No description provided for @progressExerciseLongestHoldCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'The longest single hold each session.'**
+  String get progressExerciseLongestHoldCaption;
+
+  /// No description provided for @progressExerciseTopSetCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'The heaviest set you did each session.'**
+  String get progressExerciseTopSetCaption;
+
+  /// No description provided for @progressExerciseTrendHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Log this exercise in more sessions to see a trend line.'**
+  String get progressExerciseTrendHint;
+
+  /// No description provided for @progressOneRmTested.
+  ///
+  /// In en, this message translates to:
+  /// **'Tested 1RM'**
+  String get progressOneRmTested;
+
+  /// No description provided for @progressOneRmEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated 1RM'**
+  String get progressOneRmEstimated;
+
+  /// No description provided for @progressOneRmTestedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Tested on {date}'**
+  String progressOneRmTestedOn(String date);
+
+  /// A tested 1RM, with the estimate from the log beside it as a second opinion.
+  ///
+  /// In en, this message translates to:
+  /// **'Tested on {date} • log suggests ≈ {weight}'**
+  String progressOneRmTestedOnSuggests(String date, String weight);
+
+  /// No description provided for @progressOneRmTapToEnter.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to enter a max you tested'**
+  String get progressOneRmTapToEnter;
+
+  /// No description provided for @progressOneRmSingle.
+  ///
+  /// In en, this message translates to:
+  /// **'You lifted this for a single on {date}'**
+  String progressOneRmSingle(String date);
+
+  /// Which logged set the estimated 1RM comes from.
+  ///
+  /// In en, this message translates to:
+  /// **'From {weight} × {reps} on {date}'**
+  String progressOneRmFrom(String weight, int reps, String date);
+
+  /// No description provided for @progressRecordHeaviest.
+  ///
+  /// In en, this message translates to:
+  /// **'Heaviest'**
+  String get progressRecordHeaviest;
+
+  /// No description provided for @progressRecordMostTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Most time'**
+  String get progressRecordMostTime;
+
+  /// No description provided for @progressRecordBestVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Best volume'**
+  String get progressRecordBestVolume;
+
+  /// No description provided for @progressRecordInASession.
+  ///
+  /// In en, this message translates to:
+  /// **'in a session • {date}'**
+  String progressRecordInASession(String date);
+
+  /// No description provided for @progressMeasurementsHistoryTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get progressMeasurementsHistoryTooltip;
+
+  /// No description provided for @progressMeasurementsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load measurements.\n{error}'**
+  String progressMeasurementsLoadFailed(String error);
+
+  /// No description provided for @progressMeasurementsLastUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated {date}'**
+  String progressMeasurementsLastUpdated(String date);
+
+  /// No description provided for @progressMeasurementsNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing measured on this day yet — tap a row to add it.'**
+  String get progressMeasurementsNothing;
+
+  /// The previous measurement of a field, under its name. value includes its unit.
+  ///
+  /// In en, this message translates to:
+  /// **'Was {value} on {date}'**
+  String progressMeasurementsWas(String value, String date);
+
+  /// No description provided for @progressHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Measurement history'**
+  String get progressHistoryTitle;
+
+  /// No description provided for @progressHistoryCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} measurements over {days, plural, =1{1 day} other{{days} days}}'**
+  String progressHistoryCount(int count, int days);
+
+  /// field is the measurement: weight, chest, waist, hips, arms or legs.
+  ///
+  /// In en, this message translates to:
+  /// **'No {field, select, weight{weight} chest{chest} waist{waist} hips{hips} arms{arms} other{legs}} measurements yet'**
+  String progressHistoryNone(String field);
+
+  /// No description provided for @progressHistoryOnlyOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Only one {field, select, weight{weight} chest{chest} waist{waist} hips{hips} arms{arms} other{legs}} measurement so far'**
+  String progressHistoryOnlyOne(String field);
+
+  /// No description provided for @progressHistoryNoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Measure your {field, select, weight{weight} chest{chest} waist{waist} hips{hips} arms{arms} other{legs}} on the measurements screen and it will show up here.'**
+  String progressHistoryNoneHint(String field);
+
+  /// No description provided for @progressHistoryOnlyOneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} on {date}. Log it again on another day to see a trend.'**
+  String progressHistoryOnlyOneHint(String value, String date);
+
+  /// No description provided for @progressPhotosCompareTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare'**
+  String get progressPhotosCompareTooltip;
+
+  /// No description provided for @progressPhotosLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load photos.\n{error}'**
+  String progressPhotosLoadFailed(String error);
+
+  /// No description provided for @progressPhotosAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add photo'**
+  String get progressPhotosAdd;
+
+  /// No description provided for @progressPhotosClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get progressPhotosClose;
+
+  /// No description provided for @progressPhotosDeleteTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete photo'**
+  String get progressPhotosDeleteTooltip;
+
+  /// No description provided for @progressPhotosDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete photo?'**
+  String get progressPhotosDeleteTitle;
+
+  /// No description provided for @progressPhotosDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes the photo from Gymfy for good. The original in your gallery is untouched.'**
+  String get progressPhotosDeleteMessage;
+
+  /// No description provided for @progressPhotosNoteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional)'**
+  String get progressPhotosNoteLabel;
+
+  /// No description provided for @progressPhotosNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. front relaxed'**
+  String get progressPhotosNoteHint;
+
+  /// No description provided for @progressPhotosEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No photos yet'**
+  String get progressPhotosEmptyTitle;
+
+  /// No description provided for @progressPhotosEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo from your gallery and Gymfy keeps its own copy, so your progress shots stay put even if you clear your gallery.'**
+  String get progressPhotosEmptyMessage;
+
+  /// No description provided for @progressCompareTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare'**
+  String get progressCompareTitle;
+
+  /// No description provided for @progressComparePickBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the \"before\" photo'**
+  String get progressComparePickBefore;
+
+  /// No description provided for @progressComparePickAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the \"after\" photo'**
+  String get progressComparePickAfter;
+
+  /// No description provided for @progressCompareSameDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Same day'**
+  String get progressCompareSameDay;
+
+  /// No description provided for @progressCompareDaysApart.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day apart} other{{count} days apart}}'**
+  String progressCompareDaysApart(int count);
+
+  /// No description provided for @progressCompareWeeksApart.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 week apart} other{{count} weeks apart}}'**
+  String progressCompareWeeksApart(int count);
+
+  /// No description provided for @progressCompareMonthsApart.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 month apart} other{{count} months apart}}'**
+  String progressCompareMonthsApart(int count);
+
+  /// No description provided for @progressCompareBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'Before'**
+  String get progressCompareBefore;
+
+  /// No description provided for @progressCompareAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'After'**
+  String get progressCompareAfter;
+
+  /// No description provided for @progressCompareNotEnoughTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to compare yet'**
+  String get progressCompareNotEnoughTitle;
+
+  /// No description provided for @progressCompareNotEnoughMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least two progress photos and you can fade between any two of them here.'**
+  String get progressCompareNotEnoughMessage;
+
+  /// No description provided for @progressActivityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get progressActivityTitle;
+
+  /// Under the year grid for a tapped day with no workout. day is 'Today', 'Yesterday' or a date.
+  ///
+  /// In en, this message translates to:
+  /// **'{day} — rest day'**
+  String progressActivityRestDay(String day);
+
+  /// No description provided for @progressActivityUntimed.
+  ///
+  /// In en, this message translates to:
+  /// **'{day} — trained, length not recorded'**
+  String progressActivityUntimed(String day);
+
+  /// No description provided for @progressActivityTrained.
+  ///
+  /// In en, this message translates to:
+  /// **'{day} — {duration} trained'**
+  String progressActivityTrained(String day, String duration);
+
+  /// A day with timed workouts and one more whose length was never recorded.
+  ///
+  /// In en, this message translates to:
+  /// **'{day} — {duration} trained, and one more not recorded'**
+  String progressActivityTrainedPlusUntimed(String day, String duration);
+
+  /// No description provided for @progressActivityYear.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{1 day} other{{days} days}} • {duration} this year'**
+  String progressActivityYear(int days, String duration);
+
+  /// No description provided for @progressActivityLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Less'**
+  String get progressActivityLess;
+
+  /// No description provided for @progressActivityMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get progressActivityMore;
+
+  /// No description provided for @progressStreakTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak'**
+  String get progressStreakTitle;
+
+  /// No description provided for @progressStreakDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day} other{{count} days}}'**
+  String progressStreakDays(int count);
+
+  /// No description provided for @progressStreakCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'current'**
+  String get progressStreakCurrent;
+
+  /// No description provided for @progressStreakBest.
+  ///
+  /// In en, this message translates to:
+  /// **'best ever'**
+  String get progressStreakBest;
+
+  /// period is week, month or year.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing logged in the last {period, select, week{week} month{month} other{year}}.'**
+  String progressRecapEmpty(String period);
+
+  /// No description provided for @progressRecapVolumeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume'**
+  String get progressRecapVolumeTitle;
+
+  /// No description provided for @progressRecapVolumeDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'lifted in the last {period, select, week{week} month{month} other{year}}'**
+  String progressRecapVolumeDetail(String period);
+
+  /// No description provided for @progressRecapOneDay.
+  ///
+  /// In en, this message translates to:
+  /// **'One day is not a trend yet.'**
+  String get progressRecapOneDay;
+
+  /// No description provided for @progressRecapWorkoutsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts'**
+  String get progressRecapWorkoutsTitle;
+
+  /// No description provided for @progressRecapSessionsDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'sessions in the last {period, select, week{week} month{month} other{year}}'**
+  String progressRecapSessionsDetail(String period);
+
+  /// No description provided for @progressRecapSessionsRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'sessions • {count, plural, =1{1 personal record} other{{count} personal records}}'**
+  String progressRecapSessionsRecords(int count);
+
+  /// No description provided for @progressRecapWorkoutsTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 workout} other{{count} workouts}}'**
+  String progressRecapWorkoutsTooltip(int count);
+
+  /// No description provided for @progressRecapMusclesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What you trained'**
+  String get progressRecapMusclesTitle;
+
+  /// No description provided for @progressRecapMusclesDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'took the most sets'**
+  String get progressRecapMusclesDetail;
+
+  /// No description provided for @progressRecapMuscleSets.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 set} other{{count} sets}}'**
+  String progressRecapMuscleSets(int count);
+
+  /// No description provided for @reviewsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviews'**
+  String get reviewsTitle;
+
+  /// No description provided for @reviewsMonthlyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly review'**
+  String get reviewsMonthlyTitle;
+
+  /// No description provided for @reviewsYearTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Year in training'**
+  String get reviewsYearTitle;
+
+  /// period is a month and year, e.g. September 2026.
+  ///
+  /// In en, this message translates to:
+  /// **'{period} — and how it compares'**
+  String reviewsMonthlySubtitle(String period);
+
+  /// period is a year, e.g. 2026.
+  ///
+  /// In en, this message translates to:
+  /// **'{period}, start to finish'**
+  String reviewsYearSubtitle(String period);
+
+  /// No description provided for @reviewsShareTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Share as image'**
+  String get reviewsShareTooltip;
+
+  /// Title of the share sheet. period is a month and year, or a year.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your {period} review'**
+  String reviewsShareTitle(String period);
+
+  /// No description provided for @reviewsSaveImageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save image'**
+  String get reviewsSaveImageTitle;
+
+  /// No description provided for @reviewsImageSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Image saved — send it from your files.'**
+  String get reviewsImageSaved;
+
+  /// No description provided for @reviewsImageFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not make the image.\n{error}'**
+  String reviewsImageFailed(String error);
+
+  /// No description provided for @reviewsEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier'**
+  String get reviewsEarlier;
+
+  /// No description provided for @reviewsLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get reviewsLater;
+
+  /// period is a month and year, e.g. September 2026.
+  ///
+  /// In en, this message translates to:
+  /// **'No workouts in {period}.'**
+  String reviewsNoWorkoutsMonth(String period);
+
+  /// period is a year, e.g. 2026.
+  ///
+  /// In en, this message translates to:
+  /// **'No workouts in {period}.'**
+  String reviewsNoWorkoutsYear(String period);
+
+  /// span is month or year.
+  ///
+  /// In en, this message translates to:
+  /// **'Step back to an earlier {span, select, month{month} other{year}} with the arrows above.'**
+  String reviewsStepBack(String span);
+
+  /// No description provided for @reviewsExercisesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercises'**
+  String get reviewsExercisesTitle;
+
+  /// No description provided for @reviewsSets.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 set} other{{count} sets}}'**
+  String reviewsSets(int count);
+
+  /// No description provided for @reviewsWorkouts.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 workout} other{{count} workouts}}'**
+  String reviewsWorkouts(int count);
+
+  /// After a change on the review card: what it is compared against, e.g. 'vs August'.
+  ///
+  /// In en, this message translates to:
+  /// **'vs {period}'**
+  String reviewsVersus(String period);
+
+  /// No description provided for @reviewsCardMonthHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'YOUR MONTH IN TRAINING'**
+  String get reviewsCardMonthHeading;
+
+  /// No description provided for @reviewsCardYearHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'YOUR YEAR IN TRAINING'**
+  String get reviewsCardYearHeading;
+
+  /// period is a month name or a year.
+  ///
+  /// In en, this message translates to:
+  /// **'So far — {period} is not over yet'**
+  String reviewsCardSoFar(String period);
+
+  /// Label under the number of workouts; the number is shown above it.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{workout} other{workouts}}'**
+  String reviewsCardWorkouts(int count);
+
+  /// No description provided for @reviewsCardLifted.
+  ///
+  /// In en, this message translates to:
+  /// **'lifted'**
+  String get reviewsCardLifted;
+
+  /// No description provided for @reviewsCardTrained.
+  ///
+  /// In en, this message translates to:
+  /// **'trained'**
+  String get reviewsCardTrained;
+
+  /// Under the time trained; count workouts had no recorded length.
+  ///
+  /// In en, this message translates to:
+  /// **'trained, {count} not timed'**
+  String reviewsCardTrainedUntimed(int count);
+
+  /// Label under the number of personal records; the number is shown above it.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{personal record} other{personal records}}'**
+  String reviewsCardRecords(int count);
+
+  /// No description provided for @reviewsCardDaysTrained.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day trained} other{{count} days trained}}'**
+  String reviewsCardDaysTrained(int count);
+
+  /// No description provided for @reviewsCardLongestStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'longest streak {count, plural, =1{1 day} other{{count} days}}'**
+  String reviewsCardLongestStreak(int count);
+
+  /// No description provided for @reviewsCardTopExercises.
+  ///
+  /// In en, this message translates to:
+  /// **'Top exercises'**
+  String get reviewsCardTopExercises;
+
+  /// No description provided for @reviewsCardMostTrained.
+  ///
+  /// In en, this message translates to:
+  /// **'Most trained'**
+  String get reviewsCardMostTrained;
+
+  /// No description provided for @reviewsCardTrackedWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracked with Gymfy'**
+  String get reviewsCardTrackedWith;
+
+  /// No description provided for @healthConnectAvailabilityUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available on this phone'**
+  String get healthConnectAvailabilityUnsupported;
+
+  /// No description provided for @healthConnectAvailabilityNotInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Not installed'**
+  String get healthConnectAvailabilityNotInstalled;
+
+  /// No description provided for @healthConnectAvailabilityNeedsUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs an update'**
+  String get healthConnectAvailabilityNeedsUpdate;
+
+  /// No description provided for @healthConnectAvailabilityAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get healthConnectAvailabilityAvailable;
+
+  /// No description provided for @healthConnectIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Android\'s store for health data, on this phone. Gymfy can add your finished workouts to it and fill in your bodyweight from a smart scale. It all stays on the device — Gymfy has no internet access.'**
+  String get healthConnectIntro;
+
+  /// No description provided for @healthConnectChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking…'**
+  String get healthConnectChecking;
+
+  /// No description provided for @healthConnectInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get healthConnectInstall;
+
+  /// No description provided for @healthConnectUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get healthConnectUpdate;
+
+  /// No description provided for @healthConnectStoreFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the Play Store.'**
+  String get healthConnectStoreFailed;
+
+  /// No description provided for @healthConnectWriteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Write workouts'**
+  String get healthConnectWriteTitle;
+
+  /// No description provided for @healthConnectWriteSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Each workout you finish appears as strength training, with its name, start and end'**
+  String get healthConnectWriteSubtitle;
+
+  /// No description provided for @healthConnectReadTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Read bodyweight'**
+  String get healthConnectReadTitle;
+
+  /// No description provided for @healthConnectReadSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weigh-ins fill in days where you haven\'t entered a weight. A weight you typed is never replaced'**
+  String get healthConnectReadSubtitle;
+
+  /// No description provided for @healthConnectWriteRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect did not allow Gymfy to write workouts.'**
+  String get healthConnectWriteRefused;
+
+  /// No description provided for @healthConnectReadRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect did not allow Gymfy to read your weight.'**
+  String get healthConnectReadRefused;
+
+  /// No description provided for @healthConnectWeighInsAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Added 1 weigh-in to your measurements.} other{Added {count} weigh-ins to your measurements.}}'**
+  String healthConnectWeighInsAdded(int count);
+
+  /// No description provided for @healthConnectPermissionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions'**
+  String get healthConnectPermissionsTitle;
+
+  /// A switch is on but Health Connect has since revoked its permission. what is write, read or both.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect no longer lets Gymfy {what, select, write{write workouts} read{read your weight} other{write workouts or read your weight}}'**
+  String healthConnectPermissionsMissing(String what);
+
+  /// Whether each permission is granted; workouts and weight are yes or no.
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts: {workouts, select, yes{allowed} other{not allowed}} · Weight: {weight, select, yes{allowed} other{not allowed}}'**
+  String healthConnectPermissionsStatus(String workouts, String weight);
+
+  /// No description provided for @healthConnectGrant.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant'**
+  String get healthConnectGrant;
+
+  /// No description provided for @healthConnectBackfillTile.
+  ///
+  /// In en, this message translates to:
+  /// **'Write past workouts'**
+  String get healthConnectBackfillTile;
+
+  /// No description provided for @healthConnectBackfillTileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Only workouts finished from now on are written by themselves'**
+  String get healthConnectBackfillTileSubtitle;
+
+  /// No description provided for @healthConnectBackfillTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Write past workouts?'**
+  String get healthConnectBackfillTitle;
+
+  /// No description provided for @healthConnectBackfillMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Adds every finished workout from before you switched this on to Health Connect, as strength training with its start and end time. Workouts already there are not added twice.'**
+  String get healthConnectBackfillMessage;
+
+  /// No description provided for @healthConnectBackfillConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Write'**
+  String get healthConnectBackfillConfirm;
+
+  /// No description provided for @healthConnectWriteNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect is not allowing Gymfy to write workouts.'**
+  String get healthConnectWriteNotAllowed;
+
+  /// No description provided for @healthConnectBackfillWrote.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No workouts needed writing.} =1{Wrote 1 workout to Health Connect.} other{Wrote {count} workouts to Health Connect.}}'**
+  String healthConnectBackfillWrote(int count);
+
+  /// No description provided for @healthConnectBackfillUntimed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 without a recorded length was left out.} other{{count} without a recorded length were left out.}}'**
+  String healthConnectBackfillUntimed(int count);
+
+  /// No description provided for @healthConnectBackfillStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Then it stopped: {error}'**
+  String healthConnectBackfillStopped(String error);
+
+  /// No description provided for @healthConnectManageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage in Health Connect'**
+  String get healthConnectManageTitle;
+
+  /// No description provided for @healthConnectManageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke access, or delete what Gymfy wrote there'**
+  String get healthConnectManageSubtitle;
+
+  /// No description provided for @healthConnectOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open Health Connect.'**
+  String get healthConnectOpenFailed;
+
+  /// No description provided for @healthConnectLastError.
+  ///
+  /// In en, this message translates to:
+  /// **'Last sync with Health Connect failed: {error}'**
+  String healthConnectLastError(String error);
+
+  /// On the watch, under the workout's name.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No sets yet} =1{1 set logged} other{{count} sets logged}}'**
+  String wearSetsLogged(int count);
+
+  /// The watch's repeat button for a bodyweight set.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 rep} other{{count} reps}}'**
+  String wearRepeatReps(int count);
+
+  /// The watch's repeat button: the last working set. A plain x, which every watch font has.
+  ///
+  /// In en, this message translates to:
+  /// **'{weight} x {reps}'**
+  String wearRepeatSet(String weight, int reps);
+
+  /// No description provided for @backupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup & restore'**
+  String get backupTitle;
+
+  /// No description provided for @backupIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'One file with everything in Gymfy — workouts, plans, exercises, measurements, meals, settings and progress photos. Restore it on this phone or a new one. Nothing is uploaded anywhere.'**
+  String get backupIntro;
+
+  /// No description provided for @backupSectionBackUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up'**
+  String get backupSectionBackUp;
+
+  /// No description provided for @backupSaveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save a backup'**
+  String get backupSaveTitle;
+
+  /// No description provided for @backupSaveMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Saves a .{extension} file wherever you choose. Keep a copy somewhere other than this phone.'**
+  String backupSaveMessage(String extension);
+
+  /// No description provided for @backupSaveButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save backup'**
+  String get backupSaveButton;
+
+  /// No description provided for @backupSectionRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get backupSectionRestore;
+
+  /// No description provided for @backupRestoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from a backup'**
+  String get backupRestoreTitle;
+
+  /// No description provided for @backupRestoreMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Replaces everything on this phone with what is in the backup. You will see what it holds before anything changes.'**
+  String get backupRestoreMessage;
+
+  /// No description provided for @backupChooseButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose backup'**
+  String get backupChooseButton;
+
+  /// No description provided for @backupAutomaticTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic backup'**
+  String get backupAutomaticTitle;
+
+  /// No description provided for @backupSaveDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save your backup'**
+  String get backupSaveDialogTitle;
+
+  /// name is the backup's file name.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {name}'**
+  String backupSaved(String name);
+
+  /// No description provided for @backupSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the backup.\n{error}'**
+  String backupSaveFailed(String error);
+
+  /// No description provided for @backupFinishWorkoutFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish or discard your current workout before restoring.'**
+  String get backupFinishWorkoutFirst;
+
+  /// No description provided for @backupPickDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a backup'**
+  String get backupPickDialogTitle;
+
+  /// No description provided for @backupRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup restored.'**
+  String get backupRestored;
+
+  /// No description provided for @backupRestoreFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not restore that backup.\n{error}'**
+  String backupRestoreFailed(String error);
+
+  /// No description provided for @backupFolderPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder for backups'**
+  String get backupFolderPickerTitle;
+
+  /// No description provided for @backupCantWriteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Gymfy can\'t write there'**
+  String get backupCantWriteTitle;
+
+  /// Documents and Download are Android's folder names. folder is a path.
+  ///
+  /// In en, this message translates to:
+  /// **'Android only lets Gymfy save into some folders. Try a folder inside Documents or Download — or use Gymfy\'s own folder, which always works but is deleted if you uninstall the app:\n\n{folder}'**
+  String backupCantWriteMessage(String folder);
+
+  /// No description provided for @backupUseAppFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Gymfy\'s folder'**
+  String get backupUseAppFolder;
+
+  /// No description provided for @backupFolderFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not use that folder either.\n{problem}'**
+  String backupFolderFailed(String problem);
+
+  /// No description provided for @backupFolderSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Backups will be saved to {path}'**
+  String backupFolderSet(String path);
+
+  /// No description provided for @backupReplaceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace everything?'**
+  String get backupReplaceTitle;
+
+  /// Before a restore. date is when the backup was made, with the time.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup from {date}: {workouts, plural, =1{1 workout} other{{workouts} workouts}}, {sets, plural, =1{1 set} other{{sets} sets}}, {photos, plural, =1{1 photo} other{{photos} photos}}.\n\nEverything currently on this phone will be replaced by it. This cannot be undone — save a backup first if you might want today\'s data back.'**
+  String backupReplaceMessage(String date, int workouts, int sets, int photos);
+
+  /// No description provided for @backupRestoreButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get backupRestoreButton;
+
+  /// No description provided for @backupModeWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get backupModeWeekly;
+
+  /// No description provided for @backupModeAfterWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'After workout'**
+  String get backupModeAfterWorkout;
+
+  /// No description provided for @backupNoFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'No folder chosen'**
+  String get backupNoFolder;
+
+  /// No description provided for @backupLastFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Last automatic backup failed: {error}'**
+  String backupLastFailed(String error);
+
+  /// No description provided for @backupLastAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Last backup {date}'**
+  String backupLastAt(String date);
+
+  /// No description provided for @backupNoneYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No automatic backup yet'**
+  String get backupNoneYet;
+
+  /// No description provided for @backupChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get backupChange;
+
+  /// No description provided for @backupChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose'**
+  String get backupChoose;
+
+  /// No description provided for @backupNowButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up to folder now'**
+  String get backupNowButton;
+
+  /// No description provided for @backupAutoExplainer.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs while Gymfy is open — when you open it once a week has passed, or right after you finish a workout. The last {keep} automatic backups are kept. Choose a folder in Documents or Download; cloud drives and SD cards are not supported.'**
+  String backupAutoExplainer(int keep);
+
+  /// No description provided for @backupErrorNotBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'That file is not a Gymfy backup.'**
+  String get backupErrorNotBackup;
+
+  /// No description provided for @backupErrorTooNew.
+  ///
+  /// In en, this message translates to:
+  /// **'That backup was made by a newer version of Gymfy. Update the app to restore it.'**
+  String get backupErrorTooNew;
+
+  /// No description provided for @backupErrorTooOld.
+  ///
+  /// In en, this message translates to:
+  /// **'That backup is from a version of Gymfy too old to restore.'**
+  String get backupErrorTooOld;
+
+  /// No description provided for @backupErrorNoMigration.
+  ///
+  /// In en, this message translates to:
+  /// **'Gymfy cannot read backups from version {version} yet.'**
+  String backupErrorNoMigration(String version);
+
+  /// detail is a short English diagnostic, e.g. 'it has no tables', quoted as it is.
+  ///
+  /// In en, this message translates to:
+  /// **'That backup is damaged and cannot be read ({detail}).'**
+  String backupErrorDamaged(String detail);
+
+  /// No description provided for @dataExportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export data'**
+  String get dataExportTitle;
+
+  /// No description provided for @dataExportIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Save a copy of everything you have logged. The file is written wherever you choose — nothing is uploaded anywhere.'**
+  String get dataExportIntro;
+
+  /// No description provided for @dataExportFormatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Format'**
+  String get dataExportFormatTitle;
+
+  /// No description provided for @dataExportCsvTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Spreadsheet'**
+  String get dataExportCsvTitle;
+
+  /// No description provided for @dataExportCsvSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'One row per set, ready to open in Excel or Sheets and chart however you like.'**
+  String get dataExportCsvSubtitle;
+
+  /// No description provided for @dataExportCsvButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save CSV'**
+  String get dataExportCsvButton;
+
+  /// No description provided for @dataExportJsonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything'**
+  String get dataExportJsonTitle;
+
+  /// No description provided for @dataExportJsonSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your workouts with their sets kept together, plus your body measurements and calorie log.'**
+  String get dataExportJsonSubtitle;
+
+  /// No description provided for @dataExportJsonButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save JSON'**
+  String get dataExportJsonButton;
+
+  /// No description provided for @dataExportCopyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This is a copy, not a backup'**
+  String get dataExportCopyTitle;
+
+  /// No description provided for @dataExportCopyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Gymfy cannot import these files back, and progress photos are not included. To move to a new phone, or to keep a copy you can restore, use a backup instead.'**
+  String get dataExportCopyMessage;
+
+  /// No description provided for @dataExportNoWorkouts.
+  ///
+  /// In en, this message translates to:
+  /// **'No finished workouts to export yet.'**
+  String get dataExportNoWorkouts;
+
+  /// No description provided for @dataExportNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing logged to export yet.'**
+  String get dataExportNothing;
+
+  /// No description provided for @dataExportSaveDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save your data'**
+  String get dataExportSaveDialogTitle;
+
+  /// name is the exported file's name.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {name}'**
+  String dataExportSaved(String name);
+
+  /// No description provided for @dataExportSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save that file.\n{error}'**
+  String dataExportSaveFailed(String error);
+
+  /// The last two items of a list of alternatives; the ones before are joined with commas.
+  ///
+  /// In en, this message translates to:
+  /// **'{first} or {second}'**
+  String commonListOr(String first, String second);
+
+  /// No description provided for @importTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import a history'**
+  String get importTitle;
+
+  /// No description provided for @importErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'That file could not be read'**
+  String get importErrorTitle;
+
+  /// No description provided for @importErrorNotText.
+  ///
+  /// In en, this message translates to:
+  /// **'That file is not readable as text. Export it again as CSV.'**
+  String get importErrorNotText;
+
+  /// No description provided for @importErrorReadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read that file.\n{error}'**
+  String importErrorReadFailed(String error);
+
+  /// No description provided for @importErrorImportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not import that file.\n{error}'**
+  String importErrorImportFailed(String error);
+
+  /// No description provided for @importErrorSplitFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your workouts were imported, but the split could not be built.\n{error}'**
+  String importErrorSplitFailed(String error);
+
+  /// No description provided for @importErrorUnclosedQuote.
+  ///
+  /// In en, this message translates to:
+  /// **'This file has a quote that is never closed, so the rest of it cannot be read. It may have been cut short while being saved.'**
+  String get importErrorUnclosedQuote;
+
+  /// No description provided for @importErrorEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'That file is empty.'**
+  String get importErrorEmpty;
+
+  /// fields lists the missing columns (importField… joined with commonListOr); headers are the file's own column names, quoted as they are.
+  ///
+  /// In en, this message translates to:
+  /// **'This does not look like a workout export — it has no {fields} column.\n\nThe columns found were: {headers}.'**
+  String importErrorNotWorkoutExport(String fields, String headers);
+
+  /// No description provided for @importFieldDate.
+  ///
+  /// In en, this message translates to:
+  /// **'a date'**
+  String get importFieldDate;
+
+  /// No description provided for @importFieldExercise.
+  ///
+  /// In en, this message translates to:
+  /// **'an exercise name'**
+  String get importFieldExercise;
+
+  /// No description provided for @importFieldReps.
+  ///
+  /// In en, this message translates to:
+  /// **'reps'**
+  String get importFieldReps;
+
+  /// No description provided for @importFieldWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'a weight'**
+  String get importFieldWeight;
+
+  /// No description provided for @importSplitNameDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported split'**
+  String get importSplitNameDefault;
+
+  /// The name of a split built from an import. source is the other app's name, e.g. Hevy.
+  ///
+  /// In en, this message translates to:
+  /// **'{source} import'**
+  String importSplitNameFrom(String source);
+
+  /// No description provided for @importChooseFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a file'**
+  String get importChooseFile;
+
+  /// No description provided for @importChooseAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose another file'**
+  String get importChooseAnother;
+
+  /// No description provided for @importImporting.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing…'**
+  String get importImporting;
+
+  /// No description provided for @importButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get importButton;
+
+  /// No description provided for @importButtonWorkouts.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Import 1 workout} other{Import {count} workouts}}'**
+  String importButtonWorkouts(int count);
+
+  /// No description provided for @importButtonSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Import a split of 1 day} other{Import a split of {days} days}}'**
+  String importButtonSplit(int days);
+
+  /// No description provided for @importButtonBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Import {workouts, plural, =1{1 workout} other{{workouts} workouts}} and {days, plural, =1{a split of 1 day} other{a split of {days} days}}'**
+  String importButtonBoth(int workouts, int days);
+
+  /// No description provided for @importExplainerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bring your history with you'**
+  String get importExplainerTitle;
+
+  /// No description provided for @importExplainerMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Export your workouts from the other app as a CSV file, then pick it here. Hevy and Strong both do this from their settings.\n\nColumns are matched by name, so most exports work without anything being configured. Nothing is overwritten — importing only adds, and importing the same file twice adds nothing the second time.'**
+  String get importExplainerMessage;
+
+  /// No description provided for @importNothingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to import'**
+  String get importNothingTitle;
+
+  /// sample is the first unreadable date, exactly as the file has it.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{That file was read, but one of its rows has a date this app could not make sense of: \"{sample}\".\n\nSend that line on and it can be taught to read it.} other{That file was read, but {count} of its rows have a date this app could not make sense of — the first one is \"{sample}\".\n\nSend that line on and it can be taught to read it.}}'**
+  String importNothingUnreadableDates(int count, String sample);
+
+  /// No description provided for @importNothingNoSets.
+  ///
+  /// In en, this message translates to:
+  /// **'That file was read, but none of its rows were sets — no exercise name, reps and weight together on any line.'**
+  String get importNothingNoSets;
+
+  /// No description provided for @importPreviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What is in this file'**
+  String get importPreviewTitle;
+
+  /// source is the other app's name, e.g. Hevy.
+  ///
+  /// In en, this message translates to:
+  /// **'Looks like a {source} export'**
+  String importPreviewSource(String source);
+
+  /// No description provided for @importPreviewWorkouts.
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts'**
+  String get importPreviewWorkouts;
+
+  /// No description provided for @importPreviewSets.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets'**
+  String get importPreviewSets;
+
+  /// No description provided for @importPreviewExercises.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercises'**
+  String get importPreviewExercises;
+
+  /// No description provided for @importPreviewFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get importPreviewFrom;
+
+  /// No description provided for @importPreviewTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get importPreviewTo;
+
+  /// No description provided for @importAlreadyHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Already here'**
+  String get importAlreadyHere;
+
+  /// No description provided for @importPreviewWillSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} — will be skipped'**
+  String importPreviewWillSkip(int count);
+
+  /// No description provided for @importPreviewNotSets.
+  ///
+  /// In en, this message translates to:
+  /// **'Rows that were not sets'**
+  String get importPreviewNotSets;
+
+  /// No description provided for @importPreviewDatesSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 row was left out because its date could not be read: \"{sample}\". Send that line on and it can be taught to read it.} other{{count} rows were left out because their date could not be read — the first is \"{sample}\". Send that line on and it can be taught to read it.}}'**
+  String importPreviewDatesSkipped(int count, String sample);
+
+  /// No description provided for @importPreviewAllHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Every workout in this file is already on your phone.'**
+  String get importPreviewAllHere;
+
+  /// No description provided for @importPreviewWillAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 workout will be added.} other{{count} workouts will be added.}}'**
+  String importPreviewWillAdd(int count);
+
+  /// No description provided for @importPreviewNearDuplicates.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 of them starts within an hour of a workout you already have. If you have imported the same training from another app, it will be added a second time.} other{{count} of them start within an hour of a workout you already have. If you have imported the same training from another app, those will be added a second time.}}'**
+  String importPreviewNearDuplicates(int count);
+
+  /// No description provided for @importPlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Build a split from this file'**
+  String get importPlanTitle;
+
+  /// No description provided for @importPlanWillBeCalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Will be called \"{name}\"'**
+  String importPlanWillBeCalled(String name);
+
+  /// No description provided for @importPlanExplainer.
+  ///
+  /// In en, this message translates to:
+  /// **'Your workout names become the days of a split, each holding the exercises you actually train on it, with the sets and reps you have been doing. Nothing existing is changed — this adds a new split you can edit or delete.'**
+  String get importPlanExplainer;
+
+  /// No description provided for @importPlanExists.
+  ///
+  /// In en, this message translates to:
+  /// **'You already have a split called \"{name}\". Turning this on adds a second one with the same name.'**
+  String importPlanExists(String name);
+
+  /// No description provided for @importPlanCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create the split'**
+  String get importPlanCreate;
+
+  /// No description provided for @importPlanDayWorkouts.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 workout} other{{count} workouts}}'**
+  String importPlanDayWorkouts(int count);
+
+  /// No description provided for @importPlanDayExercises.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 exercise} other{{count} exercises}}'**
+  String importPlanDayExercises(int count);
+
+  /// No description provided for @importUnitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What unit is this file in?'**
+  String get importUnitTitle;
+
+  /// No description provided for @importUnitMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This export does not name its unit, so it has to be told. Getting it wrong scales every weight you import.'**
+  String get importUnitMessage;
+
+  /// No description provided for @importUnitKilograms.
+  ///
+  /// In en, this message translates to:
+  /// **'Kilograms'**
+  String get importUnitKilograms;
+
+  /// No description provided for @importUnitPounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Pounds'**
+  String get importUnitPounds;
+
+  /// No description provided for @importOutcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported'**
+  String get importOutcomeTitle;
+
+  /// No description provided for @importOutcomeWorkoutsAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts added'**
+  String get importOutcomeWorkoutsAdded;
+
+  /// No description provided for @importOutcomeSetsAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets added'**
+  String get importOutcomeSetsAdded;
+
+  /// No description provided for @importOutcomeSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} — skipped'**
+  String importOutcomeSkipped(int count);
+
+  /// No description provided for @importOutcomeSplitCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Split created'**
+  String get importOutcomeSplitCreated;
+
+  /// No description provided for @importOutcomeDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Days'**
+  String get importOutcomeDays;
+
+  /// No description provided for @importOutcomeDaysValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{1 day} other{{days} days}}, with {exercises, plural, =1{1 exercise} other{{exercises} exercises}}'**
+  String importOutcomeDaysValue(int days, int exercises);
+
+  /// No description provided for @importOutcomeFindSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Find it under Workout → Splits. Its days are already on the weekdays you have been training them on — open a day to change that, or to add one the history was not clear about.'**
+  String get importOutcomeFindSplit;
+
+  /// No description provided for @importOutcomeNewExercises.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 exercise was new and has been added to your library. It has no muscles set yet, so it will not appear on the muscle map until you edit it.} other{{count} exercises were new and have been added to your library. They have no muscles set yet, so they will not appear on the muscle map until you edit them.}}'**
+  String importOutcomeNewExercises(int count);
+
+  /// The name an imported workout is saved under when the file gives it none.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported workout'**
+  String get importUntitledWorkout;
+}
+
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
+  const _AppLocalizationsDelegate();
+
+  @override
+  Future<AppLocalizations> load(Locale locale) {
+    return SynchronousFuture<AppLocalizations>(lookupAppLocalizations(locale));
+  }
+
+  @override
+  bool isSupported(Locale locale) =>
+      <String>['de', 'en'].contains(locale.languageCode);
+
+  @override
+  bool shouldReload(_AppLocalizationsDelegate old) => false;
+}
+
+AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when only language code is specified.
+  switch (locale.languageCode) {
+    case 'de':
+      return AppLocalizationsDe();
+    case 'en':
+      return AppLocalizationsEn();
+  }
+
+  throw FlutterError(
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
+}

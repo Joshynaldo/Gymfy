@@ -7,7 +7,11 @@
 //
 // Volumes are kilograms, like everything stored; the UI converts for display.
 
+import 'package:intl/intl.dart';
+
+import '../../../l10n/l10n.dart';
 import '../../../shared/utils/dates.dart';
+import '../../../shared/utils/format.dart';
 
 /// One logged set, flattened with everything the recap needs.
 typedef RecapSet = ({
@@ -30,7 +34,15 @@ enum RecapPeriod {
 
   const RecapPeriod(this.label, this.buckets, this.grain);
 
+  /// The English name. On screen use [localizedLabel].
   final String label;
+
+  /// The name in the app's language, e.g. "Woche".
+  String localizedLabel(AppLocalizations l10n) => switch (this) {
+    RecapPeriod.week => l10n.homeRecapPeriodWeek,
+    RecapPeriod.month => l10n.homeRecapPeriodMonth,
+    RecapPeriod.year => l10n.homeRecapPeriodYear,
+  };
 
   /// How many buckets the chart shows.
   final int buckets;
@@ -53,7 +65,8 @@ class RecapBucket {
   /// Midnight at the start of the bucket.
   final DateTime start;
 
-  /// The short label under the bar.
+  /// The short label under the bar, in English. A screen in another language
+  /// asks [bucketLabel] with its `l10n` instead.
   final String label;
 
   final double volumeKg;
@@ -127,7 +140,16 @@ List<DateTime> bucketStarts(RecapPeriod period, DateTime today) {
 }
 
 /// The short label under a bucket.
-String bucketLabel(DateTime start, RecapGrain grain) {
+///
+/// Pass [l10n] for the language's own letters — `M D M D F S S` along a German
+/// week. Without it, English.
+String bucketLabel(DateTime start, RecapGrain grain, {AppLocalizations? l10n}) {
+  final locale = otherDateLocale(l10n);
+  if (locale != null && grain != RecapGrain.week) {
+    // CLDR's narrow forms: one letter, made for exactly this.
+    final pattern = grain == RecapGrain.day ? 'EEEEE' : 'LLLLL';
+    return DateFormat(pattern, locale).format(start);
+  }
   const weekdays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   const months = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
   return switch (grain) {

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../l10n/l10n.dart';
+import '../../goals/widgets/goals_card.dart';
 import '../../onboarding/data/onboarding_repository.dart';
 
 import '../../progress/widgets/activity_heatmap.dart';
@@ -31,10 +33,11 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final name = ref.watch(userNameProvider).value;
+    final l10n = context.l10n;
 
     return GlassScaffold(
       appBar: GlassAppBar(
-        title: Text(name == null ? 'Gymfy' : 'Hi, $name'),
+        title: Text(name == null ? 'Gymfy' : l10n.homeGreeting(name)),
         actions: [
           const StreakBadge(),
           // The way into the library from the screen people actually open.
@@ -43,7 +46,7 @@ class HomeScreen extends ConsumerWidget {
           // on the tab you are most often standing on.
           GlassIconButton(
             icon: Icons.search,
-            tooltip: 'Find an exercise',
+            tooltip: l10n.homeFindExerciseTooltip,
             onPressed: () => context.go('/exercises'),
           ),
         ],
@@ -58,6 +61,9 @@ class HomeScreen extends ConsumerWidget {
           // accent belongs to Start workout.
           const LastWorkoutCard(),
           const WeekCard(),
+          // Under the week, since a weekly workouts goal is the same question
+          // asked as a target. Silent until a goal exists.
+          const GoalsCard(),
           // The year grid. It also lives in Progress → All-time, where it is
           // the long look back; here it is the short one — how the last few
           // weeks have actually gone, under the week you are in.

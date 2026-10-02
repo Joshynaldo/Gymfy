@@ -8,6 +8,8 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../app/theme/glass.dart';
+import '../../../l10n/app_language.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/data/settings_repository.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/widgets/app_card.dart';
@@ -25,7 +27,9 @@ import '../data/backup_repository.dart';
 /// platform picker; the app uses [FilePicker.getDirectoryPath].
 final backupFolderPickerProvider = Provider<Future<String?> Function()>(
   (ref) =>
-      () => FilePicker.getDirectoryPath(dialogTitle: 'Folder for backups'),
+      () => FilePicker.getDirectoryPath(
+        dialogTitle: ref.read(appLocalizationsProvider).backupFolderPickerTitle,
+      ),
 );
 
 /// The folder used when the picked one can't be written to: the app's own
@@ -59,76 +63,62 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final muted = theme.textTheme.bodyMedium?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
     );
 
     return GlassScaffold(
-      appBar: GlassAppBar(title: const Text('Backup & restore')),
+      appBar: GlassAppBar(title: Text(l10n.backupTitle)),
       body: (context) => ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24) + barInsets(context),
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
-            child: Text(
-              'One file with everything in Gymfy — workouts, plans, '
-              'exercises, measurements, meals, settings and progress '
-              'photos. Restore it on this phone or a new one. Nothing is '
-              'uploaded anywhere.',
-              style: muted,
-            ),
+            child: Text(l10n.backupIntro, style: muted),
           ),
           if (_busy) const LinearProgressIndicator(),
-          const AppSectionHeader(title: 'Back up'),
+          AppSectionHeader(title: l10n.backupSectionBackUp),
           AppPanel(
             icon: Icons.backup_outlined,
-            title: 'Save a backup',
+            title: l10n.backupSaveTitle,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Saves a .$backupFileExtension file wherever you choose. '
-                  'Keep a copy somewhere other than this phone.',
-                  style: muted,
-                ),
+                Text(l10n.backupSaveMessage(backupFileExtension), style: muted),
                 const SizedBox(height: 14),
                 Align(
                   alignment: Alignment.centerRight,
                   child: FilledButton.icon(
                     onPressed: _busy ? null : _saveBackup,
                     icon: const Icon(Icons.save_alt, size: 18),
-                    label: const Text('Save backup'),
+                    label: Text(l10n.backupSaveButton),
                   ),
                 ),
               ],
             ),
           ),
-          const AppSectionHeader(title: 'Restore'),
+          AppSectionHeader(title: l10n.backupSectionRestore),
           AppPanel(
             icon: Icons.settings_backup_restore,
-            title: 'Restore from a backup',
+            title: l10n.backupRestoreTitle,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Replaces everything on this phone with what is in the '
-                  'backup. You will see what it holds before anything '
-                  'changes.',
-                  style: muted,
-                ),
+                Text(l10n.backupRestoreMessage, style: muted),
                 const SizedBox(height: 14),
                 Align(
                   alignment: Alignment.centerRight,
                   child: OutlinedButton.icon(
                     onPressed: _busy ? null : _restore,
                     icon: const Icon(Icons.folder_open, size: 18),
-                    label: const Text('Choose backup'),
+                    label: Text(l10n.backupChooseButton),
                   ),
                 ),
               ],
             ),
           ),
-          const AppSectionHeader(title: 'Automatic backup'),
+          AppSectionHeader(title: l10n.backupAutomaticTitle),
           _AutoBackupPanel(
             busy: _busy,
             onPickFolder: _pickFolder,
@@ -139,6 +129,10 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     );
   }
 
+  /// The strings for messages said after an await. [_say] checks [mounted]
+  /// before showing anything, so the fallback is never seen.
+  AppLocalizations get _l10n => mounted ? context.l10n : englishLocalizations;
+
   Future<void> _saveBackup() async {
     setState(() => _busy = true);
     try {
@@ -147,14 +141,14 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
           .buildArchiveBytes();
       final name = backupFileName(DateTime.now());
       final saved = await FilePicker.saveFile(
-        dialogTitle: 'Save your backup',
+        dialogTitle: _l10n.backupSaveDialogTitle,
         fileName: name,
         bytes: bytes,
       );
       if (saved == null) return; // Cancelled.
-      _say('Saved $name');
+      _say(_l10n.backupSaved(name));
     } catch (error) {
-      _say('Could not save the backup.\n$error');
+      _say(_l10n.backupSaveFailed('$error'));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -169,13 +163,15 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
         .watchInProgressSession()
         .first;
     if (open != null) {
-      _say('Finish or discard your current workout before restoring.');
+      _say(_l10n.backupFinishWorkoutFirst);
       return;
     }
 
     setState(() => _busy = true);
     try {
-      final picked = await FilePicker.pickFile(dialogTitle: 'Choose a backup');
+      final picked = await FilePicker.pickFile(
+        dialogTitle: _l10n.backupPickDialogTitle,
+      );
       if (picked == null) return;
       final path = await _localPath(picked);
 
@@ -194,12 +190,12 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
       await ref.read(exerciseRepositoryProvider).seed();
 
       if (!mounted) return;
-      _say('Backup restored.');
+      _say(_l10n.backupRestored);
       context.go('/home');
     } on BackupException catch (error) {
-      _say(error.message);
+      _say(error.describe(_l10n));
     } catch (error) {
-      _say('Could not restore that backup.\n$error');
+      _say(_l10n.backupRestoreFailed('$error'));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -232,21 +228,16 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     final useFallback = await showDialog<bool>(
       context: context,
       builder: (context) => GlassDialog(
-        title: const Text('Gymfy can\'t write there'),
-        content: Text(
-          'Android only lets Gymfy save into some folders. Try a folder '
-          'inside Documents or Download — or use Gymfy\'s own folder, which '
-          'always works but is deleted if you uninstall the app:\n\n'
-          '$fallback',
-        ),
+        title: Text(context.l10n.backupCantWriteTitle),
+        content: Text(context.l10n.backupCantWriteMessage(fallback)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Use Gymfy\'s folder'),
+            child: Text(context.l10n.backupUseAppFolder),
           ),
         ],
       ),
@@ -254,7 +245,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     if (useFallback != true) return;
     final fallbackProblem = await checkFolderWritable(fallback);
     if (fallbackProblem != null) {
-      _say('Could not use that folder either.\n$fallbackProblem');
+      _say(_l10n.backupFolderFailed(fallbackProblem));
       return;
     }
     await _setFolder(fallback);
@@ -272,16 +263,16 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     if (mode == AutoBackupMode.off) {
       await settings.write(autoBackupModeKey, AutoBackupMode.weekly.slug);
     }
-    _say('Backups will be saved to $path');
+    _say(_l10n.backupFolderSet(path));
   }
 
   Future<void> _backupToFolderNow() async {
     setState(() => _busy = true);
     try {
       final file = await ref.read(autoBackupServiceProvider).backupNow();
-      if (file != null) _say('Saved ${file.uri.pathSegments.last}');
+      if (file != null) _say(_l10n.backupSaved(file.uri.pathSegments.last));
     } catch (error) {
-      _say('Could not save the backup.\n$error');
+      _say(_l10n.backupSaveFailed('$error'));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -304,27 +295,26 @@ class _ConfirmRestoreDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String count(int n, String noun) => '$n $noun${n == 1 ? '' : 's'}';
+    final l10n = context.l10n;
 
     return GlassDialog(
-      title: const Text('Replace everything?'),
+      title: Text(l10n.backupReplaceTitle),
       content: Text(
-        'Backup from ${formatDateTime(summary.createdAt)}: '
-        '${count(summary.workouts, 'workout')}, '
-        '${count(summary.sets, 'set')}, '
-        '${count(summary.photos, 'photo')}.\n\n'
-        'Everything currently on this phone will be replaced by it. This '
-        'cannot be undone — save a backup first if you might want today\'s '
-        'data back.',
+        l10n.backupReplaceMessage(
+          formatDateTime(summary.createdAt, l10n: l10n),
+          summary.workouts,
+          summary.sets,
+          summary.photos,
+        ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Cancel'),
+          child: Text(l10n.commonCancel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Restore'),
+          child: Text(l10n.backupRestoreButton),
         ),
       ],
     );
@@ -346,6 +336,7 @@ class _AutoBackupPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
     final muted = theme.textTheme.bodySmall?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
@@ -363,20 +354,14 @@ class _AutoBackupPanel extends ConsumerWidget {
 
     return AppPanel(
       icon: Icons.schedule,
-      title: 'Automatic backup',
+      title: l10n.backupAutomaticTitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AppSegmented<AutoBackupMode>(
             segments: [
               for (final m in AutoBackupMode.values)
-                (
-                  value: m,
-                  label: m == AutoBackupMode.afterWorkout
-                      ? 'After workout'
-                      : m.label,
-                  leading: null,
-                ),
+                (value: m, label: m.localizedLabel(l10n), leading: null),
             ],
             selected: mode,
             onChanged: (next) async {
@@ -393,13 +378,13 @@ class _AutoBackupPanel extends ConsumerWidget {
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.folder_outlined),
-            title: Text(hasFolder ? folder : 'No folder chosen'),
+            title: Text(hasFolder ? folder : l10n.backupNoFolder),
             subtitle: Text(
               lastError != null
-                  ? 'Last automatic backup failed: $lastError'
+                  ? l10n.backupLastFailed(lastError)
                   : lastAt != null
-                  ? 'Last backup ${formatDateTime(lastAt)}'
-                  : 'No automatic backup yet',
+                  ? l10n.backupLastAt(formatDateTime(lastAt, l10n: l10n))
+                  : l10n.backupNoneYet,
               style: lastError != null
                   ? theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.error,
@@ -408,7 +393,7 @@ class _AutoBackupPanel extends ConsumerWidget {
             ),
             trailing: TextButton(
               onPressed: busy ? null : onPickFolder,
-              child: Text(hasFolder ? 'Change' : 'Choose'),
+              child: Text(hasFolder ? l10n.backupChange : l10n.backupChoose),
             ),
           ),
           if (hasFolder)
@@ -418,20 +403,13 @@ class _AutoBackupPanel extends ConsumerWidget {
                 onPressed: busy ? null : onBackupNow,
                 style: TextButton.styleFrom(foregroundColor: accent),
                 icon: const Icon(Icons.backup_outlined, size: 18),
-                label: const Text('Back up to folder now'),
+                label: Text(l10n.backupNowButton),
               ),
             ),
           const SizedBox(height: 8),
           // Said up front, not discovered: there is no background job, and
           // Android limits where the app may write without extra permissions.
-          Text(
-            'Runs while Gymfy is open — when you open it once a week has '
-            'passed, or right after you finish a workout. The last '
-            '$autoBackupKeep automatic backups are kept. Choose a folder in '
-            'Documents or Download; cloud drives and SD cards are not '
-            'supported.',
-            style: muted,
-          ),
+          Text(l10n.backupAutoExplainer(autoBackupKeep), style: muted),
         ],
       ),
     );

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/models/exercise.dart' show isBundledAsset;
 import '../../../shared/models/equipment.dart';
@@ -77,12 +78,12 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (error, _) => Scaffold(
-        appBar: GlassAppBar(title: const Text('Edit exercise')),
+        appBar: GlassAppBar(title: Text(context.l10n.exercisesEditTitle)),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              'Could not load this exercise.\n$error',
+              context.l10n.exercisesDetailLoadFailed('$error'),
               textAlign: TextAlign.center,
             ),
           ),
@@ -91,8 +92,9 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
       data: (exercise) {
         if (exercise == null) {
           return GlassScaffold(
-            appBar: GlassAppBar(title: const Text('Edit exercise')),
-            body: (context) => const Center(child: Text('Exercise not found.')),
+            appBar: GlassAppBar(title: Text(context.l10n.exercisesEditTitle)),
+            body: (context) =>
+                Center(child: Text(context.l10n.exercisesNotFound)),
           );
         }
         _prefill(exercise);
@@ -115,10 +117,13 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
 
   Widget _form(BuildContext context, {required bool canSave}) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return GlassScaffold(
       appBar: GlassAppBar(
-        title: Text(widget.isEditing ? 'Edit exercise' : 'New exercise'),
+        title: Text(
+          widget.isEditing ? l10n.exercisesEditTitle : l10n.exercisesNewTitle,
+        ),
       ),
       body: (context) => ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 96) + barInsets(context),
@@ -126,19 +131,19 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
           TextField(
             controller: _nameController,
             textCapitalization: TextCapitalization.words,
-            decoration: const InputDecoration(
-              labelText: 'Name',
-              hintText: 'e.g. Cable Fly',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: l10n.exercisesNameLabel,
+              hintText: l10n.exercisesNameHint,
+              border: const OutlineInputBorder(),
             ),
             // Rebuilds so the save button enables the moment a name is typed.
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 24),
-          Text('Muscles worked', style: theme.textTheme.titleMedium),
+          Text(l10n.exercisesMusclesWorked, style: theme.textTheme.titleMedium),
           const SizedBox(height: 4),
           Text(
-            'Drives the muscle map, so pick everything this lift actually hits.',
+            l10n.exercisesMusclesHelp,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -150,7 +155,7 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
             children: [
               for (final muscleId in MuscleId.all)
                 AppChip(
-                  label: muscleLabel(muscleId),
+                  label: muscleLabel(muscleId, l10n: l10n),
                   selected: _muscleIds.contains(muscleId),
                   onTap: () => setState(() {
                     if (_muscleIds.contains(muscleId)) {
@@ -167,17 +172,21 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
           // the answer to it often settles the switch: nothing bodyweight is
           // plate-loaded.
           AppPickerField(
-            label: 'Equipment',
-            value: _equipment.label,
+            label: l10n.exercisesEquipment,
+            value: _equipment.localizedLabel(l10n),
             icon: Icons.fitness_center,
             onTap: () async {
               final picked = await showOptionPicker<Equipment>(
                 context: context,
-                title: 'Equipment',
+                title: l10n.exercisesEquipment,
                 selected: _equipment,
                 options: [
                   for (final equipment in Equipment.values)
-                    (value: equipment, label: equipment.label, subtitle: null),
+                    (
+                      value: equipment,
+                      label: equipment.localizedLabel(l10n),
+                      subtitle: null,
+                    ),
                 ],
               );
               if (picked != null) setState(() => _equipment = picked);
@@ -186,20 +195,16 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
           const SizedBox(height: 12),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Loaded with plates'),
-            subtitle: const Text(
-              'Log sets by tapping plates instead of typing a weight. For '
-              'barbell and EZ-bar lifts.',
-            ),
+            title: Text(l10n.exercisesPlateLoaded),
+            subtitle: Text(l10n.exercisesPlateLoadedSubtitle),
             value: _plateLoaded,
             onChanged: (value) => setState(() => _plateLoaded = value),
           ),
           const SizedBox(height: 12),
-          Text('Image', style: theme.textTheme.titleMedium),
+          Text(l10n.exercisesImage, style: theme.textTheme.titleMedium),
           const SizedBox(height: 4),
           Text(
-            'Optional. A GIF from your gallery animates just like the built-in '
-            'ones.',
+            l10n.exercisesImageHelp,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -219,7 +224,7 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _canSave && !_busy ? _save : null,
         icon: const Icon(Icons.check),
-        label: Text(widget.isEditing ? 'Save' : 'Create'),
+        label: Text(widget.isEditing ? l10n.commonSave : l10n.commonCreate),
       ),
     );
   }
@@ -318,7 +323,7 @@ class _ImagePickerTile extends StatelessWidget {
       return OutlinedButton.icon(
         onPressed: onPick,
         icon: const Icon(Icons.image_outlined),
-        label: const Text('Choose image'),
+        label: Text(context.l10n.exercisesChooseImage),
       );
     }
 
@@ -342,7 +347,7 @@ class _ImagePickerTile extends StatelessWidget {
               child: OutlinedButton.icon(
                 onPressed: onPick,
                 icon: const Icon(Icons.swap_horiz),
-                label: const Text('Replace'),
+                label: Text(context.l10n.exercisesReplaceImage),
               ),
             ),
             const SizedBox(width: 8),
@@ -350,7 +355,7 @@ class _ImagePickerTile extends StatelessWidget {
               child: OutlinedButton.icon(
                 onPressed: onClear,
                 icon: const Icon(Icons.delete_outline),
-                label: const Text('Remove'),
+                label: Text(context.l10n.exercisesRemoveImage),
               ),
             ),
           ],

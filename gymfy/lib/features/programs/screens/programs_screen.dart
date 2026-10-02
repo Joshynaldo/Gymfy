@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../app/theme/glass.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/weekday.dart';
 import '../../../shared/widgets/app_button.dart';
@@ -26,8 +27,10 @@ class ProgramsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return GlassScaffold(
-      appBar: GlassAppBar(title: const Text('Programs')),
+      appBar: GlassAppBar(title: Text(l10n.programsTitle)),
       body: (context) => ListView(
         padding: const EdgeInsets.only(top: 4, bottom: 24) + barInsets(context),
         children: [
@@ -38,7 +41,9 @@ class ProgramsScreen extends StatelessWidget {
               child: AppTile(
                 icon: Icons.event_note_outlined,
                 title: program.name,
-                subtitle: '${programFacts(program)}\n${program.summary}',
+                subtitle:
+                    '${programFacts(program, l10n: l10n)}\n'
+                    '${program.localizedSummary(l10n)}',
                 onTap: () => context.go('/workout/programs/${program.id}'),
               ),
             ),
@@ -49,12 +54,13 @@ class ProgramsScreen extends StatelessWidget {
 }
 
 /// "3 days a week · Beginner" — the two facts that decide whether a programme
-/// is worth reading about.
-String programFacts(BundledProgram program) {
-  final days = program.daysPerWeek == 1
-      ? '1 day a week'
-      : '${program.daysPerWeek} days a week';
-  return '$days · ${program.level.label}';
+/// is worth reading about. In [l10n]'s language when given, else English.
+String programFacts(BundledProgram program, {AppLocalizations? l10n}) {
+  final strings = l10n ?? englishLocalizations;
+  return strings.programsFacts(
+    program.daysPerWeek,
+    program.level.localizedLabel(strings),
+  );
 }
 
 class _Intro extends StatelessWidget {
@@ -69,8 +75,7 @@ class _Intro extends StatelessWidget {
       child: Text(
         // Says up front that nothing here touches what you already have: the
         // fear with a "load a programme" button is that it replaces yours.
-        'Each programme is added as a new split you can edit like any other. '
-        'Your own splits are never changed.',
+        context.l10n.programsIntro,
         style: theme.textTheme.bodyMedium?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,
         ),
@@ -100,14 +105,15 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final program = bundledPrograms
         .where((p) => p.id == widget.programId)
         .firstOrNull;
 
     if (program == null) {
       return GlassScaffold(
-        appBar: GlassAppBar(title: const Text('Program')),
-        body: (context) => const Center(child: Text('Program not found.')),
+        appBar: GlassAppBar(title: Text(l10n.programsFallbackTitle)),
+        body: (context) => Center(child: Text(l10n.programsNotFound)),
       );
     }
 
@@ -121,7 +127,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              'Could not open this program.\n$error',
+              l10n.programsOpenFailed('$error'),
               textAlign: TextAlign.center,
             ),
           ),
@@ -132,12 +138,12 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
           children: [
             AppPanel(
               title: program.name,
-              subtitle: programFacts(program),
-              child: Text(program.description),
+              subtitle: programFacts(program, l10n: l10n),
+              child: Text(program.localizedDescription(l10n)),
             ),
             const SizedBox(height: 8),
             AppButton(
-              label: 'Add to my splits',
+              label: l10n.programsAddToSplits,
               icon: Icons.add,
               onPressed: _busy ? null : () => _add(program, document),
             ),
@@ -152,24 +158,23 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
 
   Future<void> _add(BundledProgram program, PlanDocument document) async {
     setState(() => _busy = true);
+    final l10n = context.l10n;
     try {
       final messenger = ScaffoldMessenger.of(context);
       final ids = await importPlanDocument(context, ref, document);
       if (!mounted || ids.isEmpty) return;
 
       messenger.showSnackBar(
-        SnackBar(
-          content: Text('Added ${program.name}. Set it active to follow it.'),
-        ),
+        SnackBar(content: Text(l10n.programsAdded(program.name))),
       );
       // Straight to the new split, where "Set active" is — adding a programme
       // and then hunting for it in the split list would be a strange reward.
       context.go('/workout/split/${ids.first}');
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not add that program.\n$error')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.programsAddFailed('$error'))));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -185,8 +190,9 @@ class _DayPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
-    final schedule = weekdaySummary(day.weekdays);
+    final schedule = weekdaySummary(day.weekdays, l10n: l10n);
 
     return AppPanel(
       title: day.name,
@@ -221,7 +227,7 @@ class _DayPanel extends ConsumerWidget {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    exerciseTarget(exercise),
+                    exerciseTarget(exercise, l10n: l10n),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -233,7 +239,7 @@ class _DayPanel extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.only(top: 6),
               child: Text(
-                'Marked exercises are done back to back as a superset.',
+                l10n.programsSupersetNote,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -258,12 +264,14 @@ class _DayPanel extends ConsumerWidget {
 }
 
 /// "5 × 5 @ 75%", "3 × 8–12" — the target as it reads on a programme sheet.
-String exerciseTarget(SharedExercise exercise) {
+String exerciseTarget(SharedExercise exercise, {AppLocalizations? l10n}) {
   final target = formatSetTarget(
     exercise.sets,
     exercise.reps,
     exercise.repsMax,
   );
   final percent = exercise.targetPercent;
-  return percent == null ? target : '$target @ ${formatPercent(percent)}';
+  return percent == null
+      ? target
+      : '$target @ ${formatPercent(percent, l10n: l10n)}';
 }

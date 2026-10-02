@@ -57,3 +57,24 @@ int longestStreak(Set<DateTime> days) {
 
   return best;
 }
+
+/// Midnight of the first day of the week [day] falls in, for a week that
+/// starts on [firstWeekday] (ISO: 1 = Monday … 7 = Sunday).
+///
+/// Built from the calendar date rather than by subtracting a [Duration]: a
+/// week that crosses a daylight-saving change is not 7 × 24 hours long, and
+/// subtracting hours would land on 23:00 the evening before.
+DateTime startOfWeek(DateTime day, int firstWeekday) {
+  final back = (day.weekday - firstWeekday) % 7;
+  return DateTime(day.year, day.month, day.day - back);
+}
+
+/// Whole calendar days from [from] to [to] — negative when [to] is earlier.
+///
+/// Counted on UTC dates, so a daylight-saving change in between can't make one
+/// day 23 hours long and round the answer down by one.
+int daysBetween(DateTime from, DateTime to) {
+  final a = DateTime.utc(from.year, from.month, from.day);
+  final b = DateTime.utc(to.year, to.month, to.day);
+  return b.difference(a).inDays;
+}

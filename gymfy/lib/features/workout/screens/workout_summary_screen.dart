@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/session_length.dart';
@@ -23,10 +24,20 @@ import '../../../app/theme/glass.dart';
 ///
 /// Reachable via `/workout/summary/:sessionId`, so tapping the system back
 /// button returns to the Workout tab home rather than the live logging screen.
+///
+/// Also opened from the training calendar in Progress, at
+/// `/progress/session/:sessionId`, as [fromHistory]: an old workout looked up,
+/// not one just finished — so it has a back arrow, and "Done" goes back to the
+/// calendar instead of to the Workout tab.
 class WorkoutSummaryScreen extends ConsumerWidget {
-  const WorkoutSummaryScreen({super.key, required this.sessionId});
+  const WorkoutSummaryScreen({
+    super.key,
+    required this.sessionId,
+    this.fromHistory = false,
+  });
 
   final int sessionId;
+  final bool fromHistory;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,8 +45,12 @@ class WorkoutSummaryScreen extends ConsumerWidget {
 
     return GlassScaffold(
       appBar: GlassAppBar(
-        title: const Text('Workout complete'),
-        automaticallyImplyLeading: false,
+        title: Text(
+          fromHistory
+              ? context.l10n.workoutTitle
+              : context.l10n.workoutSummaryTitle,
+        ),
+        automaticallyImplyLeading: fromHistory,
       ),
       body: (context) => sessionAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -43,16 +58,16 @@ class WorkoutSummaryScreen extends ConsumerWidget {
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              'Could not load the summary.\n$error',
+              context.l10n.workoutSummaryLoadFailed('$error'),
               textAlign: TextAlign.center,
             ),
           ),
         ),
         data: (session) {
           if (session == null) {
-            return const Center(child: Text('Workout not found.'));
+            return Center(child: Text(context.l10n.workoutNotFound));
           }
-          return _SummaryBody(session: session);
+          return _SummaryBody(session: session, fromHistory: fromHistory);
         },
       ),
     );
@@ -60,13 +75,15 @@ class WorkoutSummaryScreen extends ConsumerWidget {
 }
 
 class _SummaryBody extends ConsumerWidget {
-  const _SummaryBody({required this.session});
+  const _SummaryBody({required this.session, required this.fromHistory});
 
   final WorkoutSession session;
+  final bool fromHistory;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final sets =
         ref.watch(sessionSetsProvider(session.id)).value ?? const <LoggedSet>[];
     // Names for the per-exercise breakdown; empty map until the library loads.
@@ -106,7 +123,7 @@ class _SummaryBody extends ConsumerWidget {
             Text(session.name, style: theme.textTheme.headlineSmall),
             const SizedBox(height: 4),
             Text(
-              formatDateTime(session.startedAt),
+              formatDateTime(session.startedAt, l10n: l10n),
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -125,12 +142,12 @@ class _SummaryBody extends ConsumerWidget {
           const SizedBox(height: 24),
         ],
         if (sets.isEmpty)
-          Text(
-            'No sets were logged in this workout.',
-            style: theme.textTheme.bodyMedium,
-          )
+          Text(l10n.workoutSummaryNoSets, style: theme.textTheme.bodyMedium)
         else ...[
-          Text('Exercises', style: theme.textTheme.titleMedium),
+          Text(
+            l10n.workoutSummaryExercises,
+            style: theme.textTheme.titleMedium,
+          ),
           const SizedBox(height: 8),
           for (final entry in byExercise.entries)
             _ExerciseSummaryTile(
@@ -138,21 +155,24 @@ class _SummaryBody extends ConsumerWidget {
               sets: entry.value,
             ),
           const SizedBox(height: 24),
-          Text('Muscles worked', style: theme.textTheme.titleMedium),
+          Text(
+            l10n.workoutSummaryMusclesWorked,
+            style: theme.textTheme.titleMedium,
+          ),
           SizedBox(
             height: 440,
             child: MuscleMapView(
               intensities: ref.watch(
                 sessionMuscleIntensitiesProvider(session.id),
               ),
-              emptyMessage: 'No muscles to show for this workout.',
+              emptyMessage: l10n.workoutSummaryNoMuscles,
             ),
           ),
         ],
         const SizedBox(height: 24),
         FilledButton(
-          onPressed: () => context.go('/workout'),
-          child: const Text('Done'),
+          onPressed: () => fromHistory ? context.pop() : context.go('/workout'),
+          child: Text(l10n.commonDone),
         ),
       ],
     );
@@ -177,6 +197,7 @@ class _StatsRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final unit = ref.watch(weightUnitProvider);
 
     return Row(
@@ -184,7 +205,7 @@ class _StatsRow extends ConsumerWidget {
         Expanded(
           child: _StatTile(
             icon: Icons.timer_outlined,
-            label: 'Duration',
+            label: l10n.workoutSummaryDuration,
             // Not counted up: a clock that races from 00:00 to your session
             // length looks like the timer is still running.
             //
@@ -202,7 +223,7 @@ class _StatsRow extends ConsumerWidget {
         Expanded(
           child: _StatTile(
             icon: Icons.repeat,
-            label: 'Sets',
+            label: l10n.workoutSummarySets,
             value: AnimatedCount(
               value: setCount.toDouble(),
               from: 0,
@@ -215,11 +236,11 @@ class _StatsRow extends ConsumerWidget {
         Expanded(
           child: _StatTile(
             icon: Icons.fitness_center,
-            label: 'Volume',
+            label: l10n.workoutSummaryVolume,
             value: AnimatedCount(
               value: totalVolume,
               from: 0,
-              format: (value) => formatWeightUnit(value, unit),
+              format: (value) => formatWeightUnit(value, unit, l10n: l10n),
               style: _valueStyle(context),
             ),
           ),
@@ -281,6 +302,7 @@ class _ExerciseSummaryTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final unit = ref.watch(weightUnitProvider);
     final volume = sets.fold<double>(0, (sum, s) => sum + s.weight * s.reps);
     // The "top set" is the heaviest working set; ties broken by the most
@@ -302,7 +324,7 @@ class _ExerciseSummaryTile extends ConsumerWidget {
             children: [
               Expanded(child: Text(name, style: theme.textTheme.titleSmall)),
               Text(
-                '${sets.length} ${sets.length == 1 ? 'set' : 'sets'}',
+                l10n.workoutSummaryExerciseSets(sets.length),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -317,9 +339,25 @@ class _ExerciseSummaryTile extends ConsumerWidget {
             // every held set, and "0 kg total" under a set of planks reads as
             // a bug rather than as an absence.
             topSet.seconds != null
-                ? 'Top set ${formatLoggedSet(weightKg: topSet.weight, reps: topSet.reps, seconds: topSet.seconds, unit: unit)}'
-                : 'Top set ${formatLoggedSet(weightKg: topSet.weight, reps: topSet.reps, seconds: null, unit: unit)}'
-                      '  •  ${formatWeightUnit(volume, unit)} total',
+                ? l10n.workoutSummaryTopSet(
+                    formatLoggedSet(
+                      weightKg: topSet.weight,
+                      reps: topSet.reps,
+                      seconds: topSet.seconds,
+                      unit: unit,
+                      l10n: l10n,
+                    ),
+                  )
+                : l10n.workoutSummaryTopSetTotal(
+                    formatLoggedSet(
+                      weightKg: topSet.weight,
+                      reps: topSet.reps,
+                      seconds: null,
+                      unit: unit,
+                      l10n: l10n,
+                    ),
+                    formatWeightUnit(volume, unit, l10n: l10n),
+                  ),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),

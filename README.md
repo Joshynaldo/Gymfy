@@ -81,12 +81,18 @@ Gymfy is free and will stay free: no subscription, no pro tier, nothing to unloc
   mid-session, or start an empty workout and build it as you train. A swap can
   also be saved to the plan.
 - **Timed exercises** like planks, dead hangs and carries are logged in minutes and
-  seconds, with records measured in time.
+  seconds, with records measured in time. They skip what only makes sense for
+  reps: no RPE or RIR, and no drop or failure sets.
 - **Notes on each exercise** for seat settings, grip width or what your back said
   last time.
 - **A rest timer** that shows a countdown ring, adds 30 seconds on a tap, and
   sends a notification with optional vibration once the phone is back in your
   pocket.
+- **A workout notification** on Android that stays up while you train: the
+  exercise, which set you're on and the rest countdown, with buttons to log the
+  suggested set, add 30 seconds or skip the rest. "Log set" only appears when
+  Gymfy has real numbers to log, never a made-up first set. It can be switched
+  off in Settings.
 - **A workout summary** when you finish.
 
 ### See your progress
@@ -94,8 +100,16 @@ Gymfy is free and will stay free: no subscription, no pro tier, nothing to unloc
   second view for fatigue: how much is still recovering, fading on a 48-hour
   half-life. Male and female body diagrams.
 - **A year of activity** in a GitHub-style heatmap, plus your training streak.
+- **A training calendar** month by month. Tap a day to see what you did and open
+  the workout.
 - **Charts** for volume, workout frequency and muscle groups over a week, a month
   or a year.
+- **Monthly review and Year in Training.** Workouts, volume, time trained, top
+  exercises, records and most-trained muscles, compared with the month or year
+  before. Share one as an image.
+- **Goals.** Lift a weight on an exercise by a date, train a number of times a
+  week, or reach a bodyweight. Progress fills in from what you log, shows on
+  Home, and gets a small celebration when you get there.
 - **Per-exercise progress** for top set, volume and estimated 1RM, with dated
   personal records.
 - **Body measurements** with history charts, and **progress photos** with a
@@ -112,26 +126,45 @@ Gymfy is free and will stay free: no subscription, no pro tier, nothing to unloc
 ### On your wrist
 The **Wear OS companion** shows the workout that's running, your set count, the
 current exercise and the rest countdown, with a double buzz when rest is over.
-From the watch you can add 30 seconds, skip the rest or repeat your last set.
-The phone stays in charge of all the data, and the watch talks to it directly
-over the Wearable Data Layer, not through the internet.
+From the watch you can add 30 seconds, skip the rest, or log the next set: the
+watch shows the suggested weight and reps (seconds for a hold), you adjust
+them with − / + or the rotating crown, and the phone checks the set before
+saving it. The phone stays in charge of all the data; the watch only sees the
+workout that's running. They talk through Google's Wearable Data Layer in
+Google Play services: directly over Bluetooth when they're connected, and
+through Google's servers, end-to-end encrypted, when they're not. Gymfy itself
+still has no internet permission.
 
 ### Your data stays yours
 - **Everything stays on the phone.** Your data lives in a SQLite database on the
-  device. There's no account, backend or sync, and the app doesn't even ask
-  for the internet permission.
+  device. There's no account, backend or cloud sync, and the app doesn't even
+  ask for the internet permission.
+- **Health Connect, if you want it** (Android). Off until you switch it on in
+  Settings, one switch per direction: finished workouts are written to Health
+  Connect as strength-training sessions, so they show up next to your other
+  fitness data, and weigh-ins saved there fill in your bodyweight on days you
+  haven't entered one. Health Connect is a store on the phone itself, so this
+  still needs no internet permission.
 - **Import your history** from Hevy, Strong or StrengthLog CSV exports. Gymfy even
   rebuilds your split from it and puts each day on the weekday you usually
   train it.
-- **Back up and restore.** One `.gymfy-backup` file holds your whole database
-  and your progress photos, and restoring it brings everything back, on this
-  phone or a new one. Automatic backups can run weekly or after each workout
+- **Back up and restore.** One `.gymfy-backup` file holds your whole database,
+  your progress photos and the pictures of your own exercises, and restoring it
+  brings everything back, on this phone or a new one. Automatic backups can run weekly or after each workout
   into a folder you pick, keeping the newest 10.
 - **Export everything** to CSV or JSON at any time, for spreadsheets or other
   apps.
 - **About 1,270 built-in exercises** covering 18 muscle groups, including
   cardio and plyometrics, each with an animated preview. Add as many of your
   own as you like.
+
+### In your language
+- **English and German.** Gymfy follows your phone's language, or you can pick
+  one under Settings → Language. Dates, decimals and units follow it too, so a
+  German phone shows "82,5 kg" and "3. Okt.".
+- **Translated everywhere you'd look:** every screen, the workout and rest
+  notifications, and the watch app. Exercise names stay in English, the way
+  most gyms say them; muscle groups and equipment are translated.
 
 ---
 
@@ -188,7 +221,7 @@ running while you work.
 flutter test
 ```
 
-Around 1,270 tests across 116 files. They're the main reason the app can be
+Around 2,140 tests across 168 files. They're the main reason the app can be
 refactored at all: as well as the usual unit coverage, there are widget tests
 for every screen, layout tests that fail on a pixel of overflow, and a couple
 that rasterise a widget and read the pixels back — because "the card looks
@@ -217,10 +250,14 @@ gymfy/
       router/            go_router, with a StatefulShellRoute per tab
       theme/             ThemeData, the glass material, accent provider
     features/            one folder per feature: providers, widgets, screens
+      backup/              backup files, restore and automatic backups
       calculator/          1RM estimates and strength rank
+      calendar/            the month-by-month training calendar
       calories/            calorie log (moving out into its own app)
       data_export/         export everything to a file
       exercises/           library, seed data, GIF previews
+      goals/               lift, weekly and bodyweight goals
+      health_connect/      workouts out to, weigh-ins in from Health Connect
       help/                about the app
       home/                today's workout, streak, activity heatmap
       import/              CSV import from Hevy, Strong and StrengthLog
@@ -230,11 +267,15 @@ gymfy/
       overload/            progressive-overload suggestions
       plan_share/          .gymfy and PDF export, and import
       plates/              plate calculator and plate inventory
+      programs/            the bundled ready-made programs
       progress/            measurements, photos, per-exercise charts
+      reviews/             monthly and yearly reviews, shared as an image
       settings/            accent, themes, units, rest timer
       stats/               the panels Progress is assembled from
       wear/                the phone side of the Wear OS sync
       workout/             splits, days, sessions, set logging
+      workout_notification/ the ongoing notification while a workout runs
+    l10n/                English and German strings (ARB) and generated code
     shared/
       data/                cross-feature providers
       database/            the Drift database
@@ -242,7 +283,8 @@ gymfy/
       utils/               formatting, search, units
       widgets/             the shared UI vocabulary
   assets/
-    exercises/           one GIF per exercise, named <id>.gif
+    exercises/           one animated preview per exercise, named <id>.webp
+    programs/            the bundled programs as .gymfy plan files
     fonts/               Schibsted Grotesk (the Hyper theme's typeface)
     icon/                launcher icon and splash source art
     musclemap/source/    the licensed anatomy pack the diagrams come from
@@ -264,8 +306,12 @@ navigation stack, so switching tabs never loses where you were in another one.
 - Widgets never hardcode a hex value. Colours come from the theme or the accent
   provider. `app/theme/` is the one place raw hex is allowed, because that file
   *is* the theme.
-- The database schema is versioned (currently v25) and every change ships a
+- The database schema is versioned (currently v27) and every change ships a
   migration. Existing logs are never dropped.
+- No user-facing text is written into a widget. Every string lives in
+  `lib/l10n/app_en.arb` with its German twin in `app_de.arb`, and widgets read
+  it through `context.l10n`. Key names and the German glossary are in
+  `gymfy/FEATURE_PLAN.md`.
 
 ---
 

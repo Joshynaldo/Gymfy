@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../app/theme/motion.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/data/body_profile.dart';
 import '../../../shared/data/lifter_sex.dart';
 import '../../../shared/utils/units.dart';
@@ -107,6 +108,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
 
     return Scaffold(
@@ -151,24 +153,29 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         ? null
                         : TextButton(
                             onPressed: _saving ? null : _back,
-                            child: const Text('Back'),
+                            child: Text(l10n.commonBack),
                           ),
                   ),
                   const Spacer(),
                   if (_page == _lastPage)
                     FilledButton(
                       onPressed: _saving ? null : _finish,
-                      child: Text(_saving ? 'Saving…' : 'Start lifting'),
+                      child: Text(
+                        _saving ? l10n.onboardingSaving : l10n.onboardingFinish,
+                      ),
                     )
                   else
-                    FilledButton(onPressed: _next, child: const Text('Next')),
+                    FilledButton(
+                      onPressed: _next,
+                      child: Text(l10n.commonNext),
+                    ),
                 ],
               ),
             ),
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Text(
-                'You can change any of this later in Settings.',
+                l10n.onboardingChangeLater,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -230,12 +237,11 @@ class _NamePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return _Step(
-      title: 'Welcome to Gymfy',
-      body:
-          'Everything you log stays on this phone — there is no account and '
-          'nothing gets uploaded. What should we call you?',
+      title: l10n.onboardingWelcomeTitle,
+      body: l10n.onboardingWelcomeBody,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -243,26 +249,21 @@ class _NamePage extends StatelessWidget {
             controller: controller,
             textCapitalization: TextCapitalization.words,
             textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(
-              labelText: 'Your name',
-              hintText: 'Optional',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: l10n.onboardingNameLabel,
+              hintText: l10n.onboardingNameHint,
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 28),
-          Text(
-            'Body diagram and strength standards',
-            style: theme.textTheme.titleSmall,
-          ),
+          Text(l10n.onboardingSexTitle, style: theme.textTheme.titleSmall),
           const SizedBox(height: 6),
           Text(
             // Says what it is *for*, because that's the only reason it is
             // asked. Strength standards genuinely differ by sex — a 1.0×
             // bodyweight bench is intermediate for men and advanced for women
             // — and the muscle map ships two different anatomical drawings.
-            'Picks which body the muscle map draws, and which strength table '
-            'your lifts are compared against. Optional — skip it and the app '
-            'works the same, minus the ranks.',
+            l10n.onboardingSexBody,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -271,12 +272,18 @@ class _NamePage extends StatelessWidget {
           SegmentedButton<LifterSex?>(
             segments: [
               for (final option in LifterSex.values)
-                ButtonSegment(value: option, label: Text(option.label)),
+                ButtonSegment(
+                  value: option,
+                  label: Text(option.localizedLabel(l10n)),
+                ),
               // An explicit way out, so skipping is a choice you can see rather
               // than the absence of one. Without it the only way past is to
               // leave a control untouched, which reads as an unanswered
               // question rather than a declined one.
-              const ButtonSegment(value: null, label: Text('Rather not say')),
+              ButtonSegment(
+                value: null,
+                label: Text(l10n.onboardingSexDecline),
+              ),
             ],
             selected: {sex},
             showSelectedIcon: false,
@@ -319,13 +326,11 @@ class _BodyweightPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final unit = ref.watch(weightUnitProvider);
+    final l10n = context.l10n;
 
     return _Step(
-      title: 'How much do you weigh?',
-      body:
-          'Used to rank your lifts against your own bodyweight, and it becomes '
-          'the first point on your weight chart. Leave it at zero to skip — '
-          'nothing else depends on it.',
+      title: l10n.onboardingBodyweightTitle,
+      body: l10n.onboardingBodyweightBody,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -347,7 +352,7 @@ class _BodyweightPage extends ConsumerWidget {
             key: ValueKey(unit),
             initialWeight: weight,
             unit: unit,
-            label: 'Bodyweight',
+            label: l10n.onboardingBodyweightLabel,
             onChanged: onChanged,
           ),
           const SizedBox(height: 16),
@@ -356,14 +361,14 @@ class _BodyweightPage extends ConsumerWidget {
               Expanded(
                 child: AppPickerField(
                   icon: Icons.height,
-                  label: 'Height',
+                  label: l10n.bodyProfileHeightLabel,
                   value: heightCm == null
-                      ? 'Skip'
+                      ? l10n.onboardingSkipped
                       : formatHeight(heightCm!, unit),
                   onTap: () async {
                     final picked = await showNumberPicker(
                       context: context,
-                      title: 'How tall are you?',
+                      title: l10n.bodyProfileHeightQuestion,
                       min: minHeightCm,
                       max: maxHeightCm,
                       initial: heightCm ?? 175,
@@ -377,20 +382,18 @@ class _BodyweightPage extends ConsumerWidget {
               Expanded(
                 child: AppPickerField(
                   icon: Icons.cake_outlined,
-                  label: 'Age',
-                  value: age == null ? 'Skip' : '$age',
+                  label: l10n.bodyProfileAgeLabel,
+                  value: age == null ? l10n.onboardingSkipped : '$age',
                   onTap: () async {
                     final picked = await showNumberPicker(
                       context: context,
-                      title: 'How old are you?',
+                      title: l10n.bodyProfileAgeQuestion,
                       min: minAge,
                       max: maxAge,
                       initial: age ?? 30,
                       // Stored as a year of birth, so it stays right after
                       // your next birthday.
-                      helper:
-                          'Kept as your year of birth, so it stays '
-                          'correct.',
+                      helper: l10n.bodyProfileAgeHelper,
                     );
                     if (picked != null) onAgeChanged(picked);
                   },
@@ -422,16 +425,14 @@ class _OverloadPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const _Step(
-      title: 'Should Gymfy suggest heavier weights?',
-      body:
-          'When you hit every set at the top of your rep range, the next '
-          'session opens with a bit more on the bar. It only ever suggests — '
-          'the weight stays yours to change.',
+    final l10n = context.l10n;
+    return _Step(
+      title: l10n.onboardingOverloadTitle,
+      body: l10n.onboardingOverloadBody,
       // The same panel Settings shows, minus the deload option: that's a
       // question about month three, and asking it before workout one would be
       // asking someone to plan a stall they haven't hit yet.
-      child: OverloadSettingsPanel(showDeload: false),
+      child: const OverloadSettingsPanel(showDeload: false),
     );
   }
 }
@@ -442,12 +443,11 @@ class _AccentPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selected = ref.watch(accentColorProvider);
+    final l10n = context.l10n;
 
     return _Step(
-      title: 'Pick your colour',
-      body:
-          'Drives buttons, highlights and charts across the app. Tap one to try '
-          'it — the app changes as you go.',
+      title: l10n.onboardingAccentTitle,
+      body: l10n.onboardingAccentBody,
       child: Wrap(
         spacing: 16,
         runSpacing: 16,

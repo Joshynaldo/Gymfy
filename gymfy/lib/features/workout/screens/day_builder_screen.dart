@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/widgets/app_button.dart';
@@ -35,7 +36,7 @@ class DayBuilderScreen extends ConsumerWidget {
     final dayAsync = ref.watch(dayProvider(dayId));
     final exercisesAsync = ref.watch(dayExercisesProvider(dayId));
 
-    final title = dayAsync.value?.name ?? 'Day';
+    final title = dayAsync.value?.name ?? context.l10n.workoutDayFallbackTitle;
 
     return GlassScaffold(
       appBar: GlassAppBar(title: Text(title)),
@@ -45,7 +46,7 @@ class DayBuilderScreen extends ConsumerWidget {
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              'Could not load this day.\n$error',
+              context.l10n.workoutDayLoadFailed('$error'),
               textAlign: TextAlign.center,
             ),
           ),
@@ -80,7 +81,7 @@ class DayBuilderScreen extends ConsumerWidget {
             header: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               child: AppButton(
-                label: 'Start workout',
+                label: context.l10n.workoutStartWorkout,
                 icon: Icons.play_arrow,
                 onPressed: () => _startWorkout(context, ref, title),
               ),
@@ -121,7 +122,7 @@ class DayBuilderScreen extends ConsumerWidget {
       // between them read as a mistake.
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: AppButton(
-        label: 'Add exercises',
+        label: context.l10n.workoutAddExercises,
         icon: Icons.add,
         expand: false,
         onPressed: () => _addExercises(context, ref),
@@ -134,6 +135,7 @@ class DayBuilderScreen extends ConsumerWidget {
     if (ids == null || !context.mounted) return;
 
     final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
     final added = await ref
         .read(workoutRepositoryProvider)
         .addExercisesToDay(dayId, ids);
@@ -142,7 +144,9 @@ class DayBuilderScreen extends ConsumerWidget {
     // sometimes be a lie.
     messenger.showSnackBar(
       SnackBar(
-        content: Text(addedToDayMessage(added: added, asked: ids.length)),
+        content: Text(
+          addedToDayMessage(added: added, asked: ids.length, l10n: l10n),
+        ),
       ),
     );
   }
@@ -202,6 +206,7 @@ class _PlannedExerciseTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
     final entry = planned.entry;
     final exercise = planned.exercise;
@@ -212,18 +217,22 @@ class _PlannedExerciseTile extends ConsumerWidget {
     final tile = ListTile(
       leading: ExerciseThumbnail(gifPath: exercise.gifPath),
       title: Text(exercise.name),
+      // Separate facts joined by a bullet rather than one sentence: each is a
+      // message of its own, and the last two are often absent.
       subtitle: Text(
         [
-          '${entry.defaultSets} sets × '
-              '${formatRepTarget(entry.defaultReps, entry.defaultRepsMax)} reps',
+          l10n.workoutPlannedSetsReps(
+            entry.defaultSets,
+            formatRepTarget(entry.defaultReps, entry.defaultRepsMax),
+          ),
           // Only mentioned when there are some — "0 warm-ups" on every cable
           // curl would be noise on the row it least belongs to.
           if (entry.warmupSets > 0)
-            entry.warmupSets == 1
-                ? '1 warm-up'
-                : '${entry.warmupSets} warm-ups',
+            l10n.workoutPlannedWarmups(entry.warmupSets),
           if (entry.targetPercent != null)
-            '@ ${formatPercent(entry.targetPercent!)} 1RM',
+            l10n.workoutPlannedPercent(
+              formatPercent(entry.targetPercent!, l10n: l10n),
+            ),
         ].join(' • '),
       ),
       trailing: Row(
@@ -233,13 +242,13 @@ class _PlannedExerciseTile extends ConsumerWidget {
           if (canLink || place != null)
             IconButton(
               icon: Icon(Icons.link, color: place != null ? accent : null),
-              tooltip: 'Superset',
+              tooltip: l10n.workoutSuperset,
               visualDensity: VisualDensity.compact,
               onPressed: () => _editSuperset(context, ref),
             ),
           IconButton(
             icon: const Icon(Icons.delete_outline),
-            tooltip: 'Remove exercise',
+            tooltip: l10n.workoutRemoveExerciseTooltip,
             visualDensity: VisualDensity.compact,
             onPressed: () => ref
                 .read(workoutRepositoryProvider)
@@ -251,7 +260,7 @@ class _PlannedExerciseTile extends ConsumerWidget {
               padding: const EdgeInsets.only(left: 4),
               child: Icon(
                 Icons.drag_handle,
-                semanticLabel: 'Drag to reorder',
+                semanticLabel: l10n.workoutDragToReorder,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
@@ -275,12 +284,16 @@ class _PlannedExerciseTile extends ConsumerWidget {
               children: [
                 Icon(Icons.link, size: 14, color: accent),
                 const SizedBox(width: 5),
-                Text(
-                  'SUPERSET · REST AFTER THE LAST',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1.1,
+                // Wraps rather than running off the edge: in German, or at a
+                // large text size, the caps line is wider than the screen.
+                Flexible(
+                  child: Text(
+                    l10n.workoutSupersetRestAfterLast,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.1,
+                    ),
                   ),
                 ),
               ],
@@ -310,24 +323,24 @@ class _PlannedExerciseTile extends ConsumerWidget {
   Future<void> _editSuperset(BuildContext context, WidgetRef ref) async {
     final action = await showOptionPicker<_SupersetAction>(
       context: context,
-      title: 'Superset',
+      title: context.l10n.workoutSuperset,
       options: [
         if (hasPrevious && !linkedToPrevious)
           (
             value: _SupersetAction.withPrevious,
-            label: 'Superset with the exercise above',
+            label: context.l10n.workoutSupersetWithAbove,
             subtitle: null,
           ),
         if (hasNext && !linkedToNext)
           (
             value: _SupersetAction.withNext,
-            label: 'Superset with the exercise below',
+            label: context.l10n.workoutSupersetWithBelow,
             subtitle: null,
           ),
         if (superset != null)
           (
             value: _SupersetAction.leave,
-            label: 'Remove from superset',
+            label: context.l10n.workoutSupersetLeave,
             subtitle: null,
           ),
       ],
@@ -346,6 +359,7 @@ class _PlannedExerciseTile extends ConsumerWidget {
 
   Future<void> _editSetsReps(BuildContext context, WidgetRef ref) async {
     final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
     final result = await showDialog<_SetsRepsResult>(
       context: context,
       builder: (context) => _SetsRepsDialog(
@@ -390,13 +404,7 @@ class _PlannedExerciseTile extends ConsumerWidget {
     // Said out loud because it is the one edit here that changes rows you
     // weren't looking at — several of them may be scrolled off screen.
     messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          changed == 1
-              ? 'Updated 1 exercise'
-              : 'Updated all $changed exercises',
-        ),
-      ),
+      SnackBar(content: Text(l10n.workoutUpdatedExercises(changed))),
     );
   }
 }
@@ -512,8 +520,10 @@ class _SetsRepsDialogState extends State<_SetsRepsDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return GlassDialog(
-      title: const Text('Sets & reps'),
+      title: Text(l10n.workoutSetsRepsTitle),
       // Scrollable because the content genuinely can exceed the space: three
       // wheels, a switch, six warm-up chips and the apply-to-all row already
       // overflow a short dialog, and a large system font size makes that worse
@@ -528,7 +538,7 @@ class _SetsRepsDialogState extends State<_SetsRepsDialog> {
               children: [
                 Expanded(
                   child: NumberWheel(
-                    label: 'Sets',
+                    label: l10n.workoutWheelSets,
                     controller: _setsController,
                     itemCount: _maxSets,
                     labelAt: _oneBased,
@@ -539,7 +549,9 @@ class _SetsRepsDialogState extends State<_SetsRepsDialog> {
                   child: NumberWheel(
                     // The label changes with the mode, so the left wheel never
                     // silently means two different things.
-                    label: _useRange ? 'From' : 'Reps',
+                    label: _useRange
+                        ? l10n.workoutWheelFrom
+                        : l10n.workoutWheelReps,
                     controller: _repsController,
                     itemCount: _maxReps,
                     labelAt: _oneBased,
@@ -549,7 +561,7 @@ class _SetsRepsDialogState extends State<_SetsRepsDialog> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: NumberWheel(
-                      label: 'To',
+                      label: l10n.workoutWheelTo,
                       controller: _repsMaxController,
                       itemCount: _maxReps,
                       labelAt: _oneBased,
@@ -560,7 +572,7 @@ class _SetsRepsDialogState extends State<_SetsRepsDialog> {
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Rep range'),
+              title: Text(l10n.workoutRepRange),
               value: _useRange,
               onChanged: (value) => setState(() => _useRange = value),
             ),
@@ -569,7 +581,7 @@ class _SetsRepsDialogState extends State<_SetsRepsDialog> {
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Warm-up sets',
+                l10n.workoutWarmupSets,
                 style: Theme.of(context).textTheme.labelLarge,
               ),
             ),
@@ -602,7 +614,7 @@ class _SetsRepsDialogState extends State<_SetsRepsDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.commonCancel),
         ),
         // Hidden on a one-exercise day, where it would do exactly what Save
         // does and only raise a moment's doubt about the difference.
@@ -617,9 +629,9 @@ class _SetsRepsDialogState extends State<_SetsRepsDialog> {
             // Deliberately a TextButton beside the filled Save. Both are one
             // tap now, so the only thing keeping the wider action from being
             // hit by accident is that it looks secondary and says what it does.
-            child: Text('Save to all ${widget.otherExercises + 1}'),
+            child: Text(l10n.workoutSaveToAll(widget.otherExercises + 1)),
           ),
-        FilledButton(onPressed: _submit, child: const Text('Save')),
+        FilledButton(onPressed: _submit, child: Text(l10n.commonSave)),
       ],
     );
   }
@@ -644,10 +656,13 @@ class _EmptyState extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 16),
-            Text('No exercises yet', style: theme.textTheme.titleLarge),
+            Text(
+              context.l10n.workoutDayEmptyTitle,
+              style: theme.textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
             Text(
-              'Add exercises from the library and set their sets and reps.',
+              context.l10n.workoutDayEmptyMessage,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
             ),

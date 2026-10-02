@@ -86,6 +86,14 @@ dependencies {
     // Services library, which is the whole reason it can live in :app when
     // Glance could not. Its cost to the phone build is measured in TODO.md.
     implementation("com.google.android.gms:play-services-wearable:19.0.0")
+
+    // Health Connect: writes finished workouts, reads bodyweight. On-device
+    // IPC to the Health Connect app, not a network client. 1.1.0 is the
+    // latest stable; it declares minSdk 26 while the app runs from 24, which
+    // is what the tools:overrideLibrary in AndroidManifest.xml is about —
+    // every call into it is gated in HealthConnectBridge.kt. Its cost to the
+    // phone build is measured in TODO.md.
+    implementation("androidx.health.connect:connect-client:1.1.0")
 }
 
 flutter {

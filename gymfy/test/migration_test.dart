@@ -23,6 +23,7 @@ import 'package:gymfy/shared/database/app_database.dart';
 /// Undoes what version N's migration branch added. Keyed by N, applied in
 /// descending order by [rewindTo].
 const _undoVersion = <int, List<String>>{
+  27: ['DROP TABLE goals'],
   // v26 swapped the warm-up flag for a set type. Winding back puts the flag
   // back and fills it from the type before dropping the new columns, so a test
   // that logs a warm-up at v26 still has one after rewinding.
@@ -127,13 +128,13 @@ void main() {
     final db = AppDatabase.forTesting(NativeDatabase.memory());
     addTearDown(db.close);
 
-    expect(db.schemaVersion, 26);
+    expect(db.schemaVersion, 27);
   });
 
   test('every version above the oldest test target can be wound back', () {
     // Guards the helper itself: a new migration with no undo entry would make
     // every rewind test below fail with a confusing SQL error instead of this.
-    for (var v = 10; v <= 26; v++) {
+    for (var v = 10; v <= 27; v++) {
       expect(_undoVersion.keys, contains(v), reason: 'no undo for v$v');
     }
   });
@@ -145,6 +146,7 @@ void main() {
     expect(await db.select(db.restTimers).get(), isEmpty);
     expect(await db.select(db.workoutDaySchedules).get(), isEmpty);
     expect(await db.select(db.sessionExercises).get(), isEmpty);
+    expect(await db.select(db.goals).get(), isEmpty);
   });
 
   test('upgrading from v9 adds the rest-timer table and keeps data', () async {
@@ -686,7 +688,8 @@ void main() {
       final version = await upgraded
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data['user_version'], 26);
+      // All the way to the current version: v27 runs straight after.
+      expect(version.data['user_version'], 27);
     });
 
     test('a finished v26 step whose version was never written reruns '
@@ -706,6 +709,146 @@ void main() {
       final sets = await again.select(again.loggedSets).get();
       expect(sets.where((s) => s.setType == 'warmup'), hasLength(1));
     });
+  });
+
+  group('upgrading from v26', () {
+    // Goals are a new table and nothing else. The test that matters is that
+    // nobody's log moves — and, as with v26, that the step survives being
+    // killed and run a second time.
+    late File file;
+
+    setUp(() async {
+      file = _tempDatabase('v26');
+      final old = AppDatabase.forTesting(NativeDatabase(file));
+      await old
+          .into(old.exercises)
+          .insert(
+            ExercisesCompanion.insert(
+              id: 'barbell_bench_press',
+              name: 'Barbell Bench Press',
+              muscleIds: const ['chest'],
+            ),
+          );
+      // A free workout, so the session that survives has no plan behind it.
+      final sessionId = await old
+          .into(old.workoutSessions)
+          .insert(
+            WorkoutSessionsCompanion.insert(
+              name: 'Free workout',
+              completedAt: Value(DateTime(2026, 9, 30, 19)),
+            ),
+          );
+      await old
+          .into(old.loggedSets)
+          .insert(
+            LoggedSetsCompanion.insert(
+              sessionId: sessionId,
+              exerciseId: 'barbell_bench_press',
+              setNumber: 1,
+              weight: const Value(100),
+              reps: const Value(5),
+            ),
+          );
+      await rewindTo(old, 26);
+      // Guards the rewind: the v26 shape really has no goals table.
+      final tables = await old
+          .customSelect("SELECT name FROM sqlite_master WHERE type = 'table'")
+          .get();
+      expect(tables.map((t) => t.data['name']), isNot(contains('goals')));
+      await old.close();
+    });
+
+    test('adds an empty goals table and keeps the log', () async {
+      final upgraded = AppDatabase.forTesting(NativeDatabase(file));
+      addTearDown(upgraded.close);
+
+      // Nobody had goals before goals existed.
+      expect(await upgraded.select(upgraded.goals).get(), isEmpty);
+
+      final session =
+          (await upgraded.select(upgraded.workoutSessions).get()).single;
+      expect(session.name, 'Free workout');
+      expect(session.dayId, isNull);
+      final set = (await upgraded.select(upgraded.loggedSets).get()).single;
+      expect((set.weight, set.reps, set.setType), (100.0, 5, 'normal'));
+
+      // And the new table takes a row, foreign key and all.
+      await upgraded
+          .into(upgraded.goals)
+          .insert(
+            GoalsCompanion.insert(
+              kind: 'lift',
+              exerciseId: const Value('barbell_bench_press'),
+              target: 110,
+              startValue: const Value(100),
+              deadline: Value(DateTime(2026, 12, 31)),
+            ),
+          );
+      final goal = (await upgraded.select(upgraded.goals).get()).single;
+      expect(goal.target, 110);
+      expect(goal.celebratedAt, isNull);
+      expect(goal.archivedAt, isNull);
+    });
+
+    test(
+      'a v27 step whose version was never written reruns harmlessly',
+      () async {
+        // The table was created but the app died before drift wrote the new
+        // version. Running the step again must not fail on "table already
+        // exists" at every launch after, and must not lose a goal set since.
+        final first = AppDatabase.forTesting(NativeDatabase(file));
+        await first
+            .into(first.goals)
+            .insert(GoalsCompanion.insert(kind: 'frequency', target: 3));
+        await first.customStatement('PRAGMA user_version = 26');
+        await first.close();
+
+        final again = AppDatabase.forTesting(NativeDatabase(file));
+        addTearDown(again.close);
+
+        final goals = await again.select(again.goals).get();
+        expect(goals.single.kind, 'frequency');
+        final version = await again
+            .customSelect('PRAGMA user_version')
+            .getSingle();
+        expect(version.data['user_version'], 27);
+      },
+    );
+  });
+
+  test('a goal is removed with the exercise it is about', () async {
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
+    await db.customStatement('PRAGMA foreign_keys = ON');
+
+    await db
+        .into(db.exercises)
+        .insert(
+          ExercisesCompanion.insert(
+            id: 'custom_landmine_press',
+            name: 'Landmine Press',
+            muscleIds: const ['front_deltoid'],
+            isCustom: const Value(true),
+          ),
+        );
+    await db
+        .into(db.goals)
+        .insert(
+          GoalsCompanion.insert(
+            kind: 'lift',
+            exerciseId: const Value('custom_landmine_press'),
+            target: 40,
+          ),
+        );
+    // A goal with no exercise must survive the same delete untouched.
+    await db
+        .into(db.goals)
+        .insert(GoalsCompanion.insert(kind: 'frequency', target: 3));
+
+    await db.delete(db.exercises).go();
+
+    final left = await db.select(db.goals).get();
+    expect(left.map((g) => g.kind), ['frequency']);
   });
 
   test('a rest override is removed with the exercise it belongs to', () async {

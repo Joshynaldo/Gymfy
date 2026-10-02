@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/utils/format.dart';
 import '../data/photo_repository.dart';
 import '../widgets/photo_file_image.dart';
@@ -53,17 +54,18 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final photosAsync = ref.watch(progressPhotosProvider);
 
     return GlassScaffold(
-      appBar: GlassAppBar(title: const Text('Compare')),
+      appBar: GlassAppBar(title: Text(l10n.progressCompareTitle)),
       body: (context) => photosAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              'Could not load photos.\n$error',
+              l10n.progressPhotosLoadFailed('$error'),
               textAlign: TextAlign.center,
             ),
           ),
@@ -116,7 +118,9 @@ class _PhotoComparisonScreenState extends ConsumerState<PhotoComparisonScreen> {
       context: context,
       builder: (context) => _PhotoPickerSheet(
         items: items,
-        title: isBefore ? 'Pick the "before" photo' : 'Pick the "after" photo',
+        title: isBefore
+            ? context.l10n.progressComparePickBefore
+            : context.l10n.progressComparePickAfter,
       ),
     );
     if (chosen == null) return;
@@ -140,6 +144,7 @@ class _SpanBanner extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
     // Absolute, because nothing stops the user putting the newer photo on the
     // left if that's the comparison they want.
@@ -149,11 +154,12 @@ class _SpanBanner extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
       child: Text(
         switch (days) {
-          0 => 'Same day',
-          1 => '1 day apart',
-          _ when days < 14 => '$days days apart',
-          _ when days < 60 => '${(days / 7).round()} weeks apart',
-          _ => '${(days / 30).round()} months apart',
+          0 => l10n.progressCompareSameDay,
+          _ when days < 14 => l10n.progressCompareDaysApart(days),
+          _ when days < 60 => l10n.progressCompareWeeksApart(
+            (days / 7).round(),
+          ),
+          _ => l10n.progressCompareMonthsApart((days / 30).round()),
         },
         textAlign: TextAlign.center,
         style: theme.textTheme.titleMedium?.copyWith(color: accent),
@@ -236,6 +242,7 @@ class _Ends extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Row(
@@ -243,8 +250,17 @@ class _Ends extends StatelessWidget {
         children: [
           // Laid out to match the slider: the older photo is what you see at
           // the left end, the newer at the right.
-          _End(label: 'Before', item: before, onTap: onTapBefore),
-          _End(label: 'After', item: after, onTap: onTapAfter, alignEnd: true),
+          _End(
+            label: l10n.progressCompareBefore,
+            item: before,
+            onTap: onTapBefore,
+          ),
+          _End(
+            label: l10n.progressCompareAfter,
+            item: after,
+            onTap: onTapAfter,
+            alignEnd: true,
+          ),
         ],
       ),
     );
@@ -288,7 +304,7 @@ class _End extends StatelessWidget {
                 ),
               ),
               Text(
-                formatShortDate(item.photo.date),
+                formatShortDate(item.photo.date, l10n: context.l10n),
                 style: theme.textTheme.bodyMedium,
               ),
               if (note != null && note.isNotEmpty)
@@ -359,7 +375,7 @@ class _PhotoPickerSheet extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          formatShortDate(item.photo.date),
+                          formatShortDate(item.photo.date, l10n: context.l10n),
                           style: theme.textTheme.bodySmall,
                         ),
                       ],
@@ -394,11 +410,13 @@ class _NotEnoughPhotos extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 16),
-            Text('Nothing to compare yet', style: theme.textTheme.titleLarge),
+            Text(
+              context.l10n.progressCompareNotEnoughTitle,
+              style: theme.textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
             Text(
-              'Add at least two progress photos and you can fade between any '
-              'two of them here.',
+              context.l10n.progressCompareNotEnoughMessage,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
             ),

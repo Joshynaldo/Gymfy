@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/session_length.dart';
@@ -36,6 +37,7 @@ class _Body extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final unit = ref.watch(weightUnitProvider);
     final sets = ref.watch(sessionSetsProvider(session.id)).value ?? const [];
     final intensities =
@@ -63,7 +65,7 @@ class _Body extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'LAST WORKOUT',
+                  l10n.homeLastWorkoutHeading,
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                     letterSpacing: 1,
@@ -83,7 +85,7 @@ class _Body extends ConsumerWidget {
                   // eighteen sets, which states something false about a
                   // workout that plainly happened.
                   [
-                    formatDayLabel(completedAt),
+                    formatDayLabel(completedAt, l10n: l10n),
                     if (length != null) formatDuration(length),
                   ].join(' · '),
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -92,8 +94,10 @@ class _Body extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '${sets.length} ${sets.length == 1 ? 'set' : 'sets'} • '
-                  '${formatWeightUnit(volume, unit)}',
+                  l10n.homeLastWorkoutSets(
+                    sets.length,
+                    formatWeightUnit(volume, unit, l10n: l10n),
+                  ),
                   style: theme.textTheme.bodyMedium,
                 ),
               ],

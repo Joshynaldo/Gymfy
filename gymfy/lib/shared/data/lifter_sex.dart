@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/l10n.dart';
 import 'settings_repository.dart';
 
 /// Which set of reference data applies to this lifter.
@@ -15,7 +16,14 @@ enum LifterSex {
 
   const LifterSex(this.label);
 
+  /// The English name. On screen use [localizedLabel].
   final String label;
+
+  /// The name in the app's language, e.g. "Weiblich".
+  String localizedLabel(AppLocalizations l10n) => switch (this) {
+    LifterSex.male => l10n.lifterSexMale,
+    LifterSex.female => l10n.lifterSexFemale,
+  };
 }
 
 /// The settings key holding the lifter's sex.

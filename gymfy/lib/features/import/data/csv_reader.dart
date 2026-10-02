@@ -18,13 +18,35 @@
 //   character on the front of the first header — so the first column silently
 //   fails to match its own name.
 
+import '../../../l10n/l10n.dart';
+
+/// Why a file cannot be read as CSV at all.
+enum CsvProblem {
+  /// A quote opened and never closed — usually a file cut short.
+  unclosedQuote,
+
+  /// Nothing in it.
+  empty,
+}
+
 /// Thrown when a file cannot be read as CSV at all.
 ///
-/// Its [message] is written to be shown to a person, not logged.
+/// Carries the [problem] rather than a sentence, so the screen words it in
+/// the app's language; [message] is the English, written to be shown to a
+/// person, not logged.
 class CsvException implements Exception {
-  const CsvException(this.message);
+  const CsvException(this.problem);
 
-  final String message;
+  final CsvProblem problem;
+
+  /// What to tell the user, in [l10n]'s language.
+  String describe(AppLocalizations l10n) => switch (problem) {
+    CsvProblem.unclosedQuote => l10n.importErrorUnclosedQuote,
+    CsvProblem.empty => l10n.importErrorEmpty,
+  };
+
+  /// The message in English.
+  String get message => describe(englishLocalizations);
 
   @override
   String toString() => message;
@@ -104,10 +126,7 @@ List<List<String>> parseCsv(String source) {
   if (field.isNotEmpty || row.isNotEmpty) endRow();
 
   if (quoted) {
-    throw const CsvException(
-      'This file has a quote that is never closed, so the rest of it cannot '
-      'be read. It may have been cut short while being saved.',
-    );
+    throw const CsvException(CsvProblem.unclosedQuote);
   }
 
   return rows;
@@ -134,7 +153,7 @@ class CsvTable {
   factory CsvTable.parse(String source) {
     final raw = parseCsv(source);
     if (raw.isEmpty) {
-      throw const CsvException('That file is empty.');
+      throw const CsvException(CsvProblem.empty);
     }
 
     final headers = raw.first.map((h) => h.trim()).toList();

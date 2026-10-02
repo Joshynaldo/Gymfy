@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/utils/exercise_display.dart';
 import '../../../shared/widgets/app_segmented.dart';
 import '../data/muscle_colors.dart';
@@ -19,8 +20,7 @@ class MuscleMapView extends StatefulWidget {
     required this.intensities,
     required this.emptyMessage,
     this.caption,
-    this.contrastCaption =
-        'Each muscle has its own colour. Brighter still means more volume.',
+    this.contrastCaption,
     this.heatColor,
     this.leadingControl,
   });
@@ -37,7 +37,7 @@ class MuscleMapView extends StatefulWidget {
   /// Replaces [caption] while per-muscle colours are on. Defaults to the volume
   /// wording, which is what every caller but the fatigue map wants — brightness
   /// means something different there and saying "volume" would be wrong.
-  final String contrastCaption;
+  final String? contrastCaption;
 
   /// Overrides the accent as the colour muscles heat toward.
   ///
@@ -70,6 +70,7 @@ class _MuscleMapViewState extends State<MuscleMapView> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final trained = _trainedMuscles;
 
     return Column(
@@ -92,9 +93,17 @@ class _MuscleMapViewState extends State<MuscleMapView> {
                 child: AppSegmented<BodySide>(
                   selected: _side,
                   onChanged: (value) => setState(() => _side = value),
-                  segments: const [
-                    (value: BodySide.front, label: 'Front', leading: null),
-                    (value: BodySide.back, label: 'Back', leading: null),
+                  segments: [
+                    (
+                      value: BodySide.front,
+                      label: l10n.muscleMapFront,
+                      leading: null,
+                    ),
+                    (
+                      value: BodySide.back,
+                      label: l10n.muscleMapBack,
+                      leading: null,
+                    ),
                   ],
                 ),
               ),
@@ -106,8 +115,8 @@ class _MuscleMapViewState extends State<MuscleMapView> {
                 visualDensity: VisualDensity.compact,
                 color: _isContrast ? theme.colorScheme.primary : null,
                 tooltip: _isContrast
-                    ? 'Switch to heatmap'
-                    : 'Switch to per-muscle colours',
+                    ? l10n.muscleMapShowHeatmap
+                    : l10n.muscleMapShowColours,
                 onPressed: () => setState(() {
                   _mode = _isContrast
                       ? MuscleMapMode.heatmap
@@ -124,7 +133,7 @@ class _MuscleMapViewState extends State<MuscleMapView> {
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
-                  'Could not load the muscle map.\n$error',
+                  l10n.muscleMapLoadFailed('$error'),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -154,7 +163,7 @@ class _MuscleMapViewState extends State<MuscleMapView> {
             children: [
               Expanded(
                 child: Text(
-                  _captionText,
+                  _captionText(l10n),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -185,10 +194,12 @@ class _MuscleMapViewState extends State<MuscleMapView> {
     return colouredMuscles.where((id) => (data[id] ?? 0) > 0).toList();
   }
 
-  String get _captionText {
+  String _captionText(AppLocalizations l10n) {
     final data = widget.intensities.value;
     if (data == null || data.isEmpty) return widget.emptyMessage;
-    if (_isContrast) return widget.contrastCaption;
+    if (_isContrast) {
+      return widget.contrastCaption ?? l10n.muscleMapContrastCaption;
+    }
     return widget.caption ?? '';
   }
 }
@@ -221,7 +232,10 @@ class _Legend extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 5),
-              Text(muscleLabel(muscleId), style: theme.textTheme.labelSmall),
+              Text(
+                muscleLabel(muscleId, l10n: context.l10n),
+                style: theme.textTheme.labelSmall,
+              ),
             ],
           ),
       ],

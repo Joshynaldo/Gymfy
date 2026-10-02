@@ -1,3 +1,185 @@
+# Localisation (English + German)
+
+**ARB key convention: `<area><Part><Purpose>`**, lowerCamelCase ASCII
+(`l10n_test.dart` checks the shape).
+- `<area>` is the `lib/features` folder in camelCase (`home`, `settings`,
+  `muscleMap`, `planShare`, `workoutNotification` …); `shell` for `lib/app`
+  (nav bar, router); `shared` for `lib/shared` widgets and utils; the type
+  name for a shared enum or model (`muscle`, `equipment`, `setType`,
+  `lifterSex`, `measurementField`, `goalKind`, `theme`, `bodyProfile`,
+  `notification`); `common` only for words that mean exactly the same
+  everywhere (`commonCancel`, `commonSave`, `commonDone`, `commonNotSet`,
+  `commonToday` …).
+- `<Part>` is the screen, widget or section, without `Screen`/`Card`:
+  `homeToday…`, `homeLastWorkout…`, `settingsRestTimer…`.
+- `<Purpose>`: `Title`, `Subtitle`, `Label`, `Hint`, `Tooltip`, `Message`,
+  `Caption`, `Action`, `Semantics`, `…Failed` for errors. Examples:
+  `homeTodayRestTitle`, `settingsDefaultRestSubtitle`,
+  `muscleMapShowHeatmap`, `helpOpenLinkFailed`.
+- Counts are one ICU plural named for what is counted (`homeWeekWorkouts`:
+  `{count, plural, =1{1 workout} other{{count} workouts}}`); grammatical
+  variants are an ICU select (`settingsBodyDiagramSubtitle`, because German
+  declines "Männliches/Weibliches"). Never build a sentence by `+` or by
+  splicing a translated word into another one.
+- Every placeholder is declared with its type in `app_en.arb`. Numbers and
+  dates that the app formats itself go in pre-formatted as `String`.
+
+**Setup.** `l10n.yaml`, `lib/l10n/app_en.arb` (template — its values are the
+English strings verbatim, so English widget tests keep finding them) and
+`app_de.arb`. The generated `lib/l10n/app_localizations*.dart` are
+**committed**, like every `.g.dart`; `flutter gen-l10n` regenerates them, and
+`flutter pub get` / `test` / `build` do too (`generate: true`).
+- Widgets: `context.l10n.someKey` (`lib/l10n/l10n.dart`). Never
+  `AppLocalizations.of(context)!`: most widget tests pump a bare
+  `MaterialApp` with no delegates, and `context.l10n` falls back to English
+  there.
+- No `BuildContext` (notifications, background sync): `ref.read(
+  appLocalizationsProvider)` in `lib/l10n/app_language.dart`, or
+  `englishLocalizations` for something that must stay English.
+- Language: `app_language` setting, Settings → Language. `system` follows the
+  phone (German phone → German, any unsupported language → English).
+  `appLocaleProvider` feeds every `MaterialApp` in `main.dart`. On `system`,
+  `appLocalizationsProvider` resolves `systemLocalesProvider`, which
+  `systemLocalesWatcherProvider` (watched in `main.dart`) keeps current when
+  the phone's language changes — Android does not restart the app for it.
+- Formatting: the helpers in `shared/utils/format.dart`, `units.dart`
+  (`formatWeightUnit`, `formatWeightIn`, `formatLoggedSet`), `weekday.dart`
+  and `home/data/recap.dart` (`bucketLabel`) take an optional `l10n:` — pass
+  `context.l10n`. Without it they print the old English. German: dates from
+  intl's CLDR data ("3. Okt. 2026", "Fr., 25. Sept."), numbers "62,5" and
+  "41.040". Leave `l10n` off for files (CSV, backups) and for a value going
+  back into a text field the user edits (`parseWeight` reads "1.040" as 1.04).
+  `formatDuration` ("1 h 05 min") is the same in German and takes none.
+- Enum labels: `.label` stays English (data, exports); on screen use
+  `.localizedLabel(context.l10n)` — `Equipment`, `SetType`, `LifterSex`,
+  `MeasurementField`, `GoalKind`, `RecapPeriod`, `AppTheme` (plus
+  `localizedDescription`). Muscles: `muscleLabel(id, l10n: context.l10n)`;
+  search: `matchesExerciseSearch(..., l10n: context.l10n)` so "Brust" finds
+  chest work.
+- Not translated, on purpose: exercise names (seed data), the editor theme
+  names (Tokyo Night, Dracula, Catppuccin Mocha, Gruvbox, Hyper), the
+  feedback mail's subject, units (`kg`, `lbs`, `cm`, `min`, `h`).
+- Tests: `l10n_test.dart` fails on a key missing from either file, on
+  mismatched placeholders and on a German value that is a copy of the
+  English (add genuine ones to `_sameInGerman`). German widget test:
+  `MaterialApp(locale: const Locale('de'), localizationsDelegates:
+  AppLocalizations.localizationsDelegates, supportedLocales:
+  AppLocalizations.supportedLocales)`; a pure unit test of German dates calls
+  `initializeDateFormatting('de')` (`package:intl/date_symbol_data_local.dart`)
+  first. Add your densest screens to `german_layout_test.dart`.
+
+**Translated:** everything the app shows — `lib/main.dart`, `lib/app`,
+`lib/shared` and every feature folder, including the panels features put on
+Settings (plates, overload, logging, rest length, Health Connect) and
+onboarding's overload page. **Left English on purpose**, besides the list
+above: exercise names, the bundled programmes' names and day names, sessions
+already saved as "Free workout" or "Imported workout", the product name
+"Health Connect", the contents of exported files (CSV headers, the JSON's
+note — files are data, read by other programs), the short English
+diagnostics inside a damaged-backup message and inside errors quoted from
+the platform (`$error`), and the two developer harnesses
+`lib/design_preview.dart` and `lib/preview_screens.dart`, which ship in no
+build.
+
+What the second batch added, for whoever translates the rest:
+- More helpers take an optional `l10n:` and print the old English without
+  it: `formatPercent` (German "72,5 %", with a no-break space),
+  `formatPlate`/`formatBar` (leave `formatPlate` English for storage —
+  `encodePlates` joins with commas), `formatRecordValue`/`describeRecord`,
+  `describeSetPosition`/`describeNextNumbers`, `programFacts`,
+  `blockWeekLabel`, `exerciseTarget`, `filterOptionsFor` (pass the same
+  `l10n` as `matchesExerciseSearch`, or a German query empties the chips),
+  `buildPlanPdf`, `workoutNotificationFrom`.
+- More enums gained `localizedLabel`: `RecordKind`, `OverloadMode`,
+  `EffortRatingMode`, `ProgramLevel`, `MuscleGroup`. Bundled programmes have
+  `localizedSummary`/`localizedDescription`; their names (which are also the
+  split names inside the files) and the day names in the files stay English,
+  like exercise names.
+- `PlanFormatException` carries a `PlanFormatProblem` and words it with
+  `describe(l10n)`; `message` is the English.
+- The ongoing workout notification gets every word from Dart, button labels
+  and channel name included (`WorkoutNotificationLabels`); Kotlin keeps only
+  an English fallback. `WorkoutNotificationSync` watches
+  `appLocalizationsProvider`, so a test container without a database must
+  override it (`overrideWithValue(englishLocalizations)`).
+- The keypad in the log sheet and the warm-up field show the language's
+  decimal separator; the value typed stays a point internally.
+- The printed plan uses the PDF's built-in Helvetica, which has Latin-1
+  only: `planSharePdf…` messages may use umlauts and ß but no en dash or
+  curly quotes (`localized_workout_test.dart` checks).
+- German layout tests for these screens: `german_workout_layout_test.dart`.
+  The test font draws every glyph a full em wide, so it overstates German
+  widths — but four rows it flagged were fixed anyway rather than worked
+  around: the warm-up button is capped so Log set keeps its room, the day
+  builder's superset caption wraps, the plate total's label gives way to the
+  number, and the training block sheet's buttons sit in an `OverflowBar`.
+
+What the third batch (progress, stats, calculator, calendar, calories, goals,
+reviews, backup, data_export, import, health_connect, wear) added:
+- `formatDecimal(value, digits, l10n:)` in `format.dart`, for ratios and
+  multipliers that are not weights ("1,24× Körpergewicht").
+- Optional `l10n:` and the old English without it: `goalTitle`,
+  `goalValue`, `goalCaption`, `workoutsPerWeekLabel`, `goalDraftProblem`,
+  `describeVolumeComparison` (one message per thing, since German needs
+  "2,3 Londoner Doppeldeckerbusse"), `describeBackfill`, `defaultSplitName`,
+  `describeRepeatableSet`, `wearWorkoutFrom`, `MeasurementDisplay`'s
+  `formatValue`/`formatWithUnit` (leave `l10n` off for the text field).
+  `ReviewPeriod` keeps `label`/`shortLabel` English and gained
+  `localizedLabel`/`localizedShortLabel`.
+- `localizedLabel` for `StrengthTier`, `ProgressView`, `AutoBackupMode`,
+  `HealthConnectAvailability`, `ImportField`; `OneRmFormula.localizedNote`
+  (the formula names are surnames and stay).
+- `BackupException`, `CsvException` and `ImportFormatException` carry a
+  problem (`BackupProblem`, `CsvProblem`, the missing `ImportField`s plus
+  the file's headers) and are worded by the screen with `describe(l10n)`;
+  `message` is the English the old tests read. Column matching in the import
+  is untouched — `parseWorkoutCsv` only gained `untitledName`, the name an
+  untitled workout is saved under, and the screen passes it in the app's
+  language, like the split it builds (`createSplitFrom(name: …)`).
+- The watch payload is worded on the phone in the phone app's language:
+  `WearSync` watches `appLocalizationsProvider`, so a test container without
+  a database overrides it, like `WorkoutNotificationSync`. The watch's own
+  few words (idle screen, "Rest over", +30 s, skip, Log, reps, the rest
+  channel) are Android string resources in `android/wear/src/main/res`
+  with `values-de`, and follow the watch's language.
+- The Health Connect privacy screen (`HealthPermissionsRationaleActivity`)
+  has `android/app/src/main/res/values-de/strings.xml`; Health Connect
+  shows it in the phone's language. It names the switches as the German
+  Settings screen does — `localized_insights_test.dart` checks both.
+- An ICU select with one-word branches (`beginner{beginner}`) is fine:
+  `l10n_test.dart` no longer reads a branch body as a placeholder.
+- The calorie summary's "left/over" figure sits in a `Wrap` and drops under
+  the total when the two don't fit — found by
+  `german_insights_layout_test.dart`, which covers these screens.
+
+**German glossary** — du-form, the words German lifters use, the same word
+everywhere: workout → Training (pl. Trainings) · set → Satz/Sätze · rep →
+Wiederholung, short Wdh. · warm-up set → Aufwärmsatz · working set →
+Arbeitssatz · drop set → Dropsatz · failure → Bis Versagen · rest → Pause ·
+rest timer → Pausentimer · rest day → Ruhetag · exercise → Übung · exercise
+library → Übungsbibliothek · split → Split · programme → Programm · plan →
+Plan/Trainingsplan · weight → Gewicht · bodyweight → Körpergewicht · volume →
+Volumen · PR → PR/Bestleistung · 1RM → 1RM · progressive overload →
+Progressive Overload · deload → Deload · strength rank → Kraftlevel ·
+strength standards → Kraftstandards · muscle map → Muskelkarte · body diagram
+→ Körperdiagramm · plates → Hantelscheiben (short: Scheiben) · plate
+calculator → Scheibenrechner · bar → Stange · log (verb) → loggen · theme →
+Design · accent → Akzentfarbe · not set → Nicht angegeben · superset →
+Supersatz · top set → Topsatz · rep range → Wiederholungsbereich · warm-up
+ramp → Aufwärmschema · working weight → Arbeitsgewicht · RPE/RIR → RPE/RIR
+· training block → Trainingsblock · deload week → Deload-Woche · beginner /
+intermediate → Einsteiger / Fortgeschritten · equipment → Ausrüstung ·
+custom (exercise) → Eigene · personal record → Bestleistung · strength
+tiers Beginner / Novice / Intermediate / Advanced / Elite → Neuling /
+Anfänger / Fortgeschritten / Erfahren / Elite ("auf Stufe Erfahren") ·
+measurements → Körpermaße · weigh-in → Gewichtswert, "gewogen" · streak →
+Serie ("3 Tage in Folge") · review → Rückblick · all-time → Gesamt/Insgesamt
+· trends → Verlauf · backup → Backup (das) · restore → Wiederherstellen ·
+write to Health Connect → eintragen · read bodyweight → Körpergewicht
+übernehmen · macros → Makros (P / KH / F). Set-type
+badges: A (Aufwärmsatz), D (Dropsatz), V (Versagen). English's spaced em
+dash becomes a spaced en dash (" – ").
+
 # Schema v26: what it added and the rules around it
 
 Every schema change for backup, logging, sessions and programs landed in **one
@@ -91,11 +273,31 @@ plan slot, **set null** when the slot is deleted).
 - Commit messages: no Claude mention / co-author trailer.
 
 ## Settings keys (AppSettings)
+- `app_language`: `system` (default; also what a missing row means) | `en` |
+  `de` — see Localisation above.
 - `effort_rating_mode`: `off` (default) | `rpe` | `rir`.
 - `auto_backup_mode`: `off` (default) | `weekly` | `after_workout`;
   `auto_backup_folder` (path/URI); `auto_backup_last_at` (ISO-8601);
   `auto_backup_last_error` (last failed automatic backup, shown on the screen).
 - Warm-up calculator ramp: `warmup_ramp_percents` (e.g. `40,60,80`).
+- `workout_notification`: `true` (default) | `false` — the ongoing workout
+  notification (Android only, `lib/features/workout_notification/`).
+- Health Connect (`lib/features/health_connect/`, no schema change):
+  `health_connect_write_workouts`, `health_connect_read_bodyweight`
+  (`true`|`false`, both off by default); `health_connect_write_since`
+  (ISO-8601, workouts finished after it are written automatically, older ones
+  only by the backfill); `health_connect_written_sessions` (JSON
+  `{sessionId: clientRecordId}`, how deletions find their record);
+  `health_connect_weight_imports` (JSON `{"yyyy-mm-dd": {id, kg}}`, how a
+  typed or edited bodyweight is told apart from an import);
+  `health_connect_weight_checked_at` (ISO-8601); `health_connect_last_error`.
+  These live in `app_settings` but are device-local, like the `auto_backup_*`
+  keys (`deviceLocalSettingKeys` in `backup_repository.dart`): a restore keeps
+  this phone's values and never brings back the file's. So a restore never
+  switches Health Connect on, and a new phone starts with both switches off
+  and an empty ledger, so "Write past workouts" writes everything. On the
+  same phone, with writing on, the next sync deletes from Health Connect the
+  workouts the restored backup does not contain — as deleting them would.
 
 ## Feature areas and the files they touched
 **P1 Backup & restore** — new `lib/features/backup/` (data: `backup_format.dart`,
@@ -130,3 +332,60 @@ picker that feeds the existing plan import (`plan_share`); `plan_document.dart`
 existing plate rounding; split settings UI for `block_weeks`,
 `deload_percent`, `block_started_at`; overload/active workout apply
 `deloadPercentFor` during a deload week from `trainingBlockWeekForSplit`.
+
+# Schema v27: goals
+
+One new table, nothing else changed (`if (from < 27)` in app_database.dart,
+transactional and safe to rerun like v26). Backups: `_from26` in
+backup_format.dart adds an empty `goals` table to a v26 payload, because a
+restore refuses a backup with a table missing.
+
+### New table `goals` (lib/shared/models/goal.dart)
+| column | type | meaning |
+|---|---|---|
+| `kind` | TEXT | `GoalKind` slug: `lift`, `frequency`, `bodyweight`. `GoalKind.parse` returns null for an unknown slug; such goals are skipped, never guessed. |
+| `exercise_id` | TEXT NULL → exercises, **cascade** | Lift goals only. |
+| `target` | REAL | kg for lift/bodyweight, workouts per week for frequency. |
+| `start_value` | REAL NULL | Best working weight / latest bodyweight when the goal was set. Progress runs from here; for bodyweight it also decides cut vs gain. |
+| `deadline` | DATETIME NULL | Midnight. Never set on frequency goals. |
+| `created_at` | DATETIME | Bodyweight goals only count weigh-ins from this day on. |
+| `celebrated_at` | DATETIME NULL | When the user dismissed the celebration. The only stored part of "reached". |
+| `archived_at` | DATETIME NULL | Off Home and the active list, kept for the record. |
+
+**Reached is derived, never stored** (`features/goals/data/goal_progress.dart`):
+- Lift = heaviest *working* set at any rep count, or a tested 1RM. Not the
+  estimated 1RM — "lift 100 kg" is about the bar.
+- Bodyweight = first weigh-in on/after `created_at` crossing the target; stays
+  reached if the scale bounces back.
+- Frequency = completed workouts (recap rule: finished and with sets, free
+  workouts included) in the current week, which starts on
+  `firstWeekdayProvider` (device region, `firstWeekdayFor`). Celebrated once
+  per week: `celebrate` compares `celebrated_at` with the moment this week's
+  target was met.
+- Editing a goal clears `celebrated_at`.
+
+## Helpers added with v27 (reuse them)
+- `shared/utils/dates.dart`: `startOfWeek(day, firstWeekday)`, `daysBetween`.
+- `shared/utils/weekday.dart`: `firstWeekdayFor(Locale)` (CLDR table, by
+  hand), `weekdaysFrom(first)`. `shared/data/week_start.dart`:
+  `firstWeekdayProvider` (device region, not the app language: English on a
+  German phone still starts on Monday).
+- `shared/data/current_day.dart`: `currentDayProvider` (today at midnight),
+  moved on by `currentDayWatcherProvider` (watched in `main.dart`) when the
+  app resumes on a new day. Watch it in a long-lived provider whose answer
+  depends on the date and not only on the data — `goalStatusesProvider` does.
+- `shared/utils/format.dart`: `formatMonthName`, `formatMonthYear`,
+  `formatDate` ("3 Oct 2026"; pass `l10n:` for "3. Okt. 2026", see
+  Localisation above).
+- `features/exercises/data/exercise_names.dart`: `exerciseNamesProvider`
+  (id → name, archived included).
+- `features/workout/data/personal_records.dart`: `recordCountsByWorkout` and
+  `recordsByDayProvider` — the summary's record rules over the whole log in
+  one pass. A month's count equals the sum of its summaries.
+- `features/home/data/activity_repository.dart`: `allTrainingByDayProvider`
+  (the heatmap's per-day minutes without the 53-week window).
+- `features/reviews/data/image_share.dart`: `shareOrSaveImage` / `capturePng`;
+  Kotlin half `ShareBridge.kt` (`de.kopten.gymfy/share`, provider
+  `${applicationId}.shareprovider`, files only from `<cache>/share/`).
+- Summary from history: `WorkoutSummaryScreen(fromHistory: true)` at
+  `/progress/session/:id` (back arrow, Done pops).

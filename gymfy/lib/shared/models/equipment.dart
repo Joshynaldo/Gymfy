@@ -1,3 +1,5 @@
+import '../../l10n/l10n.dart';
+
 /// What a movement needs to be performed.
 ///
 /// Stored as the enum's [name] so the database keeps a readable slug rather
@@ -30,7 +32,18 @@ enum Equipment {
 
   const Equipment(this.label);
 
+  /// The English name. On screen use [localizedLabel].
   final String label;
+
+  /// The name in the app's language: `context.l10n` in, "Langhantel" out.
+  String localizedLabel(AppLocalizations l10n) => switch (this) {
+    Equipment.barbell => l10n.equipmentBarbell,
+    Equipment.dumbbell => l10n.equipmentDumbbell,
+    Equipment.machine => l10n.equipmentMachine,
+    Equipment.cable => l10n.equipmentCable,
+    Equipment.bodyweight => l10n.equipmentBodyweight,
+    Equipment.other => l10n.equipmentOther,
+  };
 
   /// Reads a stored slug, falling back to [Equipment.other].
   ///

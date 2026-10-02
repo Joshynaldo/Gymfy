@@ -1,6 +1,9 @@
 package de.kopten.gymfy.wear
 
 import com.google.android.gms.wearable.DataMap
+import java.math.BigDecimal
+import java.math.RoundingMode
+import org.json.JSONObject
 
 /**
  * What the phone last told us about the workout.
@@ -22,8 +25,40 @@ data class WorkoutState(
     val updatedAtMs: Long = 0,
     /** The last working set, ready to draw. Empty when there is none. */
     val lastSet: String = "",
+    /**
+     * The exercise the next set belongs to, ready to draw. Empty when there
+     * is nothing to log — and always empty from a phone on a build older
+     * than logging, which is how the watch knows to offer the repeat button
+     * instead.
+     */
+    val nextExercise: String = "",
+    /** Opaque; sent back with a log so it lands on this exercise. */
+    val nextExerciseId: String = "",
+    /** Ready to draw: "Set 3 of 4". */
+    val nextSet: String = "",
+    /** The suggested weight, already in [weightUnit]. Never converted here. */
+    val nextWeight: Double = 0.0,
+    /** The suggested reps — or seconds, when [nextTimed]. */
+    val nextReps: Int = 0,
+    /** Whether [nextReps] is a hold in seconds. */
+    val nextTimed: Boolean = false,
+    /** "kg" or "lbs": drawn beside the weight and sent back with it. */
+    val weightUnit: String = "",
+    /** One press of + or -, in [weightUnit]. */
+    val weightStep: Double = 0.0,
+    /**
+     * What [formatWeight] writes between the whole and the fraction: the
+     * phone app's, so its "82,5 kg" is "82,5 kg" here too. A dot from a
+     * phone on a build that does not send it.
+     */
+    val decimalSeparator: String = ".",
 ) {
     val resting: Boolean get() = restEndsAtMs > 0
+
+    /** Whether the phone sent enough to log a set from here. */
+    val canLog: Boolean
+        get() = nextExercise.isNotEmpty() && nextExerciseId.isNotEmpty() &&
+            weightUnit.isNotEmpty()
 
     /**
      * Whether this is old enough to be disbelieved.
@@ -100,9 +135,58 @@ data class WorkoutState(
             restTotalSeconds = map.number("restTotalSeconds").toInt(),
             updatedAtMs = map.number("updatedAtMs"),
             lastSet = map.getString("lastSet", ""),
+            nextExercise = map.getString("nextExercise", ""),
+            nextExerciseId = map.getString("nextExerciseId", ""),
+            nextSet = map.getString("nextSet", ""),
+            // A Dart double always crosses as a Double, whole or not, so
+            // these have one width — unlike the integers above.
+            nextWeight = map.getDouble("nextWeight", 0.0),
+            nextReps = map.number("nextReps").toInt(),
+            nextTimed = map.getBoolean("nextTimed", false),
+            weightUnit = map.getString("weightUnit", ""),
+            weightStep = map.getDouble("weightStep", 0.0),
+            decimalSeparator = map.getString("decimalSeparator", ".")
+                .takeIf { it.isNotEmpty() } ?: ".",
         )
     }
 }
+
+/**
+ * The command that logs one set: `set.log:` and a JSON object.
+ *
+ * The id makes a double tap one set — the phone applies each id once — so
+ * the caller keeps one id per thing on screen rather than minting one per
+ * tap. The field names must match `WearBridge.logField*` in Dart, pinned by
+ * `wear_bridge_test.dart`.
+ *
+ * [value] is reps, or seconds when the phone said the exercise is timed; the
+ * key says which, so the phone never has to guess.
+ */
+fun logSetCommand(id: String, state: WorkoutState, weight: Double, value: Int): String {
+    val body = JSONObject()
+        .put("id", id)
+        .put("exerciseId", state.nextExerciseId)
+        .put("weight", weight)
+        .put("unit", state.weightUnit)
+        .put(if (state.nextTimed) "seconds" else "reps", value)
+    return "$COMMAND_LOG_SET:$body"
+}
+
+/**
+ * A weight as the phone writes one: "80", "82.5" — never "80.0" — with the
+ * phone app's [separator] whatever the watch's locale, so the two screens
+ * show the same number: "82,5" beside a German phone.
+ *
+ * Rounded to two places first. The phone sends a whole number of steps, but
+ * one on an older build sent pounds that had been to kilograms and back —
+ * 149.99999999999997 — and this would have printed every digit of it.
+ */
+fun formatWeight(value: Double, separator: String = "."): String =
+    BigDecimal.valueOf(value)
+        .setScale(2, RoundingMode.HALF_UP)
+        .stripTrailingZeros()
+        .toPlainString()
+        .replace(".", separator)
 
 /** Formats seconds as m:ss, the way the phone app shows a rest. */
 fun formatRest(seconds: Int): String {
@@ -140,3 +224,17 @@ const val COMMAND_SKIP_REST = "rest.skip"
 
 /** Log another set the same as the last. Must match `WearBridge` in Dart. */
 const val COMMAND_REPEAT_SET = "set.repeat"
+
+/** Log one set with the numbers on the wrist. See [logSetCommand]. */
+const val COMMAND_LOG_SET = "set.log"
+
+// The ceilings the phone accepts (`maxRemote*` in wear_sync.dart), so the
+// controls cannot reach a set the phone would refuse — and the floors below
+// which a set is not a set.
+const val MAX_WEIGHT = 9999.0
+const val MAX_REPS = 99
+const val MIN_HOLD_SECONDS = 1
+const val MAX_HOLD_SECONDS = 99 * 60 + 59
+
+/** One press of + or - on a hold. */
+const val HOLD_STEP_SECONDS = 5

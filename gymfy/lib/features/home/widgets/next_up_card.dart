@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/utils/weekday.dart';
 import '../../workout/data/workout_repository.dart';
 import '../../../shared/widgets/app_card.dart';
@@ -33,7 +34,9 @@ class NextUpCard extends ConsumerWidget {
           child: Icon(Icons.event_outlined, color: accent),
         ),
         title: Text(next.day.name),
-        subtitle: Text(relativeDayLabel(next.daysAway, next.weekday)),
+        subtitle: Text(
+          relativeDayLabel(next.daysAway, next.weekday, l10n: context.l10n),
+        ),
         titleTextStyle: theme.textTheme.titleMedium,
       ),
     );
@@ -45,10 +48,16 @@ class NextUpCard extends ConsumerWidget {
 /// Named days for the near future and the weekday beyond that: "in 4 days" is
 /// arithmetic the reader has to do, while "Thursday" is the answer. Past a week
 /// the weekday alone becomes ambiguous, so the count comes back.
-String relativeDayLabel(int daysAway, int weekday) => switch (daysAway) {
-  1 => 'Tomorrow',
-  <= 6 => weekdayName(weekday),
-  // Exactly a week out: the same weekday as today, so naming it would read as
-  // "today" at a glance.
-  _ => 'Next ${weekdayName(weekday)}',
-};
+///
+/// In [l10n]'s language when given, English otherwise.
+String relativeDayLabel(int daysAway, int weekday, {AppLocalizations? l10n}) {
+  final strings = l10n ?? englishLocalizations;
+  final name = weekdayName(weekday, l10n: l10n);
+  return switch (daysAway) {
+    1 => strings.homeNextUpTomorrow,
+    <= 6 => name,
+    // Exactly a week out: the same weekday as today, so naming it would read
+    // as "today" at a glance.
+    _ => strings.homeNextUpNextWeekday(name),
+  };
+}

@@ -74,7 +74,7 @@ final class RestTimerProvider
   }
 }
 
-String _$restTimerHash() => r'59984da55b5a444f35efaa27ac4463e6f38de0c4';
+String _$restTimerHash() => r'8871e7e708143e46c444c5d73d86f9821ea960a6';
 
 /// The one rest timer.
 ///

@@ -1,6 +1,7 @@
 // Shared overrides for widget tests that render themed UI.
 
 import 'package:gymfy/app/theme/accent_color.dart';
+import 'package:gymfy/features/settings/data/notification_preferences.dart';
 import 'package:gymfy/features/workout/data/logging_preferences.dart';
 import 'package:gymfy/shared/data/lifter_sex.dart';
 import 'package:gymfy/shared/utils/units.dart';
@@ -36,7 +37,18 @@ final defaultDisplayOverrides = [
   defaultAccentOverride,
   defaultWeightUnitOverride,
   ...defaultLoggingOverrides,
+  defaultWorkoutNotificationOverride,
 ];
+
+/// Switches the ongoing workout notification off without touching the
+/// database.
+///
+/// The active workout reads the setting as it opens, to decide whether to ask
+/// for notification permission. Same reasoning as the overrides above — and
+/// off rather than on, so a test about the screen never reaches for the real
+/// notification plugin. `workout_notification_test.dart` is the one about it.
+final defaultWorkoutNotificationOverride = workoutNotificationProvider
+    .overrideWith((ref) => Stream.value(false));
 
 /// Pins the logging preferences (effort rating, warm-up ramp) to their
 /// defaults without touching the database.

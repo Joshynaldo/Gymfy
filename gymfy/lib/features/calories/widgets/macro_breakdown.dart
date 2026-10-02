@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 
 /// Calories per gram for each macronutrient.
 const _kcalPerGramProtein = 4;
@@ -29,6 +30,7 @@ class MacroBreakdown extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final accent = ref.watch(accentColorProvider);
     final colors = _macroColors(accent);
 
@@ -38,9 +40,19 @@ class MacroBreakdown extends ConsumerWidget {
     final totalKcal = pKcal + cKcal + fKcal;
 
     final macros = [
-      (label: 'Protein', grams: protein, kcal: pKcal, color: colors[0]),
-      (label: 'Carbs', grams: carbs, kcal: cKcal, color: colors[1]),
-      (label: 'Fat', grams: fat, kcal: fKcal, color: colors[2]),
+      (
+        label: l10n.caloriesMacroProtein,
+        grams: protein,
+        kcal: pKcal,
+        color: colors[0],
+      ),
+      (
+        label: l10n.caloriesMacroCarbs,
+        grams: carbs,
+        kcal: cKcal,
+        color: colors[1],
+      ),
+      (label: l10n.caloriesMacroFat, grams: fat, kcal: fKcal, color: colors[2]),
     ];
 
     return Container(
@@ -52,13 +64,13 @@ class MacroBreakdown extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Macros', style: theme.textTheme.titleMedium),
+          Text(l10n.caloriesMacrosTitle, style: theme.textTheme.titleMedium),
           const SizedBox(height: 12),
           if (totalKcal == 0)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16),
               child: Text(
-                'Add meals with macros to see your split.',
+                l10n.caloriesMacrosEmpty,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -160,7 +172,7 @@ class _LegendRow extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
           Text(
-            '${grams}g · ${(percent * 100).round()}%',
+            context.l10n.caloriesMacroShare(grams, (percent * 100).round()),
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),

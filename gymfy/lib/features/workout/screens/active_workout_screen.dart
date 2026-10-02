@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/accent_color.dart';
 import '../../../app/theme/glass.dart';
 import '../../../app/theme/motion.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/data/notification_service.dart';
 import '../../../shared/data/settings_repository.dart';
 import '../../../shared/database/app_database.dart';
@@ -28,7 +29,9 @@ import '../../overload/data/percent_target.dart' show formatPercent;
 import '../../plates/data/plate_math.dart';
 import '../../plates/screens/plate_calculator_screen.dart';
 import '../../settings/data/notification_preferences.dart';
+import '../../workout_notification/data/workout_notification.dart';
 import '../data/logging_preferences.dart';
+import '../data/next_set.dart';
 import '../data/personal_records.dart';
 import '../data/rest_timer_controller.dart';
 import '../data/rest_timer_repository.dart';
@@ -64,7 +67,7 @@ class ActiveWorkoutScreen extends ConsumerWidget {
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              'Could not load this workout.\n$error',
+              context.l10n.workoutLoadFailed('$error'),
               textAlign: TextAlign.center,
             ),
           ),
@@ -74,7 +77,8 @@ class ActiveWorkoutScreen extends ConsumerWidget {
         if (session == null) {
           return GlassScaffold(
             appBar: GlassAppBar(),
-            body: (context) => const Center(child: Text('Workout not found.')),
+            body: (context) =>
+                Center(child: Text(context.l10n.workoutNotFound)),
           );
         }
         return _ActiveWorkoutView(session: session);
@@ -104,22 +108,61 @@ class _ActiveWorkoutView extends ConsumerStatefulWidget {
 }
 
 class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
-  /// The exercise you picked by hand, if you picked one.
-  ///
-  /// Held by id rather than by index: the running order can be added to,
-  /// swapped and reordered mid-session, and an index would then point at a
-  /// different movement. (A lift appears once per session, so the id is
-  /// enough.)
-  String? _picked;
-
   /// The record being celebrated, if a set just beat one. See [_celebrate].
   ({String exerciseName, List<BrokenRecord> records})? _celebration;
   Timer? _celebrationTimer;
 
   @override
+  void initState() {
+    super.initState();
+    // After the first frame, so the system dialog does not open over a
+    // screen that has not drawn yet.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _askForNotifications());
+  }
+
+  @override
   void dispose() {
     _celebrationTimer?.cancel();
     super.dispose();
+  }
+
+  /// Asks for notification permission for the ongoing workout notification.
+  ///
+  /// Here, when a workout starts or is resumed, because that is the moment
+  /// the notification is for — the same reasoning that has the rest timer
+  /// ask when the first rest starts rather than at launch. Android asks at
+  /// most twice and then stops showing the dialog by itself, and on older
+  /// versions this answers yes without asking.
+  Future<void> _askForNotifications() async {
+    // Not on iOS, which has no workout notification to ask for: it would
+    // be a permission dialog for nothing.
+    if (!WorkoutNotificationBridge.supported) return;
+    final bool wanted;
+    try {
+      wanted = await _readSetting(workoutNotificationProvider);
+    } on StateError {
+      // The screen closed before the setting loaded. Nothing to ask for.
+      return;
+    }
+    if (!wanted || !mounted) return;
+    final granted = await ref
+        .read(notificationServiceProvider)
+        .requestPermission();
+    // Everything posted before the answer was dropped for want of
+    // permission, and nothing has changed since to post it again.
+    if (granted && mounted) {
+      ref.read(workoutNotificationSyncProvider.notifier).resend();
+    }
+  }
+
+  /// Puts the card on [exerciseId], or back on the plan's own choice for
+  /// null. Shared with the notification and the watch — see
+  /// [PickedExercise].
+  void _pick(String? exerciseId) {
+    if (!mounted) return;
+    ref
+        .read(pickedExerciseProvider(widget.session.id).notifier)
+        .pick(exerciseId);
   }
 
   @override
@@ -141,7 +184,11 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
     // the cost RestTimerBar exists to keep to itself.
     final resting = ref.watch(restTimerProvider.select((t) => t != null));
 
-    final current = _current(planned, setsByExercise);
+    final current = currentSessionEntry(
+      planned,
+      sets,
+      picked: ref.watch(pickedExerciseProvider(session.id)),
+    );
 
     return GlassScaffold(
       appBar: GlassAppBar(
@@ -149,14 +196,14 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
         actions: [
           IconButton(
             icon: const Icon(Icons.donut_large_outlined),
-            tooltip: 'Plate calculator',
+            tooltip: context.l10n.platesTitle,
             // Pushed over the session rather than routed to, so closing it
             // returns to the workout instead of leaving you in the More tab.
             onPressed: () => showPlateCalculator(context),
           ),
           TextButton(
             onPressed: () => _finish(context),
-            child: const Text('Finish'),
+            child: Text(context.l10n.workoutFinish),
           ),
         ],
       ),
@@ -209,7 +256,7 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
                     // runs out — and the only control a free workout starts
                     // with, so it has to be findable without a menu.
                     AppButton(
-                      label: 'Add exercise',
+                      label: context.l10n.workoutAddExercise,
                       icon: Icons.add,
                       kind: AppButtonKind.secondary,
                       onPressed: () => _addExercises(context, planned),
@@ -267,38 +314,6 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
     }
   }
 
-  /// The exercise the card is showing.
-  ///
-  /// Your pick if you made one, otherwise the first exercise still short of its
-  /// planned working sets — which is where you are on any day you work through
-  /// the plan in order.
-  SessionExerciseEntry? _current(
-    List<SessionExerciseEntry> planned,
-    Map<String, List<LoggedSet>> setsByExercise,
-  ) {
-    if (planned.isEmpty) return null;
-    if (_picked != null) {
-      for (final entry in planned) {
-        if (entry.exercise.id == _picked) return entry;
-      }
-    }
-    for (final entry in planned) {
-      if (_shortOfTarget(entry, setsByExercise)) return entry;
-    }
-    return planned.last;
-  }
-
-  /// Whether [entry] still has planned working sets to do.
-  static bool _shortOfTarget(
-    SessionExerciseEntry entry,
-    Map<String, List<LoggedSet>> setsByExercise,
-  ) {
-    final done = (setsByExercise[entry.exercise.id] ?? const [])
-        .where((s) => !s.isWarmup)
-        .length;
-    return done < entry.targets.defaultSets;
-  }
-
   /// The other exercises in [entry]'s superset, in order. Empty when it
   /// stands alone.
   static List<SessionExerciseEntry> _partnersOf(
@@ -329,7 +344,7 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
     Widget row(SessionExerciseEntry entry) => _UpNextRow(
       planned: entry,
       loggedSets: setsByExercise[entry.exercise.id] ?? const [],
-      onTap: () => setState(() => _picked = entry.exercise.id),
+      onTap: () => _pick(entry.exercise.id),
     );
 
     // One block's rows, minus whatever is on the card. A superset keeps its
@@ -351,7 +366,7 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
       const SizedBox(height: 28),
       Row(
         children: [
-          const Expanded(child: _SectionLabel('UP NEXT')),
+          Expanded(child: _SectionLabel(context.l10n.workoutUpNext)),
           // Beside the list it changes. Tucked behind a menu it would be
           // undiscoverable; in the app bar it would crowd Finish.
           TextButton.icon(
@@ -362,7 +377,7 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
               entries: planned,
             ),
             icon: const Icon(Icons.swap_vert, size: 18),
-            label: const Text('Reorder'),
+            label: Text(context.l10n.workoutReorder),
           ),
         ],
       ),
@@ -384,9 +399,7 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
       sessionId: widget.session.id,
       entries: entries,
     );
-    if (added.isNotEmpty && entries.isEmpty && mounted) {
-      setState(() => _picked = added.first);
-    }
+    if (added.isNotEmpty && entries.isEmpty) _pick(added.first);
   }
 
   /// The menu on the card: swap the exercise, or take it out of today's list.
@@ -402,16 +415,16 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
       options: [
         (
           value: _EntryAction.swap,
-          label: 'Swap exercise',
-          subtitle: 'Do something else in its place',
+          label: context.l10n.workoutSwapExercise,
+          subtitle: context.l10n.workoutSwapExerciseSubtitle,
         ),
         // Only offered while nothing is logged for it: the sets you did are
         // removed with the delete button on each row, not by a list edit.
         if (!hasSets)
           (
             value: _EntryAction.remove,
-            label: 'Remove from workout',
-            subtitle: 'Your plan stays as it is',
+            label: context.l10n.workoutRemoveFromWorkout,
+            subtitle: context.l10n.workoutPlanUnchanged,
           ),
       ],
       selected: null,
@@ -426,11 +439,13 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
           entry: entry,
           entries: entries,
         );
-        if (swapped != null && mounted) setState(() => _picked = swapped);
+        if (swapped != null) _pick(swapped);
       case _EntryAction.remove:
         await ref.read(sessionRepositoryProvider).removeExercise(entry.row.id);
-        if (mounted && _picked == entry.exercise.id) {
-          setState(() => _picked = null);
+        if (mounted &&
+            ref.read(pickedExerciseProvider(widget.session.id)) ==
+                entry.exercise.id) {
+          _pick(null);
         }
     }
   }
@@ -459,7 +474,7 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
           (workingDone[e.exercise.id] ?? 0) < e.targets.defaultSets,
     );
     if (step == null) return true;
-    if (mounted) setState(() => _picked = step.next?.exercise.id);
+    _pick(step.next?.exercise.id);
     return step.rests;
   }
 
@@ -507,6 +522,7 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
     // until its row loaded, and the first set would go unrated.
     final effortMode = await _readSetting(effortRatingModeProvider);
     if (!context.mounted) return;
+    final l10n = context.l10n;
 
     final result = await showLogSetSheet(
       context: context,
@@ -517,8 +533,8 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
       unit: ref.read(weightUnitProvider),
       suggestion: suggestion,
       phaseLabel: isWarmup
-          ? 'Warm-up ${samePhase.length + 1}'
-          : 'Set ${samePhase.length + 1} · working set',
+          ? l10n.workoutPhaseWarmup(samePhase.length + 1)
+          : l10n.workoutPhaseWorking(samePhase.length + 1),
       repeatable: last,
       effortMode: effortMode,
     );
@@ -806,7 +822,7 @@ class _CurrentExerciseCard extends ConsumerWidget {
                   padding: EdgeInsets.zero,
                   iconSize: 20,
                   icon: const Icon(Icons.more_vert),
-                  tooltip: 'Exercise options',
+                  tooltip: context.l10n.workoutExerciseOptionsTooltip,
                   onPressed: onMore,
                 ),
               ),
@@ -841,13 +857,13 @@ class _CurrentExerciseCard extends ConsumerWidget {
               if (!exercise.isTimed)
                 IconButton(
                   icon: const Icon(Icons.stairs_outlined),
-                  tooltip: 'Warm-up calculator',
+                  tooltip: context.l10n.workoutWarmupCalculator,
                   onPressed: onWarmupCalculator,
                 ),
               const SizedBox(width: 6),
               Expanded(
                 child: AppButton(
-                  label: 'Log set ${working + 1}',
+                  label: context.l10n.workoutLogSet(working + 1),
                   icon: Icons.add,
                   // Deliberately not the accent. On this screen the accent
                   // belongs to the rest countdown, which is the thing you read
@@ -972,6 +988,7 @@ class _SupersetLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return Padding(
       padding: const EdgeInsets.only(top: 9),
@@ -982,9 +999,11 @@ class _SupersetLine extends StatelessWidget {
           const SizedBox(width: 7),
           Expanded(
             child: Text(
-              'Superset with '
-              '${partners.map((p) => p.exercise.name).join(' and ')}'
-              ' — rest after the last one',
+              l10n.workoutSupersetWith(
+                partners
+                    .map((p) => p.exercise.name)
+                    .reduce((a, b) => l10n.commonListAnd(a, b)),
+              ),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -1021,7 +1040,7 @@ class _SupersetGroup extends ConsumerWidget {
               Icon(Icons.link, size: 14, color: accent),
               const SizedBox(width: 5),
               Text(
-                'SUPERSET',
+                context.l10n.workoutSupersetCaps,
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w600,
@@ -1087,8 +1106,8 @@ class _WarmupButton extends StatelessWidget {
     final expected = planned.targets.warmupSets;
     final done = loggedSets.where((s) => s.isWarmup).length;
     final label = done < expected
-        ? 'Warm-up ${done + 1} of $expected'
-        : 'Warm-up';
+        ? context.l10n.workoutWarmupProgress(done + 1, expected)
+        : context.l10n.workoutWarmup;
     final radius = BorderRadius.circular(16);
 
     return Pressable(
@@ -1106,11 +1125,23 @@ class _WarmupButton extends StatelessWidget {
             color: theme.colorScheme.onSurface.withValues(alpha: 0.10),
           ),
         ),
-        child: Text(
-          label,
-          style: theme.textTheme.labelLarge?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            fontWeight: FontWeight.w600,
+        // Capped at about a third of the screen, so a long label ("Aufwärmen
+        // 2/3", or any label at a large text size) shrinks to fit instead of
+        // squeezing Log set — the one button the card is for — to nothing.
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.sizeOf(context).width * 0.32,
+          ),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              maxLines: 1,
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ),
       ),
@@ -1145,32 +1176,38 @@ class _SuggestionLine extends ConsumerWidget {
 
     if (suggestion == null) return const SizedBox.shrink();
 
-    final weight = formatWeightUnit(suggestion.weight, unit);
+    final l10n = context.l10n;
+    final weight = formatWeightUnit(suggestion.weight, unit, l10n: l10n);
     final (icon, text) = switch (suggestion.reason) {
       OverloadReason.earned => (
         Icons.trending_up,
-        'You hit every set last time — going up to $weight',
+        l10n.workoutSuggestionEarned(weight),
       ),
       OverloadReason.deload => (
         Icons.trending_down,
-        'Several increases in a row — a lighter $weight is suggested',
+        l10n.workoutSuggestionDeload(weight),
       ),
       OverloadReason.atLimit => (
         Icons.pause,
-        'Top set was a limit effort last time — holding at $weight',
+        l10n.workoutSuggestionAtLimit(weight),
       ),
       // A planned % of 1RM, and a training block's deload week — see
       // overloadSuggestionProvider for when each applies.
       OverloadReason.percentOfMax => (
         Icons.percent,
-        '${formatPercent(suggestion.targetPercent ?? 0)} of your 1RM — $weight',
+        l10n.workoutSuggestionPercent(
+          formatPercent(suggestion.targetPercent ?? 0, l10n: l10n),
+          weight,
+        ),
       ),
       OverloadReason.blockDeload => (
         Icons.trending_down,
-        'Deload week at '
-            '${formatPercent(suggestion.deloadPercent ?? 0)} — $weight',
+        l10n.workoutSuggestionBlockDeload(
+          formatPercent(suggestion.deloadPercent ?? 0, l10n: l10n),
+          weight,
+        ),
       ),
-      _ => (Icons.remove, 'Same $weight as last time'),
+      _ => (Icons.remove, l10n.workoutSuggestionSame(weight)),
     };
 
     return Padding(
@@ -1242,6 +1279,7 @@ class _LoggedSetRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final unit = ref.watch(weightUnitProvider);
 
     // Warm-ups and drop sets are dimmed rather than hidden or restyled:
@@ -1250,7 +1288,7 @@ class _LoggedSetRow extends ConsumerWidget {
     // length without a heavy separator cutting the card in two.
     final muted = theme.colorScheme.onSurfaceVariant;
     final dimmed = !isWorkingSet(set);
-    final rating = _ratingLabel(set);
+    final rating = _ratingLabel(set, l10n);
 
     return SizedBox(
       height: 36,
@@ -1273,6 +1311,7 @@ class _LoggedSetRow extends ConsumerWidget {
                 reps: set.reps,
                 seconds: set.seconds,
                 unit: unit,
+                l10n: l10n,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -1289,7 +1328,7 @@ class _LoggedSetRow extends ConsumerWidget {
             ),
             const SizedBox(width: 6),
           ],
-          if (_badgeFor(set.type) case final badge?) ...[
+          if (_badgeFor(set.type, l10n) case final badge?) ...[
             _SetTypeBadge(letter: badge, colour: muted),
             const SizedBox(width: 4),
           ],
@@ -1305,14 +1344,21 @@ class _LoggedSetRow extends ConsumerWidget {
             icon: const Icon(Icons.tune),
             iconSize: 18,
             visualDensity: VisualDensity.compact,
-            tooltip: 'Change set type',
+            tooltip: context.l10n.workoutChangeSetTypeTooltip,
             onPressed: () async {
               final type = await showOptionPicker<SetType>(
                 context: context,
-                title: 'Set type',
+                title: context.l10n.workoutSetTypeTitle,
                 options: [
-                  for (final type in SetType.values)
-                    (value: type, label: type.label, subtitle: null),
+                  // Only a held set stores seconds.
+                  for (final type in SetType.optionsFor(
+                    timed: set.seconds != null,
+                  ))
+                    (
+                      value: type,
+                      label: type.localizedLabel(context.l10n),
+                      subtitle: null,
+                    ),
                 ],
                 selected: set.type,
               );
@@ -1326,7 +1372,7 @@ class _LoggedSetRow extends ConsumerWidget {
             icon: const Icon(Icons.close),
             iconSize: 18,
             visualDensity: VisualDensity.compact,
-            tooltip: 'Delete set',
+            tooltip: context.l10n.workoutDeleteSetTooltip,
             onPressed: () =>
                 ref.read(sessionRepositoryProvider).deleteSet(set.id),
           ),
@@ -1339,19 +1385,20 @@ class _LoggedSetRow extends ConsumerWidget {
 /// The letter a row of [type] is badged with, or null for an ordinary
 /// working set — the default needs no label, and a badge on every row would
 /// stop the unusual ones standing out.
-String? _badgeFor(SetType type) => switch (type) {
-  SetType.warmup => 'W',
-  SetType.drop => 'D',
-  SetType.failure => 'F',
+String? _badgeFor(SetType type, AppLocalizations l10n) => switch (type) {
+  SetType.warmup => l10n.workoutBadgeWarmup,
+  SetType.drop => l10n.workoutBadgeDrop,
+  SetType.failure => l10n.workoutBadgeFailure,
   SetType.normal => null,
 };
 
 /// "RPE 8" or "RIR 2", whichever the set was rated in, or null when unrated.
-String? _ratingLabel(LoggedSet set) {
+///
+/// RPE and RIR are the same abbreviations in German; only a half step changes,
+/// to "8,5".
+String? _ratingLabel(LoggedSet set, AppLocalizations l10n) {
   final rpe = set.rpe;
-  if (rpe != null) {
-    return 'RPE ${rpe == rpe.roundToDouble() ? rpe.round() : rpe}';
-  }
+  if (rpe != null) return 'RPE ${formatWeight(rpe, l10n: l10n)}';
   if (set.rir != null) return 'RIR ${set.rir}';
   return null;
 }
@@ -1392,6 +1439,7 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return Center(
       child: Padding(
@@ -1406,21 +1454,22 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              isFree ? 'Free workout' : 'Nothing to log',
+              isFree
+                  ? l10n.workoutFreeWorkoutName
+                  : l10n.workoutEmptyNothingTitle,
               style: theme.textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
             Text(
               isFree
-                  ? 'Add exercises as you go. Nothing here changes your plan.'
-                  : 'This day has no exercises. Add some for today — your '
-                        'plan stays as it is.',
+                  ? l10n.workoutEmptyFreeMessage
+                  : l10n.workoutEmptyNothingMessage,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: 24),
             AppButton(
-              label: 'Add exercise',
+              label: context.l10n.workoutAddExercise,
               icon: Icons.add,
               expand: false,
               onPressed: onAdd,

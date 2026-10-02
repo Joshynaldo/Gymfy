@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- HealthPermissionsRationaleActivity: what Health Connect shows behind
+         "privacy policy" next to Gymfy's permissions. The Health Connect
+         section of store/privacy-policy.md, shortened. Change both together:
+         neither may promise something the code does not do.
+
+         Line breaks in the file are just spaces to Android; paragraphs are
+         the explicit \n\n at their ends. -->
+    <string name="health_rationale_title">Gymfy and Health Connect</string>
+    <string name="health_rationale_body">Gymfy only reads or writes Health
+        Connect if you turn that on in Gymfy\'s Settings → Health Connect. Both
+        switches are off until you do.\n\nWrite workouts (write exercise): when
+        you finish a workout, Gymfy adds one exercise session — strength
+        training, its start and end time, and the workout\'s name. No sets,
+        weights, notes, measurements or photos. Past workouts are written only
+        if you tap \"Write past workouts\". While writing is on, deleting a
+        workout in Gymfy deletes its session here too.\n\nRead bodyweight
+        (read weight): when you open Gymfy, it reads weight records from the
+        last 30 days and fills in your bodyweight on days where you have not
+        entered one — the first weigh-in of each day. A weight you typed is
+        never replaced, and no record is imported twice. Nothing else is
+        read.\n\nEverything stays on this phone. Gymfy has no internet access
+        and sends nothing anywhere. Apps you allow to read exercise data from
+        Health Connect can see the workouts Gymfy wrote.\n\nTo stop, turn the
+        switch off in Gymfy. To revoke access or delete what Gymfy wrote, use
+        Health Connect\'s settings for Gymfy, or \"Manage in Health Connect\"
+        in Gymfy. Workouts already written stay in Health Connect until you
+        delete them there.</string>
+</resources>

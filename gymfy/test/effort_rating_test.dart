@@ -195,6 +195,7 @@ void main() {
       WidgetTester tester, {
       EffortRatingMode mode = EffortRatingMode.rpe,
       SetType setType = SetType.normal,
+      bool timed = false,
     }) async {
       tester.view.physicalSize = const Size(400, 1000);
       tester.view.devicePixelRatio = 1;
@@ -220,7 +221,7 @@ void main() {
                           isPlateLoaded: false,
                           isCustom: false,
                           isArchived: false,
-                          isTimed: false,
+                          isTimed: timed,
                           equipment: 'other',
                         ),
                         setType: setType,
@@ -327,5 +328,53 @@ void main() {
       await save(tester);
       expect(results.single?.rpe, isNull);
     });
+
+    group('a held exercise', () {
+      for (final mode in [EffortRatingMode.rpe, EffortRatingMode.rir]) {
+        testWidgets('is never rated (${mode.name})', (tester) async {
+          await open(tester, mode: mode, timed: true);
+          await tester.tap(find.text('Next: time'));
+          await tester.pumpAndSettle();
+
+          expect(find.text('HOW HARD · RPE'), findsNothing);
+          expect(find.text('REPS LEFT · RIR'), findsNothing);
+          expect(find.byKey(const ValueKey('effort-8')), findsNothing);
+          expect(find.byKey(const ValueKey('effort-2')), findsNothing);
+        });
+      }
+
+      testWidgets('offers only warm-up and working', (tester) async {
+        await open(tester, timed: true);
+
+        expect(find.text(SetType.warmup.label), findsOneWidget);
+        expect(find.text(SetType.normal.label), findsOneWidget);
+        expect(find.text(SetType.drop.label), findsNothing);
+        expect(find.text(SetType.failure.label), findsNothing);
+      });
+
+      testWidgets('opened as a drop set, starts as a working set', (
+        tester,
+      ) async {
+        await open(tester, timed: true, setType: SetType.drop);
+
+        expect(find.text('Working set'), findsOneWidget);
+        expect(find.textContaining('Drop set'), findsNothing);
+      });
+    });
+
+    testWidgets('a lift counted in reps still offers every set type', (
+      tester,
+    ) async {
+      await open(tester);
+
+      for (final type in SetType.values) {
+        expect(find.text(type.label), findsOneWidget, reason: type.name);
+      }
+    });
+  });
+
+  test('a hold offers warm-up and working; a counted lift offers all', () {
+    expect(SetType.optionsFor(timed: true), [SetType.warmup, SetType.normal]);
+    expect(SetType.optionsFor(timed: false), SetType.values);
   });
 }

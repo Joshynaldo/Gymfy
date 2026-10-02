@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/utils/units.dart';
 import '../data/plate_math.dart';
 
@@ -57,7 +58,7 @@ class BarbellDiagram extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Text(
-                'Just the bar',
+                context.l10n.platesJustTheBar,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -116,7 +117,7 @@ class _Plate extends StatelessWidget {
         child: RotatedBox(
           quarterTurns: 3,
           child: Text(
-            formatPlate(weight),
+            formatPlate(weight, l10n: context.l10n),
             style: theme.textTheme.labelSmall?.copyWith(
               color: plateNeedsDarkLabel(color) ? Colors.black87 : Colors.white,
               fontWeight: FontWeight.w600,

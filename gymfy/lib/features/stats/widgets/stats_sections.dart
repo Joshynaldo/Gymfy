@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/accent_color.dart';
+import '../../../l10n/l10n.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
 import '../../../shared/widgets/app_card.dart';
@@ -47,6 +48,7 @@ class _BodyMapSectionState extends ConsumerState<BodyMapSection> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final data = _isFatigue
         ? ref.watch(muscleFatigueProvider)
         : ref.watch(weeklyMuscleIntensitiesProvider);
@@ -75,14 +77,14 @@ class _BodyMapSectionState extends ConsumerState<BodyMapSection> {
             segments: [
               (
                 value: MapReading.volume,
-                label: 'Volume',
+                label: l10n.statsReadingVolume,
                 leading: _ReadingDot(
                   colour: Theme.of(context).colorScheme.primary,
                 ),
               ),
               (
                 value: MapReading.fatigue,
-                label: 'Fatigue',
+                label: l10n.statsReadingFatigue,
                 leading: const _ReadingDot(colour: fatigueColor),
               ),
             ],
@@ -93,23 +95,17 @@ class _BodyMapSectionState extends ConsumerState<BodyMapSection> {
           // looking at without reading the caption.
           heatColor: _isFatigue ? fatigueColor : null,
           emptyMessage: _isFatigue
-              ? 'Everything is recovered — nothing you have trained '
-                    'recently is still weighing on you.'
-              : 'No training logged in the last 7 days — finish a '
-                    'workout to light up your muscle map.',
+              ? l10n.statsFatigueEmpty
+              : l10n.statsVolumeEmpty,
           // Says what brighter means *and* what it is brighter than. The map is
           // normalised against your hardest-hit muscle, so "more volume" alone
           // invites reading it as an absolute.
           caption: _isFatigue
-              ? 'Brighter means less recovered — recent work halves every '
-                    'two days.'
-              : 'Brighter means more volume this week, relative to your '
-                    'hardest-hit muscle.',
+              ? l10n.statsFatigueCaption
+              : l10n.statsVolumeCaption,
           contrastCaption: _isFatigue
-              ? 'Each muscle has its own colour. Brighter still means '
-                    'less recovered.'
-              : 'Each muscle has its own colour. Brighter still means '
-                    'more volume.',
+              ? l10n.statsFatigueContrastCaption
+              : l10n.muscleMapContrastCaption,
         ),
       ),
     );
@@ -123,19 +119,19 @@ class RankSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final inputs = ref.watch(rankInputsProvider);
     final lifts = ref.watch(rankedLiftsProvider);
 
     if (inputs.sex == null || inputs.bodyweightKg == null) {
       return AppPanel(
         icon: Icons.military_tech_outlined,
-        title: 'Strength rank',
+        title: l10n.calculatorRankTitle,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Ranks compare your lifts to your own bodyweight, so they need '
-              'your bodyweight and which standards table to use.',
+              l10n.statsRankNeedsSetup,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -145,7 +141,7 @@ class RankSection extends ConsumerWidget {
               alignment: Alignment.centerLeft,
               child: FilledButton.tonal(
                 onPressed: () => context.go('/more/rank'),
-                child: const Text('Set it up'),
+                child: Text(l10n.statsRankSetUp),
               ),
             ),
           ],
@@ -156,10 +152,9 @@ class RankSection extends ConsumerWidget {
     if (lifts.ranked.isEmpty) {
       return AppPanel(
         icon: Icons.military_tech_outlined,
-        title: 'Strength rank',
+        title: l10n.calculatorRankTitle,
         child: Text(
-          'Log a barbell or cable lift — bench, squat, deadlift, press, row, '
-          'curl — and its medal appears here.',
+          l10n.statsRankEmpty,
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -171,13 +166,16 @@ class RankSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _OverallRank(lifts: lifts.ranked),
-        AppSectionHeader(title: 'Your lifts', count: lifts.ranked.length),
+        AppSectionHeader(
+          title: l10n.calculatorYourLifts,
+          count: lifts.ranked.length,
+        ),
         for (final lift in lifts.ranked) _RankRow(lift: lift),
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
           child: TextButton(
             onPressed: () => context.go('/more/rank'),
-            child: const Text('See the full breakdown'),
+            child: Text(l10n.statsRankFullBreakdown),
           ),
         ),
       ],
@@ -194,6 +192,7 @@ class _OverallRank extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     // The *lowest* tier across the ranked lifts, not the highest. A single
     // strong deadlift shouldn't crown someone Advanced while their press is
@@ -217,14 +216,14 @@ class _OverallRank extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Overall',
+                  l10n.statsOverallLabel,
                   style: theme.textTheme.labelLarge?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  tier.label,
+                  tier.localizedLabel(l10n),
                   style: theme.textTheme.headlineSmall?.copyWith(
                     color: tierColor(tier),
                     fontWeight: FontWeight.w700,
@@ -233,9 +232,8 @@ class _OverallRank extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   tier == best
-                      ? 'Every ranked lift is ${tier.label.toLowerCase()}.'
-                      : 'Your weakest ranked lift. Your best is '
-                            '${best.label.toLowerCase()}.',
+                      ? l10n.statsOverallEvery(tier.name)
+                      : l10n.statsOverallWeakest(best.name),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -258,9 +256,12 @@ class _RankRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final unit = ref.watch(weightUnitProvider);
     final rank = lift.rank;
     final next = rank.next;
+    final tier = rank.tier.localizedLabel(l10n);
+    final oneRm = formatWeightUnit(lift.oneRm, unit, l10n: l10n);
 
     return AppCard(
       onTap: () => context.go('/more/rank'),
@@ -281,9 +282,9 @@ class _RankRow extends ConsumerWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${rank.tier.label} • '
-                  '${formatWeightUnit(lift.oneRm, unit)} '
-                  '${lift.tested ? 'tested' : 'est.'}',
+                  lift.tested
+                      ? l10n.statsRankRowTested(tier, oneRm)
+                      : l10n.statsRankRowEstimated(tier, oneRm),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -305,8 +306,8 @@ class _RankRow extends ConsumerWidget {
           const SizedBox(width: 12),
           Text(
             next == null
-                ? 'Top'
-                : '+${formatWeightUnit(rank.weightToNext!, unit)}',
+                ? l10n.statsRankRowTop
+                : '+${formatWeightUnit(rank.weightToNext!, unit, l10n: l10n)}',
             style: theme.textTheme.labelMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -324,6 +325,7 @@ class TotalsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final totals = ref.watch(trainingTotalsProvider);
     final streak = ref.watch(workoutStreakProvider).value ?? 0;
     final unit = ref.watch(weightUnitProvider);
@@ -335,7 +337,7 @@ class TotalsSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const AppSectionHeader(title: 'All time'),
+        AppSectionHeader(title: l10n.statsAllTimeTitle),
         AppPanel(
           child: Column(
             children: [
@@ -346,19 +348,19 @@ class TotalsSection extends ConsumerWidget {
                     value: '${totals.workouts}',
                     count: totals.workouts.toDouble(),
                     format: (value) => '${value.round()}',
-                    label: totals.workouts == 1 ? 'workout' : 'workouts',
+                    label: l10n.statsTotalsWorkouts(totals.workouts),
                   ),
                   _Stat(
                     icon: Icons.repeat,
                     value: '${totals.sets}',
                     count: totals.sets.toDouble(),
                     format: (value) => '${value.round()}',
-                    label: totals.sets == 1 ? 'set' : 'sets',
+                    label: l10n.statsTotalsSets(totals.sets),
                   ),
                   _Stat(
                     icon: Icons.timer_outlined,
                     value: formatDuration(Duration(minutes: totals.minutes)),
-                    label: 'trained',
+                    label: l10n.statsTotalsTrained,
                   ),
                 ],
               ),
@@ -367,20 +369,20 @@ class TotalsSection extends ConsumerWidget {
                 children: [
                   _Stat(
                     icon: Icons.fitness_center,
-                    value: formatWeightUnit(totals.volumeKg, unit),
+                    value: formatWeightUnit(totals.volumeKg, unit, l10n: l10n),
                     count: totals.volumeKg,
-                    format: (v) => formatWeightUnit(v, unit),
-                    label: 'lifted',
+                    format: (v) => formatWeightUnit(v, unit, l10n: l10n),
+                    label: l10n.statsTotalsLifted,
                   ),
                   _Stat(
                     icon: Icons.calendar_month,
                     value: '${totals.days}',
-                    label: totals.days == 1 ? 'day' : 'days',
+                    label: l10n.statsTotalsDays(totals.days),
                   ),
                   _Stat(
                     icon: Icons.local_fire_department,
                     value: '$streak',
-                    label: 'day streak',
+                    label: l10n.statsTotalsStreak(streak),
                   ),
                 ],
               ),
@@ -392,8 +394,7 @@ class TotalsSection extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
             child: Text(
               // A lifetime volume figure has no feel to it. This gives it one.
-              'That is ${comparison.times.toStringAsFixed(1)}× '
-              '${comparison.label}.',
+              describeVolumeComparison(comparison, l10n: l10n),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),

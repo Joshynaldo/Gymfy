@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import '../../../l10n/l10n.dart';
+
 /// Where feedback goes.
 ///
 /// A `mailto:` link rather than a form or an issue tracker. A form would need a
@@ -17,7 +19,8 @@ const feedbackAddress = 'gymfy.dev@gmail.com';
 /// in `pubspec.yaml`, so the copy cannot go stale unnoticed.
 const appVersion = '1.0.0';
 
-/// The subject line. Fixed, so filtering the inbox on it actually works.
+/// The subject line. Fixed, so filtering the inbox on it actually works — and
+/// so it stays English in every language, for the same reason.
 const feedbackSubject = 'Gymfy feedback';
 
 /// Builds the `mailto:` link for a feedback mail.
@@ -25,17 +28,27 @@ const feedbackSubject = 'Gymfy feedback';
 /// [platform] and [osVersion] are passed in rather than read from [Platform]
 /// so this stays a pure function — the composed body is the part worth testing,
 /// and it shouldn't depend on the machine the test runs on.
+///
+/// The two attached lines are written in [l10n]'s language (English without
+/// one): the user reads them before sending and is told they may delete them,
+/// which only works if they can read them.
 Uri buildFeedbackUri({
   required String platform,
   required String osVersion,
   String version = appVersion,
+  AppLocalizations? l10n,
 }) {
+  final strings = l10n ?? englishLocalizations;
+  final device = strings.helpFeedbackMailDevice(
+    version,
+    platform,
+    _shortOsVersion(osVersion),
+  );
   final body =
       '\n\n'
       '———\n'
-      'Gymfy $version on $platform ${_shortOsVersion(osVersion)}\n'
-      'Only these two lines are attached. Delete them if you would rather '
-      'not send them.\n';
+      '$device\n'
+      '${strings.helpFeedbackMailNote}\n';
 
   return Uri(
     scheme: 'mailto',
@@ -50,9 +63,10 @@ Uri buildFeedbackUri({
 }
 
 /// The current device's `mailto:` link.
-Uri currentFeedbackUri() => buildFeedbackUri(
+Uri currentFeedbackUri({AppLocalizations? l10n}) => buildFeedbackUri(
   platform: Platform.operatingSystem,
   osVersion: Platform.operatingSystemVersion,
+  l10n: l10n,
 );
 
 /// Android reports its version as a whole build banner — release, SDK level,

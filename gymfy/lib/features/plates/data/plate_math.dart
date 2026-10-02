@@ -16,7 +16,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/data/settings_repository.dart';
+import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
 
 /// Setting keys. One per unit, since the two hold different physical objects.
@@ -206,10 +208,16 @@ String encodePlates(Iterable<double> plates) {
 }
 
 /// Formats a plate weight without a trailing `.0`, e.g. `2.5` and `20`.
-String formatPlate(double value) {
-  return value == value.roundToDouble()
+///
+/// Pass [l10n] on screen for the language's decimal separator ("1,25" in
+/// German). Leave it off for storage: [encodePlates] joins these with commas.
+String formatPlate(double value, {AppLocalizations? l10n}) {
+  final text = value == value.roundToDouble()
       ? value.round().toString()
       : value.toString();
+  return l10n == null
+      ? text
+      : text.replaceAll('.', decimalSeparator(l10n: l10n));
 }
 
 /// The plate denominations available in the current unit.
@@ -248,8 +256,10 @@ List<double> barOptionsFor(WeightUnit unit) => [
 ];
 
 /// How a bar weight reads on a picker.
-String formatBar(double bar, WeightUnit unit) =>
-    bar == 0 ? 'None' : '${formatPlate(bar)} ${unit.label}';
+String formatBar(double bar, WeightUnit unit, {AppLocalizations? l10n}) =>
+    bar == 0
+    ? (l10n ?? englishLocalizations).platesNoBar
+    : '${formatPlate(bar, l10n: l10n)} ${unit.label}';
 
 /// The bar for one exercise, in the current unit.
 ///

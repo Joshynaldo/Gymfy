@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../data/feedback_mail.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
@@ -41,17 +42,17 @@ class HelpScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return GlassScaffold(
-      appBar: GlassAppBar(title: const Text('Help')),
+      appBar: GlassAppBar(title: Text(l10n.helpTitle)),
       body: (context) => ListView(
         padding: const EdgeInsets.only(top: 8, bottom: 24) + barInsets(context),
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             child: Text(
-              'Gymfy is made by one person. Everything you log stays on your '
-              'phone — there is no account and no server.',
+              l10n.helpIntro,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -59,34 +60,32 @@ class HelpScreen extends StatelessWidget {
           ),
           AppTile(
             icon: Icons.mail_outline,
-            title: 'Send feedback',
+            title: l10n.helpFeedbackTitle,
             // Says up front what the mail will carry. There is no crash
             // reporting in this app, so a bug that is never written down is a
             // bug that is never fixed — but that is not a reason to attach
             // anything the user didn't agree to.
-            subtitle:
-                'Opens your mail app · only the app version is '
-                'attached',
+            subtitle: l10n.helpFeedbackSubtitle,
             trailing: const Icon(Icons.open_in_new, size: 18),
             onTap: () => sendFeedback(context),
           ),
           AppTile(
             icon: Icons.code,
-            title: 'Developer',
-            subtitle: 'Joshynaldo on GitHub',
+            title: l10n.helpDeveloperTitle,
+            subtitle: l10n.helpDeveloperSubtitle,
             trailing: const Icon(Icons.open_in_new, size: 18),
             onTap: () => openDeveloperPage(context),
           ),
           AppTile(
             icon: Icons.animation,
-            title: 'Exercise animations',
-            subtitle: 'ExerciseGymGifsDB · used with permission',
+            title: l10n.helpAnimationsTitle,
+            subtitle: l10n.helpAnimationsSubtitle,
             trailing: const Icon(Icons.open_in_new, size: 18),
             onTap: () => openLink(context, exerciseAnimationCredit),
           ),
           AppTile(
             icon: Icons.info_outline,
-            title: 'Version',
+            title: l10n.helpVersionTitle,
             subtitle: appVersion,
             // Nothing to tap, so no chevron promising otherwise.
             trailing: null,
@@ -107,6 +106,7 @@ Future<void> openDeveloperPage(BuildContext context) =>
 /// broken button, so it says so.
 Future<void> openLink(BuildContext context, String url) async {
   final messenger = ScaffoldMessenger.of(context);
+  final l10n = context.l10n;
   if (await _launch(
     Uri.parse(url),
     // Hands it to the browser rather than a web view inside the app: these are
@@ -116,7 +116,7 @@ Future<void> openLink(BuildContext context, String url) async {
     return;
   }
 
-  messenger.showSnackBar(SnackBar(content: Text('Could not open $url')));
+  messenger.showSnackBar(SnackBar(content: Text(l10n.helpOpenLinkFailed(url))));
 }
 
 /// Opens the mail app with a feedback mail composed and ready to edit.
@@ -124,16 +124,17 @@ Future<void> openLink(BuildContext context, String url) async {
 /// Composed, never sent: the user reads it, edits it, and sends it themselves.
 Future<void> sendFeedback(BuildContext context) async {
   final messenger = ScaffoldMessenger.of(context);
-  if (await _launch(currentFeedbackUri())) return;
+  final l10n = context.l10n;
+  if (await _launch(currentFeedbackUri(l10n: l10n))) return;
 
   // No mail app configured is common enough on a fresh phone. The address is
   // the whole point of the button, so it goes on screen with a way to keep it
   // rather than vanishing behind "something went wrong".
   messenger.showSnackBar(
     SnackBar(
-      content: const Text('No mail app found. Write to $feedbackAddress'),
+      content: Text(l10n.helpNoMailApp(feedbackAddress)),
       action: SnackBarAction(
-        label: 'Copy',
+        label: l10n.commonCopy,
         onPressed: () =>
             Clipboard.setData(const ClipboardData(text: feedbackAddress)),
       ),
