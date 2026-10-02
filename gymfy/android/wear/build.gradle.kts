@@ -6,9 +6,13 @@
 // Nothing here is on `:app`'s compile path — `flutter run` does not build this
 // module at all. See TODO.md, Phase 12, for the measurements.
 
+// No `org.jetbrains.kotlin.android` here, as in :app. Since AGP 9 that plugin
+// is on its way out: Flutter applies it for every module that leaves it off
+// while `android.builtInKotlin=false`, and once that flag goes true AGP
+// compiles Kotlin itself. Naming it here is what Flutter's build warns about
+// (under :app's name, though this is the module that triggers it).
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
