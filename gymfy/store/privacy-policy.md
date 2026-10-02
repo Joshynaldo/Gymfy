@@ -7,9 +7,11 @@ internet connection.
 
 ## The short version
 
-**Nothing you enter into Gymfy ever leaves your phone.** The app contains no
-networking code of any kind. It cannot upload your data, because it cannot
-talk to anything.
+**Nothing you enter into Gymfy leaves your phone unless you send it
+somewhere.** The app contains no networking code of any kind and has no
+internet permission, so it cannot upload your data. The only ways data leaves
+the app are listed under "When data leaves the app" below, and each one is
+something you start or switch on.
 
 ## What Gymfy stores, and where
 
@@ -18,8 +20,8 @@ measurements, progress photos, calorie entries, your name, bodyweight, height
 and birth year — is written to a database inside the app's own private storage
 on your device. Other apps cannot read it. It is never transmitted. Other apps
 see only what you choose to hand them: what you share through Health Connect,
-and the files and pictures described under "When data leaves the app", both
-below.
+the files and pictures described under "When data leaves the app", and the
+live workout details the Gymfy watch app shows, all described below.
 
 There is no user account, no sign-in, and no identifier of any kind is created
 for you.
@@ -64,8 +66,9 @@ Connect below.
 ## When data leaves the app — always because you asked
 
 These features can move data off the device. Each one is started by you —
-automatic backups by you switching them on — and the result goes only where
-you send it: a file you save, a folder you pick or an app you choose.
+automatic backups by you switching them on, the watch by you installing the
+Gymfy watch app — and the result goes only where you send it: a file you
+save, a folder you pick, an app you choose or the watch you paired.
 
 **Export** (Settings → Data → Export data) writes your logged data to a CSV or
 JSON file at a location you pick. Where the file goes afterwards is up to you.
@@ -92,6 +95,19 @@ number of workouts, volume lifted, time trained, days trained and longest
 streak, top exercises, records and most-trained muscles, set against the
 period before. Nothing else is attached. Where sharing is not available,
 Gymfy offers to save the picture to a location you pick instead.
+
+**Wear OS watch** — only if you install the Gymfy watch app on a watch paired
+with your phone. While a workout is running, the phone sends the watch the
+workout's name, the current exercise, which set you are on and how many you
+have logged, the next set's weight and reps, and the rest countdown. The watch
+sends back the buttons you press and the sets you log. Nothing else goes to
+the watch: no history, measurements or photos. This goes through Google's
+Wearable Data Layer, which is part of Google Play services on your phone and
+watch, not through Gymfy itself, which still has no internet permission.
+When the phone and watch are connected over Bluetooth the data goes directly
+between them. When they are not, Google routes it through its own servers,
+end-to-end encrypted. Google Play services is covered by Google's own privacy
+policy. To stop it, uninstall the Gymfy watch app.
 
 **Send feedback** (Help → Send feedback) opens *your* mail app with a draft
 message. Gymfy does not send it; you read it, edit it and send it yourself. The

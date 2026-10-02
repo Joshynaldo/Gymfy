@@ -154,6 +154,17 @@ networking code in the app to transmit them with.
 Do **not** tick "Data is encrypted in transit" as a reassurance. It implies
 there is transit.
 
+**The Wear OS watch app** does move live workout details (workout name,
+exercise, set count, next set, rest countdown) between the phone and a paired
+watch, through Google's Wearable Data Layer in Google Play services. Over
+Bluetooth that never leaves the two devices. Without Bluetooth, Google routes
+it through its servers end-to-end encrypted, and Play's Data safety rules say
+that "user data that is sent off device, but that is unreadable by you or
+anyone other than the sender and recipient as a result of end-to-end
+encryption does not need to be disclosed". So the answer above stays **No**.
+The privacy policy describes the watch anyway. Re-check this against Play's
+current wording when filing.
+
 ---
 
 ## Content rating questionnaire
