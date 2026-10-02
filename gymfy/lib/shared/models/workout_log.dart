@@ -135,12 +135,21 @@ class SessionExercises extends Table {
   IntColumn get position => integer().withDefault(const Constant(0))();
 
   /// The plan slot this came from, which supplies the targets (sets, reps,
-  /// warm-ups, superset group, percent of 1RM). Null for an exercise added
-  /// during the session, and set to null if the slot is later deleted — the
-  /// session keeps the exercise either way.
+  /// warm-ups, percent of 1RM). Null for an exercise added during the
+  /// session, and set to null if the slot is later deleted — the session
+  /// keeps the exercise either way.
   IntColumn get workoutExerciseId => integer().nullable().references(
     WorkoutExercises,
     #id,
     onDelete: KeyAction.setNull,
   )();
+
+  /// The superset this entry is done in, like `WorkoutExercises.supersetGroup`
+  /// but for this session's own running order. Null when it stands alone.
+  ///
+  /// The session's, not the plan's (v28). Copied from the plan slot when the
+  /// session starts, then edited here: a free workout or an exercise added
+  /// mid-workout has no plan slot to carry a group, and pairing two exercises
+  /// for one workout is no reason to rewrite the plan.
+  IntColumn get supersetGroup => integer().nullable()();
 }

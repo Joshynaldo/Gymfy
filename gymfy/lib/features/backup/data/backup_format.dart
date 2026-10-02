@@ -292,6 +292,7 @@ BackupPayload migrateBackup(BackupPayload payload, {required int to}) {
 final Map<int, BackupPayload Function(BackupPayload)> _steps = {
   25: _from25,
   26: _from26,
+  27: _from27,
 };
 
 /// v25 → v26: the warm-up flag becomes a set type, and sessions gain their own
@@ -387,6 +388,39 @@ BackupPayload _from26(BackupPayload old) {
 
   return BackupPayload(
     schemaVersion: 27,
+    createdAt: old.createdAt,
+    tables: tables,
+    photos: old.photos,
+    exerciseImages: old.exerciseImages,
+  );
+}
+
+/// v27 → v28: a session's running order carries its own superset groups.
+///
+/// Not left absent like a new nullable column usually is: until v28 the app
+/// read a session's supersets from its plan slots, so each entry takes its
+/// slot's group — what the database migration does too, and what the workout
+/// showed when the backup was made.
+BackupPayload _from27(BackupPayload old) {
+  final tables = Map<String, BackupTable>.of(old.tables);
+
+  final entries = tables['session_exercises'];
+  if (entries != null && !entries.columns.contains('superset_group')) {
+    final groupOfSlot = {
+      for (final slot in tables['workout_exercises']?.rowMaps ?? const [])
+        slot['id']: slot['superset_group'],
+    };
+    tables['session_exercises'] = BackupTable.fromRowMaps(
+      [...entries.columns, 'superset_group'],
+      [
+        for (final row in entries.rowMaps)
+          {...row, 'superset_group': groupOfSlot[row['workout_exercise_id']]},
+      ],
+    );
+  }
+
+  return BackupPayload(
+    schemaVersion: 28,
     createdAt: old.createdAt,
     tables: tables,
     photos: old.photos,

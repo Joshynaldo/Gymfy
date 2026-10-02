@@ -3603,6 +3603,17 @@ class $SessionExercisesTable extends SessionExercises
       'REFERENCES workout_exercises (id) ON DELETE SET NULL',
     ),
   );
+  static const VerificationMeta _supersetGroupMeta = const VerificationMeta(
+    'supersetGroup',
+  );
+  @override
+  late final GeneratedColumn<int> supersetGroup = GeneratedColumn<int>(
+    'superset_group',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3610,6 +3621,7 @@ class $SessionExercisesTable extends SessionExercises
     exerciseId,
     position,
     workoutExerciseId,
+    supersetGroup,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3657,6 +3669,15 @@ class $SessionExercisesTable extends SessionExercises
         ),
       );
     }
+    if (data.containsKey('superset_group')) {
+      context.handle(
+        _supersetGroupMeta,
+        supersetGroup.isAcceptableOrUnknown(
+          data['superset_group']!,
+          _supersetGroupMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -3686,6 +3707,10 @@ class $SessionExercisesTable extends SessionExercises
         DriftSqlType.int,
         data['${effectivePrefix}workout_exercise_id'],
       ),
+      supersetGroup: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}superset_group'],
+      ),
     );
   }
 
@@ -3709,16 +3734,26 @@ class SessionExercise extends DataClass implements Insertable<SessionExercise> {
   final int position;
 
   /// The plan slot this came from, which supplies the targets (sets, reps,
-  /// warm-ups, superset group, percent of 1RM). Null for an exercise added
-  /// during the session, and set to null if the slot is later deleted — the
-  /// session keeps the exercise either way.
+  /// warm-ups, percent of 1RM). Null for an exercise added during the
+  /// session, and set to null if the slot is later deleted — the session
+  /// keeps the exercise either way.
   final int? workoutExerciseId;
+
+  /// The superset this entry is done in, like `WorkoutExercises.supersetGroup`
+  /// but for this session's own running order. Null when it stands alone.
+  ///
+  /// The session's, not the plan's (v28). Copied from the plan slot when the
+  /// session starts, then edited here: a free workout or an exercise added
+  /// mid-workout has no plan slot to carry a group, and pairing two exercises
+  /// for one workout is no reason to rewrite the plan.
+  final int? supersetGroup;
   const SessionExercise({
     required this.id,
     required this.sessionId,
     required this.exerciseId,
     required this.position,
     this.workoutExerciseId,
+    this.supersetGroup,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3729,6 +3764,9 @@ class SessionExercise extends DataClass implements Insertable<SessionExercise> {
     map['position'] = Variable<int>(position);
     if (!nullToAbsent || workoutExerciseId != null) {
       map['workout_exercise_id'] = Variable<int>(workoutExerciseId);
+    }
+    if (!nullToAbsent || supersetGroup != null) {
+      map['superset_group'] = Variable<int>(supersetGroup);
     }
     return map;
   }
@@ -3742,6 +3780,9 @@ class SessionExercise extends DataClass implements Insertable<SessionExercise> {
       workoutExerciseId: workoutExerciseId == null && nullToAbsent
           ? const Value.absent()
           : Value(workoutExerciseId),
+      supersetGroup: supersetGroup == null && nullToAbsent
+          ? const Value.absent()
+          : Value(supersetGroup),
     );
   }
 
@@ -3756,6 +3797,7 @@ class SessionExercise extends DataClass implements Insertable<SessionExercise> {
       exerciseId: serializer.fromJson<String>(json['exerciseId']),
       position: serializer.fromJson<int>(json['position']),
       workoutExerciseId: serializer.fromJson<int?>(json['workoutExerciseId']),
+      supersetGroup: serializer.fromJson<int?>(json['supersetGroup']),
     );
   }
   @override
@@ -3767,6 +3809,7 @@ class SessionExercise extends DataClass implements Insertable<SessionExercise> {
       'exerciseId': serializer.toJson<String>(exerciseId),
       'position': serializer.toJson<int>(position),
       'workoutExerciseId': serializer.toJson<int?>(workoutExerciseId),
+      'supersetGroup': serializer.toJson<int?>(supersetGroup),
     };
   }
 
@@ -3776,6 +3819,7 @@ class SessionExercise extends DataClass implements Insertable<SessionExercise> {
     String? exerciseId,
     int? position,
     Value<int?> workoutExerciseId = const Value.absent(),
+    Value<int?> supersetGroup = const Value.absent(),
   }) => SessionExercise(
     id: id ?? this.id,
     sessionId: sessionId ?? this.sessionId,
@@ -3784,6 +3828,9 @@ class SessionExercise extends DataClass implements Insertable<SessionExercise> {
     workoutExerciseId: workoutExerciseId.present
         ? workoutExerciseId.value
         : this.workoutExerciseId,
+    supersetGroup: supersetGroup.present
+        ? supersetGroup.value
+        : this.supersetGroup,
   );
   SessionExercise copyWithCompanion(SessionExercisesCompanion data) {
     return SessionExercise(
@@ -3796,6 +3843,9 @@ class SessionExercise extends DataClass implements Insertable<SessionExercise> {
       workoutExerciseId: data.workoutExerciseId.present
           ? data.workoutExerciseId.value
           : this.workoutExerciseId,
+      supersetGroup: data.supersetGroup.present
+          ? data.supersetGroup.value
+          : this.supersetGroup,
     );
   }
 
@@ -3806,14 +3856,21 @@ class SessionExercise extends DataClass implements Insertable<SessionExercise> {
           ..write('sessionId: $sessionId, ')
           ..write('exerciseId: $exerciseId, ')
           ..write('position: $position, ')
-          ..write('workoutExerciseId: $workoutExerciseId')
+          ..write('workoutExerciseId: $workoutExerciseId, ')
+          ..write('supersetGroup: $supersetGroup')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, sessionId, exerciseId, position, workoutExerciseId);
+  int get hashCode => Object.hash(
+    id,
+    sessionId,
+    exerciseId,
+    position,
+    workoutExerciseId,
+    supersetGroup,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3822,7 +3879,8 @@ class SessionExercise extends DataClass implements Insertable<SessionExercise> {
           other.sessionId == this.sessionId &&
           other.exerciseId == this.exerciseId &&
           other.position == this.position &&
-          other.workoutExerciseId == this.workoutExerciseId);
+          other.workoutExerciseId == this.workoutExerciseId &&
+          other.supersetGroup == this.supersetGroup);
 }
 
 class SessionExercisesCompanion extends UpdateCompanion<SessionExercise> {
@@ -3831,12 +3889,14 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExercise> {
   final Value<String> exerciseId;
   final Value<int> position;
   final Value<int?> workoutExerciseId;
+  final Value<int?> supersetGroup;
   const SessionExercisesCompanion({
     this.id = const Value.absent(),
     this.sessionId = const Value.absent(),
     this.exerciseId = const Value.absent(),
     this.position = const Value.absent(),
     this.workoutExerciseId = const Value.absent(),
+    this.supersetGroup = const Value.absent(),
   });
   SessionExercisesCompanion.insert({
     this.id = const Value.absent(),
@@ -3844,6 +3904,7 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExercise> {
     required String exerciseId,
     this.position = const Value.absent(),
     this.workoutExerciseId = const Value.absent(),
+    this.supersetGroup = const Value.absent(),
   }) : sessionId = Value(sessionId),
        exerciseId = Value(exerciseId);
   static Insertable<SessionExercise> custom({
@@ -3852,6 +3913,7 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExercise> {
     Expression<String>? exerciseId,
     Expression<int>? position,
     Expression<int>? workoutExerciseId,
+    Expression<int>? supersetGroup,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -3859,6 +3921,7 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExercise> {
       if (exerciseId != null) 'exercise_id': exerciseId,
       if (position != null) 'position': position,
       if (workoutExerciseId != null) 'workout_exercise_id': workoutExerciseId,
+      if (supersetGroup != null) 'superset_group': supersetGroup,
     });
   }
 
@@ -3868,6 +3931,7 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExercise> {
     Value<String>? exerciseId,
     Value<int>? position,
     Value<int?>? workoutExerciseId,
+    Value<int?>? supersetGroup,
   }) {
     return SessionExercisesCompanion(
       id: id ?? this.id,
@@ -3875,6 +3939,7 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExercise> {
       exerciseId: exerciseId ?? this.exerciseId,
       position: position ?? this.position,
       workoutExerciseId: workoutExerciseId ?? this.workoutExerciseId,
+      supersetGroup: supersetGroup ?? this.supersetGroup,
     );
   }
 
@@ -3896,6 +3961,9 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExercise> {
     if (workoutExerciseId.present) {
       map['workout_exercise_id'] = Variable<int>(workoutExerciseId.value);
     }
+    if (supersetGroup.present) {
+      map['superset_group'] = Variable<int>(supersetGroup.value);
+    }
     return map;
   }
 
@@ -3906,7 +3974,8 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExercise> {
           ..write('sessionId: $sessionId, ')
           ..write('exerciseId: $exerciseId, ')
           ..write('position: $position, ')
-          ..write('workoutExerciseId: $workoutExerciseId')
+          ..write('workoutExerciseId: $workoutExerciseId, ')
+          ..write('supersetGroup: $supersetGroup')
           ..write(')'))
         .toString();
   }
@@ -10677,6 +10746,7 @@ typedef $$SessionExercisesTableCreateCompanionBuilder =
       required String exerciseId,
       Value<int> position,
       Value<int?> workoutExerciseId,
+      Value<int?> supersetGroup,
     });
 typedef $$SessionExercisesTableUpdateCompanionBuilder =
     SessionExercisesCompanion Function({
@@ -10685,6 +10755,7 @@ typedef $$SessionExercisesTableUpdateCompanionBuilder =
       Value<String> exerciseId,
       Value<int> position,
       Value<int?> workoutExerciseId,
+      Value<int?> supersetGroup,
     });
 
 final class $$SessionExercisesTableReferences
@@ -10767,6 +10838,11 @@ class $$SessionExercisesTableFilterComposer
 
   ColumnFilters<int> get position => $composableBuilder(
     column: $table.position,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get supersetGroup => $composableBuilder(
+    column: $table.supersetGroup,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -10859,6 +10935,11 @@ class $$SessionExercisesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get supersetGroup => $composableBuilder(
+    column: $table.supersetGroup,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$WorkoutSessionsTableOrderingComposer get sessionId {
     final $$WorkoutSessionsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -10943,6 +11024,11 @@ class $$SessionExercisesTableAnnotationComposer
 
   GeneratedColumn<int> get position =>
       $composableBuilder(column: $table.position, builder: (column) => column);
+
+  GeneratedColumn<int> get supersetGroup => $composableBuilder(
+    column: $table.supersetGroup,
+    builder: (column) => column,
+  );
 
   $$WorkoutSessionsTableAnnotationComposer get sessionId {
     final $$WorkoutSessionsTableAnnotationComposer composer = $composerBuilder(
@@ -11053,12 +11139,14 @@ class $$SessionExercisesTableTableManager
                 Value<String> exerciseId = const Value.absent(),
                 Value<int> position = const Value.absent(),
                 Value<int?> workoutExerciseId = const Value.absent(),
+                Value<int?> supersetGroup = const Value.absent(),
               }) => SessionExercisesCompanion(
                 id: id,
                 sessionId: sessionId,
                 exerciseId: exerciseId,
                 position: position,
                 workoutExerciseId: workoutExerciseId,
+                supersetGroup: supersetGroup,
               ),
           createCompanionCallback:
               ({
@@ -11067,12 +11155,14 @@ class $$SessionExercisesTableTableManager
                 required String exerciseId,
                 Value<int> position = const Value.absent(),
                 Value<int?> workoutExerciseId = const Value.absent(),
+                Value<int?> supersetGroup = const Value.absent(),
               }) => SessionExercisesCompanion.insert(
                 id: id,
                 sessionId: sessionId,
                 exerciseId: exerciseId,
                 position: position,
                 workoutExerciseId: workoutExerciseId,
+                supersetGroup: supersetGroup,
               ),
           withReferenceMapper: (p0) => p0
               .map(

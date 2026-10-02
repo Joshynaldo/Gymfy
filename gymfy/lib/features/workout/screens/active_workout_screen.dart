@@ -402,7 +402,8 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
     if (added.isNotEmpty && entries.isEmpty) _pick(added.first);
   }
 
-  /// The menu on the card: swap the exercise, or take it out of today's list.
+  /// The menu on the card: swap the exercise, pair it into a superset, or
+  /// take it out of today's list.
   Future<void> _exerciseActions(
     BuildContext context,
     SessionExerciseEntry entry,
@@ -418,6 +419,13 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
           label: context.l10n.workoutSwapExercise,
           subtitle: context.l10n.workoutSwapExerciseSubtitle,
         ),
+        // Hidden with nothing to pair it with.
+        if (entries.length > 1)
+          (
+            value: _EntryAction.superset,
+            label: context.l10n.workoutSuperset,
+            subtitle: context.l10n.workoutSupersetActionSubtitle,
+          ),
         // Only offered while nothing is logged for it: the sets you did are
         // removed with the delete button on each row, not by a list edit.
         if (!hasSets)
@@ -440,6 +448,8 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
           entries: entries,
         );
         if (swapped != null) _pick(swapped);
+      case _EntryAction.superset:
+        await editSessionSuperset(context, ref, entry: entry, entries: entries);
       case _EntryAction.remove:
         await ref.read(sessionRepositoryProvider).removeExercise(entry.row.id);
         if (mounted &&
@@ -975,7 +985,7 @@ class _SetDots extends StatelessWidget {
 }
 
 /// What the card's options menu can do to an exercise.
-enum _EntryAction { swap, remove }
+enum _EntryAction { swap, superset, remove }
 
 /// "Superset with …" under the card's title: what you go to straight after
 /// this set, with no rest in between.

@@ -49,7 +49,8 @@ Gymfy is free and will stay free: no subscription, no pro tier, nothing to unloc
   Full Body 5×5, Upper / Lower, Push / Pull / Legs, Percentage Strength and a
   Body-Part Split. Adding one makes it a normal split you can edit.
 - **Reorder and superset.** Drag exercises into order and pair neighbours into
-  supersets. The rest timer only starts after the last exercise of a superset.
+  supersets, in the plan or mid-workout, free workouts included. The rest timer
+  only starts after the last exercise of a superset.
 - **% of 1RM targets.** Plan a lift at, say, 75 % of your max and Gymfy works out
   the weight from your tested or estimated 1RM, rounded to what your plates can
   make.
@@ -306,7 +307,7 @@ navigation stack, so switching tabs never loses where you were in another one.
 - Widgets never hardcode a hex value. Colours come from the theme or the accent
   provider. `app/theme/` is the one place raw hex is allowed, because that file
   *is* the theme.
-- The database schema is versioned (currently v27) and every change ships a
+- The database schema is versioned (currently v28) and every change ships a
   migration. Existing logs are never dropped.
 - No user-facing text is written into a widget. Every string lives in
   `lib/l10n/app_en.arb` with its German twin in `app_de.arb`, and widgets read

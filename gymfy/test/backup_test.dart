@@ -309,7 +309,7 @@ void main() {
     test('records the schema it was taken from', () async {
       final payload = await repo.snapshot();
       expect(payload.schemaVersion, db.schemaVersion);
-      expect(payload.schemaVersion, 27);
+      expect(payload.schemaVersion, 28);
     });
   });
 
@@ -834,6 +834,54 @@ void main() {
       });
     });
 
+    test('the v27 step gives each session entry its plan slot\'s superset', () {
+      // Until v28 a workout read its supersets from the plan, so a v27 backup
+      // must come back showing the same supersets it showed when it was made.
+      final migrated = migrateBackup(
+        BackupPayload(
+          schemaVersion: 27,
+          createdAt: DateTime(2026, 9, 1),
+          tables: {
+            'workout_exercises': BackupTable.fromRowMaps(
+              const ['id', 'superset_group'],
+              [
+                {'id': 10, 'superset_group': 1},
+                {'id': 11, 'superset_group': 1},
+                {'id': 12, 'superset_group': null},
+              ],
+            ),
+            'session_exercises': BackupTable.fromRowMaps(
+              const ['id', 'workout_exercise_id'],
+              [
+                {'id': 1, 'workout_exercise_id': 10},
+                {'id': 2, 'workout_exercise_id': 11},
+                {'id': 3, 'workout_exercise_id': 12},
+                // Added mid-workout, so no slot and no superset.
+                {'id': 4, 'workout_exercise_id': null},
+              ],
+            ),
+          },
+        ),
+        to: 28,
+      );
+
+      expect(migrated.schemaVersion, 28);
+      final entries = migrated.tables['session_exercises']!;
+      expect(entries.columns, contains('superset_group'));
+      expect(entries.rowMaps.map((r) => r['superset_group']), [
+        1,
+        1,
+        null,
+        null,
+      ]);
+      // A name that matches the Dart column, or the restore would call the
+      // file damaged.
+      expect(
+        db.sessionExercises.$columns.map((c) => c.name),
+        contains('superset_group'),
+      );
+    });
+
     test(
       'a v25 backup backfills the running order of open sessions only',
       () async {
@@ -1068,7 +1116,7 @@ void main() {
       final summary = await repo.inspect(path);
 
       expect(summary.createdAt, DateTime(2026, 9, 5, 8, 30));
-      expect(summary.schemaVersion, 27);
+      expect(summary.schemaVersion, 28);
       expect(summary.workouts, 2);
       expect(summary.sets, 5);
     });

@@ -229,6 +229,14 @@ plan slot, **set null** when the slot is deleted).
   added exercise has `planned == null` and needs UI defaults (3 sets × 10).
 - A swap rewrites `exercise_id` and keeps `workout_exercise_id`, so targets
   carry over. "Save swap to plan" = also update that `workout_exercises` row.
+- **v28 adds `superset_group`** (INTEGER NULL), the session's own superset
+  groups, read through `SessionExerciseEntry.supersetGroup`. `startSession`
+  copies each slot's group; the v28 migration (and the backup's v27 step)
+  filled existing rows from their slots. Edit with
+  `SessionRepository.supersetWithNext/supersetWithPrevious/leaveSuperset`;
+  every reorder, remove and swap renumbers the groups. Saving a mid-workout
+  superset to the plan uses `WorkoutRepository.supersetPlannedPair`, which
+  refuses slots that aren't neighbours in the plan.
 - `ExerciseRepository.hasHistory` counts session_exercises, so a custom
   exercise in a running order is archived instead of deleted.
 

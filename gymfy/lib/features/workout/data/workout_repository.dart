@@ -591,24 +591,58 @@ class WorkoutRepository {
       final index = rows.indexWhere((r) => r.id == id);
       final other = index + step;
       if (other < 0 || other >= rows.length) return;
-
-      // Both whole blocks join, so linking onto an existing pair makes a
-      // tri-set rather than stealing one member from it.
-      final joined = [
-        for (final block in supersetBlocks(rows, (r) => r.supersetGroup))
-          if (block.contains(rows[index]) || block.contains(rows[other]))
-            ...block,
-      ];
-      final unused =
-          rows
-              .map((r) => r.supersetGroup ?? 0)
-              .fold(0, (top, g) => g > top ? g : top) +
-          1;
-      await (_db.update(_db.workoutExercises)
-            ..where((t) => t.id.isIn([for (final r in joined) r.id])))
-          .write(WorkoutExercisesCompanion(supersetGroup: Value(unused)));
-      await _tidySupersets(row.dayId);
+      await _join(rows, index, other);
     });
+  }
+
+  /// Joins the planned exercises [firstId] and [secondId] into one superset,
+  /// and returns whether it did.
+  ///
+  /// For "save to plan" from a running workout, where the two were paired as
+  /// neighbours in *today's* order. Refused (false, nothing changed) unless
+  /// they are on the same day and next to each other in the plan too — the
+  /// workout may have been reordered, and joining two exercises the plan
+  /// keeps apart would superset whatever stands between them.
+  Future<bool> supersetPlannedPair(int firstId, int secondId) {
+    return _db.transaction(() async {
+      final first = await (_db.select(
+        _db.workoutExercises,
+      )..where((t) => t.id.equals(firstId))).getSingleOrNull();
+      final second = await (_db.select(
+        _db.workoutExercises,
+      )..where((t) => t.id.equals(secondId))).getSingleOrNull();
+      if (first == null || second == null || first.id == second.id) {
+        return false;
+      }
+      if (first.dayId != second.dayId) return false;
+
+      final rows = await _orderedRows(first.dayId);
+      final a = rows.indexWhere((r) => r.id == first.id);
+      final b = rows.indexWhere((r) => r.id == second.id);
+      if ((a - b).abs() != 1) return false;
+      await _join(rows, a, b);
+      return true;
+    });
+  }
+
+  /// Puts the blocks holding `rows[index]` and `rows[other]` into one
+  /// superset. Both whole blocks join, so linking onto an existing pair makes
+  /// a tri-set rather than stealing one member from it.
+  Future<void> _join(List<WorkoutExercise> rows, int index, int other) async {
+    final joined = [
+      for (final block in supersetBlocks(rows, (r) => r.supersetGroup))
+        if (block.contains(rows[index]) || block.contains(rows[other]))
+          ...block,
+    ];
+    final unused =
+        rows
+            .map((r) => r.supersetGroup ?? 0)
+            .fold(0, (top, g) => g > top ? g : top) +
+        1;
+    await (_db.update(_db.workoutExercises)
+          ..where((t) => t.id.isIn([for (final r in joined) r.id])))
+        .write(WorkoutExercisesCompanion(supersetGroup: Value(unused)));
+    await _tidySupersets(rows[index].dayId);
   }
 
   /// Takes the planned exercise [id] out of its superset.
