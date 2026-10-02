@@ -2220,6 +2220,36 @@ abstract class AppLocalizations {
   /// **'That exercise is already in this day\'s plan, so the swap is for this workout only.'**
   String get workoutSwapPlanClash;
 
+  /// No description provided for @workoutSupersetActionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pair it with the exercise before or after'**
+  String get workoutSupersetActionSubtitle;
+
+  /// No description provided for @workoutSupersetWithExercise.
+  ///
+  /// In en, this message translates to:
+  /// **'Superset with {exercise}'**
+  String workoutSupersetWithExercise(String exercise);
+
+  /// No description provided for @workoutSupersetBackToBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to back, rest after the last'**
+  String get workoutSupersetBackToBack;
+
+  /// No description provided for @workoutSupersetScopeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'For how long?'**
+  String get workoutSupersetScopeTitle;
+
+  /// No description provided for @workoutSupersetPlanApart.
+  ///
+  /// In en, this message translates to:
+  /// **'These two aren\'t next to each other in the plan, so the superset is for this workout only.'**
+  String get workoutSupersetPlanApart;
+
   /// No description provided for @workoutReorderTitle.
   ///
   /// In en, this message translates to:

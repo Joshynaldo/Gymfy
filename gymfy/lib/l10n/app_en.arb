@@ -726,6 +726,16 @@
   "workoutSwapScopePlan": "This workout and the plan",
   "workoutSwapScopePlanSubtitle": "Future workouts of this day use it too",
   "workoutSwapPlanClash": "That exercise is already in this day's plan, so the swap is for this workout only.",
+  "workoutSupersetActionSubtitle": "Pair it with the exercise before or after",
+  "workoutSupersetWithExercise": "Superset with {exercise}",
+  "@workoutSupersetWithExercise": {
+    "placeholders": {
+      "exercise": { "type": "String" }
+    }
+  },
+  "workoutSupersetBackToBack": "Back to back, rest after the last",
+  "workoutSupersetScopeTitle": "For how long?",
+  "workoutSupersetPlanApart": "These two aren't next to each other in the plan, so the superset is for this workout only.",
   "workoutReorderTitle": "Reorder exercises",
   "workoutWarmupRampCaption": "{exercise} · ramp {ramp}",
   "@workoutWarmupRampCaption": {

@@ -1306,6 +1306,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'That exercise is already in this day\'s plan, so the swap is for this workout only.';
 
   @override
+  String get workoutSupersetActionSubtitle =>
+      'Pair it with the exercise before or after';
+
+  @override
+  String workoutSupersetWithExercise(String exercise) {
+    return 'Superset with $exercise';
+  }
+
+  @override
+  String get workoutSupersetBackToBack => 'Back to back, rest after the last';
+
+  @override
+  String get workoutSupersetScopeTitle => 'For how long?';
+
+  @override
+  String get workoutSupersetPlanApart =>
+      'These two aren\'t next to each other in the plan, so the superset is for this workout only.';
+
+  @override
   String get workoutReorderTitle => 'Reorder exercises';
 
   @override

@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../shared/database/app_database.dart';
 import '../../../shared/models/set_type.dart';
 import '../../../shared/utils/dates.dart';
+import 'supersets.dart';
 
 export '../../../shared/models/set_type.dart';
 
@@ -87,9 +88,13 @@ class SessionExerciseEntry {
         defaultReps: addedExerciseReps,
       );
 
-  /// The superset it belongs to in the plan, or null when it stands alone.
-  /// Pass this to `supersetBlocks` / `restsAfter` (supersets.dart).
-  int? get supersetGroup => planned?.supersetGroup;
+  /// The superset it is done in today, or null when it stands alone. Pass
+  /// this to `supersetBlocks` / `restsAfter` (supersets.dart).
+  ///
+  /// The session's own group, not the plan slot's: it starts as the plan's
+  /// and can be changed during the workout (see
+  /// [SessionRepository.supersetWithNext]).
+  int? get supersetGroup => row.supersetGroup;
 }
 
 /// Working sets suggested for an exercise added mid-workout, which has no plan
@@ -139,6 +144,7 @@ class SessionRepository {
               exerciseId: entry.exerciseId,
               position: Value(index),
               workoutExerciseId: Value(entry.id),
+              supersetGroup: Value(entry.supersetGroup),
             ),
         ]);
       });
@@ -190,8 +196,8 @@ class SessionRepository {
   //
   // Everything below edits the session's own list and nothing else. The plan
   // is the plan; what you did today because the rack was taken is not a
-  // reason to rewrite it. ("Save swap to plan" is the one deliberate
-  // exception, and lives in workout_repository.dart.)
+  // reason to rewrite it. (Saving a swap or a superset to the plan are the
+  // deliberate exceptions, and live in workout_repository.dart.)
   //
   // An exercise appears at most once in a running order. Logged sets are
   // keyed by exercise, not by entry, so two entries for the same lift would
@@ -277,6 +283,10 @@ class SessionRepository {
         final ids = [for (final r in order) r.id];
         ids.insert(ids.indexOf(row.id), keptId);
         await _writeOrder(ids);
+        // The kept entry stands alone, so slotting it in front of the
+        // replacement can split a superset. Renumber so the halves don't
+        // rejoin later by accident.
+        await _tidySupersets(row.sessionId);
       }
       return true;
     });
@@ -296,6 +306,7 @@ class SessionRepository {
           if (known.contains(r.id)) r.id,
       ];
       await _writeOrder(ids);
+      await _tidySupersets(sessionId);
     });
   }
 
@@ -326,7 +337,91 @@ class SessionRepository {
       await (_db.delete(
         _db.sessionExercises,
       )..where((t) => t.id.equals(row.id))).go();
+      await _tidySupersets(row.sessionId);
       return true;
+    });
+  }
+
+  // --- Supersets ------------------------------------------------------------
+  //
+  // The same rules as the plan's (workout_repository.dart): only neighbours
+  // form a superset, joining onto one makes it bigger rather than stealing a
+  // member, and the numbers are rewritten after every edit so a leftover can't
+  // quietly rejoin a group later.
+
+  /// Joins the entry [sessionExerciseId] and the one after it in the running
+  /// order into one superset. Does nothing for the last entry.
+  Future<void> supersetWithNext(int sessionExerciseId) =>
+      _joinNeighbour(sessionExerciseId, 1);
+
+  /// Joins the entry [sessionExerciseId] and the one before it into one
+  /// superset. Does nothing for the first entry.
+  Future<void> supersetWithPrevious(int sessionExerciseId) =>
+      _joinNeighbour(sessionExerciseId, -1);
+
+  Future<void> _joinNeighbour(int sessionExerciseId, int step) {
+    return _db.transaction(() async {
+      final row = await (_db.select(
+        _db.sessionExercises,
+      )..where((t) => t.id.equals(sessionExerciseId))).getSingleOrNull();
+      if (row == null) return;
+
+      final order = await _orderOf(row.sessionId);
+      final index = order.indexWhere((r) => r.id == row.id);
+      final other = index + step;
+      if (other < 0 || other >= order.length) return;
+
+      // Both whole blocks join, so linking onto a pair makes a tri-set.
+      final joined = [
+        for (final block in supersetBlocks(order, (r) => r.supersetGroup))
+          if (block.contains(order[index]) || block.contains(order[other]))
+            ...block,
+      ];
+      final unused =
+          order
+              .map((r) => r.supersetGroup ?? 0)
+              .fold(0, (top, g) => g > top ? g : top) +
+          1;
+      await (_db.update(_db.sessionExercises)
+            ..where((t) => t.id.isIn([for (final r in joined) r.id])))
+          .write(SessionExercisesCompanion(supersetGroup: Value(unused)));
+      await _tidySupersets(row.sessionId);
+    });
+  }
+
+  /// Takes the entry [sessionExerciseId] out of its superset. A partner left
+  /// on its own becomes a plain exercise again, and taking the middle one out
+  /// of a tri-set leaves two that no longer touch, so they part too.
+  Future<void> leaveSuperset(int sessionExerciseId) {
+    return _db.transaction(() async {
+      final row = await (_db.select(
+        _db.sessionExercises,
+      )..where((t) => t.id.equals(sessionExerciseId))).getSingleOrNull();
+      if (row == null) return;
+      await (_db.update(_db.sessionExercises)
+            ..where((t) => t.id.equals(row.id)))
+          .write(const SessionExercisesCompanion(supersetGroup: Value(null)));
+      await _tidySupersets(row.sessionId);
+    });
+  }
+
+  /// Rewrites a session's superset numbers to match its blocks: each block of
+  /// two or more gets its own number, anything standing alone gets none.
+  Future<void> _tidySupersets(int sessionId) async {
+    final order = await _orderOf(sessionId);
+    var next = 1;
+    await _db.batch((batch) {
+      for (final block in supersetBlocks(order, (r) => r.supersetGroup)) {
+        final group = block.length > 1 ? next++ : null;
+        for (final row in block) {
+          if (row.supersetGroup == group) continue;
+          batch.update(
+            _db.sessionExercises,
+            SessionExercisesCompanion(supersetGroup: Value(group)),
+            where: (t) => t.id.equals(row.id),
+          );
+        }
+      }
     });
   }
 

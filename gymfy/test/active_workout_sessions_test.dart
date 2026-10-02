@@ -75,6 +75,8 @@ SessionExerciseEntry _entry(
     exerciseId: exercise.id,
     position: position,
     workoutExerciseId: planned?.id,
+    // Copied from the slot, as starting a session does.
+    supersetGroup: planned?.supersetGroup,
   ),
   exercise: exercise,
   planned: planned,
@@ -137,6 +139,21 @@ class _RecordingSessions extends SessionRepository {
     removed.add(sessionExerciseId);
     return true;
   }
+
+  /// Superset edits as "next:id", "previous:id" or "leave:id".
+  final supersets = <String>[];
+
+  @override
+  Future<void> supersetWithNext(int sessionExerciseId) async =>
+      supersets.add('next:$sessionExerciseId');
+
+  @override
+  Future<void> supersetWithPrevious(int sessionExerciseId) async =>
+      supersets.add('previous:$sessionExerciseId');
+
+  @override
+  Future<void> leaveSuperset(int sessionExerciseId) async =>
+      supersets.add('leave:$sessionExerciseId');
 }
 
 /// Records saves of a swap back to the plan.
@@ -155,6 +172,19 @@ class _RecordingPlans extends WorkoutRepository {
     replaced.add((id: id, exerciseId: exerciseId));
     return true;
   }
+
+  /// Superset saves to the plan as "pair:a+b" or "leave:id".
+  final supersets = <String>[];
+
+  @override
+  Future<bool> supersetPlannedPair(int firstId, int secondId) async {
+    if (refuse) return false;
+    supersets.add('pair:$firstId+$secondId');
+    return true;
+  }
+
+  @override
+  Future<void> leaveSuperset(int id) async => supersets.add('leave:$id');
 }
 
 /// No bests yet, so no set is ever a record and nothing pops up.
@@ -420,6 +450,130 @@ void main() {
 
       expect(onCard('Dip'), findsOneWidget);
       expect(find.text('3 × 10'), findsOneWidget);
+    });
+  });
+
+  group('supersets made mid-session', () {
+    Future<void> openSuperset(WidgetTester tester) async {
+      await tester.tap(find.byTooltip('Exercise options'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Superset'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('a free workout pairs neighbours without asking about a plan', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        entries: [_entry(_dip, 0), _entry(_row, 1)],
+        free: true,
+      );
+
+      await openSuperset(tester);
+      await tester.tap(find.text('Superset with Cable row'));
+      await tester.pumpAndSettle();
+
+      // No plan to save to, so no "for how long?" question.
+      expect(find.text('For how long?'), findsNothing);
+      expect(sessions.supersets, ['next:1']);
+      expect(plans.supersets, isEmpty);
+    });
+
+    testWidgets('a planned pair can be saved to the plan as well', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        entries: [
+          _entry(_bench, 0, planned: _slot(_bench, 0)),
+          _entry(_row, 1, planned: _slot(_row, 1)),
+        ],
+      );
+
+      await openSuperset(tester);
+      await tester.tap(find.text('Superset with Cable row'));
+      await tester.pumpAndSettle();
+      expect(find.text('For how long?'), findsOneWidget);
+      await tester.tap(find.text('This workout and the plan'));
+      await tester.pumpAndSettle();
+
+      expect(sessions.supersets, ['next:1']);
+      expect(plans.supersets, ['pair:100+101']);
+    });
+
+    testWidgets('or kept to this workout', (tester) async {
+      await pump(
+        tester,
+        entries: [
+          _entry(_bench, 0, planned: _slot(_bench, 0)),
+          _entry(_row, 1, planned: _slot(_row, 1)),
+        ],
+      );
+
+      await openSuperset(tester);
+      await tester.tap(find.text('Superset with Cable row'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Just this workout'));
+      await tester.pumpAndSettle();
+
+      expect(sessions.supersets, ['next:1']);
+      expect(plans.supersets, isEmpty);
+    });
+
+    testWidgets('a plan that keeps them apart keeps the superset to today, '
+        'and says so', (tester) async {
+      plans.refuse = true;
+      await pump(
+        tester,
+        entries: [
+          _entry(_bench, 0, planned: _slot(_bench, 0)),
+          _entry(_row, 1, planned: _slot(_row, 1)),
+        ],
+      );
+
+      await openSuperset(tester);
+      await tester.tap(find.text('Superset with Cable row'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('This workout and the plan'));
+      await tester.pumpAndSettle();
+
+      expect(sessions.supersets, ['next:1']);
+      expect(
+        find.textContaining("aren't next to each other in the plan"),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a superset can be left, from the plan too', (tester) async {
+      await pump(
+        tester,
+        entries: [
+          _entry(_bench, 0, planned: _slot(_bench, 0, group: 1)),
+          _entry(_row, 1, planned: _slot(_row, 1, group: 1)),
+        ],
+      );
+
+      await openSuperset(tester);
+      // Already paired with the row, so only leaving is offered.
+      expect(find.text('Superset with Cable row'), findsNothing);
+      await tester.tap(find.text('Remove from superset'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('This workout and the plan'));
+      await tester.pumpAndSettle();
+
+      expect(sessions.supersets, ['leave:1']);
+      expect(plans.supersets, ['leave:100']);
+    });
+
+    testWidgets('one exercise alone is not offered a superset', (tester) async {
+      await pump(tester, entries: [_entry(_dip, 0)], free: true);
+
+      await tester.tap(find.byTooltip('Exercise options'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Superset'), findsNothing);
+      expect(find.text('Swap exercise'), findsOneWidget);
     });
   });
 

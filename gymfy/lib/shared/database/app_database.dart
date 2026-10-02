@@ -46,7 +46,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 27;
+  int get schemaVersion => 28;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -327,6 +327,32 @@ class AppDatabase extends _$AppDatabase {
       if (from < 27) {
         await transaction(() async {
           if (!await _hasTable('goals')) await m.createTable(goals);
+        });
+      }
+      // v28 gives each session's running order its own superset groups, so a
+      // superset can be made during a workout — including a free one, or with
+      // an exercise added mid-session, neither of which has a plan slot.
+      //
+      // Every existing entry takes its group from the plan slot it came from,
+      // which is where the app read it until now, so nothing changes on
+      // screen. The UPDATE runs whether or not the column was added just
+      // now: a device coming from v25 gets the table from v26 above with this
+      // column already in it, and its open session still needs the groups.
+      // Only empty groups are filled, so a rerun after a kill finds nothing
+      // left to do.
+      if (from < 28) {
+        await transaction(() async {
+          await _addColumnOnce(
+            m,
+            sessionExercises,
+            sessionExercises.supersetGroup,
+          );
+          await customStatement(
+            'UPDATE session_exercises SET superset_group = '
+            '(SELECT we.superset_group FROM workout_exercises we '
+            'WHERE we.id = session_exercises.workout_exercise_id) '
+            'WHERE superset_group IS NULL AND workout_exercise_id IS NOT NULL',
+          );
         });
       }
     },

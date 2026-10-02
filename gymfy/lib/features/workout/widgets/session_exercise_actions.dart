@@ -9,12 +9,13 @@ import '../data/session_repository.dart';
 import '../data/workout_repository.dart';
 import '../screens/widgets/exercise_picker.dart';
 
-// The edits a running workout's exercise list allows: add, swap, reorder and
-// remove. Kept out of active_workout_screen.dart, which is busy enough with
-// logging; the screen only decides *when* to call these.
+// The edits a running workout's exercise list allows: add, swap, superset,
+// reorder and remove. Kept out of active_workout_screen.dart, which is busy
+// enough with logging; the screen only decides *when* to call these.
 //
 // All of them edit the session's own running order (session_exercises) and
-// leave the plan alone, except a swap the user explicitly saves to the plan.
+// leave the plan alone, except a swap or superset the user explicitly saves to
+// the plan.
 
 /// Asks which exercises to add and appends them to the session. Exercises
 /// already in the workout aren't offered. Returns the ids actually added,
@@ -36,8 +37,32 @@ Future<List<String>> addExercisesToSession(
   ];
 }
 
-/// Whether a swap applies to today only, or to the plan as well.
+/// Whether a swap or a superset change applies to today only, or to the plan
+/// as well.
 enum SwapScope { session, plan }
+
+/// Asks whether an edit should be saved to the plan too. Returns null if the
+/// sheet was dismissed.
+Future<SwapScope?> _askScope(BuildContext context, {required String title}) {
+  final l10n = context.l10n;
+  return showOptionPicker<SwapScope>(
+    context: context,
+    title: title,
+    options: [
+      (
+        value: SwapScope.session,
+        label: l10n.workoutSwapScopeSession,
+        subtitle: l10n.workoutPlanUnchanged,
+      ),
+      (
+        value: SwapScope.plan,
+        label: l10n.workoutSwapScopePlan,
+        subtitle: l10n.workoutSwapScopePlanSubtitle,
+      ),
+    ],
+    selected: null,
+  );
+}
 
 /// Swaps [entry] for an exercise the user picks, and returns the new
 /// exercise's id — or null if nothing changed.
@@ -64,23 +89,7 @@ Future<String?> swapSessionExercise(
   final planned = entry.planned;
   var scope = SwapScope.session;
   if (planned != null) {
-    final picked = await showOptionPicker<SwapScope>(
-      context: context,
-      title: l10n.workoutSwapScopeTitle,
-      options: [
-        (
-          value: SwapScope.session,
-          label: l10n.workoutSwapScopeSession,
-          subtitle: l10n.workoutPlanUnchanged,
-        ),
-        (
-          value: SwapScope.plan,
-          label: l10n.workoutSwapScopePlan,
-          subtitle: l10n.workoutSwapScopePlanSubtitle,
-        ),
-      ],
-      selected: null,
-    );
+    final picked = await _askScope(context, title: l10n.workoutSwapScopeTitle);
     if (picked == null) return null;
     scope = picked;
   }
@@ -104,6 +113,115 @@ Future<String?> swapSessionExercise(
     }
   }
   return exerciseId;
+}
+
+enum _SupersetEdit { withPrevious, withNext, leave }
+
+/// Offers the superset edits that make sense for [entry] in today's running
+/// order — pair it with the exercise before or after, or take it out of its
+/// superset — and applies the one picked.
+///
+/// Like a swap, a change can be saved to the plan as well. That is asked only
+/// when the plan has the exercises involved: a free workout, or an exercise
+/// added mid-session, has no plan slot to save it to.
+Future<void> editSessionSuperset(
+  BuildContext context,
+  WidgetRef ref, {
+  required SessionExerciseEntry entry,
+  required List<SessionExerciseEntry> entries,
+}) async {
+  // Taken before any await, which the context may not outlive.
+  final messenger = ScaffoldMessenger.maybeOf(context);
+  final l10n = context.l10n;
+
+  final index = entries.indexWhere((e) => e.row.id == entry.row.id);
+  if (index == -1) return;
+  final previous = index > 0 ? entries[index - 1] : null;
+  final next = index < entries.length - 1 ? entries[index + 1] : null;
+  bool linkedTo(SessionExerciseEntry? other) =>
+      other != null &&
+      entry.supersetGroup != null &&
+      other.supersetGroup == entry.supersetGroup;
+
+  final edit = await showOptionPicker<_SupersetEdit>(
+    context: context,
+    title: l10n.workoutSuperset,
+    options: [
+      if (previous != null && !linkedTo(previous))
+        (
+          value: _SupersetEdit.withPrevious,
+          label: l10n.workoutSupersetWithExercise(previous.exercise.name),
+          subtitle: l10n.workoutSupersetBackToBack,
+        ),
+      if (next != null && !linkedTo(next))
+        (
+          value: _SupersetEdit.withNext,
+          label: l10n.workoutSupersetWithExercise(next.exercise.name),
+          subtitle: l10n.workoutSupersetBackToBack,
+        ),
+      if (linkedTo(previous) || linkedTo(next))
+        (
+          value: _SupersetEdit.leave,
+          label: l10n.workoutSupersetLeave,
+          subtitle: null,
+        ),
+    ],
+    selected: null,
+  );
+  if (edit == null || !context.mounted) return;
+
+  final partner = switch (edit) {
+    _SupersetEdit.withPrevious => previous,
+    _SupersetEdit.withNext => next,
+    _SupersetEdit.leave => null,
+  };
+  // Only asked when saving would change the plan: not for a superset the plan
+  // already has, nor for leaving one the plan never had.
+  final slot = entry.planned;
+  final partnerSlot = partner?.planned;
+  final canSaveToPlan = switch (edit) {
+    _SupersetEdit.leave => slot?.supersetGroup != null,
+    _ =>
+      slot != null &&
+          partnerSlot != null &&
+          (slot.supersetGroup == null ||
+              slot.supersetGroup != partnerSlot.supersetGroup),
+  };
+  var scope = SwapScope.session;
+  if (canSaveToPlan) {
+    final picked = await _askScope(
+      context,
+      title: l10n.workoutSupersetScopeTitle,
+    );
+    if (picked == null) return;
+    scope = picked;
+  }
+
+  final sessions = ref.read(sessionRepositoryProvider);
+  switch (edit) {
+    case _SupersetEdit.withPrevious:
+      await sessions.supersetWithPrevious(entry.row.id);
+    case _SupersetEdit.withNext:
+      await sessions.supersetWithNext(entry.row.id);
+    case _SupersetEdit.leave:
+      await sessions.leaveSuperset(entry.row.id);
+  }
+  if (scope != SwapScope.plan) return;
+
+  final plan = ref.read(workoutRepositoryProvider);
+  if (edit == _SupersetEdit.leave) {
+    await plan.leaveSuperset(slot!.id);
+    return;
+  }
+  final saved = await plan.supersetPlannedPair(slot!.id, partnerSlot!.id);
+  // Neighbours today, but not in the plan: the workout was reordered. Today's
+  // superset stands; say why the plan didn't change rather than let it look
+  // saved.
+  if (!saved) {
+    messenger?.showSnackBar(
+      SnackBar(content: Text(l10n.workoutSupersetPlanApart)),
+    );
+  }
 }
 
 /// Lets the user drag the session's exercises into a new order and saves it.

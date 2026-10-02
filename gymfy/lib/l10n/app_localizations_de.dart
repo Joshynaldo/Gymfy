@@ -1311,6 +1311,26 @@ class AppLocalizationsDe extends AppLocalizations {
       'Diese Übung ist schon im Plan dieses Tages – der Tausch gilt also nur für dieses Training.';
 
   @override
+  String get workoutSupersetActionSubtitle =>
+      'Mit der Übung davor oder danach kombinieren';
+
+  @override
+  String workoutSupersetWithExercise(String exercise) {
+    return 'Supersatz mit $exercise';
+  }
+
+  @override
+  String get workoutSupersetBackToBack =>
+      'Direkt hintereinander, Pause nach der letzten';
+
+  @override
+  String get workoutSupersetScopeTitle => 'Für wie lange?';
+
+  @override
+  String get workoutSupersetPlanApart =>
+      'Im Plan stehen die beiden nicht nebeneinander – der Supersatz gilt also nur für dieses Training.';
+
+  @override
   String get workoutReorderTitle => 'Übungen sortieren';
 
   @override

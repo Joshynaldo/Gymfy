@@ -15,7 +15,8 @@ import 'dart:io';
 
 // `show` only: drift's full export includes matchers-shaped names that
 // would collide with the test package.
-import 'package:drift/drift.dart' show OrderingTerm, Value;
+import 'package:drift/drift.dart'
+    show BooleanExpressionOperators, OrderingTerm, Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/shared/database/app_database.dart';
@@ -23,6 +24,7 @@ import 'package:gymfy/shared/database/app_database.dart';
 /// Undoes what version N's migration branch added. Keyed by N, applied in
 /// descending order by [rewindTo].
 const _undoVersion = <int, List<String>>{
+  28: ['ALTER TABLE session_exercises DROP COLUMN superset_group'],
   27: ['DROP TABLE goals'],
   // v26 swapped the warm-up flag for a set type. Winding back puts the flag
   // back and fills it from the type before dropping the new columns, so a test
@@ -128,13 +130,13 @@ void main() {
     final db = AppDatabase.forTesting(NativeDatabase.memory());
     addTearDown(db.close);
 
-    expect(db.schemaVersion, 27);
+    expect(db.schemaVersion, 28);
   });
 
   test('every version above the oldest test target can be wound back', () {
     // Guards the helper itself: a new migration with no undo entry would make
     // every rewind test below fail with a confusing SQL error instead of this.
-    for (var v = 10; v <= 27; v++) {
+    for (var v = 10; v <= 28; v++) {
       expect(_undoVersion.keys, contains(v), reason: 'no undo for v$v');
     }
   });
@@ -688,8 +690,8 @@ void main() {
       final version = await upgraded
           .customSelect('PRAGMA user_version')
           .getSingle();
-      // All the way to the current version: v27 runs straight after.
-      expect(version.data['user_version'], 27);
+      // All the way to the current version: v27 and v28 run straight after.
+      expect(version.data['user_version'], 28);
     });
 
     test('a finished v26 step whose version was never written reruns '
@@ -811,7 +813,170 @@ void main() {
         final version = await again
             .customSelect('PRAGMA user_version')
             .getSingle();
-        expect(version.data['user_version'], 27);
+        expect(version.data['user_version'], 28);
+      },
+    );
+  });
+
+  group('upgrading from v27', () {
+    // v28 moves a session's supersets from its plan slots onto the session's
+    // own running order. What matters is that nothing changes on screen: every
+    // entry that came from a plan slot carries that slot's group afterwards.
+    late File file;
+    late int openSessionId;
+    late int finishedSessionId;
+
+    setUp(() async {
+      file = _tempDatabase('v27');
+      final old = AppDatabase.forTesting(NativeDatabase(file));
+      for (final (id, name) in const [
+        ('barbell_bench_press', 'Barbell Bench Press'),
+        ('barbell_row', 'Barbell Row'),
+        ('barbell_biceps_curl', 'Barbell Biceps Curl'),
+        ('triceps_pushdown', 'Triceps Pushdown'),
+      ]) {
+        await old
+            .into(old.exercises)
+            .insert(
+              ExercisesCompanion.insert(
+                id: id,
+                name: name,
+                muscleIds: const ['chest'],
+              ),
+            );
+      }
+      final splitId = await old
+          .into(old.splits)
+          .insert(SplitsCompanion.insert(name: 'Upper'));
+      final dayId = await old
+          .into(old.workoutDays)
+          .insert(WorkoutDaysCompanion.insert(splitId: splitId, name: 'Upper'));
+      // Bench and row are a superset in the plan; the curl stands alone.
+      final slots = <String, int>{};
+      for (final (index, (exerciseId, group)) in const [
+        ('barbell_bench_press', 1),
+        ('barbell_row', 1),
+        ('barbell_biceps_curl', null),
+      ].indexed) {
+        slots[exerciseId] = await old
+            .into(old.workoutExercises)
+            .insert(
+              WorkoutExercisesCompanion.insert(
+                dayId: dayId,
+                exerciseId: exerciseId,
+                position: Value(index),
+                supersetGroup: Value(group),
+              ),
+            );
+      }
+
+      Future<int> session({DateTime? completedAt}) async {
+        final id = await old
+            .into(old.workoutSessions)
+            .insert(
+              WorkoutSessionsCompanion.insert(
+                dayId: Value(dayId),
+                name: 'Upper',
+                completedAt: Value(completedAt),
+              ),
+            );
+        for (final (index, exerciseId) in slots.keys.indexed) {
+          await old
+              .into(old.sessionExercises)
+              .insert(
+                SessionExercisesCompanion.insert(
+                  sessionId: id,
+                  exerciseId: exerciseId,
+                  position: Value(index),
+                  workoutExerciseId: Value(slots[exerciseId]),
+                ),
+              );
+        }
+        return id;
+      }
+
+      openSessionId = await session();
+      finishedSessionId = await session(completedAt: DateTime(2026, 9, 29));
+      // Added mid-workout: no plan slot, so nothing to take a group from.
+      await old
+          .into(old.sessionExercises)
+          .insert(
+            SessionExercisesCompanion.insert(
+              sessionId: openSessionId,
+              exerciseId: 'triceps_pushdown',
+              position: const Value(3),
+            ),
+          );
+
+      await rewindTo(old, 27);
+      // Guards the rewind: the v27 shape has no session superset column.
+      final columns = await old
+          .customSelect('PRAGMA table_info(session_exercises)')
+          .get();
+      expect(
+        columns.map((c) => c.data['name']),
+        isNot(contains('superset_group')),
+      );
+      await old.close();
+    });
+
+    Future<Map<String, int?>> groupsOf(AppDatabase db, int sessionId) async {
+      final rows = await (db.select(
+        db.sessionExercises,
+      )..where((t) => t.sessionId.equals(sessionId))).get();
+      return {for (final row in rows) row.exerciseId: row.supersetGroup};
+    }
+
+    test('every entry takes its plan slot\'s superset', () async {
+      final upgraded = AppDatabase.forTesting(NativeDatabase(file));
+      addTearDown(upgraded.close);
+
+      expect(await groupsOf(upgraded, openSessionId), {
+        'barbell_bench_press': 1,
+        'barbell_row': 1,
+        'barbell_biceps_curl': null,
+        'triceps_pushdown': null,
+      });
+      // Finished sessions too, so their running order reads the same.
+      expect(await groupsOf(upgraded, finishedSessionId), {
+        'barbell_bench_press': 1,
+        'barbell_row': 1,
+        'barbell_biceps_curl': null,
+      });
+      final version = await upgraded
+          .customSelect('PRAGMA user_version')
+          .getSingle();
+      expect(version.data['user_version'], 28);
+    });
+
+    test(
+      'a v28 step whose version was never written reruns harmlessly',
+      () async {
+        // The column was added but the app died before drift wrote the new
+        // version. The rerun must not fail on "duplicate column", and must
+        // not undo a superset made since: only empty groups are filled.
+        final first = AppDatabase.forTesting(NativeDatabase(file));
+        await (first.update(first.sessionExercises)..where(
+              (t) =>
+                  t.sessionId.equals(openSessionId) &
+                  t.exerciseId.isIn([
+                    'barbell_biceps_curl',
+                    'triceps_pushdown',
+                  ]),
+            ))
+            .write(const SessionExercisesCompanion(supersetGroup: Value(2)));
+        await first.customStatement('PRAGMA user_version = 27');
+        await first.close();
+
+        final again = AppDatabase.forTesting(NativeDatabase(file));
+        addTearDown(again.close);
+
+        expect(await groupsOf(again, openSessionId), {
+          'barbell_bench_press': 1,
+          'barbell_row': 1,
+          'barbell_biceps_curl': 2,
+          'triceps_pushdown': 2,
+        });
       },
     );
   });
