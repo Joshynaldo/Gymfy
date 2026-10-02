@@ -17,9 +17,9 @@ import 'package:gymfy/features/workout/data/session_repository.dart';
 import 'package:gymfy/features/workout/screens/workout_summary_screen.dart';
 import 'package:gymfy/shared/data/week_start.dart';
 import 'package:gymfy/shared/database/app_database.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'support/default_accent.dart';
+import 'package:gymfy/shared/widgets/lucide_icons.dart';
 
 // A Thursday.
 final _today = DateTime(2026, 10, 1, 12);

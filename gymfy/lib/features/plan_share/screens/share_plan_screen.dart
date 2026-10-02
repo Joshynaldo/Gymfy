@@ -5,7 +5,6 @@ import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:printing/printing.dart';
 
 import '../../../l10n/l10n.dart';
@@ -19,6 +18,7 @@ import '../widgets/plan_import_flow.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../app/theme/glass.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Sharing plans: send your splits as a file, print them, or take someone
 /// else's in.

@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
@@ -17,6 +16,7 @@ import 'split_list_screen.dart' show createSplit;
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// The Workout tab: the split you're actually following, with its days on first
 /// sight.

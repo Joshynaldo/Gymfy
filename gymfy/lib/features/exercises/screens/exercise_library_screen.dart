@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
@@ -23,6 +22,7 @@ import 'widgets/add_to_day_sheet.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../app/theme/glass.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// The Exercises tab: a searchable, filterable list of the whole exercise
 /// library, read live from the database.

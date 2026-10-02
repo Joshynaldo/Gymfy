@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
 import '../../../shared/utils/weekday.dart';
 import '../../workout/data/workout_repository.dart';
 import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// What's coming after today.
 ///

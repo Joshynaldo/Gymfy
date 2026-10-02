@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../../shared/utils/dates.dart';
@@ -15,6 +14,7 @@ import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../app/theme/glass.dart';
 import '../../../shared/widgets/glass_dialog.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// What the add-photo dialog collects before the file is copied in.
 typedef _PhotoDetails = ({DateTime day, String? note});

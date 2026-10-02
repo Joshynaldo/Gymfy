@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../../shared/utils/format.dart';
@@ -8,6 +7,7 @@ import '../../../shared/utils/units.dart';
 import '../../exercises/data/exercise_repository.dart';
 import '../data/plate_math.dart';
 import 'barbell_diagram.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Builds a weight by stacking plates, instead of typing a number.
 ///

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../l10n/l10n.dart';
 import '../../shared/data/settings_repository.dart';
 import 'glass.dart';
 import 'motion.dart';
+import '../../shared/widgets/lucide_icons.dart';
 
 /// Central definition of Gymfy's look-and-feel.
 ///

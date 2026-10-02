@@ -4,7 +4,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../app/theme/accent_color.dart';
@@ -23,6 +22,7 @@ import '../../workout/data/session_repository.dart';
 import '../data/auto_backup.dart';
 import '../data/backup_format.dart';
 import '../data/backup_repository.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Asks the user for a folder. A seam so widget tests can answer without a
 /// platform picker; the app uses [FilePicker.getDirectoryPath].

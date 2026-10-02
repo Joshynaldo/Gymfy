@@ -25,9 +25,9 @@ import 'package:gymfy/features/reviews/data/review.dart';
 import 'package:gymfy/features/reviews/screens/review_screen.dart';
 import 'package:gymfy/features/reviews/widgets/review_links.dart';
 import 'package:gymfy/features/workout/data/personal_records.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'support/default_accent.dart';
+import 'package:gymfy/shared/widgets/lucide_icons.dart';
 
 RecapSet _set(DateTime date, int session, {double weight = 100}) => (
   date: date,

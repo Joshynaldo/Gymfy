@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../app/theme/accent_color.dart';
 import '../../l10n/l10n.dart';
 import 'glass_sheet.dart';
 import 'number_wheel.dart';
+import 'lucide_icons.dart';
 
 /// The shared look for "pick a value" controls.
 ///

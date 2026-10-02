@@ -1,10 +1,10 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../data/strength_standards.dart';
 import '../data/tier_style.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// A hexagonal medal for one strength tier.
 ///

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/app_button.dart';
@@ -9,6 +8,7 @@ import '../../../shared/widgets/glass_sheet.dart';
 import '../data/session_repository.dart';
 import '../data/workout_repository.dart';
 import '../screens/widgets/exercise_picker.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 // The edits a running workout's exercise list allows: add, swap, superset,
 // reorder and remove. Kept out of active_workout_screen.dart, which is busy

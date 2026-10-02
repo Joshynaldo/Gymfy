@@ -10,7 +10,6 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
@@ -23,6 +22,7 @@ import '../../../shared/widgets/glass_sheet.dart';
 import '../../overload/data/percent_target.dart';
 import '../../overload/data/training_block.dart';
 import '../data/training_plan_repository.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Deload loads offered as chips. A split storing something else (an imported
 /// value, an older build) gets its own chip added, so it is never silently

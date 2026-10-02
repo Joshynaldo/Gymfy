@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/glass.dart';
 import '../../../l10n/l10n.dart';
@@ -21,6 +20,7 @@ import '../data/progress_repository.dart';
 import '../widgets/activity_heatmap.dart';
 import '../widgets/recap_section.dart';
 import '../widgets/streak_card.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Which question Progress is answering.
 ///

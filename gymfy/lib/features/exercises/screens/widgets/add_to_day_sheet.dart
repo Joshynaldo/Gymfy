@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../l10n/l10n.dart';
 import '../../../workout/data/workout_repository.dart';
+import '../../../../shared/widgets/lucide_icons.dart';
 
 /// Asks which workout day some exercises should be added to, and returns the
 /// chosen day's id (or null if the sheet was dismissed).

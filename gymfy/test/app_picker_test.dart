@@ -5,9 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/shared/widgets/app_picker.dart';
 import 'package:gymfy/shared/widgets/number_wheel.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'support/default_accent.dart';
+import 'package:gymfy/shared/widgets/lucide_icons.dart';
 
 void main() {
   Future<void> pump(WidgetTester tester, Widget child) async {

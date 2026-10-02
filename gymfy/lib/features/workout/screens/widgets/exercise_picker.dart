@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../app/theme/accent_color.dart';
 import '../../../../l10n/l10n.dart';
@@ -12,6 +11,7 @@ import '../../../../shared/models/equipment.dart';
 import '../../../../shared/widgets/muscle_filter_bar.dart';
 import '../../../exercises/widgets/equipment_filter_sheet.dart';
 import '../../../exercises/data/exercise_repository.dart';
+import '../../../../shared/widgets/lucide_icons.dart';
 
 /// Opens a bottom sheet over the exercise library and returns the ids of every
 /// exercise the user picked, or null if they dismissed it without confirming.

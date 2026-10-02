@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
 import '../data/rest_timer_repository.dart';
 import 'rest_length_picker.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Sets how long to rest between sets of one exercise.
 ///

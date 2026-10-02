@@ -11,9 +11,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/features/help/data/feedback_mail.dart';
 import 'package:gymfy/features/help/screens/help_screen.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'support/default_accent.dart';
+import 'package:gymfy/shared/widgets/lucide_icons.dart';
 
 void main() {
   testWidgets('offers the developer profile', (tester) async {

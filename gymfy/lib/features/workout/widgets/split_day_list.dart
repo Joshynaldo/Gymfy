@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
@@ -15,6 +14,7 @@ import '../screens/widgets/weekday_picker.dart';
 import '../../../app/theme/glass.dart';
 import '../../../shared/widgets/glass_dialog.dart';
 import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Every day of one split, as a scrollable column of cards.
 ///

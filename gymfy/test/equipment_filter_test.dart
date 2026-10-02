@@ -17,9 +17,9 @@ import 'package:gymfy/shared/database/app_database.dart';
 import 'package:gymfy/shared/models/equipment.dart';
 import 'package:gymfy/features/exercises/widgets/equipment_filter_sheet.dart';
 import 'package:gymfy/shared/utils/exercise_search.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'support/default_accent.dart';
+import 'package:gymfy/shared/widgets/lucide_icons.dart';
 
 Exercise _exercise(
   String id,

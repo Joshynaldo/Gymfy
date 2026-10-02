@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/app_card.dart';
@@ -10,6 +9,7 @@ import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../shared/widgets/glyph_icon.dart';
 import '../../../app/theme/glass.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// A tool the "More" hub links to.
 class _Tool {

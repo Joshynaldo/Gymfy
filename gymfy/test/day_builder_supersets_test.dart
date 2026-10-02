@@ -11,9 +11,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/features/workout/data/workout_repository.dart';
 import 'package:gymfy/features/workout/screens/day_builder_screen.dart';
 import 'package:gymfy/shared/database/app_database.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'support/default_accent.dart';
+import 'package:gymfy/shared/widgets/lucide_icons.dart';
 
 const _dayId = 10;
 

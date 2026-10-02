@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/glass.dart';
 import '../../../l10n/l10n.dart';
@@ -8,6 +7,7 @@ import '../../../shared/database/app_database.dart';
 import '../../../shared/widgets/glass_dialog.dart';
 import '../../../shared/widgets/pressable.dart';
 import '../data/exercise_repository.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// What the editor gives back.
 ///

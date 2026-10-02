@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../app/theme/glass.dart';
@@ -17,6 +16,7 @@ import '../../overload/data/percent_target.dart';
 import '../../plan_share/data/plan_document.dart';
 import '../../plan_share/widgets/plan_import_flow.dart';
 import '../data/program_catalog.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// The programme browser: ready-made splits that ship with the app.
 ///

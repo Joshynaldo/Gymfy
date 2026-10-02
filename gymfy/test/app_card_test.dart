@@ -9,9 +9,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/app/theme/accent_color.dart';
 import 'package:gymfy/app/theme/app_theme.dart';
 import 'package:gymfy/shared/widgets/app_card.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'support/default_accent.dart';
+import 'package:gymfy/shared/widgets/lucide_icons.dart';
 
 Future<void> _pump(WidgetTester tester, Widget child) async {
   await tester.pumpWidget(

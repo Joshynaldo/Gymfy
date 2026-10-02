@@ -6,13 +6,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../app/theme/accent_color.dart';
 import '../../app/theme/glass.dart';
 import '../../app/theme/motion.dart';
 import 'glyph_icon.dart';
 import 'pressable.dart';
+import 'lucide_icons.dart';
 
 /// A tappable card, styled like the ones on the Home tab.
 ///

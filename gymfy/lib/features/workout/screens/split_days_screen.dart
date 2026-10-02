@@ -2,7 +2,6 @@
 // here unambiguously means our Drift row class.
 import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
@@ -14,6 +13,7 @@ import '../data/workout_repository.dart';
 import '../widgets/split_day_list.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// The overview of *one* split: every day shown as a card, each listing its
 /// planned exercises inline so the whole programme is visible at a glance.

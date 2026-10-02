@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/app_picker.dart';
 import '../data/logging_preferences.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// The Settings section for how sets are logged: effort rating and the
 /// warm-up ramp.

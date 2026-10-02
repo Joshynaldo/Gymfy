@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../data/rest_timer_repository.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// The rest lengths offered in the picker: 30 seconds up to five minutes,
 /// spaced the way people actually rest — finer at the short end.

@@ -5,12 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show SynchronousFuture;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../app/theme/accent_color.dart';
 import '../models/exercise.dart' show isBundledAsset;
 import '../utils/exercise_display.dart';
 import '../utils/exercise_preview.dart';
+import 'lucide_icons.dart';
 
 /// Default side, matching `AppGlyph` so rows keep their height and the left
 /// edge of a list stays a straight column.

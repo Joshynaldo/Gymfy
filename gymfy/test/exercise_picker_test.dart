@@ -9,9 +9,9 @@ import 'package:gymfy/features/exercises/data/exercise_repository.dart';
 import 'package:gymfy/features/workout/screens/widgets/exercise_picker.dart';
 import 'package:gymfy/shared/database/app_database.dart';
 import 'package:gymfy/shared/widgets/exercise_thumbnail.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'support/default_accent.dart';
+import 'package:gymfy/shared/widgets/lucide_icons.dart';
 
 final _sample = <Exercise>[
   Exercise(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../app/theme/motion.dart';
@@ -13,6 +12,7 @@ import '../../../shared/widgets/app_picker.dart';
 import '../../../shared/widgets/weight_wheel.dart';
 import '../../overload/widgets/overload_settings.dart';
 import '../data/onboarding_repository.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// First-launch setup: name, bodyweight, progressive overload, accent colour.
 ///

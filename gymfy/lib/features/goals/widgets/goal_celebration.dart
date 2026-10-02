@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../app/theme/motion.dart';
@@ -13,6 +12,7 @@ import '../data/goal_labels.dart';
 import '../data/goal_progress.dart';
 import '../data/goal_repository.dart';
 import 'goal_progress_row.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// The moment a goal is reached.
 ///

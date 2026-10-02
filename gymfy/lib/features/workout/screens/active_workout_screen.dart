@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../app/theme/glass.dart';
@@ -43,6 +42,7 @@ import '../widgets/record_celebration.dart';
 import '../widgets/rest_timer_bar.dart';
 import '../widgets/session_exercise_actions.dart';
 import '../widgets/warmup_calculator_sheet.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// The live workout screen: log sets exercise by exercise while you train.
 ///

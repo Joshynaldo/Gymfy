@@ -24,9 +24,9 @@ import 'package:gymfy/features/workout/data/workout_repository.dart';
 import 'package:gymfy/features/workout/screens/active_workout_screen.dart';
 import 'package:gymfy/shared/database/app_database.dart' hide RestTimer;
 import 'package:gymfy/shared/widgets/app_card.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'support/default_accent.dart';
+import 'package:gymfy/shared/widgets/lucide_icons.dart';
 
 const _sessionId = 1;
 const _dayId = 10;

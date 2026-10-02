@@ -15,7 +15,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'app/router/scaffold_with_nav_bar.dart';
 import 'app/theme/accent_color.dart';
@@ -37,6 +36,7 @@ import 'shared/widgets/glass_nav_bar.dart';
 import 'shared/widgets/glass_scaffold.dart';
 import 'shared/widgets/number_wheel.dart';
 import 'shared/widgets/weight_wheel.dart';
+import 'shared/widgets/lucide_icons.dart';
 
 void main() => runApp(const _PreviewApp());
 

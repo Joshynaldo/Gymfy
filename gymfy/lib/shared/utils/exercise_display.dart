@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../l10n/l10n.dart';
 import '../models/muscle_ids.dart';
+import '../widgets/lucide_icons.dart';
 
 /// Small helpers for turning exercise data into things we can show on screen.
 /// Shared by the exercise list and detail screens.

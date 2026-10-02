@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/glass.dart';
 import '../../../l10n/l10n.dart';
@@ -19,6 +18,7 @@ import '../data/csv_reader.dart';
 import '../data/import_format.dart';
 import '../data/import_plan.dart';
 import '../data/import_repository.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Bringing a training history in from another app.
 ///

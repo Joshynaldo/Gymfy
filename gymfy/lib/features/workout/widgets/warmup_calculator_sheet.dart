@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
@@ -11,6 +10,7 @@ import '../../../shared/widgets/glass_sheet.dart';
 import '../../plates/data/plate_math.dart';
 import '../data/logging_preferences.dart';
 import '../data/warmup_calculator.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Opens the warm-up calculator for [exercise] and returns the ramp sets the
 /// user chose to log, or null if they closed it.

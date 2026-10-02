@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
@@ -15,6 +14,7 @@ import '../../workout/widgets/free_workout.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../app/theme/motion.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// The centrepiece of the Home tab: what today is.
 ///

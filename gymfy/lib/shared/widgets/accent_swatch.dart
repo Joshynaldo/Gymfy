@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'lucide_icons.dart';
 
 /// One tappable accent colour.
 ///

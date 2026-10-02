@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/glass.dart';
 import '../../../l10n/l10n.dart';
@@ -17,6 +16,7 @@ import '../data/image_share.dart';
 import '../data/review.dart';
 import '../data/review_providers.dart';
 import '../widgets/review_share_card.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// How many exercises the list under the card goes down to.
 const _listedExercises = 8;

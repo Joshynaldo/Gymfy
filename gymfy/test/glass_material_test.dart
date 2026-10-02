@@ -18,9 +18,9 @@ import 'package:gymfy/app/theme/app_theme.dart';
 import 'package:gymfy/app/theme/glass.dart';
 import 'package:gymfy/shared/widgets/app_card.dart';
 import 'package:gymfy/shared/widgets/app_chip.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'support/default_accent.dart';
+import 'package:gymfy/shared/widgets/lucide_icons.dart';
 
 GlassStyle _glass(AppTheme theme) =>
     buildAppTheme(theme, AccentPalette.blue).extension<GlassStyle>()!;

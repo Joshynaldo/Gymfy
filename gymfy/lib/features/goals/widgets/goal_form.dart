@@ -1,7 +1,6 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../../shared/data/week_start.dart';
@@ -25,6 +24,7 @@ import '../data/goal_labels.dart';
 import '../data/goal_progress.dart';
 import '../data/goal_repository.dart';
 import 'goal_progress_row.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Opens the form for a new goal, or for changing [editing].
 Future<void> showGoalForm(BuildContext context, {Goal? editing}) {

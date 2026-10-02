@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../app/theme/glass.dart';
@@ -10,6 +9,7 @@ import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
 import '../../../shared/widgets/pressable.dart';
 import '../data/personal_records.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// A record's value as it reads on screen, in the record's own unit.
 ///

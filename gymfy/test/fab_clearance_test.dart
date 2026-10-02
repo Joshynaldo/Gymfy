@@ -18,9 +18,9 @@ import 'package:gymfy/shared/widgets/glass_nav_bar.dart';
 import 'package:gymfy/shared/widgets/glass_scaffold.dart';
 
 import 'package:gymfy/shared/widgets/app_button.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'support/default_accent.dart';
+import 'package:gymfy/shared/widgets/lucide_icons.dart';
 
 /// The floating button, whatever shape it is wearing.
 final _button = find.widgetWithText(AppButton, 'Add exercises');

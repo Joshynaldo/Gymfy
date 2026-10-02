@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
@@ -8,6 +7,7 @@ import '../../../shared/data/settings_repository.dart';
 import '../../../shared/widgets/glass_dialog.dart';
 import '../data/health_connect_bridge.dart';
 import '../data/health_connect_sync.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// The Settings section for Health Connect: whether it is there, the two
 /// switches, permissions, the backfill, and the way out to revoke or delete.

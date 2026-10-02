@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
 import '../../workout/data/session_repository.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Days trained in a row, in the Home app bar.
 ///

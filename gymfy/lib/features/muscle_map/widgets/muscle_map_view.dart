@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../../shared/utils/exercise_display.dart';
 import '../../../shared/widgets/app_segmented.dart';
 import '../data/muscle_colors.dart';
 import 'muscle_map.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// A self-contained muscle-map panel: a front/back toggle, the heatmap for the
 /// selected side, and a caption. Fed a ready [AsyncValue] of intensities so the

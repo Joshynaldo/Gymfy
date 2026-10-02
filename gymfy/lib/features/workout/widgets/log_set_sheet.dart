@@ -5,7 +5,6 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../app/theme/glass.dart';
@@ -23,6 +22,7 @@ import '../../overload/data/overload_math.dart';
 import '../../overload/data/percent_target.dart' show formatPercent;
 import '../../plates/widgets/plate_stacker.dart';
 import '../data/logging_preferences.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// What a finished trip through the sheet produces.
 ///

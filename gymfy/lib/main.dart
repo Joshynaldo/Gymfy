@@ -15,10 +15,12 @@ import 'features/workout_notification/data/workout_notification.dart';
 import 'l10n/app_language.dart';
 import 'l10n/l10n.dart';
 import 'shared/data/current_day.dart';
+import 'shared/widgets/lucide_icons.dart';
 
 Future<void> main() async {
   // Required because we touch the database (a platform plugin) before runApp.
   WidgetsFlutterBinding.ensureInitialized();
+  registerLucideLicense();
 
   // One shared Riverpod container for the whole app. We create it here so the
   // exercise library can be seeded before the first frame, then hand the SAME

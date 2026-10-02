@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/glass.dart';
 import '../../../l10n/l10n.dart';
@@ -17,6 +16,7 @@ import '../data/goal_repository.dart';
 import '../widgets/goal_celebration.dart';
 import '../widgets/goal_form.dart';
 import '../widgets/goal_progress_row.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Every goal: the ones being worked on, the ones reached, the ones put away.
 ///
