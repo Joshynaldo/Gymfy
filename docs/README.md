@@ -26,7 +26,8 @@ a button that works.
 | Get Gymfy · Google Play / App Store | nothing, marked "Coming soon" | not links until the listings exist |
 | Privacy · Read the full privacy policy | `privacy-policy.html` | yes |
 | Footer · Features / Download / Privacy / Source code | as above | yes |
-| Deep dives · Show it in the preview | switches the mockup to that screen and scrolls to it | yes |
+| Tour steps (wide screens) | scrolling a step past the middle of the window puts the mockup on its screen | yes, no click needed |
+| Tour steps · Show it in the preview (narrow screens) | switches the mockup to that screen and scrolls to it | yes; hidden on wide screens, where scrolling does it |
 | Accent swatches | recolour the mockup | yes, real buttons with a pressed state |
 | Mockup · tab bar, Start workout, Finish | switch the mockup's screen | yes |
 | Mockup · Log set, number pad, Next / Save set, Repeat last set | log a sample set and restart the rest timer | yes |
@@ -65,7 +66,7 @@ goes stale.
 
 ## The app mockup
 
-The phone in the hero is the "Gymfy Hyper" design from Claude Design
+The phone under the hero is the "Gymfy Hyper" design from Claude Design
 (`GymfyPhone.dc.html`), rebuilt as plain HTML, CSS and a small script at the
 bottom of `index.html`, so the page still needs no runtime and no build step.
 It replaced the four phone screenshots. The screens, glass styles and sample
@@ -80,6 +81,21 @@ data are the design's. A few things differ on purpose:
   app (see `gymfy/assets/musclemap/README.md`), and a marketing page isn't the
   app.
 
-The device is drawn at 413 × 872 px and scaled down to fit narrow screens.
-Every colour that follows the accent reads `--gf-accent`, which is how the
-swatches recolour it.
+The device is drawn at 413 × 872 px. Every colour that follows the accent
+reads `--gf-accent`, which is how the swatches recolour it.
+
+### The tour around it
+
+On screens 1000 px and wider, the phone is pinned in the middle (`position:
+sticky`) and nine steps scroll past on alternating sides. An
+`IntersectionObserver` watches for the step crossing the middle of the window,
+puts the phone on that step's scene (`data-scene`: `home`, `log`, `overload`,
+`rest`, `trends`, `alltime`, `body`, `themes`, `more`) and dims the others. The
+phone is scaled to fit the window's height, so it is whole on screen for the
+length of the tour. Tapping the phone yourself takes over until the next step
+arrives.
+
+Narrower screens get the phone on top and the steps as panes underneath, each
+with a "Show it in the preview" button. To add a step, add an `<article
+class="step">` with the next `--row`, raise the phone's `grid-row` span, and,
+if it needs a new scene, add a case to `scene()` in the script.

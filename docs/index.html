@@ -497,18 +497,59 @@ h2 { font-size: clamp(1.65rem, 4vw, 2.3rem); letter-spacing: -.03em; line-height
 .card h3 { margin: 0 0 8px; font-size: 1.06rem; letter-spacing: -.015em; font-weight: 600; }
 .card p { margin: 0; color: var(--muted); font-size: .94rem; line-height: 1.58; }
 
-/* ---- Deep dives ---------------------------------------------------------
-   Three panes, each ending in a button that puts the mockup above on the
-   screen it describes. The screenshots that used to sit beside them went; the
-   live preview says it better than a still could. */
-.dives { display: grid; gap: 16px; grid-template-columns: 1fr; }
-@media (min-width: 960px) { .dives { grid-template-columns: repeat(3, 1fr); } }
-.dive { padding: 28px 26px; display: flex; flex-direction: column; }
-.dive h3 { font-size: clamp(1.2rem, 2.4vw, 1.4rem); letter-spacing: -.02em; line-height: 1.25; margin: 0 0 14px; font-weight: 700; }
-.dive p { color: var(--muted); margin: 0 0 14px; font-size: .96rem; }
-.dive .pull { color: var(--text); font-weight: 500; border-left: 2px solid var(--accent); padding-left: 14px; }
-.dive .show { margin-top: auto; align-self: flex-start; padding: 11px 18px; font-size: .92rem; }
-.dive .show svg { width: 16px; height: 16px; }
+/* ---- The tour -----------------------------------------------------------
+   The phone stays pinned in the middle while the steps scroll past on either
+   side, and each step puts it on the screen it describes (the script at the
+   bottom drives that). The phone is scaled to fit the window's height, so it
+   is whole on screen for the length of the tour.
+
+   Narrow screens get the plain version: the phone on top, the steps as panes
+   underneath, each with a button that shows its screen. */
+.story { padding: 64px 0 40px; }
+.story-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.story-phone { display: flex; flex-direction: column; align-items: center; margin-bottom: 28px; scroll-margin-top: 80px; }
+.story-phone .mock-stage { margin-top: 0; }
+
+.step {
+  padding: 26px 24px; border-radius: var(--r-container);
+  background: var(--fill); border: 1px solid var(--fill-edge);
+}
+.step-kicker { display: block; font-size: .78rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 10px; }
+.step h3 { font-size: clamp(1.25rem, 2.6vw, 1.6rem); letter-spacing: -.025em; line-height: 1.2; margin: 0 0 14px; font-weight: 700; }
+.step p { color: var(--muted); margin: 0 0 14px; }
+.step .pull { color: var(--text); font-weight: 500; border-left: 2px solid var(--accent); padding-left: 14px; }
+.step .show { padding: 11px 18px; font-size: .92rem; margin-top: 4px; }
+.step .show svg { width: 16px; height: 16px; }
+
+@media (min-width: 1000px) {
+  .story { padding: 24px 0 0; }
+  /* Wider than the rest of the page: the text has to fit beside the phone. */
+  .story-grid { max-width: 1320px; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); column-gap: 56px; row-gap: 0; }
+  .story-phone .mock-note { max-width: 320px; }
+  .story-phone {
+    grid-column: 2; grid-row: 1 / span 9;
+    position: sticky; top: var(--phone-top, 80px); align-self: start;
+    margin-bottom: 0;
+  }
+  /* On a wide screen the steps are annotations around the phone rather than
+     cards: no pane, and each takes most of a screen's height of scrolling,
+     with its text centred in it so it passes the phone at eye level. */
+  .step {
+    grid-row: var(--row); min-height: 72vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 40px 0; background: none; border: 0; border-radius: 0;
+    max-width: 30em;
+  }
+  .step.left { grid-column: 1; justify-self: end; text-align: right; }
+  .step.left .pull { border-left: 0; padding-left: 0; border-right: 2px solid var(--accent); padding-right: 14px; }
+  .step.right { grid-column: 3; justify-self: start; }
+  .step:last-of-type { min-height: 90vh; }
+  .step .show { display: none; }
+  /* Only the step the phone is showing is at full strength. */
+  .story.is-live .step { opacity: .32; transition: opacity .35s ease; }
+  .story.is-live .step.is-active { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .story.is-live .step { transition: none; } }
 
 /* ---- Themes -------------------------------------------------------------
    The swatches are controls now: each one recolours the mockup, so they are
@@ -607,276 +648,6 @@ footer a:hover { text-decoration: underline; }
     <p class="cta-note">Free, and staying that way. Google Play and the App Store are coming soon.</p>
   </div>
 
-  <!-- ================= APP MOCKUP =================
-       The Hyper theme from the Claude Design file, rebuilt as plain HTML.
-       Sample data throughout; the script at the bottom of the page wires up
-       the tabs, the rest timer, the log-set sheet and the Progress views. -->
-  <div class="mock-stage" id="preview">
-    <div class="mock-fit">
-      <div class="mock-device">
-        <div class="gf-app" id="gf" role="region" aria-label="Interactive preview of the Gymfy app, with sample data">
-
-          <div class="gf-orbs" aria-hidden="true"><div class="gf-orb a"></div><div class="gf-orb b"></div><div class="gf-orb c"></div></div>
-
-          <div class="gf-scroll" id="gf-scroll">
-
-            <!-- Home -->
-            <div class="gf-screen" data-view="home">
-              <div class="gf-card big">
-                <div class="gf-caps" style="display:flex;justify-content:space-between"><span>Wednesday</span><span>Push · Pull · Legs</span></div>
-                <div style="font-size:32px;line-height:1.1;font-weight:600;margin-top:10px;letter-spacing:-.5px">Push day</div>
-                <div style="display:flex;flex-direction:column;gap:11px;margin-top:20px">
-                  <div style="display:flex;justify-content:space-between;gap:14px"><span class="gf-ellip">Barbell bench press</span><span class="gf-muted gf-num">4 × 6–8</span></div>
-                  <div style="display:flex;justify-content:space-between;gap:14px"><span class="gf-ellip">Incline dumbbell press</span><span class="gf-muted gf-num">3 × 8–10</span></div>
-                  <div style="display:flex;justify-content:space-between;gap:14px"><span class="gf-ellip">Dumbbell shoulder press</span><span class="gf-muted gf-num">3 × 10</span></div>
-                  <div style="display:flex;justify-content:space-between;gap:14px"><span class="gf-ellip">Cable fly</span><span class="gf-muted gf-num">3 × 12–15</span></div>
-                  <div style="display:flex;justify-content:space-between;gap:14px"><span class="gf-ellip">Rope triceps pushdown</span><span class="gf-muted gf-num">3 × 12</span></div>
-                </div>
-                <button type="button" class="gf-primary" data-go="workout" style="margin-top:24px">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="#fff" aria-hidden="true"><path d="M4 2.6v10.8l9-5.4z"/></svg>Start workout
-                </button>
-              </div>
-              <div class="gf-gap22"></div>
-              <div class="gf-card">
-                <div class="gf-caps">Last workout</div>
-                <div style="font-size:19px;font-weight:600;margin-top:8px">Pull day</div>
-                <div class="gf-muted" style="font-size:13px;margin-top:4px">Monday · 1 h 12 min</div>
-                <div style="margin-top:12px">22 sets · 9,480 kg</div>
-              </div>
-              <div class="gf-gap34"></div>
-              <div class="gf-h"><b>This week</b><span>4 workouts</span></div>
-              <div class="gf-card">
-                <div class="gf-big">38,240 kg</div>
-                <div class="gf-muted" style="font-size:13px;margin-top:3px">lifted since Monday</div>
-                <div class="gf-bars" style="height:76px" aria-hidden="true">
-                  <div class="gf-bar"><i style="height:47px"></i><span>Mon</span></div>
-                  <div class="gf-bar"><i style="height:2px"></i><span>Tue</span></div>
-                  <div class="gf-bar"><i style="height:56px"></i><span>Wed</span></div>
-                  <div class="gf-bar"><i style="height:2px"></i><span>Thu</span></div>
-                  <div class="gf-bar"><i style="height:44px"></i><span>Fri</span></div>
-                  <div class="gf-bar"><i style="height:44px"></i><span>Sat</span></div>
-                  <div class="gf-bar"><i style="height:2px"></i><span>Sun</span></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Active workout -->
-            <div class="gf-screen workout" data-view="workout" hidden>
-              <div class="gf-card big" style="padding:0;overflow:hidden">
-                <div style="padding:20px 20px 6px">
-                  <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
-                    <span style="font-size:19px;font-weight:600">Barbell bench press</span>
-                    <span class="gf-muted" style="font-size:12px;flex:none">4 × 6–8</span>
-                  </div>
-                  <div class="gf-muted" style="display:flex;align-items:center;gap:7px;margin-top:9px;font-size:13px">
-                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 11l4-4 3.5 3L14 5"/></svg>
-                    You hit every set last time — going up to 102.5 kg
-                  </div>
-                </div>
-                <div id="gf-sets" style="display:flex;flex-direction:column;gap:2px;padding:14px 20px 6px"></div>
-                <button type="button" class="gf-secondary" id="gf-log" style="margin:14px 16px 16px;width:calc(100% - 32px)">
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg><span>Log set 3</span>
-                </button>
-              </div>
-              <div style="height:28px"></div>
-              <div class="gf-caps" style="padding:0 6px">Up next</div>
-              <div style="height:12px"></div>
-              <div class="gf-stack">
-                <div class="gf-quiet"><div style="flex:1;min-width:0"><div class="gf-ellip" style="font-weight:500">Incline dumbbell press</div><div class="gf-muted gf-num" style="font-size:12px;margin-top:3px">3 × 8–10</div></div><div class="gf-dots" aria-hidden="true"><i></i><i></i><i></i></div></div>
-                <div class="gf-quiet"><div style="flex:1;min-width:0"><div class="gf-ellip" style="font-weight:500">Dumbbell shoulder press</div><div class="gf-muted gf-num" style="font-size:12px;margin-top:3px">3 × 10</div></div><div class="gf-dots" aria-hidden="true"><i></i><i></i><i></i></div></div>
-                <div class="gf-quiet"><div style="flex:1;min-width:0"><div class="gf-ellip" style="font-weight:500">Cable fly</div><div class="gf-muted gf-num" style="font-size:12px;margin-top:3px">3 × 12–15</div></div><div class="gf-dots" aria-hidden="true"><i></i><i></i><i></i></div></div>
-                <div class="gf-quiet"><div style="flex:1;min-width:0"><div class="gf-ellip" style="font-weight:500">Rope triceps pushdown</div><div class="gf-muted gf-num" style="font-size:12px;margin-top:3px">3 × 12</div></div><div class="gf-dots" aria-hidden="true"><i></i><i></i><i></i></div></div>
-              </div>
-            </div>
-
-            <!-- Progress -->
-            <div class="gf-screen progress" data-view="progress" hidden>
-              <div class="gf-seg" data-seg="Trends">
-                <div class="gf-ranges" id="gf-ranges">
-                  <button type="button" aria-pressed="true" data-range="Week">Week</button>
-                  <button type="button" aria-pressed="false" data-range="Month">Month</button>
-                  <button type="button" aria-pressed="false" data-range="Year">Year</button>
-                </div>
-                <div class="gf-card big" style="padding:22px 20px 16px">
-                  <div class="gf-caps">Volume</div>
-                  <div id="gf-vol" style="font-size:34px;font-weight:600;letter-spacing:-.6px;margin-top:8px">38,240 kg</div>
-                  <div id="gf-vol-detail" class="gf-muted" style="font-size:13px;margin-top:2px">lifted in the last week</div>
-                  <svg id="gf-chart" width="309" height="150" viewBox="0 0 309 150" style="margin-top:22px;overflow:visible" aria-hidden="true">
-                    <defs><linearGradient id="gfArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" style="stop-color:var(--gf-accent);stop-opacity:.34"/><stop offset="100%" style="stop-color:var(--gf-accent);stop-opacity:0"/></linearGradient></defs>
-                    <g stroke="rgba(255,255,255,0.07)"><line x1="0" y1="4" x2="309" y2="4"/><line x1="0" y1="41" x2="309" y2="41"/><line x1="0" y1="78" x2="309" y2="78"/><line x1="0" y1="115" x2="309" y2="115"/></g>
-                    <path id="gf-area" fill="url(#gfArea)"/>
-                    <path id="gf-line" fill="none" style="stroke:var(--gf-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <g id="gf-points" style="fill:var(--gf-accent)"></g>
-                    <g id="gf-labels" fill="#9EA0BC" font-size="10.5" text-anchor="middle" font-family="Schibsted Grotesk, sans-serif"></g>
-                  </svg>
-                </div>
-                <div style="height:18px"></div>
-                <div class="gf-card">
-                  <div class="gf-caps">Workouts</div>
-                  <div id="gf-sess" class="gf-big" style="margin-top:8px">4</div>
-                  <div id="gf-sess-detail" class="gf-muted" style="font-size:13px;margin-top:2px">sessions · 1 personal record</div>
-                  <div class="gf-bars" id="gf-sess-bars" style="height:64px;gap:6px;margin-top:18px" aria-hidden="true"></div>
-                </div>
-                <div style="height:18px"></div>
-                <div class="gf-card">
-                  <div class="gf-caps">What you trained</div>
-                  <div style="font-size:20px;font-weight:600;margin-top:8px">Chest took the most sets</div>
-                  <div id="gf-muscles" style="display:flex;flex-direction:column;gap:11px;margin-top:20px"></div>
-                </div>
-              </div>
-
-              <div class="gf-seg" data-seg="All-time" hidden>
-                <div style="display:flex;gap:10px">
-                  <div class="gf-card" style="flex:1;border-radius:22px;padding:18px 14px"><div style="font-size:23px;font-weight:600;letter-spacing:-.4px">312</div><div class="gf-muted" style="font-size:11px;margin-top:5px;letter-spacing:.4px">WORKOUTS</div></div>
-                  <div class="gf-card" style="flex:1;border-radius:22px;padding:18px 14px"><div style="font-size:23px;font-weight:600;letter-spacing:-.4px">8,942</div><div class="gf-muted" style="font-size:11px;margin-top:5px;letter-spacing:.4px">SETS</div></div>
-                  <div class="gf-card" style="flex:1;border-radius:22px;padding:18px 14px"><div style="font-size:23px;font-weight:600;letter-spacing:-.4px">2.42M</div><div class="gf-muted" style="font-size:11px;margin-top:5px;letter-spacing:.4px">KG LIFTED</div></div>
-                </div>
-                <div style="height:30px"></div>
-                <div class="gf-h" style="margin-bottom:12px"><b>Activity</b></div>
-                <div class="gf-card" style="padding:18px 0 18px 18px;overflow:hidden">
-                  <div class="gf-hscroll" id="gf-heat-scroll" style="padding-right:18px">
-                    <canvas id="gf-heat" width="1590" height="240" style="width:795px;height:120px;display:block" aria-label="A year of training days"></canvas>
-                  </div>
-                  <div style="display:flex;align-items:center;gap:8px;margin-top:14px;padding-right:18px;font-size:11px" class="gf-muted">
-                    <span style="font-size:12px;flex:1">312 days · 389 h this year</span><span>Less</span>
-                    <div style="display:flex;gap:3px" aria-hidden="true">
-                      <i style="width:11px;height:11px;border-radius:3px;background:rgba(242,243,250,0.08)"></i>
-                      <i style="width:11px;height:11px;border-radius:3px;background:color-mix(in srgb, var(--gf-accent) 28%, transparent)"></i>
-                      <i style="width:11px;height:11px;border-radius:3px;background:color-mix(in srgb, var(--gf-accent) 50%, transparent)"></i>
-                      <i style="width:11px;height:11px;border-radius:3px;background:color-mix(in srgb, var(--gf-accent) 74%, transparent)"></i>
-                      <i style="width:11px;height:11px;border-radius:3px;background:var(--gf-accent)"></i>
-                    </div>
-                    <span>More</span>
-                  </div>
-                </div>
-                <div style="height:30px"></div>
-                <div class="gf-h" style="margin-bottom:12px"><b>Records</b></div>
-                <div class="gf-card gf-rows" style="padding:6px 20px">
-                  <div><div style="flex:1;min-width:0"><div class="gf-ellip" style="font-weight:500">Deadlift</div><div class="gf-muted" style="font-size:12px;margin-top:3px">14 Aug</div></div><div class="gf-num" style="font-size:17px;font-weight:600">195 kg × 1</div></div>
-                  <div><div style="flex:1;min-width:0"><div class="gf-ellip" style="font-weight:500">Barbell back squat</div><div class="gf-muted" style="font-size:12px;margin-top:3px">2 Aug</div></div><div class="gf-num" style="font-size:17px;font-weight:600">160 kg × 1</div></div>
-                  <div><div style="flex:1;min-width:0"><div class="gf-ellip" style="font-weight:500">Barbell bench press</div><div class="gf-muted" style="font-size:12px;margin-top:3px">28 Jul</div></div><div class="gf-num" style="font-size:17px;font-weight:600">122.5 kg × 1</div></div>
-                  <div><div style="flex:1;min-width:0"><div class="gf-ellip" style="font-weight:500">Barbell row</div><div class="gf-muted" style="font-size:12px;margin-top:3px">11 Aug</div></div><div class="gf-num" style="font-size:17px;font-weight:600">100 kg × 5</div></div>
-                </div>
-                <div style="height:30px"></div>
-                <div class="gf-h" style="margin-bottom:12px"><b>Strength rank</b></div>
-                <div class="gf-stack" style="gap:12px">
-                  <div class="gf-card" style="border-radius:22px;padding:18px 20px"><div style="display:flex;align-items:baseline;gap:12px"><span class="gf-ellip" style="flex:1;font-weight:500">Deadlift</span><span style="font-size:13px;font-weight:600">Advanced</span></div><div class="gf-track" style="height:6px;margin-top:14px"><i style="width:71%"></i></div><div class="gf-muted" style="display:flex;justify-content:space-between;margin-top:9px;font-size:12px"><span>2.44 × bodyweight</span><span>+27 kg to Elite</span></div></div>
-                  <div class="gf-card" style="border-radius:22px;padding:18px 20px"><div style="display:flex;align-items:baseline;gap:12px"><span class="gf-ellip" style="flex:1;font-weight:500">Barbell back squat</span><span class="gf-muted" style="font-size:13px;font-weight:600">Intermediate</span></div><div class="gf-track" style="height:6px;margin-top:14px"><i style="width:58%"></i></div><div class="gf-muted" style="display:flex;justify-content:space-between;margin-top:9px;font-size:12px"><span>2.00 × bodyweight</span><span>+22 kg to Advanced</span></div></div>
-                  <div class="gf-card" style="border-radius:22px;padding:18px 20px"><div style="display:flex;align-items:baseline;gap:12px"><span class="gf-ellip" style="flex:1;font-weight:500">Barbell bench press</span><span class="gf-muted" style="font-size:13px;font-weight:600">Intermediate</span></div><div class="gf-track" style="height:6px;margin-top:14px"><i style="width:52%"></i></div><div class="gf-muted" style="display:flex;justify-content:space-between;margin-top:9px;font-size:12px"><span>1.53 × bodyweight</span><span>+18 kg to Advanced</span></div></div>
-                </div>
-                <div style="height:30px"></div>
-                <div class="gf-h" style="margin-bottom:12px"><b>Streak</b></div>
-                <div class="gf-card" style="display:flex;gap:20px">
-                  <div style="flex:1"><div style="font-size:26px;font-weight:600">12 days</div><div class="gf-muted" style="font-size:12px;margin-top:4px">current</div></div>
-                  <div style="width:1px;background:rgba(255,255,255,0.10)"></div>
-                  <div style="flex:1"><div style="font-size:26px;font-weight:600">23 days</div><div class="gf-muted" style="font-size:12px;margin-top:4px">best ever</div></div>
-                </div>
-              </div>
-
-              <div class="gf-seg" data-seg="Body" hidden>
-                <div class="gf-card gf-rows" style="padding:6px 20px">
-                  <div><span style="flex:1">Bodyweight</span><span class="gf-num" style="font-size:17px;font-weight:600">80.4 kg</span><span class="gf-muted gf-num" style="font-size:12px;width:52px;text-align:right">+0.6</span></div>
-                  <div><span style="flex:1">Chest</span><span class="gf-num" style="font-size:17px;font-weight:600">106 cm</span><span class="gf-muted gf-num" style="font-size:12px;width:52px;text-align:right">+1.0</span></div>
-                  <div><span style="flex:1">Waist</span><span class="gf-num" style="font-size:17px;font-weight:600">84 cm</span><span class="gf-muted gf-num" style="font-size:12px;width:52px;text-align:right">−0.5</span></div>
-                  <div><span style="flex:1">Upper arm</span><span class="gf-num" style="font-size:17px;font-weight:600">38.5 cm</span><span class="gf-muted gf-num" style="font-size:12px;width:52px;text-align:right">+0.4</span></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- More -->
-            <div class="gf-screen" data-view="more" hidden>
-              <div class="gf-stack" id="gf-tools"></div>
-            </div>
-          </div>
-
-          <!-- Top bar -->
-          <div class="gf-top" id="gf-top">
-            <div class="gf-status" aria-hidden="true">
-              <span>9:41</span>
-              <div>
-                <svg width="15" height="11" viewBox="0 0 15 11" fill="#F2F3FA"><rect x="0" y="7" width="2.6" height="4" rx="0.8"/><rect x="4" y="5" width="2.6" height="6" rx="0.8"/><rect x="8" y="2.6" width="2.6" height="8.4" rx="0.8"/><rect x="12" y="0" width="2.6" height="11" rx="0.8"/></svg>
-                <svg width="20" height="11" viewBox="0 0 20 11" fill="none"><rect x="0.6" y="0.6" width="16" height="9.8" rx="2.6" stroke="rgba(242,243,250,0.6)"/><rect x="2.2" y="2.2" width="11" height="6.6" rx="1.4" fill="#F2F3FA"/><path d="M18.4 3.8v3.4a2.2 2.2 0 000-3.4z" fill="rgba(242,243,250,0.6)"/></svg>
-              </div>
-            </div>
-            <div class="gf-titlebar">
-              <div class="gf-title">
-                <strong id="gf-title" class="gf-ellip">Hi, Jonas</strong>
-                <span class="gf-chip" id="gf-streak"><svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor" aria-hidden="true"><path d="M5 0C3 3 0 4 0 7.2A4.8 4.8 0 005 12a4.8 4.8 0 005-4.8C10 4.4 7.6 3.6 5 0z"/></svg>12<span class="sr-only"> day streak</span></span>
-              </div>
-              <span class="gf-iconbtn" id="gf-search" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#F2F3FA" stroke-width="1.8"><circle cx="6.8" cy="6.8" r="4.8"/><path d="M10.4 10.4L14 14"/></svg></span>
-              <button type="button" class="gf-finish" id="gf-finish" data-go="home" hidden>Finish</button>
-            </div>
-            <div class="gf-segbar" id="gf-segbar" hidden>
-              <div class="gf-segs">
-                <button type="button" aria-pressed="false" data-seg-btn="Body">Body</button>
-                <button type="button" aria-pressed="true" data-seg-btn="Trends">Trends</button>
-                <button type="button" aria-pressed="false" data-seg-btn="All-time">All-time</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Rest timer -->
-          <div class="gf-rest" id="gf-rest" hidden>
-            <div class="gf-rest-row">
-              <div style="flex:1;min-width:0">
-                <div class="gf-caps" id="gf-rest-caps">Resting</div>
-                <div class="gf-clock" id="gf-clock" role="timer" aria-live="off">1:47</div>
-                <div class="gf-muted" style="font-size:12.5px;margin-top:2px">Barbell bench press</div>
-              </div>
-              <button type="button" class="gf-plus30" id="gf-plus30">+30s</button>
-              <button type="button" class="gf-close" id="gf-rest-close" aria-label="Dismiss the rest timer">
-                <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#9EA0BC" stroke-width="1.8" aria-hidden="true"><path d="M1.5 1.5l11 11M12.5 1.5l-11 11"/></svg>
-              </button>
-            </div>
-            <div class="gf-restbar"><i id="gf-restbar"></i></div>
-          </div>
-
-          <!-- Tab bar -->
-          <nav class="gf-nav" aria-label="App tabs">
-            <button type="button" data-tab="home" aria-current="page"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M2.6 8.4L10 2.6l7.4 5.8v8.2a.8.8 0 01-.8.8h-4V12h-5v5.4h-4a.8.8 0 01-.8-.8z"/></svg><span>Home</span></button>
-            <button type="button" data-tab="workout"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4.4 7v6M2.2 8.4v3.2M15.6 7v6M17.8 8.4v3.2M4.4 10h11.2"/></svg><span>Workout</span></button>
-            <button type="button" data-tab="progress"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.4 14.2l4.4-4.6 3.4 2.8 7.4-7.6"/><path d="M13.4 4.8h4.2V9"/></svg><span>Progress</span></button>
-            <button type="button" data-tab="more"><svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4" cy="10" r="1.7"/><circle cx="10" cy="10" r="1.7"/><circle cx="16" cy="10" r="1.7"/></svg><span>More</span></button>
-          </nav>
-
-          <!-- Log-set sheet -->
-          <div class="gf-sheet-wrap" id="gf-sheet" hidden>
-            <button type="button" class="gf-scrim" id="gf-scrim" aria-label="Close"></button>
-            <div class="gf-sheet" role="dialog" aria-label="Log a set">
-              <div class="gf-grab"></div>
-              <div style="display:flex;align-items:flex-start;gap:12px">
-                <div style="flex:1;min-width:0">
-                  <div class="gf-ellip" style="font-size:18px;font-weight:600">Barbell bench press</div>
-                  <div class="gf-muted" id="gf-sheet-sub" style="font-size:12.5px;margin-top:3px">Set 3 · working set</div>
-                </div>
-                <button type="button" class="gf-toggle" id="gf-warmup" aria-pressed="false">Warm-up</button>
-              </div>
-              <div class="gf-hint" id="gf-sheet-hint" style="margin-top:14px">
-                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" style="flex:none" aria-hidden="true"><path d="M2 11l4-4 3.5 3L14 5"/></svg>
-                You hit every set last time — going up to 102.5 kg
-              </div>
-              <div class="gf-readout"><strong id="gf-pad-value">102.5</strong><span id="gf-pad-unit">kg</span></div>
-              <div class="gf-caps" id="gf-pad-step" style="text-align:center;letter-spacing:1.2px">Step 1 — weight</div>
-              <div class="gf-pad" id="gf-pad">
-                <button type="button">1</button><button type="button">2</button><button type="button">3</button>
-                <button type="button">4</button><button type="button">5</button><button type="button">6</button>
-                <button type="button">7</button><button type="button">8</button><button type="button">9</button>
-                <button type="button" id="gf-dot">.</button><button type="button">0</button><button type="button" aria-label="Delete">⌫</button>
-              </div>
-              <div class="gf-sheet-actions">
-                <button type="button" class="gf-repeat" id="gf-repeat">Repeat last set</button>
-                <button type="button" class="gf-primary" id="gf-next" style="height:52px;border-radius:17px;font-size:14.5px">Next: reps</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="gf-homebar" aria-hidden="true"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <p class="mock-note">An interactive preview with sample data, not a screenshot. Tap the tabs, start the workout and log a set.</p>
-
   <div class="claims">
     <div class="claim"><b>No account</b><span>Nothing to sign up for</span></div>
     <div class="claim"><b>No ads</b><span>None, ever</span></div>
@@ -884,33 +655,378 @@ footer a:hover { text-decoration: underline; }
   </div>
 </div>
 
+<!-- ================= TOUR =================
+     The phone stays pinned in the middle while the steps scroll past on
+     either side; each step puts the phone on the screen it describes. On
+     narrow screens the phone sits on top and each step has a button. -->
+<section class="story" id="features" aria-label="What Gymfy does">
+  <div class="wrap story-grid">
+    <div class="story-phone" id="preview">
+      <!-- ================= APP MOCKUP =================
+           The Hyper theme from the Claude Design file, rebuilt as plain HTML.
+           Sample data throughout; the script at the bottom of the page wires up
+           the tabs, the rest timer, the log-set sheet and the Progress views. -->
+      <div class="mock-stage">
+        <div class="mock-fit">
+          <div class="mock-device">
+            <div class="gf-app" id="gf" role="region" aria-label="Interactive preview of the Gymfy app, with sample data">
+
+              <div class="gf-orbs" aria-hidden="true"><div class="gf-orb a"></div><div class="gf-orb b"></div><div class="gf-orb c"></div></div>
+
+              <div class="gf-scroll" id="gf-scroll">
+
+                <!-- Home -->
+                <div class="gf-screen" data-view="home">
+                  <div class="gf-card big">
+                    <div class="gf-caps" style="display:flex;justify-content:space-between"><span>Wednesday</span><span>Push · Pull · Legs</span></div>
+                    <div style="font-size:32px;line-height:1.1;font-weight:600;margin-top:10px;letter-spacing:-.5px">Push day</div>
+                    <div style="display:flex;flex-direction:column;gap:11px;margin-top:20px">
+                      <div style="display:flex;justify-content:space-between;gap:14px"><span class="gf-ellip">Barbell bench press</span><span class="gf-muted gf-num">4 × 6–8</span></div>
+                      <div style="display:flex;justify-content:space-between;gap:14px"><span class="gf-ellip">Incline dumbbell press</span><span class="gf-muted gf-num">3 × 8–10</span></div>
+                      <div style="display:flex;justify-content:space-between;gap:14px"><span class="gf-ellip">Dumbbell shoulder press</span><span class="gf-muted gf-num">3 × 10</span></div>
+                      <div style="display:flex;justify-content:space-between;gap:14px"><span class="gf-ellip">Cable fly</span><span class="gf-muted gf-num">3 × 12–15</span></div>
+                      <div style="display:flex;justify-content:space-between;gap:14px"><span class="gf-ellip">Rope triceps pushdown</span><span class="gf-muted gf-num">3 × 12</span></div>
+                    </div>
+                    <button type="button" class="gf-primary" data-go="workout" style="margin-top:24px">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="#fff" aria-hidden="true"><path d="M4 2.6v10.8l9-5.4z"/></svg>Start workout
+                    </button>
+                  </div>
+                  <div class="gf-gap22"></div>
+                  <div class="gf-card">
+                    <div class="gf-caps">Last workout</div>
+                    <div style="font-size:19px;font-weight:600;margin-top:8px">Pull day</div>
+                    <div class="gf-muted" style="font-size:13px;margin-top:4px">Monday · 1 h 12 min</div>
+                    <div style="margin-top:12px">22 sets · 9,480 kg</div>
+                  </div>
+                  <div class="gf-gap34"></div>
+                  <div class="gf-h"><b>This week</b><span>4 workouts</span></div>
+                  <div class="gf-card">
+                    <div class="gf-big">38,240 kg</div>
+                    <div class="gf-muted" style="font-size:13px;margin-top:3px">lifted since Monday</div>
+                    <div class="gf-bars" style="height:76px" aria-hidden="true">
+                      <div class="gf-bar"><i style="height:47px"></i><span>Mon</span></div>
+                      <div class="gf-bar"><i style="height:2px"></i><span>Tue</span></div>
+                      <div class="gf-bar"><i style="height:56px"></i><span>Wed</span></div>
+                      <div class="gf-bar"><i style="height:2px"></i><span>Thu</span></div>
+                      <div class="gf-bar"><i style="height:44px"></i><span>Fri</span></div>
+                      <div class="gf-bar"><i style="height:44px"></i><span>Sat</span></div>
+                      <div class="gf-bar"><i style="height:2px"></i><span>Sun</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Active workout -->
+                <div class="gf-screen workout" data-view="workout" hidden>
+                  <div class="gf-card big" style="padding:0;overflow:hidden">
+                    <div style="padding:20px 20px 6px">
+                      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
+                        <span style="font-size:19px;font-weight:600">Barbell bench press</span>
+                        <span class="gf-muted" style="font-size:12px;flex:none">4 × 6–8</span>
+                      </div>
+                      <div class="gf-muted" style="display:flex;align-items:center;gap:7px;margin-top:9px;font-size:13px">
+                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 11l4-4 3.5 3L14 5"/></svg>
+                        You hit every set last time — going up to 102.5 kg
+                      </div>
+                    </div>
+                    <div id="gf-sets" style="display:flex;flex-direction:column;gap:2px;padding:14px 20px 6px"></div>
+                    <button type="button" class="gf-secondary" id="gf-log" style="margin:14px 16px 16px;width:calc(100% - 32px)">
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg><span>Log set 3</span>
+                    </button>
+                  </div>
+                  <div style="height:28px"></div>
+                  <div class="gf-caps" style="padding:0 6px">Up next</div>
+                  <div style="height:12px"></div>
+                  <div class="gf-stack">
+                    <div class="gf-quiet"><div style="flex:1;min-width:0"><div class="gf-ellip" style="font-weight:500">Incline dumbbell press</div><div class="gf-muted gf-num" style="font-size:12px;margin-top:3px">3 × 8–10</div></div><div class="gf-dots" aria-hidden="true"><i></i><i></i><i></i></div></div>
+                    <div class="gf-quiet"><div style="flex:1;min-width:0"><div class="gf-ellip" style="font-weight:500">Dumbbell shoulder press</div><div class="gf-muted gf-num" style="font-size:12px;margin-top:3px">3 × 10</div></div><div class="gf-dots" aria-hidden="true"><i></i><i></i><i></i></div></div>
+                    <div class="gf-quiet"><div style="flex:1;min-width:0"><div class="gf-ellip" style="font-weight:500">Cable fly</div><div class="gf-muted gf-num" style="font-size:12px;margin-top:3px">3 × 12–15</div></div><div class="gf-dots" aria-hidden="true"><i></i><i></i><i></i></div></div>
+                    <div class="gf-quiet"><div style="flex:1;min-width:0"><div class="gf-ellip" style="font-weight:500">Rope triceps pushdown</div><div class="gf-muted gf-num" style="font-size:12px;margin-top:3px">3 × 12</div></div><div class="gf-dots" aria-hidden="true"><i></i><i></i><i></i></div></div>
+                  </div>
+                </div>
+
+                <!-- Progress -->
+                <div class="gf-screen progress" data-view="progress" hidden>
+                  <div class="gf-seg" data-seg="Trends">
+                    <div class="gf-ranges" id="gf-ranges">
+                      <button type="button" aria-pressed="true" data-range="Week">Week</button>
+                      <button type="button" aria-pressed="false" data-range="Month">Month</button>
+                      <button type="button" aria-pressed="false" data-range="Year">Year</button>
+                    </div>
+                    <div class="gf-card big" style="padding:22px 20px 16px">
+                      <div class="gf-caps">Volume</div>
+                      <div id="gf-vol" style="font-size:34px;font-weight:600;letter-spacing:-.6px;margin-top:8px">38,240 kg</div>
+                      <div id="gf-vol-detail" class="gf-muted" style="font-size:13px;margin-top:2px">lifted in the last week</div>
+                      <svg id="gf-chart" width="309" height="150" viewBox="0 0 309 150" style="margin-top:22px;overflow:visible" aria-hidden="true">
+                        <defs><linearGradient id="gfArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" style="stop-color:var(--gf-accent);stop-opacity:.34"/><stop offset="100%" style="stop-color:var(--gf-accent);stop-opacity:0"/></linearGradient></defs>
+                        <g stroke="rgba(255,255,255,0.07)"><line x1="0" y1="4" x2="309" y2="4"/><line x1="0" y1="41" x2="309" y2="41"/><line x1="0" y1="78" x2="309" y2="78"/><line x1="0" y1="115" x2="309" y2="115"/></g>
+                        <path id="gf-area" fill="url(#gfArea)"/>
+                        <path id="gf-line" fill="none" style="stroke:var(--gf-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <g id="gf-points" style="fill:var(--gf-accent)"></g>
+                        <g id="gf-labels" fill="#9EA0BC" font-size="10.5" text-anchor="middle" font-family="Schibsted Grotesk, sans-serif"></g>
+                      </svg>
+                    </div>
+                    <div style="height:18px"></div>
+                    <div class="gf-card">
+                      <div class="gf-caps">Workouts</div>
+                      <div id="gf-sess" class="gf-big" style="margin-top:8px">4</div>
+                      <div id="gf-sess-detail" class="gf-muted" style="font-size:13px;margin-top:2px">sessions · 1 personal record</div>
+                      <div class="gf-bars" id="gf-sess-bars" style="height:64px;gap:6px;margin-top:18px" aria-hidden="true"></div>
+                    </div>
+                    <div style="height:18px"></div>
+                    <div class="gf-card">
+                      <div class="gf-caps">What you trained</div>
+                      <div style="font-size:20px;font-weight:600;margin-top:8px">Chest took the most sets</div>
+                      <div id="gf-muscles" style="display:flex;flex-direction:column;gap:11px;margin-top:20px"></div>
+                    </div>
+                  </div>
+
+                  <div class="gf-seg" data-seg="All-time" hidden>
+                    <div style="display:flex;gap:10px">
+                      <div class="gf-card" style="flex:1;border-radius:22px;padding:18px 14px"><div style="font-size:23px;font-weight:600;letter-spacing:-.4px">312</div><div class="gf-muted" style="font-size:11px;margin-top:5px;letter-spacing:.4px">WORKOUTS</div></div>
+                      <div class="gf-card" style="flex:1;border-radius:22px;padding:18px 14px"><div style="font-size:23px;font-weight:600;letter-spacing:-.4px">8,942</div><div class="gf-muted" style="font-size:11px;margin-top:5px;letter-spacing:.4px">SETS</div></div>
+                      <div class="gf-card" style="flex:1;border-radius:22px;padding:18px 14px"><div style="font-size:23px;font-weight:600;letter-spacing:-.4px">2.42M</div><div class="gf-muted" style="font-size:11px;margin-top:5px;letter-spacing:.4px">KG LIFTED</div></div>
+                    </div>
+                    <div style="height:30px"></div>
+                    <div class="gf-h" style="margin-bottom:12px"><b>Activity</b></div>
+                    <div class="gf-card" style="padding:18px 0 18px 18px;overflow:hidden">
+                      <div class="gf-hscroll" id="gf-heat-scroll" style="padding-right:18px">
+                        <canvas id="gf-heat" width="1590" height="240" style="width:795px;height:120px;display:block" aria-label="A year of training days"></canvas>
+                      </div>
+                      <div style="display:flex;align-items:center;gap:8px;margin-top:14px;padding-right:18px;font-size:11px" class="gf-muted">
+                        <span style="font-size:12px;flex:1">312 days · 389 h this year</span><span>Less</span>
+                        <div style="display:flex;gap:3px" aria-hidden="true">
+                          <i style="width:11px;height:11px;border-radius:3px;background:rgba(242,243,250,0.08)"></i>
+                          <i style="width:11px;height:11px;border-radius:3px;background:color-mix(in srgb, var(--gf-accent) 28%, transparent)"></i>
+                          <i style="width:11px;height:11px;border-radius:3px;background:color-mix(in srgb, var(--gf-accent) 50%, transparent)"></i>
+                          <i style="width:11px;height:11px;border-radius:3px;background:color-mix(in srgb, var(--gf-accent) 74%, transparent)"></i>
+                          <i style="width:11px;height:11px;border-radius:3px;background:var(--gf-accent)"></i>
+                        </div>
+                        <span>More</span>
+                      </div>
+                    </div>
+                    <div style="height:30px"></div>
+                    <div class="gf-h" style="margin-bottom:12px"><b>Records</b></div>
+                    <div class="gf-card gf-rows" style="padding:6px 20px">
+                      <div><div style="flex:1;min-width:0"><div class="gf-ellip" style="font-weight:500">Deadlift</div><div class="gf-muted" style="font-size:12px;margin-top:3px">14 Aug</div></div><div class="gf-num" style="font-size:17px;font-weight:600">195 kg × 1</div></div>
+                      <div><div style="flex:1;min-width:0"><div class="gf-ellip" style="font-weight:500">Barbell back squat</div><div class="gf-muted" style="font-size:12px;margin-top:3px">2 Aug</div></div><div class="gf-num" style="font-size:17px;font-weight:600">160 kg × 1</div></div>
+                      <div><div style="flex:1;min-width:0"><div class="gf-ellip" style="font-weight:500">Barbell bench press</div><div class="gf-muted" style="font-size:12px;margin-top:3px">28 Jul</div></div><div class="gf-num" style="font-size:17px;font-weight:600">122.5 kg × 1</div></div>
+                      <div><div style="flex:1;min-width:0"><div class="gf-ellip" style="font-weight:500">Barbell row</div><div class="gf-muted" style="font-size:12px;margin-top:3px">11 Aug</div></div><div class="gf-num" style="font-size:17px;font-weight:600">100 kg × 5</div></div>
+                    </div>
+                    <div style="height:30px"></div>
+                    <div class="gf-h" style="margin-bottom:12px"><b>Strength rank</b></div>
+                    <div class="gf-stack" style="gap:12px">
+                      <div class="gf-card" style="border-radius:22px;padding:18px 20px"><div style="display:flex;align-items:baseline;gap:12px"><span class="gf-ellip" style="flex:1;font-weight:500">Deadlift</span><span style="font-size:13px;font-weight:600">Advanced</span></div><div class="gf-track" style="height:6px;margin-top:14px"><i style="width:71%"></i></div><div class="gf-muted" style="display:flex;justify-content:space-between;margin-top:9px;font-size:12px"><span>2.44 × bodyweight</span><span>+27 kg to Elite</span></div></div>
+                      <div class="gf-card" style="border-radius:22px;padding:18px 20px"><div style="display:flex;align-items:baseline;gap:12px"><span class="gf-ellip" style="flex:1;font-weight:500">Barbell back squat</span><span class="gf-muted" style="font-size:13px;font-weight:600">Intermediate</span></div><div class="gf-track" style="height:6px;margin-top:14px"><i style="width:58%"></i></div><div class="gf-muted" style="display:flex;justify-content:space-between;margin-top:9px;font-size:12px"><span>2.00 × bodyweight</span><span>+22 kg to Advanced</span></div></div>
+                      <div class="gf-card" style="border-radius:22px;padding:18px 20px"><div style="display:flex;align-items:baseline;gap:12px"><span class="gf-ellip" style="flex:1;font-weight:500">Barbell bench press</span><span class="gf-muted" style="font-size:13px;font-weight:600">Intermediate</span></div><div class="gf-track" style="height:6px;margin-top:14px"><i style="width:52%"></i></div><div class="gf-muted" style="display:flex;justify-content:space-between;margin-top:9px;font-size:12px"><span>1.53 × bodyweight</span><span>+18 kg to Advanced</span></div></div>
+                    </div>
+                    <div style="height:30px"></div>
+                    <div class="gf-h" style="margin-bottom:12px"><b>Streak</b></div>
+                    <div class="gf-card" style="display:flex;gap:20px">
+                      <div style="flex:1"><div style="font-size:26px;font-weight:600">12 days</div><div class="gf-muted" style="font-size:12px;margin-top:4px">current</div></div>
+                      <div style="width:1px;background:rgba(255,255,255,0.10)"></div>
+                      <div style="flex:1"><div style="font-size:26px;font-weight:600">23 days</div><div class="gf-muted" style="font-size:12px;margin-top:4px">best ever</div></div>
+                    </div>
+                  </div>
+
+                  <div class="gf-seg" data-seg="Body" hidden>
+                    <div class="gf-card gf-rows" style="padding:6px 20px">
+                      <div><span style="flex:1">Bodyweight</span><span class="gf-num" style="font-size:17px;font-weight:600">80.4 kg</span><span class="gf-muted gf-num" style="font-size:12px;width:52px;text-align:right">+0.6</span></div>
+                      <div><span style="flex:1">Chest</span><span class="gf-num" style="font-size:17px;font-weight:600">106 cm</span><span class="gf-muted gf-num" style="font-size:12px;width:52px;text-align:right">+1.0</span></div>
+                      <div><span style="flex:1">Waist</span><span class="gf-num" style="font-size:17px;font-weight:600">84 cm</span><span class="gf-muted gf-num" style="font-size:12px;width:52px;text-align:right">−0.5</span></div>
+                      <div><span style="flex:1">Upper arm</span><span class="gf-num" style="font-size:17px;font-weight:600">38.5 cm</span><span class="gf-muted gf-num" style="font-size:12px;width:52px;text-align:right">+0.4</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- More -->
+                <div class="gf-screen" data-view="more" hidden>
+                  <div class="gf-stack" id="gf-tools"></div>
+                </div>
+              </div>
+
+              <!-- Top bar -->
+              <div class="gf-top" id="gf-top">
+                <div class="gf-status" aria-hidden="true">
+                  <span>9:41</span>
+                  <div>
+                    <svg width="15" height="11" viewBox="0 0 15 11" fill="#F2F3FA"><rect x="0" y="7" width="2.6" height="4" rx="0.8"/><rect x="4" y="5" width="2.6" height="6" rx="0.8"/><rect x="8" y="2.6" width="2.6" height="8.4" rx="0.8"/><rect x="12" y="0" width="2.6" height="11" rx="0.8"/></svg>
+                    <svg width="20" height="11" viewBox="0 0 20 11" fill="none"><rect x="0.6" y="0.6" width="16" height="9.8" rx="2.6" stroke="rgba(242,243,250,0.6)"/><rect x="2.2" y="2.2" width="11" height="6.6" rx="1.4" fill="#F2F3FA"/><path d="M18.4 3.8v3.4a2.2 2.2 0 000-3.4z" fill="rgba(242,243,250,0.6)"/></svg>
+                  </div>
+                </div>
+                <div class="gf-titlebar">
+                  <div class="gf-title">
+                    <strong id="gf-title" class="gf-ellip">Hi, Jonas</strong>
+                    <span class="gf-chip" id="gf-streak"><svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor" aria-hidden="true"><path d="M5 0C3 3 0 4 0 7.2A4.8 4.8 0 005 12a4.8 4.8 0 005-4.8C10 4.4 7.6 3.6 5 0z"/></svg>12<span class="sr-only"> day streak</span></span>
+                  </div>
+                  <span class="gf-iconbtn" id="gf-search" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#F2F3FA" stroke-width="1.8"><circle cx="6.8" cy="6.8" r="4.8"/><path d="M10.4 10.4L14 14"/></svg></span>
+                  <button type="button" class="gf-finish" id="gf-finish" data-go="home" hidden>Finish</button>
+                </div>
+                <div class="gf-segbar" id="gf-segbar" hidden>
+                  <div class="gf-segs">
+                    <button type="button" aria-pressed="false" data-seg-btn="Body">Body</button>
+                    <button type="button" aria-pressed="true" data-seg-btn="Trends">Trends</button>
+                    <button type="button" aria-pressed="false" data-seg-btn="All-time">All-time</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Rest timer -->
+              <div class="gf-rest" id="gf-rest" hidden>
+                <div class="gf-rest-row">
+                  <div style="flex:1;min-width:0">
+                    <div class="gf-caps" id="gf-rest-caps">Resting</div>
+                    <div class="gf-clock" id="gf-clock" role="timer" aria-live="off">1:47</div>
+                    <div class="gf-muted" style="font-size:12.5px;margin-top:2px">Barbell bench press</div>
+                  </div>
+                  <button type="button" class="gf-plus30" id="gf-plus30">+30s</button>
+                  <button type="button" class="gf-close" id="gf-rest-close" aria-label="Dismiss the rest timer">
+                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#9EA0BC" stroke-width="1.8" aria-hidden="true"><path d="M1.5 1.5l11 11M12.5 1.5l-11 11"/></svg>
+                  </button>
+                </div>
+                <div class="gf-restbar"><i id="gf-restbar"></i></div>
+              </div>
+
+              <!-- Tab bar -->
+              <nav class="gf-nav" aria-label="App tabs">
+                <button type="button" data-tab="home" aria-current="page"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M2.6 8.4L10 2.6l7.4 5.8v8.2a.8.8 0 01-.8.8h-4V12h-5v5.4h-4a.8.8 0 01-.8-.8z"/></svg><span>Home</span></button>
+                <button type="button" data-tab="workout"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4.4 7v6M2.2 8.4v3.2M15.6 7v6M17.8 8.4v3.2M4.4 10h11.2"/></svg><span>Workout</span></button>
+                <button type="button" data-tab="progress"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.4 14.2l4.4-4.6 3.4 2.8 7.4-7.6"/><path d="M13.4 4.8h4.2V9"/></svg><span>Progress</span></button>
+                <button type="button" data-tab="more"><svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4" cy="10" r="1.7"/><circle cx="10" cy="10" r="1.7"/><circle cx="16" cy="10" r="1.7"/></svg><span>More</span></button>
+              </nav>
+
+              <!-- Log-set sheet -->
+              <div class="gf-sheet-wrap" id="gf-sheet" hidden>
+                <button type="button" class="gf-scrim" id="gf-scrim" aria-label="Close"></button>
+                <div class="gf-sheet" role="dialog" aria-label="Log a set">
+                  <div class="gf-grab"></div>
+                  <div style="display:flex;align-items:flex-start;gap:12px">
+                    <div style="flex:1;min-width:0">
+                      <div class="gf-ellip" style="font-size:18px;font-weight:600">Barbell bench press</div>
+                      <div class="gf-muted" id="gf-sheet-sub" style="font-size:12.5px;margin-top:3px">Set 3 · working set</div>
+                    </div>
+                    <button type="button" class="gf-toggle" id="gf-warmup" aria-pressed="false">Warm-up</button>
+                  </div>
+                  <div class="gf-hint" id="gf-sheet-hint" style="margin-top:14px">
+                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" style="flex:none" aria-hidden="true"><path d="M2 11l4-4 3.5 3L14 5"/></svg>
+                    You hit every set last time — going up to 102.5 kg
+                  </div>
+                  <div class="gf-readout"><strong id="gf-pad-value">102.5</strong><span id="gf-pad-unit">kg</span></div>
+                  <div class="gf-caps" id="gf-pad-step" style="text-align:center;letter-spacing:1.2px">Step 1 — weight</div>
+                  <div class="gf-pad" id="gf-pad">
+                    <button type="button">1</button><button type="button">2</button><button type="button">3</button>
+                    <button type="button">4</button><button type="button">5</button><button type="button">6</button>
+                    <button type="button">7</button><button type="button">8</button><button type="button">9</button>
+                    <button type="button" id="gf-dot">.</button><button type="button">0</button><button type="button" aria-label="Delete">⌫</button>
+                  </div>
+                  <div class="gf-sheet-actions">
+                    <button type="button" class="gf-repeat" id="gf-repeat">Repeat last set</button>
+                    <button type="button" class="gf-primary" id="gf-next" style="height:52px;border-radius:17px;font-size:14.5px">Next: reps</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="gf-homebar" aria-hidden="true"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="mock-note">An interactive preview with sample data, not a screenshot. Tap the tabs, start the workout and log a set.</p>
+    </div>
+
+    <article class="step left" data-scene="home" style="--row:1">
+      <span class="step-kicker">01 · Home</span>
+      <h3>Today's workout, one tap away</h3>
+      <p>Open Gymfy and today's day from your split is already waiting: the exercises, the targets and a Start button sized for a thumb.</p>
+      <p>Your last workout and this week's volume sit right underneath, so you know where you stand before the first set.</p>
+      <button type="button" class="btn btn-ghost show" data-show="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>Show it in the preview</button>
+    </article>
+
+    <article class="step right" data-scene="log" style="--row:2">
+      <span class="step-kicker">02 · Logging</span>
+      <h3>Logging that keeps up</h3>
+      <p>A big one-handed keypad instead of the system keyboard, or tap the plates that are on the bar and the total adds itself up. Weight, reps, save.</p>
+      <p class="pull">Same as last time? Repeat the set with one tap.</p>
+      <p>Mark warm-up, drop and failure sets, and rate effort as RPE or RIR if you like.</p>
+      <button type="button" class="btn btn-ghost show" data-show="log"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>Show it in the preview</button>
+    </article>
+
+    <article class="step left" data-scene="overload" style="--row:3">
+      <span class="step-kicker">03 · Progressive overload</span>
+      <h3>It suggests the next weight, and tells you why</h3>
+      <p>Most trackers are a spreadsheet you fill in. Gymfy reads your last session for an exercise and puts a number in the field before you touch it.</p>
+      <p class="pull">Hit every target rep and the weight steps up. Fall short and it holds you there — because the app that pushes you up regardless is the one you stop trusting.</p>
+      <p>The rules are yours: increment, rep target, how many sessions at a weight before it moves.</p>
+      <button type="button" class="btn btn-ghost show" data-show="overload"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>Show it in the preview</button>
+    </article>
+
+    <article class="step right" data-scene="rest" style="--row:4">
+      <span class="step-kicker">04 · Rest timer</span>
+      <h3>A rest timer that finds you</h3>
+      <p>The countdown sits at the top of the workout, with +30&nbsp;s sized for a hand you aren't looking at.</p>
+      <p class="pull">Phone back in your pocket? The workout notification and the watch keep counting, and buzz when it's time to lift.</p>
+      <button type="button" class="btn btn-ghost show" data-show="rest"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>Show it in the preview</button>
+    </article>
+
+    <article class="step left" data-scene="trends" style="--row:5">
+      <span class="step-kicker">05 · Progress</span>
+      <h3>See the week you actually trained</h3>
+      <p>Volume, workouts and the muscles that took the most sets, over a week, a month or a year. Per-exercise charts for top set, volume and estimated 1RM.</p>
+      <p class="pull">And a body map shaded by the volume each muscle took — the fastest way to notice that your rear delts have not been touched since March.</p>
+      <button type="button" class="btn btn-ghost show" data-show="trends"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>Show it in the preview</button>
+    </article>
+
+    <article class="step right" data-scene="alltime" style="--row:6">
+      <span class="step-kicker">06 · All-time</span>
+      <h3>Records, ranks and a year of training</h3>
+      <p>Every personal record, dated so you know when you set it. A year of training days at a glance, and the streak to go with it.</p>
+      <p class="pull">A strength rank puts your big lifts against your bodyweight, so the comparison is to people your size rather than to a number on the internet.</p>
+      <button type="button" class="btn btn-ghost show" data-show="alltime"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>Show it in the preview</button>
+    </article>
+
+    <article class="step left" data-scene="body" style="--row:7">
+      <span class="step-kicker">07 · Body</span>
+      <h3>Your body, next to your lifting</h3>
+      <p>Bodyweight, chest, waist and arms, each with its own history chart, and the change since last time right beside it.</p>
+      <p>Progress photos go into the app's private storage, and two of them side by side show what the mirror has not been telling you.</p>
+      <button type="button" class="btn btn-ghost show" data-show="body"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>Show it in the preview</button>
+    </article>
+
+    <article class="step right" data-scene="themes" style="--row:8">
+      <span class="step-kicker">08 · Themes</span>
+      <h3>Eight themes, one of them glass</h3>
+      <p>AMOLED black that actually turns the pixels off. High contrast for gym lighting. Tokyo Night, Dracula, Catppuccin and Gruvbox for the editor crowd. And Hyper — translucent panes over a slowly drifting colour field, which is what this page and the preview are wearing.</p>
+      <p class="pull">Pick any accent colour. Try one: the preview changes with it.</p>
+      <div class="swatches" role="group" aria-label="Accent colour of the preview">
+        <button type="button" class="sw" style="background:#7C6BFF" data-accent="#7C6BFF" aria-label="Violet" aria-pressed="true"></button>
+        <button type="button" class="sw" style="background:#4F8CFF" data-accent="#4F8CFF" aria-label="Blue" aria-pressed="false"></button>
+        <button type="button" class="sw" style="background:#2FD8C6" data-accent="#2FD8C6" aria-label="Teal" aria-pressed="false"></button>
+        <button type="button" class="sw" style="background:#35C56A" data-accent="#35C56A" aria-label="Green" aria-pressed="false"></button>
+        <button type="button" class="sw" style="background:#FF8A3D" data-accent="#FF8A3D" aria-label="Orange" aria-pressed="false"></button>
+        <button type="button" class="sw" style="background:#FF5C8A" data-accent="#FF5C8A" aria-label="Pink" aria-pressed="false"></button>
+        <button type="button" class="sw" style="background:#9B6BFF" data-accent="#9B6BFF" aria-label="Purple" aria-pressed="false"></button>
+      </div>
+      <p>Every animation respects your system reduce-motion setting, and respecting it means stopping, not going faster.</p>
+    </article>
+
+    <article class="step left" data-scene="more" style="--row:9">
+      <span class="step-kicker">09 · More</span>
+      <h3>Everything else, one tap away</h3>
+      <p>About 1,270 exercises with animated previews, six ready-made programs, the plate and 1RM calculators, sharing a plan with a training partner, and settings in English or German.</p>
+      <p>No hub of upsells and no locked tiles: everything listed here is in the free app.</p>
+      <button type="button" class="btn btn-ghost show" data-show="more"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>Show it in the preview</button>
+    </article>
+  </div>
+</section>
+
 <!-- ================= FEATURES ================= -->
-<section id="features">
+<section id="everything">
   <div class="wrap">
     <div class="sec-head">
-      <h2>Built for the two minutes between sets</h2>
-      <p>Everything here exists because it was needed standing in front of a rack, one-handed, with the bar already loaded.</p>
+      <h2>Everything else it does</h2>
+      <p>Built for the two minutes between sets: everything here exists because it was needed standing in front of a rack, one-handed, with the bar already loaded.</p>
     </div>
 
     <div class="grid">
-
-      <div class="pane card">
-        <div class="ico"><svg viewBox="0 0 24 24"><path d="M3 12h2m14 0h2M7 8v8m10-8v8M7 12h10"/></svg></div>
-        <h3>Logging that keeps up</h3>
-        <p>A big one-handed keypad instead of the system keyboard, or just tap the plates that are on the bar and the total adds itself up. Same as last time? Repeat the set with one tap.</p>
-      </div>
-
-      <div class="pane card">
-        <div class="ico"><svg viewBox="0 0 24 24"><path d="M3 17l5-6 4 4 4-7 5 5"/><path d="M3 21h18"/></svg></div>
-        <h3>Progressive overload</h3>
-        <p>Your next weight is suggested from what you actually lifted, not a formula on a poster. Hit your target reps and it goes up; miss and it holds.</p>
-      </div>
-
-      <div class="pane card">
-        <div class="ico"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4"/><path d="M12 13v4M9 20h6"/></svg></div>
-        <h3>Set types, RPE and live PRs</h3>
-        <p>Mark warm-up, drop and failure sets, and rate effort as RPE or RIR if you like. A new record gets a celebration the moment you log it, and the warm-up calculator ramps you up with your own plates.</p>
-      </div>
 
       <div class="pane card">
         <div class="ico"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="5" rx="1.5"/><rect x="4" y="11" width="16" height="5" rx="1.5"/><path d="M8 20h8"/></svg></div>
@@ -922,12 +1038,6 @@ footer a:hover { text-decoration: underline; }
         <div class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
         <h3>Timed exercises</h3>
         <p>Planks, dead hangs, loaded carries. Logged in minutes and seconds, charted by duration, with records of their own — a plank's best is a time, not a weight.</p>
-      </div>
-
-      <div class="pane card">
-        <div class="ico"><svg viewBox="0 0 24 24"><path d="M6 8v8M9 6v12M15 6v12M18 8v8M9 12h6"/></svg></div>
-        <h3>Plate calculator</h3>
-        <p>What to load, per side, from the plates your gym actually owns. Bar weight is set per exercise — the leg press does not have a 20&nbsp;kg bar on it.</p>
       </div>
 
       <div class="pane card">
@@ -961,21 +1071,9 @@ footer a:hover { text-decoration: underline; }
       </div>
 
       <div class="pane card">
-        <div class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5-5-8 8"/></svg></div>
-        <h3>Body and photos</h3>
-        <p>Log bodyweight and measurements with a chart for each, and keep progress photos in private storage. Put two side by side to see what the mirror has not been telling you.</p>
-      </div>
-
-      <div class="pane card">
         <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M8 11l4 4 4-4"/><path d="M4 19h16"/></svg></div>
         <h3>Bring your history</h3>
         <p>Coming from Hevy, Strong or StrengthLog? Export a CSV there and import it here. Gymfy even rebuilds your split from the history and puts each day on the weekday you train it.</p>
-      </div>
-
-      <div class="pane card">
-        <div class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2.5"/></svg></div>
-        <h3>Rest timer that finds you</h3>
-        <p>A countdown ring on the workout screen, a +30s button sized for a hand you are not looking at, and a workout notification for when the phone is already back in your pocket: the set you are on, the countdown, and buttons to log the suggested set, add 30&nbsp;seconds or skip the rest.</p>
       </div>
 
       <div class="pane card">
@@ -1000,53 +1098,6 @@ footer a:hover { text-decoration: underline; }
         <div class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/></svg></div>
         <h3>English and Deutsch</h3>
         <p>Gymfy follows your phone's language, or pick one in Settings. Every screen, the notifications and the watch app are translated, down to "82,5&nbsp;kg". Exercise names stay in English, the way most gyms say them.</p>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<!-- ================= DEEP DIVES ================= -->
-<section style="padding-top:20px">
-  <div class="wrap">
-    <div class="dives">
-
-      <div class="pane dive">
-        <h3>It suggests the next weight, and tells you why</h3>
-        <p>Most trackers are a spreadsheet you fill in. Gymfy reads your last session for an exercise and puts a number in the field before you touch it.</p>
-        <p class="pull">Hit every target rep and the weight steps up. Fall short and it holds you there — because the app that pushes you up regardless is the one you stop trusting.</p>
-        <p>The rules are yours: increment, rep target, how many sessions at a weight before it moves.</p>
-        <button type="button" class="btn btn-ghost show" data-show="workout">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
-          Show it in the preview
-        </button>
-      </div>
-
-      <div class="pane dive">
-        <h3>See the week you actually trained</h3>
-        <p>Per-exercise charts for top set, volume and estimated 1RM, with personal records dated so you know when you set them.</p>
-        <p class="pull">And a body map shaded by the volume each muscle took — the fastest way to notice that your rear delts have not been touched since March.</p>
-        <p>Plus a bodyweight-relative strength rank, so the comparison is to people your size rather than to a number on the internet.</p>
-        <button type="button" class="btn btn-ghost show" data-show="progress">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
-          Show it in the preview
-        </button>
-      </div>
-
-      <div class="pane dive">
-        <h3>Eight themes, one of them glass</h3>
-        <p>AMOLED black that actually turns the pixels off. High contrast for gym lighting. Tokyo Night, Dracula, Catppuccin and Gruvbox for the editor crowd. And Hyper — translucent panes over a slowly drifting colour field, which is what this page and the preview are wearing.</p>
-        <p class="pull">Pick any accent colour. Try one: the preview changes with it.</p>
-        <div class="swatches" role="group" aria-label="Accent colour of the preview">
-          <button type="button" class="sw" style="background:#7C6BFF" data-accent="#7C6BFF" aria-label="Violet" aria-pressed="true"></button>
-          <button type="button" class="sw" style="background:#4F8CFF" data-accent="#4F8CFF" aria-label="Blue" aria-pressed="false"></button>
-          <button type="button" class="sw" style="background:#2FD8C6" data-accent="#2FD8C6" aria-label="Teal" aria-pressed="false"></button>
-          <button type="button" class="sw" style="background:#35C56A" data-accent="#35C56A" aria-label="Green" aria-pressed="false"></button>
-          <button type="button" class="sw" style="background:#FF8A3D" data-accent="#FF8A3D" aria-label="Orange" aria-pressed="false"></button>
-          <button type="button" class="sw" style="background:#FF5C8A" data-accent="#FF5C8A" aria-label="Pink" aria-pressed="false"></button>
-          <button type="button" class="sw" style="background:#9B6BFF" data-accent="#9B6BFF" aria-label="Purple" aria-pressed="false"></button>
-        </div>
-        <p>Every animation respects your system reduce-motion setting, and respecting it means stopping, not going faster.</p>
       </div>
 
     </div>
@@ -1278,10 +1329,12 @@ footer a:hover { text-decoration: underline; }
     next.textContent = onWeight ? 'Next: reps' : 'Save set';
     next.disabled = !onWeight && !state.reps;
   }
-  function openSheet() {
+  // [focus] is false when the tour opens the sheet: scrolling past a step
+  // must not pull keyboard focus into the phone.
+  function openSheet(focus) {
     state.sheet = true; state.padStep = 'weight'; state.weight = '102.5'; state.reps = ''; state.warmup = false;
     renderSheet();
-    keys[0].focus({ preventScroll: true });
+    if (focus !== false) keys[0].focus({ preventScroll: true });
   }
   function closeSheet() {
     if (!state.sheet) return;
@@ -1407,12 +1460,53 @@ footer a:hover { text-decoration: underline; }
     });
   });
 
-  // "Show it in the preview" puts the phone on the screen a section describes.
+  // --- The tour around the phone -------------------------------------------
+  // Each step of the tour names a scene: the screen, and anything open on it.
+  var currentScene = null;
+  function scene(name) {
+    if (name === currentScene) return;
+    currentScene = name;
+    switch (name) {
+      case 'log': go('workout'); openSheet(false); break;
+      case 'overload': go('workout'); closeSheet(); break;
+      case 'rest':
+        go('workout'); closeSheet();
+        if (!state.timerOn || state.rest <= 0) { state.rest = 107; state.timerOn = true; }
+        renderRest();
+        break;
+      case 'trends': state.seg = 'Trends'; go('progress'); break;
+      case 'alltime': state.seg = 'All-time'; go('progress'); break;
+      case 'body': state.seg = 'Body'; go('progress'); break;
+      case 'themes': go('home'); break;
+      case 'more': go('more'); break;
+      default: go('home');
+    }
+  }
+  // Tapping the phone yourself takes over until the next step comes along.
+  app.addEventListener('click', function () { currentScene = null; });
+
+  var story = document.querySelector('.story');
+  var steps = $$('.step[data-scene]', document);
+  var wide = window.matchMedia('(min-width: 1000px)');
+  if (story && steps.length && 'IntersectionObserver' in window) {
+    story.classList.add('is-live');
+    // A step is "on" while it crosses the middle of the window, which is
+    // where the phone's own middle sits.
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        steps.forEach(function (s) { s.classList.toggle('is-active', s === entry.target); });
+        if (wide.matches) scene(entry.target.getAttribute('data-scene'));
+      });
+    }, { rootMargin: '-50% 0px -50% 0px' });
+    steps.forEach(function (s) { observer.observe(s); });
+  }
+
+  // "Show it in the preview" (narrow screens) puts the phone on that scene.
   $$('[data-show]', document).forEach(function (b) {
     b.addEventListener('click', function () {
-      var view = b.getAttribute('data-show');
-      if (view === 'progress') state.seg = 'Trends';
-      go(view);
+      currentScene = null;
+      scene(b.getAttribute('data-show'));
       var preview = document.getElementById('preview');
       preview.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
       // Some embedded browsers never run a smooth scroll; land there anyway.
@@ -1423,11 +1517,21 @@ footer a:hover { text-decoration: underline; }
     });
   });
 
-  // The device is drawn at 413 × 872 and scaled down to fit narrow screens.
+  // The device is drawn at 413 × 872. On a narrow screen it scales to the
+  // width; in the tour it scales to the window's height too, and is pinned
+  // so its middle sits in the middle of the space under the page header.
   var stage = document.getElementById('preview');
+  var HEADER = 62;
   function fit() {
-    var scale = Math.min(1, (stage.clientWidth || 413) / 413);
-    stage.style.setProperty('--mock-scale', scale.toFixed(4));
+    var scale;
+    if (wide.matches) {
+      scale = Math.min(1, (window.innerHeight - HEADER - 40) / 872);
+      var h = 872 * scale;
+      stage.style.setProperty('--phone-top', Math.round(HEADER + (window.innerHeight - HEADER - h) / 2) + 'px');
+    } else {
+      scale = Math.min(1, (stage.clientWidth || 413) / 413);
+    }
+    stage.style.setProperty('--mock-scale', Math.max(0.4, scale).toFixed(4));
   }
   window.addEventListener('resize', fit, { passive: true });
   fit();
