@@ -13,6 +13,7 @@ import '../data/workout_repository.dart';
 import '../widgets/split_day_list.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// The overview of *one* split: every day shown as a card, each listing its
 /// planned exercises inline so the whole programme is visible at a glance.
@@ -54,7 +55,7 @@ class SplitDaysScreen extends ConsumerWidget {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: AppButton(
         label: context.l10n.workoutAddDay,
-        icon: Icons.add,
+        icon: LucideIcons.plus,
         expand: false,
         onPressed: () => addDayTo(context, ref, splitId),
       ),
@@ -98,7 +99,7 @@ class ActiveSplitAction extends ConsumerWidget {
         child: Center(
           child: Row(
             children: [
-              Icon(Icons.check_circle, size: 18, color: accent),
+              Icon(LucideIcons.circleCheck, size: 18, color: accent),
               const SizedBox(width: 6),
               Text(
                 context.l10n.commonActive,

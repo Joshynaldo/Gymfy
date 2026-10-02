@@ -22,6 +22,7 @@ import '../../../shared/widgets/glass_sheet.dart';
 import '../../overload/data/percent_target.dart';
 import '../../overload/data/training_block.dart';
 import '../data/training_plan_repository.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Deload loads offered as chips. A split storing something else (an imported
 /// value, an older build) gets its own chip added, so it is never silently
@@ -45,7 +46,7 @@ class TrainingBlockAction extends ConsumerWidget {
       // Tinted while a block runs, so the button also answers "is this split
       // on a block?" without being opened.
       icon: Icon(
-        Icons.event_repeat,
+        LucideIcons.calendarSync,
         color: hasBlock ? ref.watch(accentColorProvider) : null,
       ),
       tooltip: context.l10n.programsBlockTitle,
@@ -183,7 +184,7 @@ class _TrainingBlockSheetState extends State<TrainingBlockSheet> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.remove),
+                  icon: const Icon(LucideIcons.minus),
                   tooltip: l10n.programsBlockFewerWeeks,
                   onPressed: _weeks > 1 ? () => setState(() => _weeks--) : null,
                 ),
@@ -203,7 +204,7 @@ class _TrainingBlockSheetState extends State<TrainingBlockSheet> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.add),
+                  icon: const Icon(LucideIcons.plus),
                   tooltip: l10n.programsBlockMoreWeeks,
                   onPressed: _weeks < maxBlockWeeks
                       ? () => setState(() => _weeks++)
@@ -325,7 +326,9 @@ class TrainingBlockBanner extends ConsumerWidget {
           Row(
             children: [
               Icon(
-                week.isDeload ? Icons.trending_down : Icons.event_repeat,
+                week.isDeload
+                    ? LucideIcons.trendingDown
+                    : LucideIcons.calendarSync,
                 size: 18,
                 color: accent,
               ),

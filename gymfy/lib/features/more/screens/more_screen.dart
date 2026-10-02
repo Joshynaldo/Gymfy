@@ -7,18 +7,20 @@ import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/fade_slide_in.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
+import '../../../shared/widgets/glyph_icon.dart';
 import '../../../app/theme/glass.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// A tool the "More" hub links to.
 class _Tool {
   const _Tool({
-    required this.icon,
+    required this.glyph,
     required this.title,
     required this.subtitle,
     required this.route,
   });
 
-  final IconData icon;
+  final MockupGlyph glyph;
   final String title;
   final String subtitle;
   final String route;
@@ -37,55 +39,55 @@ class MoreScreen extends ConsumerWidget {
     // library when you are building a day or checking a movement, and both of
     // those start somewhere else in the app.
     _Tool(
-      icon: Icons.menu_book,
+      glyph: MockupGlyph.library,
       title: l10n.moreExerciseLibraryTitle,
       subtitle: l10n.moreExerciseLibrarySubtitle,
       route: '/exercises',
     ),
     _Tool(
-      icon: Icons.restaurant,
+      glyph: MockupGlyph.calories,
       title: l10n.moreCalorieLogTitle,
       subtitle: l10n.moreCalorieLogSubtitle,
       route: '/more/calories',
     ),
     _Tool(
-      icon: Icons.bar_chart,
+      glyph: MockupGlyph.weekly,
       title: l10n.moreWeeklyTitle,
       subtitle: l10n.moreWeeklySubtitle,
       route: '/more/weekly',
     ),
     _Tool(
-      icon: Icons.calculate_outlined,
+      glyph: MockupGlyph.oneRm,
       title: l10n.moreOneRmTitle,
       subtitle: l10n.moreOneRmSubtitle,
       route: '/more/one-rm',
     ),
     _Tool(
-      icon: Icons.military_tech_outlined,
+      glyph: MockupGlyph.rank,
       title: l10n.moreStrengthRankTitle,
       subtitle: l10n.moreStrengthRankSubtitle,
       route: '/more/rank',
     ),
     _Tool(
-      icon: Icons.ios_share,
+      glyph: MockupGlyph.share,
       title: l10n.moreSharePlanTitle,
       subtitle: l10n.moreSharePlanSubtitle,
       route: '/more/share-plan',
     ),
     _Tool(
-      icon: Icons.move_to_inbox_outlined,
+      glyph: MockupGlyph.import,
       title: l10n.moreImportTitle,
       subtitle: l10n.moreImportSubtitle,
       route: '/more/import',
     ),
     _Tool(
-      icon: Icons.help_outline,
+      glyph: MockupGlyph.help,
       title: l10n.moreHelpTitle,
       subtitle: l10n.moreHelpSubtitle,
       route: '/more/help',
     ),
     _Tool(
-      icon: Icons.settings_outlined,
+      glyph: MockupGlyph.settings,
       title: l10n.moreSettingsTitle,
       subtitle: l10n.moreSettingsSubtitle,
       route: '/more/settings',
@@ -109,7 +111,10 @@ class MoreScreen extends ConsumerWidget {
             // arriving after you've decided what to tap.
             delay: Duration(milliseconds: 25 * (index > 6 ? 6 : index)),
             child: AppTile(
-              icon: tool.icon,
+              // The design's own icons for the hub; the base icon is only the
+              // fallback AppTile requires and is never drawn.
+              icon: LucideIcons.chevronRight,
+              glyph: tool.glyph,
               title: tool.title,
               subtitle: tool.subtitle,
               onTap: () => context.go(tool.route),

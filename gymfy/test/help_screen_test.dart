@@ -13,6 +13,7 @@ import 'package:gymfy/features/help/data/feedback_mail.dart';
 import 'package:gymfy/features/help/screens/help_screen.dart';
 
 import 'support/default_accent.dart';
+import 'package:gymfy/shared/widgets/lucide_icons.dart';
 
 void main() {
   testWidgets('offers the developer profile', (tester) async {
@@ -27,7 +28,7 @@ void main() {
     expect(find.text('Joshynaldo on GitHub'), findsOneWidget);
     // Marks every outbound row as leaving the app, so no tap is a
     // surprise.
-    expect(find.byIcon(Icons.open_in_new), findsNWidgets(3));
+    expect(find.byIcon(LucideIcons.externalLink), findsNWidgets(3));
   });
 
   testWidgets('offers a way to send feedback', (tester) async {

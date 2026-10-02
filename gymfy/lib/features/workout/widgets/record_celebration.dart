@@ -9,6 +9,7 @@ import '../../../shared/utils/format.dart';
 import '../../../shared/utils/units.dart';
 import '../../../shared/widgets/pressable.dart';
 import '../data/personal_records.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// A record's value as it reads on screen, in the record's own unit.
 ///
@@ -101,7 +102,7 @@ class RecordCelebration extends ConsumerWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.emoji_events, color: accent, size: 28),
+                  Icon(LucideIcons.trophy, color: accent, size: 28),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -175,7 +176,7 @@ class SessionRecordsList extends ConsumerWidget {
       children: [
         Row(
           children: [
-            Icon(Icons.emoji_events, color: accent, size: 20),
+            Icon(LucideIcons.trophy, color: accent, size: 20),
             const SizedBox(width: 8),
             Text(
               context.l10n.workoutRecordCount(count),

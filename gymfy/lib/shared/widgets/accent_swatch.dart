@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'lucide_icons.dart';
 
 /// One tappable accent colour.
 ///
@@ -41,7 +42,7 @@ class AccentSwatch extends StatelessWidget {
             ),
           ),
           child: selected
-              ? Icon(Icons.check, color: theme.colorScheme.surface)
+              ? Icon(LucideIcons.check, color: theme.colorScheme.surface)
               : null,
         ),
       ),

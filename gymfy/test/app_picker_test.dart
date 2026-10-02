@@ -7,6 +7,7 @@ import 'package:gymfy/shared/widgets/app_picker.dart';
 import 'package:gymfy/shared/widgets/number_wheel.dart';
 
 import 'support/default_accent.dart';
+import 'package:gymfy/shared/widgets/lucide_icons.dart';
 
 void main() {
   Future<void> pump(WidgetTester tester, Widget child) async {
@@ -167,7 +168,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // The question is "which is it", not "here are three switches".
-      expect(find.byIcon(Icons.check), findsOneWidget);
+      expect(find.byIcon(LucideIcons.check), findsOneWidget);
     });
   });
 }

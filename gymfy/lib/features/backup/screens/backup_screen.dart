@@ -22,6 +22,7 @@ import '../../workout/data/session_repository.dart';
 import '../data/auto_backup.dart';
 import '../data/backup_format.dart';
 import '../data/backup_repository.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Asks the user for a folder. A seam so widget tests can answer without a
 /// platform picker; the app uses [FilePicker.getDirectoryPath].
@@ -80,7 +81,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
           if (_busy) const LinearProgressIndicator(),
           AppSectionHeader(title: l10n.backupSectionBackUp),
           AppPanel(
-            icon: Icons.backup_outlined,
+            icon: LucideIcons.archiveRestore,
             title: l10n.backupSaveTitle,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,7 +92,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                   alignment: Alignment.centerRight,
                   child: FilledButton.icon(
                     onPressed: _busy ? null : _saveBackup,
-                    icon: const Icon(Icons.save_alt, size: 18),
+                    icon: const Icon(LucideIcons.download, size: 18),
                     label: Text(l10n.backupSaveButton),
                   ),
                 ),
@@ -100,7 +101,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
           ),
           AppSectionHeader(title: l10n.backupSectionRestore),
           AppPanel(
-            icon: Icons.settings_backup_restore,
+            icon: LucideIcons.rotateCcw,
             title: l10n.backupRestoreTitle,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -111,7 +112,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                   alignment: Alignment.centerRight,
                   child: OutlinedButton.icon(
                     onPressed: _busy ? null : _restore,
-                    icon: const Icon(Icons.folder_open, size: 18),
+                    icon: const Icon(LucideIcons.folderOpen, size: 18),
                     label: Text(l10n.backupChooseButton),
                   ),
                 ),
@@ -353,7 +354,7 @@ class _AutoBackupPanel extends ConsumerWidget {
     final hasFolder = folder != null && folder.isNotEmpty;
 
     return AppPanel(
-      icon: Icons.schedule,
+      icon: LucideIcons.clock,
       title: l10n.backupAutomaticTitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -377,7 +378,7 @@ class _AutoBackupPanel extends ConsumerWidget {
           const SizedBox(height: 12),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.folder_outlined),
+            leading: const Icon(LucideIcons.folder),
             title: Text(hasFolder ? folder : l10n.backupNoFolder),
             subtitle: Text(
               lastError != null
@@ -402,7 +403,7 @@ class _AutoBackupPanel extends ConsumerWidget {
               child: TextButton.icon(
                 onPressed: busy ? null : onBackupNow,
                 style: TextButton.styleFrom(foregroundColor: accent),
-                icon: const Icon(Icons.backup_outlined, size: 18),
+                icon: const Icon(LucideIcons.archiveRestore, size: 18),
                 label: Text(l10n.backupNowButton),
               ),
             ),

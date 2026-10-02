@@ -6,6 +6,7 @@ import '../../../shared/utils/exercise_display.dart';
 import '../../../shared/widgets/app_segmented.dart';
 import '../data/muscle_colors.dart';
 import 'muscle_map.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// A self-contained muscle-map panel: a front/back toggle, the heatmap for the
 /// selected side, and a caption. Fed a ready [AsyncValue] of intensities so the
@@ -109,7 +110,7 @@ class _MuscleMapViewState extends State<MuscleMapView> {
               ),
               IconButton(
                 icon: Icon(
-                  _isContrast ? Icons.palette : Icons.palette_outlined,
+                  _isContrast ? LucideIcons.palette : LucideIcons.palette,
                   size: 20,
                 ),
                 visualDensity: VisualDensity.compact,

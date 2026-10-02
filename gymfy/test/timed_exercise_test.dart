@@ -23,6 +23,7 @@ import 'package:gymfy/shared/utils/format.dart';
 import 'package:gymfy/shared/utils/units.dart';
 
 import 'support/default_accent.dart';
+import 'package:gymfy/shared/widgets/lucide_icons.dart';
 
 final _plank = Exercise(
   id: 'plank',
@@ -291,7 +292,7 @@ void main() {
       await tapText(tester, '4');
       await tapText(tester, '5');
 
-      await tester.tap(find.byIcon(Icons.backspace_outlined));
+      await tester.tap(find.byIcon(LucideIcons.delete));
       await tester.pumpAndSettle();
 
       expect(clockReads(tester), '0:04');

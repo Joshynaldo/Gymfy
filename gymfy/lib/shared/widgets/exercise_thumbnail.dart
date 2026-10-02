@@ -10,6 +10,7 @@ import '../../app/theme/accent_color.dart';
 import '../models/exercise.dart' show isBundledAsset;
 import '../utils/exercise_display.dart';
 import '../utils/exercise_preview.dart';
+import 'lucide_icons.dart';
 
 /// Default side, matching `AppGlyph` so rows keep their height and the left
 /// edge of a list stays a straight column.
@@ -144,7 +145,7 @@ class _Fallback extends StatelessWidget {
         borderRadius: BorderRadius.circular(size / 3.2),
       ),
       child: Icon(
-        selected ? Icons.check : exerciseIcon,
+        selected ? LucideIcons.check : exerciseIcon,
         size: size / 2,
         color: selected ? Colors.white : accent,
       ),

@@ -11,6 +11,7 @@ import 'package:gymfy/shared/database/app_database.dart';
 import 'package:gymfy/shared/widgets/exercise_thumbnail.dart';
 
 import 'support/default_accent.dart';
+import 'package:gymfy/shared/widgets/lucide_icons.dart';
 
 final _sample = <Exercise>[
   Exercise(
@@ -21,8 +22,8 @@ final _sample = <Exercise>[
     isPlateLoaded: true,
     isCustom: false,
     isArchived: false,
-  isTimed: false,
-  equipment: 'other',
+    isTimed: false,
+    equipment: 'other',
   ),
   Exercise(
     id: 'push_up',
@@ -31,8 +32,8 @@ final _sample = <Exercise>[
     isPlateLoaded: false,
     isCustom: false,
     isArchived: false,
-  isTimed: false,
-  equipment: 'other',
+    isTimed: false,
+    equipment: 'other',
   ),
   Exercise(
     id: 'pull_up',
@@ -41,8 +42,8 @@ final _sample = <Exercise>[
     isPlateLoaded: false,
     isCustom: false,
     isArchived: false,
-  isTimed: false,
-  equipment: 'other',
+    isTimed: false,
+    equipment: 'other',
   ),
 ];
 
@@ -200,7 +201,7 @@ void main() {
 
     // The row has to say "picked" more loudly than it says which exercise it
     // is, so the picture gets out of the way entirely.
-    expect(find.byIcon(Icons.check), findsOneWidget);
+    expect(find.byIcon(LucideIcons.check), findsOneWidget);
     expect(find.byType(Image), findsNothing);
   });
 

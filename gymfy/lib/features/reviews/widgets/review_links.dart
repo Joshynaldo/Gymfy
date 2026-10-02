@@ -6,6 +6,7 @@ import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../home/data/recap_repository.dart';
 import '../data/review.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// The two ways into the reviews, under the recap on Progress → Trends.
 ///
@@ -36,7 +37,7 @@ class ReviewLinks extends ConsumerWidget {
       children: [
         AppSectionHeader(title: l10n.reviewsTitle),
         AppTile(
-          icon: Icons.calendar_view_month,
+          icon: LucideIcons.calendarDays,
           title: l10n.reviewsMonthlyTitle,
           subtitle: l10n.reviewsMonthlySubtitle(month.localizedLabel(l10n)),
           onTap: () => context.go(
@@ -44,7 +45,7 @@ class ReviewLinks extends ConsumerWidget {
           ),
         ),
         AppTile(
-          icon: Icons.auto_awesome_outlined,
+          icon: LucideIcons.sparkles,
           title: l10n.reviewsYearTitle,
           subtitle: l10n.reviewsYearSubtitle(year.localizedLabel(l10n)),
           onTap: () => context.go('/progress/review/year/${year.start.year}'),

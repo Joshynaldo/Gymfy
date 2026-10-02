@@ -14,6 +14,7 @@ import '../widgets/measurement_timeline_chart.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../app/theme/glass.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// A timeline of one body measurement, with a picker to switch body part.
 class MeasurementHistoryScreen extends ConsumerStatefulWidget {
@@ -206,7 +207,7 @@ class _NotEnoughData extends ConsumerWidget {
       child: Column(
         children: [
           Icon(
-            Icons.show_chart,
+            LucideIcons.chartLine,
             size: 64,
             color: theme.colorScheme.onSurfaceVariant,
           ),

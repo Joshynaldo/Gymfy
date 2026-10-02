@@ -18,6 +18,7 @@ import '../data/csv_reader.dart';
 import '../data/import_format.dart';
 import '../data/import_plan.dart';
 import '../data/import_repository.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Bringing a training history in from another app.
 ///
@@ -311,7 +312,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
               label: preview == null
                   ? l10n.importChooseFile
                   : l10n.importChooseAnother,
-              icon: Icons.folder_open,
+              icon: LucideIcons.folderOpen,
               kind: preview == null
                   ? AppButtonKind.primary
                   : AppButtonKind.secondary,
@@ -331,7 +332,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                         willBuildSplit ? _plan.length : 0,
                         l10n,
                       ),
-                icon: Icons.download,
+                icon: LucideIcons.download,
                 onPressed: _busy || !canImport ? null : _import,
               ),
             ),
@@ -363,7 +364,7 @@ class _Explainer extends StatelessWidget {
     final l10n = context.l10n;
 
     return AppPanel(
-      icon: Icons.move_to_inbox_outlined,
+      icon: LucideIcons.inbox,
       title: l10n.importExplainerTitle,
       child: Text(
         l10n.importExplainerMessage,
@@ -404,7 +405,7 @@ class _PreviewPanel extends StatelessWidget {
       final sample = preview.unreadableDate;
 
       return AppPanel(
-        icon: Icons.help_outline,
+        icon: LucideIcons.circleHelp,
         title: l10n.importNothingTitle,
         child: SelectableText(
           dates > 0 && sample != null
@@ -419,7 +420,7 @@ class _PreviewPanel extends StatelessWidget {
     }
 
     return AppPanel(
-      icon: Icons.fact_check_outlined,
+      icon: LucideIcons.listChecks,
       title: l10n.importPreviewTitle,
       // Naming the app is reassurance at the one moment it is worth
       // something: just before committing a year of training on the strength
@@ -530,7 +531,7 @@ class _PlanPanel extends StatelessWidget {
     final l10n = context.l10n;
 
     return AppPanel(
-      icon: Icons.calendar_month_outlined,
+      icon: LucideIcons.calendarDays,
       title: l10n.importPlanTitle,
       subtitle: enabled ? l10n.importPlanWillBeCalled(splitName) : null,
       child: Column(
@@ -615,7 +616,7 @@ class _UnitPanel extends StatelessWidget {
     final l10n = context.l10n;
 
     return AppPanel(
-      icon: Icons.scale_outlined,
+      icon: LucideIcons.scale,
       title: l10n.importUnitTitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -671,7 +672,7 @@ class _OutcomePanel extends StatelessWidget {
     final l10n = context.l10n;
 
     return AppPanel(
-      icon: Icons.check_circle_outline,
+      icon: LucideIcons.circleCheck,
       title: l10n.importOutcomeTitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -766,7 +767,7 @@ class _ErrorPanel extends StatelessWidget {
     final theme = Theme.of(context);
 
     return AppPanel(
-      icon: Icons.error_outline,
+      icon: LucideIcons.circleAlert,
       title: context.l10n.importErrorTitle,
       child: SelectableText(
         // Selectable so the header line can be copied out of it. When a file

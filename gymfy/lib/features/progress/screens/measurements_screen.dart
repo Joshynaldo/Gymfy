@@ -19,6 +19,7 @@ import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../app/theme/glass.dart';
 import '../../../shared/widgets/glass_dialog.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// The result of the measurement entry dialog. Wrapped in a record so that
 /// "cleared" (a null value) is distinguishable from "cancelled" (a null result).
@@ -52,7 +53,7 @@ class _MeasurementsScreenState extends ConsumerState<MeasurementsScreen> {
         title: Text(l10n.progressMeasurementsTitle),
         actions: [
           IconButton(
-            icon: const Icon(Icons.show_chart),
+            icon: const Icon(LucideIcons.chartLine),
             tooltip: l10n.progressMeasurementsHistoryTooltip,
             onPressed: () => context.go('/progress/measurements/history'),
           ),
@@ -137,7 +138,7 @@ class _DayNavigator extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
-            icon: const Icon(Icons.chevron_left),
+            icon: const Icon(LucideIcons.chevronLeft),
             onPressed: onPrevious,
             tooltip: l10n.commonPreviousDay,
           ),
@@ -146,7 +147,7 @@ class _DayNavigator extends StatelessWidget {
             style: theme.textTheme.titleMedium,
           ),
           IconButton(
-            icon: const Icon(Icons.chevron_right),
+            icon: const Icon(LucideIcons.chevronRight),
             onPressed: onNext,
             tooltip: l10n.commonNextDay,
           ),
@@ -282,12 +283,12 @@ class _FieldTile extends ConsumerWidget {
 /// A glyph per measurement, so the rows are distinguishable at a glance rather
 /// than being six identical squares down the left edge.
 IconData _iconFor(MeasurementField field) => switch (field) {
-  MeasurementField.weight => Icons.monitor_weight_outlined,
-  MeasurementField.chest => Icons.airline_seat_flat_outlined,
-  MeasurementField.waist => Icons.straighten,
-  MeasurementField.hips => Icons.accessibility_new,
-  MeasurementField.arms => Icons.fitness_center,
-  MeasurementField.legs => Icons.directions_walk,
+  MeasurementField.weight => LucideIcons.weight,
+  MeasurementField.chest => LucideIcons.bedSingle,
+  MeasurementField.waist => LucideIcons.ruler,
+  MeasurementField.hips => LucideIcons.personStanding,
+  MeasurementField.arms => LucideIcons.dumbbell,
+  MeasurementField.legs => LucideIcons.footprints,
 };
 
 /// Number entry for one measurement. Pre-fills with today's value, or the last

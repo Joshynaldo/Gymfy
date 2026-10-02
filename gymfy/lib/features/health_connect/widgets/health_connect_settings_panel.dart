@@ -7,6 +7,7 @@ import '../../../shared/data/settings_repository.dart';
 import '../../../shared/widgets/glass_dialog.dart';
 import '../data/health_connect_bridge.dart';
 import '../data/health_connect_sync.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// The Settings section for Health Connect: whether it is there, the two
 /// switches, permissions, the backfill, and the way out to revoke or delete.
@@ -193,7 +194,7 @@ class _HealthConnectSettingsPanelState
         ),
         ListTile(
           leading: Icon(
-            available ? Icons.favorite : Icons.favorite_border,
+            available ? LucideIcons.heart : LucideIcons.heartOff,
             color: available ? accent : null,
           ),
           // The product's name, the same in every language.
@@ -223,14 +224,14 @@ class _HealthConnectSettingsPanelState
           },
         ),
         SwitchListTile(
-          secondary: const Icon(Icons.fitness_center),
+          secondary: const Icon(LucideIcons.dumbbell),
           title: Text(l10n.healthConnectWriteTitle),
           subtitle: Text(l10n.healthConnectWriteSubtitle),
           value: write,
           onChanged: available && !_busy ? _setWrite : null,
         ),
         SwitchListTile(
-          secondary: const Icon(Icons.monitor_weight_outlined),
+          secondary: const Icon(LucideIcons.weight),
           title: Text(l10n.healthConnectReadTitle),
           subtitle: Text(l10n.healthConnectReadSubtitle),
           value: read,
@@ -238,7 +239,7 @@ class _HealthConnectSettingsPanelState
         ),
         if (available)
           ListTile(
-            leading: const Icon(Icons.verified_user_outlined),
+            leading: const Icon(LucideIcons.shieldCheck),
             title: Text(l10n.healthConnectPermissionsTitle),
             subtitle: Text(
               missing
@@ -269,16 +270,16 @@ class _HealthConnectSettingsPanelState
           ),
         if (available && write && canWrite)
           ListTile(
-            leading: const Icon(Icons.history),
+            leading: const Icon(LucideIcons.history),
             title: Text(l10n.healthConnectBackfillTile),
             subtitle: Text(l10n.healthConnectBackfillTileSubtitle),
-            trailing: const Icon(Icons.chevron_right),
+            trailing: const Icon(LucideIcons.chevronRight),
             enabled: !_busy,
             onTap: _backfill,
           ),
         if (available)
           ListTile(
-            leading: const Icon(Icons.open_in_new),
+            leading: const Icon(LucideIcons.externalLink),
             title: Text(l10n.healthConnectManageTitle),
             subtitle: Text(l10n.healthConnectManageSubtitle),
             onTap: () async {

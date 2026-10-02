@@ -16,6 +16,7 @@ import '../../overload/data/percent_target.dart';
 import '../../plan_share/data/plan_document.dart';
 import '../../plan_share/widgets/plan_import_flow.dart';
 import '../data/program_catalog.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// The programme browser: ready-made splits that ship with the app.
 ///
@@ -39,7 +40,7 @@ class ProgramsScreen extends StatelessWidget {
             FadeSlideIn(
               delay: Duration(milliseconds: 25 * (index > 6 ? 6 : index)),
               child: AppTile(
-                icon: Icons.event_note_outlined,
+                icon: LucideIcons.notebookText,
                 title: program.name,
                 subtitle:
                     '${programFacts(program, l10n: l10n)}\n'
@@ -144,7 +145,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
             const SizedBox(height: 8),
             AppButton(
               label: l10n.programsAddToSplits,
-              icon: Icons.add,
+              icon: LucideIcons.plus,
               onPressed: _busy ? null : () => _add(program, document),
             ),
             const SizedBox(height: 8),

@@ -18,6 +18,7 @@ import '../widgets/record_celebration.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../app/theme/glass.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Shown after finishing a workout: a recap of the session just completed —
 /// duration, total sets, total volume, and a per-exercise breakdown.
@@ -204,7 +205,7 @@ class _StatsRow extends ConsumerWidget {
       children: [
         Expanded(
           child: _StatTile(
-            icon: Icons.timer_outlined,
+            icon: LucideIcons.timer,
             label: l10n.workoutSummaryDuration,
             // Not counted up: a clock that races from 00:00 to your session
             // length looks like the timer is still running.
@@ -222,7 +223,7 @@ class _StatsRow extends ConsumerWidget {
         const SizedBox(width: 12),
         Expanded(
           child: _StatTile(
-            icon: Icons.repeat,
+            icon: LucideIcons.repeat,
             label: l10n.workoutSummarySets,
             value: AnimatedCount(
               value: setCount.toDouble(),
@@ -235,7 +236,7 @@ class _StatsRow extends ConsumerWidget {
         const SizedBox(width: 12),
         Expanded(
           child: _StatTile(
-            icon: Icons.fitness_center,
+            icon: LucideIcons.dumbbell,
             label: l10n.workoutSummaryVolume,
             value: AnimatedCount(
               value: totalVolume,

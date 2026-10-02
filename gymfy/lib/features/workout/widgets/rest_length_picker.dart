@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/rest_timer_repository.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// The rest lengths offered in the picker: 30 seconds up to five minutes,
 /// spaced the way people actually rest — finer at the short end.
@@ -36,14 +37,14 @@ Future<int?> showRestLengthPicker(
             ListTile(
               title: Text(formatRest(seconds)),
               trailing: seconds == current
-                  ? Icon(Icons.check, color: theme.colorScheme.primary)
+                  ? Icon(LucideIcons.check, color: theme.colorScheme.primary)
                   : null,
               onTap: () => Navigator.of(context).pop(seconds),
             ),
           if (clearLabel != null) ...[
             const Divider(height: 1),
             ListTile(
-              leading: const Icon(Icons.settings_backup_restore),
+              leading: const Icon(LucideIcons.rotateCcw),
               title: Text(clearLabel),
               onTap: () => Navigator.of(context).pop(clearRestLength),
             ),

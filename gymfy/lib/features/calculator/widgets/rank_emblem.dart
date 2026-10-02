@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../data/strength_standards.dart';
 import '../data/tier_style.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// A hexagonal medal for one strength tier.
 ///
@@ -27,7 +28,7 @@ class RankEmblem extends StatelessWidget {
         painter: _EmblemPainter(color: color, pips: tierPips(tier)),
         child: Center(
           child: Icon(
-            Icons.military_tech,
+            LucideIcons.medal,
             // Leaves room for the pip row along the bottom edge.
             size: size * 0.38,
             color: color,

@@ -36,6 +36,7 @@ import 'shared/widgets/glass_nav_bar.dart';
 import 'shared/widgets/glass_scaffold.dart';
 import 'shared/widgets/number_wheel.dart';
 import 'shared/widgets/weight_wheel.dart';
+import 'shared/widgets/lucide_icons.dart';
 
 void main() => runApp(const _PreviewApp());
 
@@ -180,7 +181,7 @@ class _GalleryState extends ConsumerState<_Gallery> {
         // hold up on every theme and accent, not just the one they were drawn
         // against.
         AppPanel(
-          icon: Icons.palette_outlined,
+          icon: LucideIcons.palette,
           title: 'Preview against',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -212,7 +213,7 @@ class _GalleryState extends ConsumerState<_Gallery> {
 
         const AppSectionHeader(title: 'Motion'),
         AppTile(
-          icon: Icons.open_in_new,
+          icon: LucideIcons.externalLink,
           title: 'Push a screen',
           subtitle: 'The transition every route in the app uses',
           onTap: () => Navigator.of(context).push(
@@ -220,7 +221,7 @@ class _GalleryState extends ConsumerState<_Gallery> {
           ),
         ),
         AppTile(
-          icon: Icons.chat_bubble_outline,
+          icon: LucideIcons.messageCircle,
           title: 'Open a dialog',
           subtitle: 'The one surface where the blur is unarguable',
           onTap: () => showDialog<void>(
@@ -245,7 +246,7 @@ class _GalleryState extends ConsumerState<_Gallery> {
           ),
         ),
         AppPanel(
-          icon: Icons.speed,
+          icon: LucideIcons.gauge,
           title: 'Counting',
           subtitle: 'Tap Change — the number travels rather than jumps.',
           trailing: FilledButton(
@@ -263,7 +264,7 @@ class _GalleryState extends ConsumerState<_Gallery> {
 
         const AppSectionHeader(title: 'Logging a set'),
         AppTile(
-          icon: Icons.dialpad,
+          icon: LucideIcons.grid3x3,
           title: 'Log a set',
           subtitle: 'The sheet and keypad the workout screen opens',
           onTap: () => showLogSetSheet(
@@ -325,7 +326,7 @@ class _GalleryState extends ConsumerState<_Gallery> {
           child: Column(
             children: [
               AppPickerField(
-                icon: Icons.height,
+                icon: LucideIcons.ruler,
                 label: 'Height',
                 value: formatHeightPreview(_height),
                 onTap: () async {
@@ -342,7 +343,7 @@ class _GalleryState extends ConsumerState<_Gallery> {
               ),
               const SizedBox(height: 10),
               AppPickerField(
-                icon: Icons.cake_outlined,
+                icon: LucideIcons.cake,
                 label: 'Age',
                 value: '$_age',
                 onTap: () async {
@@ -359,7 +360,7 @@ class _GalleryState extends ConsumerState<_Gallery> {
               ),
               const SizedBox(height: 10),
               AppPickerField(
-                icon: Icons.fitness_center,
+                icon: LucideIcons.dumbbell,
                 label: 'Bar',
                 value: '20 kg',
                 onTap: () => showOptionPicker<int>(
@@ -394,7 +395,7 @@ class _PushedScreen extends StatelessWidget {
         children: [
           for (var i = 0; i < 8; i++)
             AppTile(
-              icon: Icons.fitness_center,
+              icon: LucideIcons.dumbbell,
               title: 'Row ${i + 1}',
               subtitle: 'Press and hold to feel the surface give',
               onTap: () {},

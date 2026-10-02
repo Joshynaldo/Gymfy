@@ -42,6 +42,7 @@ import '../widgets/record_celebration.dart';
 import '../widgets/rest_timer_bar.dart';
 import '../widgets/session_exercise_actions.dart';
 import '../widgets/warmup_calculator_sheet.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// The live workout screen: log sets exercise by exercise while you train.
 ///
@@ -195,7 +196,7 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
         title: Text(session.name),
         actions: [
           IconButton(
-            icon: const Icon(Icons.donut_large_outlined),
+            icon: const Icon(LucideIcons.chartPie),
             tooltip: context.l10n.platesTitle,
             // Pushed over the session rather than routed to, so closing it
             // returns to the workout instead of leaving you in the More tab.
@@ -257,7 +258,7 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
                     // with, so it has to be findable without a menu.
                     AppButton(
                       label: context.l10n.workoutAddExercise,
-                      icon: Icons.add,
+                      icon: LucideIcons.plus,
                       kind: AppButtonKind.secondary,
                       onPressed: () => _addExercises(context, planned),
                     ),
@@ -376,7 +377,7 @@ class _ActiveWorkoutViewState extends ConsumerState<_ActiveWorkoutView> {
               sessionId: widget.session.id,
               entries: planned,
             ),
-            icon: const Icon(Icons.swap_vert, size: 18),
+            icon: const Icon(LucideIcons.arrowUpDown, size: 18),
             label: Text(context.l10n.workoutReorder),
           ),
         ],
@@ -831,7 +832,7 @@ class _CurrentExerciseCard extends ConsumerWidget {
                 child: IconButton(
                   padding: EdgeInsets.zero,
                   iconSize: 20,
-                  icon: const Icon(Icons.more_vert),
+                  icon: const Icon(LucideIcons.ellipsisVertical),
                   tooltip: context.l10n.workoutExerciseOptionsTooltip,
                   onPressed: onMore,
                 ),
@@ -866,7 +867,7 @@ class _CurrentExerciseCard extends ConsumerWidget {
               // a plank has neither.
               if (!exercise.isTimed)
                 IconButton(
-                  icon: const Icon(Icons.stairs_outlined),
+                  icon: const Icon(LucideIcons.footprints),
                   tooltip: context.l10n.workoutWarmupCalculator,
                   onPressed: onWarmupCalculator,
                 ),
@@ -874,7 +875,7 @@ class _CurrentExerciseCard extends ConsumerWidget {
               Expanded(
                 child: AppButton(
                   label: context.l10n.workoutLogSet(working + 1),
-                  icon: Icons.add,
+                  icon: LucideIcons.plus,
                   // Deliberately not the accent. On this screen the accent
                   // belongs to the rest countdown, which is the thing you read
                   // from across a gym; a second accent surface here would make
@@ -1005,7 +1006,7 @@ class _SupersetLine extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.link, size: 15, color: accent),
+          Icon(LucideIcons.link, size: 15, color: accent),
           const SizedBox(width: 7),
           Expanded(
             child: Text(
@@ -1047,7 +1048,7 @@ class _SupersetGroup extends ConsumerWidget {
           padding: const EdgeInsets.only(left: 6, bottom: 6, top: 2),
           child: Row(
             children: [
-              Icon(Icons.link, size: 14, color: accent),
+              Icon(LucideIcons.link, size: 14, color: accent),
               const SizedBox(width: 5),
               Text(
                 context.l10n.workoutSupersetCaps,
@@ -1190,34 +1191,34 @@ class _SuggestionLine extends ConsumerWidget {
     final weight = formatWeightUnit(suggestion.weight, unit, l10n: l10n);
     final (icon, text) = switch (suggestion.reason) {
       OverloadReason.earned => (
-        Icons.trending_up,
+        LucideIcons.trendingUp,
         l10n.workoutSuggestionEarned(weight),
       ),
       OverloadReason.deload => (
-        Icons.trending_down,
+        LucideIcons.trendingDown,
         l10n.workoutSuggestionDeload(weight),
       ),
       OverloadReason.atLimit => (
-        Icons.pause,
+        LucideIcons.pause,
         l10n.workoutSuggestionAtLimit(weight),
       ),
       // A planned % of 1RM, and a training block's deload week — see
       // overloadSuggestionProvider for when each applies.
       OverloadReason.percentOfMax => (
-        Icons.percent,
+        LucideIcons.percent,
         l10n.workoutSuggestionPercent(
           formatPercent(suggestion.targetPercent ?? 0, l10n: l10n),
           weight,
         ),
       ),
       OverloadReason.blockDeload => (
-        Icons.trending_down,
+        LucideIcons.trendingDown,
         l10n.workoutSuggestionBlockDeload(
           formatPercent(suggestion.deloadPercent ?? 0, l10n: l10n),
           weight,
         ),
       ),
-      _ => (Icons.remove, l10n.workoutSuggestionSame(weight)),
+      _ => (LucideIcons.minus, l10n.workoutSuggestionSame(weight)),
     };
 
     return Padding(
@@ -1351,7 +1352,7 @@ class _LoggedSetRow extends ConsumerWidget {
           // The shared option sheet rather than a popup menu, whose rows are
           // too tight to hit with a thumb mid-workout.
           IconButton(
-            icon: const Icon(Icons.tune),
+            icon: const Icon(LucideIcons.slidersHorizontal),
             iconSize: 18,
             visualDensity: VisualDensity.compact,
             tooltip: context.l10n.workoutChangeSetTypeTooltip,
@@ -1379,7 +1380,7 @@ class _LoggedSetRow extends ConsumerWidget {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.close),
+            icon: const Icon(LucideIcons.x),
             iconSize: 18,
             visualDensity: VisualDensity.compact,
             tooltip: context.l10n.workoutDeleteSetTooltip,
@@ -1458,7 +1459,7 @@ class _EmptyState extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.fitness_center,
+              LucideIcons.dumbbell,
               size: 64,
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -1480,7 +1481,7 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 24),
             AppButton(
               label: context.l10n.workoutAddExercise,
-              icon: Icons.add,
+              icon: LucideIcons.plus,
               expand: false,
               onPressed: onAdd,
             ),

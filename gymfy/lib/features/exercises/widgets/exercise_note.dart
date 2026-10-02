@@ -7,6 +7,7 @@ import '../../../shared/database/app_database.dart';
 import '../../../shared/widgets/glass_dialog.dart';
 import '../../../shared/widgets/pressable.dart';
 import '../data/exercise_repository.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// What the editor gives back.
 ///
@@ -156,9 +157,7 @@ class ExerciseNoteTile extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(
-                note == null
-                    ? Icons.sticky_note_2_outlined
-                    : Icons.sticky_note_2,
+                note == null ? LucideIcons.stickyNote : LucideIcons.stickyNote,
                 size: dense ? 15 : 17,
                 color: theme.colorScheme.onSurfaceVariant,
               ),

@@ -9,6 +9,7 @@ import '../../../shared/utils/units.dart';
 import '../data/rank_inputs.dart';
 import '../data/ranked_lifts.dart';
 import '../data/strength_standards.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// The strength rank for one exercise, sized to sit inside another screen.
 ///
@@ -160,7 +161,7 @@ class _SetupNudge extends ConsumerWidget {
       onTap: () => context.go('/more/rank'),
       child: Row(
         children: [
-          Icon(Icons.military_tech_outlined, size: 20, color: accent),
+          Icon(LucideIcons.medal, size: 20, color: accent),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -181,7 +182,10 @@ class _SetupNudge extends ConsumerWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
+          Icon(
+            LucideIcons.chevronRight,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ],
       ),
     );

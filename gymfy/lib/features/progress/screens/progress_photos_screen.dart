@@ -14,6 +14,7 @@ import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../app/theme/glass.dart';
 import '../../../shared/widgets/glass_dialog.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// What the add-photo dialog collects before the file is copied in.
 typedef _PhotoDetails = ({DateTime day, String? note});
@@ -40,7 +41,7 @@ class _ProgressPhotosScreenState extends ConsumerState<ProgressPhotosScreen> {
         title: Text(l10n.progressPhotosTitle),
         actions: [
           IconButton(
-            icon: const Icon(Icons.compare),
+            icon: const Icon(LucideIcons.columns2),
             tooltip: l10n.progressPhotosCompareTooltip,
             onPressed: () => context.go('/progress/photos/compare'),
           ),
@@ -78,7 +79,7 @@ class _ProgressPhotosScreenState extends ConsumerState<ProgressPhotosScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _busy ? null : _addPhoto,
-        icon: const Icon(Icons.add_a_photo),
+        icon: const Icon(LucideIcons.imagePlus),
         label: Text(l10n.progressPhotosAdd),
       ),
     );
@@ -226,7 +227,7 @@ class _PhotoViewer extends StatelessWidget {
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white),
+                  icon: const Icon(LucideIcons.x, color: Colors.white),
                   tooltip: l10n.progressPhotosClose,
                   onPressed: () => Navigator.of(context).pop(),
                 ),
@@ -239,7 +240,7 @@ class _PhotoViewer extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.white),
+                  icon: const Icon(LucideIcons.trash2, color: Colors.white),
                   tooltip: l10n.progressPhotosDeleteTooltip,
                   onPressed: () => _confirmDelete(context),
                 ),
@@ -317,9 +318,9 @@ class _PhotoDetailsDialogState extends State<_PhotoDetailsDialog> {
         children: [
           ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.event),
+            leading: const Icon(LucideIcons.calendar),
             title: Text(formatDayLabel(_day, l10n: l10n)),
-            trailing: const Icon(Icons.edit_calendar_outlined),
+            trailing: const Icon(LucideIcons.calendarCog),
             onTap: _pickDate,
           ),
           TextField(
@@ -363,7 +364,7 @@ class _EmptyState extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.photo_library_outlined,
+              LucideIcons.images,
               size: 64,
               color: theme.colorScheme.onSurfaceVariant,
             ),

@@ -12,6 +12,7 @@ import '../../../shared/widgets/app_picker.dart';
 import '../../../shared/widgets/weight_wheel.dart';
 import '../../overload/widgets/overload_settings.dart';
 import '../data/onboarding_repository.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// First-launch setup: name, bodyweight, progressive overload, accent colour.
 ///
@@ -360,7 +361,7 @@ class _BodyweightPage extends ConsumerWidget {
             children: [
               Expanded(
                 child: AppPickerField(
-                  icon: Icons.height,
+                  icon: LucideIcons.ruler,
                   label: l10n.bodyProfileHeightLabel,
                   value: heightCm == null
                       ? l10n.onboardingSkipped
@@ -381,7 +382,7 @@ class _BodyweightPage extends ConsumerWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: AppPickerField(
-                  icon: Icons.cake_outlined,
+                  icon: LucideIcons.cake,
                   label: l10n.bodyProfileAgeLabel,
                   value: age == null ? l10n.onboardingSkipped : '$age',
                   onTap: () async {

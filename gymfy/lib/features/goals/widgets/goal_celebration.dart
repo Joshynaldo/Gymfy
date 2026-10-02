@@ -12,6 +12,7 @@ import '../data/goal_labels.dart';
 import '../data/goal_progress.dart';
 import '../data/goal_repository.dart';
 import 'goal_progress_row.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// The moment a goal is reached.
 ///
@@ -65,7 +66,7 @@ class _GoalCelebrationState extends ConsumerState<GoalCelebration> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.emoji_events, color: accent, size: 28),
+              Icon(LucideIcons.trophy, color: accent, size: 28),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(

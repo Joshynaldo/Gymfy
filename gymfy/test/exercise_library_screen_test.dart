@@ -16,6 +16,7 @@ import 'package:gymfy/features/workout/data/workout_repository.dart';
 import 'package:gymfy/shared/database/app_database.dart';
 
 import 'support/default_accent.dart';
+import 'package:gymfy/shared/widgets/lucide_icons.dart';
 
 final _sample = <Exercise>[
   Exercise(
@@ -329,7 +330,7 @@ void main() {
     await _pumpScreen(tester);
     await _selectByLongPress(tester, 'Pull-Up');
 
-    await tester.tap(find.byIcon(Icons.close));
+    await tester.tap(find.byIcon(LucideIcons.x));
     await tester.pumpAndSettle();
 
     expect(find.text('Exercises'), findsOneWidget);
@@ -340,7 +341,7 @@ void main() {
     await _pumpScreen(tester, days: _days);
     await _selectByLongPress(tester, 'Pull-Up');
 
-    await tester.tap(find.byIcon(Icons.playlist_add));
+    await tester.tap(find.byIcon(LucideIcons.listPlus));
     await tester.pumpAndSettle();
 
     expect(find.text('Add to day'), findsOneWidget);
@@ -355,7 +356,7 @@ void main() {
     await tester.tap(find.text('Barbell Bench Press'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.playlist_add));
+    await tester.tap(find.byIcon(LucideIcons.listPlus));
     await tester.pumpAndSettle();
 
     expect(find.text('Add 2 exercises to day'), findsOneWidget);
@@ -367,7 +368,7 @@ void main() {
     await _pumpScreen(tester);
     await _selectByLongPress(tester, 'Pull-Up');
 
-    await tester.tap(find.byIcon(Icons.playlist_add));
+    await tester.tap(find.byIcon(LucideIcons.listPlus));
     await tester.pumpAndSettle();
 
     // An empty list here reads as a bug; the screen has to say what's missing.

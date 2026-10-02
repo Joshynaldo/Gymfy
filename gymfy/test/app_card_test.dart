@@ -11,6 +11,7 @@ import 'package:gymfy/app/theme/app_theme.dart';
 import 'package:gymfy/shared/widgets/app_card.dart';
 
 import 'support/default_accent.dart';
+import 'package:gymfy/shared/widgets/lucide_icons.dart';
 
 Future<void> _pump(WidgetTester tester, Widget child) async {
   await tester.pumpWidget(
@@ -123,7 +124,7 @@ void main() {
       await _pump(
         tester,
         const AppTile(
-          icon: Icons.fitness_center,
+          icon: LucideIcons.dumbbell,
           title: 'Barbell Bench Press',
           subtitle: 'Chest · Triceps',
         ),
@@ -131,13 +132,13 @@ void main() {
 
       expect(find.text('Barbell Bench Press'), findsOneWidget);
       expect(find.text('Chest · Triceps'), findsOneWidget);
-      expect(find.byIcon(Icons.fitness_center), findsOneWidget);
+      expect(find.byIcon(LucideIcons.dumbbell), findsOneWidget);
     });
 
     testWidgets('a one-line tile renders without a subtitle', (tester) async {
       await _pump(
         tester,
-        const AppTile(icon: Icons.show_chart, title: 'Squat'),
+        const AppTile(icon: LucideIcons.chartLine, title: 'Squat'),
       );
 
       expect(tester.takeException(), isNull);
@@ -148,7 +149,7 @@ void main() {
       await _pump(
         tester,
         const AppTile(
-          icon: Icons.fitness_center,
+          icon: LucideIcons.dumbbell,
           title: 'Squat',
           selected: true,
         ),
@@ -156,15 +157,15 @@ void main() {
 
       // The icon is replaced rather than decorated, so a picked row reads as
       // picked at a glance rather than needing the border to be noticed.
-      expect(find.byIcon(Icons.check), findsOneWidget);
-      expect(find.byIcon(Icons.fitness_center), findsNothing);
+      expect(find.byIcon(LucideIcons.check), findsOneWidget);
+      expect(find.byIcon(LucideIcons.dumbbell), findsNothing);
     });
 
     testWidgets('carries a badge next to the title', (tester) async {
       await _pump(
         tester,
         const AppTile(
-          icon: Icons.fitness_center,
+          icon: LucideIcons.dumbbell,
           title: 'Cable Fly',
           titleTrailing: Text('Custom'),
         ),
@@ -177,14 +178,14 @@ void main() {
       await _pump(
         tester,
         const AppTile(
-          icon: Icons.fitness_center,
+          icon: LucideIcons.dumbbell,
           title: 'Squat',
-          trailing: Icon(Icons.show_chart),
+          trailing: Icon(LucideIcons.chartLine),
         ),
       );
 
-      expect(find.byIcon(Icons.show_chart), findsOneWidget);
-      expect(find.byIcon(Icons.chevron_right), findsNothing);
+      expect(find.byIcon(LucideIcons.chartLine), findsOneWidget);
+      expect(find.byIcon(LucideIcons.chevronRight), findsNothing);
     });
 
     testWidgets('the glyph can be replaced entirely', (tester) async {
@@ -193,7 +194,7 @@ void main() {
       await _pump(
         tester,
         const AppTile(
-          icon: Icons.fitness_center,
+          icon: LucideIcons.dumbbell,
           title: 'Barbell Bench Press',
           leading: SizedBox.square(dimension: 42, child: Placeholder()),
         ),
@@ -201,7 +202,7 @@ void main() {
 
       expect(find.byType(Placeholder), findsOneWidget);
       expect(find.byType(AppGlyph), findsNothing);
-      expect(find.byIcon(Icons.fitness_center), findsNothing);
+      expect(find.byIcon(LucideIcons.dumbbell), findsNothing);
     });
   });
 
@@ -210,7 +211,7 @@ void main() {
       await _pump(
         tester,
         const AppPanel(
-          icon: Icons.table_chart_outlined,
+          icon: LucideIcons.table,
           title: 'Spreadsheet',
           subtitle: 'One row per set',
           child: Text('body'),
@@ -219,7 +220,7 @@ void main() {
 
       expect(find.text('Spreadsheet'), findsOneWidget);
       expect(find.text('One row per set'), findsOneWidget);
-      expect(find.byIcon(Icons.table_chart_outlined), findsOneWidget);
+      expect(find.byIcon(LucideIcons.table), findsOneWidget);
       expect(
         tester.getTopLeft(find.text('Spreadsheet')).dy,
         lessThan(tester.getTopLeft(find.text('body')).dy),

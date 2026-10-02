@@ -13,6 +13,7 @@ import '../widgets/rank_setup_prompt.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../app/theme/glass.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Where your lifts place against published strength standards.
 class StrengthRankScreen extends ConsumerWidget {
@@ -59,7 +60,7 @@ class StrengthRankScreen extends ConsumerWidget {
             // their best squat deserves to see why that word is softer than
             // it looks, in the same weight as the ranks themselves.
             AppPanel(
-              icon: Icons.balance,
+              icon: LucideIcons.scale,
               title: l10n.calculatorRankHowToReadTitle,
               child: Text(
                 l10n.calculatorRankHowToReadMessage,
@@ -218,7 +219,7 @@ class _NothingRankedYet extends StatelessWidget {
       children: [
         const SizedBox(height: 24),
         Icon(
-          Icons.military_tech_outlined,
+          LucideIcons.medal,
           size: 64,
           color: theme.colorScheme.onSurfaceVariant,
         ),

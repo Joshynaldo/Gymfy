@@ -13,6 +13,7 @@ import 'package:gymfy/features/workout/screens/day_builder_screen.dart';
 import 'package:gymfy/shared/database/app_database.dart';
 
 import 'support/default_accent.dart';
+import 'package:gymfy/shared/widgets/lucide_icons.dart';
 
 const _dayId = 10;
 
@@ -179,7 +180,7 @@ void main() {
       _planned('fly', 'Cable fly', 2),
     ]);
 
-    final handle = find.byIcon(Icons.drag_handle).first;
+    final handle = find.byIcon(LucideIcons.gripHorizontal).first;
     final gesture = await tester.startGesture(tester.getCenter(handle));
     await tester.pump();
     for (var i = 0; i < 9; i++) {

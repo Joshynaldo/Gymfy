@@ -12,6 +12,7 @@ import '../data/export_repository.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../app/theme/glass.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Getting your data out of the app.
 ///
@@ -50,7 +51,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
           ),
           AppSectionHeader(title: l10n.dataExportFormatTitle),
           _FormatCard(
-            icon: Icons.table_chart_outlined,
+            icon: LucideIcons.table,
             title: l10n.dataExportCsvTitle,
             badge: 'CSV',
             subtitle: l10n.dataExportCsvSubtitle,
@@ -58,7 +59,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
             onPressed: _busy ? null : _exportCsv,
           ),
           _FormatCard(
-            icon: Icons.data_object,
+            icon: LucideIcons.braces,
             title: l10n.dataExportJsonTitle,
             badge: 'JSON',
             subtitle: l10n.dataExportJsonSubtitle,
@@ -71,7 +72,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
           // so it gets a panel of its own instead of being small print they
           // scroll past.
           AppPanel(
-            icon: Icons.info_outline,
+            icon: LucideIcons.info,
             title: l10n.dataExportCopyTitle,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,7 +88,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                   alignment: Alignment.centerRight,
                   child: TextButton.icon(
                     onPressed: () => context.go('/more/settings/backup'),
-                    icon: const Icon(Icons.backup_outlined, size: 18),
+                    icon: const Icon(LucideIcons.archiveRestore, size: 18),
                     label: Text(l10n.backupTitle),
                   ),
                 ),
@@ -208,7 +209,7 @@ class _FormatCard extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: FilledButton.icon(
               onPressed: onPressed,
-              icon: const Icon(Icons.save_alt, size: 18),
+              icon: const Icon(LucideIcons.download, size: 18),
               label: Text(buttonLabel),
             ),
           ),

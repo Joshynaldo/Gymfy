@@ -9,6 +9,7 @@ import '../../../app/theme/motion.dart';
 import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/pressable.dart';
 import '../data/rest_timer_controller.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// The rest countdown, floating over the workout while a timer is running.
 ///
@@ -137,7 +138,7 @@ class RestTimerBar extends ConsumerWidget {
                           : context.l10n.workoutRestSkipTooltip,
                       square: true,
                       child: Icon(
-                        Icons.close,
+                        LucideIcons.x,
                         size: 17,
                         color: theme.colorScheme.onSurfaceVariant,
                       ),

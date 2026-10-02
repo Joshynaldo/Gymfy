@@ -11,6 +11,7 @@ import '../../../../shared/models/equipment.dart';
 import '../../../../shared/widgets/muscle_filter_bar.dart';
 import '../../../exercises/widgets/equipment_filter_sheet.dart';
 import '../../../exercises/data/exercise_repository.dart';
+import '../../../../shared/widgets/lucide_icons.dart';
 
 /// Opens a bottom sheet over the exercise library and returns the ids of every
 /// exercise the user picked, or null if they dismissed it without confirming.
@@ -126,7 +127,7 @@ class _ExercisePickerSheetState extends ConsumerState<_ExercisePickerSheet> {
                   // invisible: "chest" finding the bench press looks like magic
                   // or a bug.
                   hintText: l10n.exercisesSearchHint,
-                  prefixIcon: const Icon(Icons.search),
+                  prefixIcon: const Icon(LucideIcons.search),
                   filled: true,
                   isDense: true,
                   border: OutlineInputBorder(
@@ -333,7 +334,7 @@ class _ConfirmBar extends StatelessWidget {
             ),
             FilledButton.icon(
               onPressed: onConfirm,
-              icon: const Icon(Icons.playlist_add),
+              icon: const Icon(LucideIcons.listPlus),
               label: Text(
                 count <= 1
                     ? context.l10n.commonAdd

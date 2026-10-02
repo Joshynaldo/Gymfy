@@ -20,6 +20,7 @@ import '../data/progress_repository.dart';
 import '../widgets/activity_heatmap.dart';
 import '../widgets/recap_section.dart';
 import '../widgets/streak_card.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Which question Progress is answering.
 ///
@@ -81,12 +82,12 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
           // Actions rather than list entries, so they are reachable even when
           // a segment shows its empty state.
           GlassIconButton(
-            icon: Icons.photo_library_outlined,
+            icon: LucideIcons.images,
             tooltip: l10n.progressPhotosTitle,
             onPressed: () => context.go('/progress/photos'),
           ),
           GlassIconButton(
-            icon: Icons.straighten,
+            icon: LucideIcons.ruler,
             tooltip: l10n.progressMeasurementsTitle,
             onPressed: () => context.go('/progress/measurements'),
           ),
@@ -141,7 +142,7 @@ class _Trends extends ConsumerWidget {
               title: exercise.name,
               // A chart icon rather than a chevron: it says what opening this
               // gets you, which "›" doesn't.
-              trailing: const Icon(Icons.show_chart, size: 20),
+              trailing: const Icon(LucideIcons.chartLine, size: 20),
               onTap: () => context.go('/progress/exercise/${exercise.id}'),
             ),
         ] else if (!exercisesAsync.isLoading)
@@ -198,13 +199,13 @@ class _BodyLinks extends StatelessWidget {
       children: [
         AppSectionHeader(title: l10n.progressTrackedByHand),
         AppTile(
-          icon: Icons.straighten,
+          icon: LucideIcons.ruler,
           title: l10n.progressMeasurementsTitle,
           subtitle: l10n.progressMeasurementsSubtitle,
           onTap: () => context.go('/progress/measurements'),
         ),
         AppTile(
-          icon: Icons.photo_library_outlined,
+          icon: LucideIcons.images,
           title: l10n.progressPhotosTitle,
           subtitle: l10n.progressPhotosSubtitle,
           onTap: () => context.go('/progress/photos'),
@@ -226,7 +227,7 @@ class _NoHistory extends StatelessWidget {
       child: Column(
         children: [
           Icon(
-            Icons.show_chart,
+            LucideIcons.chartLine,
             size: 56,
             color: theme.colorScheme.onSurfaceVariant,
           ),

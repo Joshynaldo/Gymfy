@@ -14,6 +14,7 @@ import '../widgets/barbell_diagram.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../app/theme/glass.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Opens the plate calculator over the current screen, prefilled with
 /// [weight] in the display unit.
@@ -76,7 +77,7 @@ class _PlateCalculatorScreenState extends ConsumerState<PlateCalculatorScreen> {
           // cards made the bar look like a separate setting you had to go
           // and configure.
           AppPanel(
-            icon: Icons.tune,
+            icon: LucideIcons.slidersHorizontal,
             title: l10n.platesLoadingTitle,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,7 +192,7 @@ class _Result extends StatelessWidget {
         // was previously at the very bottom, under the diagram and the chips.
         _TotalPanel(load: load, unit: unit),
         AppPanel(
-          icon: Icons.fitness_center,
+          icon: LucideIcons.dumbbell,
           title: l10n.platesEachSide,
           // No "nothing to load" subtitle here: the diagram already says
           // "Just the bar", and saying it twice on one card reads as a bug.

@@ -15,6 +15,7 @@ import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../app/theme/glass.dart';
 import '../../../shared/widgets/glass_dialog.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// A record returned by the add-meal dialog.
 typedef _MealInput = ({
@@ -82,7 +83,7 @@ class _CalorieLogScreenState extends ConsumerState<CalorieLogScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addMeal,
-        icon: const Icon(Icons.add),
+        icon: const Icon(LucideIcons.plus),
         label: Text(l10n.caloriesAddMeal),
       ),
     );
@@ -129,7 +130,7 @@ class _DayNavigator extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
-            icon: const Icon(Icons.chevron_left),
+            icon: const Icon(LucideIcons.chevronLeft),
             onPressed: onPrevious,
             tooltip: l10n.commonPreviousDay,
           ),
@@ -138,7 +139,7 @@ class _DayNavigator extends StatelessWidget {
             style: theme.textTheme.titleMedium,
           ),
           IconButton(
-            icon: const Icon(Icons.chevron_right),
+            icon: const Icon(LucideIcons.chevronRight),
             onPressed: onNext,
             tooltip: l10n.commonNextDay,
           ),
@@ -274,7 +275,7 @@ class _MealTile extends ConsumerWidget {
     final l10n = context.l10n;
 
     return AppTile(
-      icon: Icons.restaurant,
+      icon: LucideIcons.utensils,
       title: entry.name,
       subtitle: l10n.caloriesMacroLine(entry.protein, entry.carbs, entry.fat),
       trailing: Row(
@@ -296,7 +297,7 @@ class _MealTile extends ConsumerWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.delete_outline),
+            icon: const Icon(LucideIcons.trash2),
             tooltip: l10n.caloriesDeleteEntry,
             visualDensity: VisualDensity.compact,
             onPressed: () =>

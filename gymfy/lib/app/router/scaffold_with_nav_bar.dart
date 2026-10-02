@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/workout/data/session_repository.dart';
 import '../../l10n/l10n.dart';
 import '../../shared/widgets/glass_nav_bar.dart';
+import '../../shared/widgets/glyph_icon.dart';
 import '../theme/glass.dart';
 import '../theme/motion.dart';
 
@@ -17,24 +18,27 @@ import '../theme/motion.dart';
 ///
 /// A function of [context] rather than a constant list because the labels are
 /// words: the bar has to say "Training" on a German phone.
+///
+/// The icons are the Gymfy Hyper design's (see [MockupGlyph]), in every theme.
+/// One glyph per tab rather than an outline and a filled pair: the selected
+/// state is told by the colour and, on glass, by the pane behind it.
 List<NavigationDestination> mainDestinations(BuildContext context) {
   final l10n = context.l10n;
   return [
     NavigationDestination(
-      icon: const Icon(Icons.home_outlined),
-      selectedIcon: const Icon(Icons.home),
+      icon: const GlyphIcon(MockupGlyph.home),
       label: l10n.shellNavHome,
     ),
     NavigationDestination(
-      icon: const Icon(Icons.fitness_center),
+      icon: const GlyphIcon(MockupGlyph.workout),
       label: l10n.shellNavWorkout,
     ),
     NavigationDestination(
-      icon: const Icon(Icons.insights),
+      icon: const GlyphIcon(MockupGlyph.progress),
       label: l10n.shellNavProgress,
     ),
     NavigationDestination(
-      icon: const Icon(Icons.apps),
+      icon: const GlyphIcon(MockupGlyph.more),
       label: l10n.shellNavMore,
     ),
   ];

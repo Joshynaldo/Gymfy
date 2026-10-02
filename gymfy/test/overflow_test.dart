@@ -25,6 +25,7 @@ import 'package:gymfy/shared/widgets/app_segmented.dart';
 import 'package:gymfy/shared/widgets/glass_nav_bar.dart';
 
 import 'support/default_accent.dart';
+import 'package:gymfy/shared/widgets/lucide_icons.dart';
 
 /// A week's worth of logged sets, so the card has bars to draw.
 ///
@@ -125,7 +126,7 @@ void main() {
             tester,
             AppButton(
               label: 'Start workout',
-              icon: Icons.play_arrow,
+              icon: LucideIcons.play,
               onPressed: () {},
             ),
             scale: scale,
@@ -200,7 +201,7 @@ void main() {
             Builder(
               builder: (context) => AppButton(
                 label: context.l10n.homeTodayStartEmpty,
-                icon: Icons.bolt_outlined,
+                icon: LucideIcons.zap,
                 onPressed: () {},
               ),
             ),

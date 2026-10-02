@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/l10n.dart';
 import '../../../workout/data/workout_repository.dart';
+import '../../../../shared/widgets/lucide_icons.dart';
 
 /// Asks which workout day some exercises should be added to, and returns the
 /// chosen day's id (or null if the sheet was dismissed).
@@ -127,7 +128,7 @@ class _NoDays extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.calendar_today_outlined,
+            LucideIcons.calendar,
             size: 40,
             color: theme.colorScheme.onSurfaceVariant,
           ),

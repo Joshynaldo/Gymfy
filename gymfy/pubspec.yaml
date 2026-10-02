@@ -86,7 +86,6 @@ dependencies:
   # so it tracks Flutter's own Gradle and Xcode requirements rather than
   # pinning its own (which is what broke share_plus and file_picker 11 here).
   url_launcher: ^6.3.1
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -190,6 +189,13 @@ flutter:
           weight: 600
         - asset: assets/fonts/SchibstedGrotesk-Bold.ttf
           weight: 700
+    # Every icon outside the design's own drawings (lib/shared/widgets/
+    # lucide_icons.dart). Vendored instead of the lucide_icons_flutter package,
+    # which also ships six stroke-weight fonts the app never uses. Tree-shaken
+    # to the glyphs used at release build. ISC — assets/fonts/lucide/LICENSE.txt.
+    - family: Lucide
+      fonts:
+        - asset: assets/fonts/lucide/Lucide.ttf
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

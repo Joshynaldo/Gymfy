@@ -9,6 +9,7 @@ import '../../../shared/utils/units.dart';
 import '../../exercises/data/exercise_names.dart';
 import '../../muscle_map/data/muscle_colors.dart';
 import '../data/review.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// How many exercises and muscles the card names. Three is a podium; the
 /// screen below the card lists the rest.
@@ -62,7 +63,7 @@ class ReviewShareCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.insights, size: 18, color: accent),
+                Icon(LucideIcons.chartLine, size: 18, color: accent),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(

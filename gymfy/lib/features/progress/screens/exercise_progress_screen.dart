@@ -17,6 +17,7 @@ import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../app/theme/glass.dart';
 import '../../../shared/widgets/glass_dialog.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Shows one exercise's progress over time: personal records, an estimated
 /// one-rep max from the best set logged, and a chart of top-set weight per
@@ -167,7 +168,7 @@ class _OneRmBadge extends ConsumerWidget {
         child: Row(
           children: [
             Icon(
-              tested != null ? Icons.emoji_events : Icons.trending_up,
+              tested != null ? LucideIcons.trophy : LucideIcons.trendingUp,
               size: 20,
               color: accent,
             ),
@@ -207,7 +208,7 @@ class _OneRmBadge extends ConsumerWidget {
               ),
             ),
             Icon(
-              Icons.edit_outlined,
+              LucideIcons.pencil,
               size: 18,
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -336,9 +337,9 @@ class _TestedOneRmDialogState extends State<_TestedOneRmDialog> {
           const SizedBox(height: 8),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.event),
+            leading: const Icon(LucideIcons.calendar),
             title: Text(formatDayLabel(_testedOn, l10n: l10n)),
-            trailing: const Icon(Icons.edit_calendar_outlined),
+            trailing: const Icon(LucideIcons.calendarCog),
             onTap: _pickDate,
           ),
         ],
@@ -394,7 +395,7 @@ class _RecordsRow extends ConsumerWidget {
           Expanded(
             child: hold
                 ? _RecordTile(
-                    icon: Icons.timer_outlined,
+                    icon: LucideIcons.timer,
                     label: l10n.progressExerciseLongestHold,
                     value: formatSetDuration(records.longestHold!),
                     detail: formatShortDate(
@@ -403,7 +404,7 @@ class _RecordsRow extends ConsumerWidget {
                     ),
                   )
                 : _RecordTile(
-                    icon: Icons.fitness_center,
+                    icon: LucideIcons.dumbbell,
                     label: l10n.progressRecordHeaviest,
                     value: formatWeightUnit(
                       records.heaviestWeight,
@@ -418,7 +419,7 @@ class _RecordsRow extends ConsumerWidget {
           const SizedBox(width: 12),
           Expanded(
             child: _RecordTile(
-              icon: Icons.bar_chart,
+              icon: LucideIcons.chartColumn,
               label: hold
                   ? l10n.progressRecordMostTime
                   : l10n.progressRecordBestVolume,

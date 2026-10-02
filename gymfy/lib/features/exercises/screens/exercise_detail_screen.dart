@@ -22,6 +22,7 @@ import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../app/theme/glass.dart';
 import '../../../shared/widgets/glass_dialog.dart';
 import '../../../shared/widgets/exercise_thumbnail.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Opens the exercise detail screen over the current screen.
 ///
@@ -228,7 +229,7 @@ class _ExerciseDetailBody extends ConsumerWidget {
           child: ExerciseRestTile(exerciseId: exercise.id),
         ),
         AppPanel(
-          icon: Icons.accessibility_new,
+          icon: LucideIcons.personStanding,
           title: l10n.exercisesMusclesWorked,
           child: Wrap(
             spacing: 8,
@@ -368,7 +369,7 @@ class _Placeholder extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.fitness_center,
+            LucideIcons.dumbbell,
             size: 56,
             color: accent.withValues(alpha: 0.6),
           ),

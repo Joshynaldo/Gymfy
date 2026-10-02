@@ -27,6 +27,7 @@ import 'package:gymfy/features/reviews/widgets/review_links.dart';
 import 'package:gymfy/features/workout/data/personal_records.dart';
 
 import 'support/default_accent.dart';
+import 'package:gymfy/shared/widgets/lucide_icons.dart';
 
 RecapSet _set(DateTime date, int session, {double weight = 100}) => (
   date: date,
@@ -125,7 +126,7 @@ void main() {
       expect(find.textContaining('not over yet'), findsOneWidget);
       final later = tester.widget<IconButton>(
         find.ancestor(
-          of: find.byIcon(Icons.chevron_right),
+          of: find.byIcon(LucideIcons.chevronRight),
           matching: find.byType(IconButton),
         ),
       );

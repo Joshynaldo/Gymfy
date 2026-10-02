@@ -7,6 +7,7 @@ import '../../../shared/utils/units.dart';
 import '../../exercises/data/exercise_repository.dart';
 import '../data/plate_math.dart';
 import 'barbell_diagram.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Builds a weight by stacking plates, instead of typing a number.
 ///
@@ -349,7 +350,7 @@ class _BarButton extends ConsumerWidget {
             value: bar,
             child: Row(
               children: [
-                Icon(bar == current ? Icons.check : null, size: 18),
+                Icon(bar == current ? LucideIcons.check : null, size: 18),
                 const SizedBox(width: 8),
                 Text(formatBar(bar, unit, l10n: l10n)),
               ],
@@ -365,7 +366,7 @@ class _BarButton extends ConsumerWidget {
               formatBar(current, unit, l10n: l10n),
               style: Theme.of(context).textTheme.labelLarge,
             ),
-            const Icon(Icons.arrow_drop_down, size: 18),
+            const Icon(LucideIcons.chevronDown, size: 18),
           ],
         ),
       ),

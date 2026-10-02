@@ -17,6 +17,7 @@ import 'package:gymfy/shared/models/set_type.dart';
 import 'package:gymfy/shared/utils/units.dart';
 
 import 'support/default_accent.dart';
+import 'package:gymfy/shared/widgets/lucide_icons.dart';
 
 final _bench = Exercise(
   id: 'barbell_bench_press',
@@ -150,7 +151,7 @@ void main() {
       // is why there is now a test.
       await _open(tester);
 
-      expect(find.byIcon(Icons.backspace_outlined), findsOneWidget);
+      expect(find.byIcon(LucideIcons.delete), findsOneWidget);
       expect(find.text('backspace'), findsNothing);
       expect(find.text('⌫'), findsNothing);
     });

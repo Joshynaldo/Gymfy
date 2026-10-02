@@ -105,12 +105,18 @@ void main() {
   });
 
   group('the navigation bar', () {
-    Widget navBar() => Builder(
+    Widget navBar({int selected = 0, ValueChanged<int>? onSelected}) => Builder(
       builder: (context) => GlassNavBar(
-        selectedIndex: 0,
-        onDestinationSelected: (_) {},
+        selectedIndex: selected,
+        onDestinationSelected: onSelected ?? (_) {},
         destinations: mainDestinations(context),
       ),
+    );
+
+    /// The pill itself, not the padding that floats it.
+    Finder pill() => find.descendant(
+      of: find.byType(GlassNavBar),
+      matching: find.byType(GlassSurface),
     );
 
     testWidgets('spans the screen on a flat theme', (tester) async {
@@ -124,61 +130,6 @@ void main() {
       );
     });
 
-    testWidgets('floats as a pill on the glass theme', (tester) async {
-      await _pump(tester, AppTheme.hyper, bottom: navBar());
-
-      expect(find.byType(GlassSurface), findsOneWidget);
-      // Narrower than the screen is the whole point: a bar welded to the bottom
-      // edge is chrome, a bar hovering above it is an object in front of the
-      // content.
-      final screenWidth =
-          tester.view.physicalSize.width / tester.view.devicePixelRatio;
-      expect(
-        tester.getSize(find.byType(NavigationBar)).width,
-        lessThan(screenWidth),
-      );
-    });
-
-    testWidgets('is still a real NavigationBar inside the pill', (
-      tester,
-    ) async {
-      // The pill is a shape, not a reimplementation. Rolling our own would mean
-      // rebuilding the selection indicator, the label behaviour, the ripples
-      // and the semantics — and every one of those is an accessibility
-      // affordance somebody relies on.
-      await _pump(tester, AppTheme.hyper, bottom: navBar());
-
-      final bar = tester.widget<NavigationBar>(find.byType(NavigationBar));
-      expect(
-        bar.destinations.length,
-        mainDestinations(tester.element(find.byType(NavigationBar))).length,
-      );
-      expect(find.text('Workout'), findsOneWidget);
-      expect(find.text('Progress'), findsOneWidget);
-    });
-
-    testWidgets('shows icons only, but still knows its labels', (tester) async {
-      // Four labels across a pill inset from both edges is four lines of tiny
-      // type competing with the screen above them, and these four are the
-      // destinations you learn on the first day.
-      //
-      // Hidden, not removed: each destination keeps its name, so a screen
-      // reader still announces it. That is the difference between a visual
-      // decision and an accessibility one, and the assertion below is what
-      // stops the first quietly becoming the second.
-      await _pump(tester, AppTheme.hyper, bottom: navBar());
-
-      final bar = tester.widget<NavigationBar>(find.byType(NavigationBar));
-      expect(bar.labelBehavior, NavigationDestinationLabelBehavior.alwaysHide);
-      expect(
-        bar.destinations
-            .cast<NavigationDestination>()
-            .map((d) => d.label)
-            .toList(),
-        ['Home', 'Workout', 'Progress', 'More'],
-      );
-    });
-
     testWidgets('keeps its labels on a flat theme', (tester) async {
       await _pump(tester, AppTheme.darkDefault, bottom: navBar());
 
@@ -189,22 +140,120 @@ void main() {
       );
     });
 
+    testWidgets('floats as a pill on the glass theme', (tester) async {
+      await _pump(tester, AppTheme.hyper, bottom: navBar());
+
+      expect(pill(), findsOneWidget);
+      expect(find.byType(NavigationBar), findsNothing);
+      // Narrower than the screen is the whole point: a bar welded to the bottom
+      // edge is chrome, a bar hovering above it is an object in front of the
+      // content.
+      final screenWidth =
+          tester.view.physicalSize.width / tester.view.devicePixelRatio;
+      expect(tester.getSize(pill()).width, lessThan(screenWidth));
+    });
+
+    testWidgets('has one tab per destination, each a button with its name', (
+      tester,
+    ) async {
+      // The pill's tabs are the design's own rather than Material's, so the
+      // things the Material bar gave for free are checked here instead: every
+      // tab is announced as a button, by name, and says whether it's the one
+      // you're on.
+      await _pump(tester, AppTheme.hyper, bottom: navBar(selected: 1));
+
+      final tabs = find.byType(GlassNavTab);
+      expect(tabs, findsNWidgets(4));
+      expect(
+        tester.getSemantics(tabs.at(1)),
+        isSemantics(label: 'Workout', isButton: true, isSelected: true),
+      );
+      expect(
+        tester.getSemantics(tabs.at(2)),
+        isSemantics(label: 'Progress', isButton: true, isSelected: false),
+      );
+    });
+
+    testWidgets('shows icons only, but still knows its labels', (tester) async {
+      // Four labels across a pill inset from both edges is four lines of tiny
+      // type competing with the screen above them, and these four are the
+      // destinations you learn on the first day.
+      //
+      // Hidden, not removed: each tab keeps its name as its tooltip and its
+      // label for screen readers. That is the difference between a visual
+      // decision and an accessibility one.
+      await _pump(tester, AppTheme.hyper, bottom: navBar());
+
+      for (final label in ['Home', 'Workout', 'Progress', 'More']) {
+        expect(find.text(label), findsNothing, reason: label);
+        expect(find.byTooltip(label), findsOneWidget, reason: label);
+      }
+    });
+
+    testWidgets('a tap reports the tab', (tester) async {
+      final picked = <int>[];
+      await _pump(
+        tester,
+        AppTheme.hyper,
+        bottom: navBar(onSelected: picked.add),
+      );
+
+      await tester.tap(find.byType(GlassNavTab).at(3));
+
+      expect(picked, [3]);
+    });
+
+    testWidgets('the selected tab gets a pane of glass that fades in', (
+      tester,
+    ) async {
+      // The design's tab switch: the old tab's pane fades out as the new one
+      // fades in, rather than Material's capsule growing behind the icon.
+      double paneOpacity(int tab) => tester
+          .widget<AnimatedOpacity>(
+            find.descendant(
+              of: find.byType(GlassNavTab).at(tab),
+              matching: find.byType(AnimatedOpacity),
+            ),
+          )
+          .opacity;
+
+      await _pump(tester, AppTheme.hyper, bottom: navBar(selected: 0));
+      expect(paneOpacity(0), 1);
+      expect(paneOpacity(2), 0);
+
+      await _pump(tester, AppTheme.hyper, bottom: navBar(selected: 2));
+      expect(paneOpacity(0), 0);
+      expect(paneOpacity(2), 1);
+
+      // Partway through, not cut over in one frame.
+      final fading = tester.widget<FadeTransition>(
+        find.descendant(
+          of: find.byType(GlassNavTab).at(2),
+          matching: find.byType(FadeTransition),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 60));
+      expect(fading.opacity.value, inExclusiveRange(0, 1));
+      await tester.pumpAndSettle();
+      expect(fading.opacity.value, 1);
+    });
+
     testWidgets('does not pad itself away from its own bottom edge', (
       tester,
     ) async {
-      // NavigationBar adds the system gesture inset itself. Inside a floating
-      // pill that lands *inside* the glass, pushing the icons up and leaving a
-      // band of empty pane beneath them, on top of the margin already holding
-      // the pill clear of the screen.
+      // The system gesture inset holds the pill clear of the screen edge; it
+      // must not also land *inside* the glass, pushing the icons up and
+      // leaving a band of empty pane beneath them.
       tester.view.padding = const FakeViewPadding(bottom: 96);
       addTearDown(tester.view.resetPadding);
 
       await _pump(tester, AppTheme.hyper, bottom: navBar());
 
-      final pill = tester.getRect(find.byType(GlassSurface));
-      final bar = tester.getRect(find.byType(NavigationBar));
+      final glass = tester.getRect(pill());
+      final tab = tester.getRect(find.byType(GlassNavTab).first);
 
-      expect(bar.bottom - pill.bottom, closeTo(0, 1));
+      // The tabs sit in the pill with its own 5px of padding, and no more.
+      expect(glass.bottom - tab.bottom, closeTo(5, 1));
     });
   });
 

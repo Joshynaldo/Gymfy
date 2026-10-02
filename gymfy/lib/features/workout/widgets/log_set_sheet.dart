@@ -22,6 +22,7 @@ import '../../overload/data/overload_math.dart';
 import '../../overload/data/percent_target.dart' show formatPercent;
 import '../../plates/widgets/plate_stacker.dart';
 import '../data/logging_preferences.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// What a finished trip through the sheet produces.
 ///
@@ -543,7 +544,7 @@ class _LogSetSheetState extends ConsumerState<_LogSetSheet> {
                 child: TextButton.icon(
                   onPressed: () => setState(() => _plates = !_plates),
                   icon: Icon(
-                    _plates ? Icons.dialpad : Icons.donut_large_outlined,
+                    _plates ? LucideIcons.grid3x3 : LucideIcons.chartPie,
                     size: 18,
                   ),
                   label: Text(
@@ -592,7 +593,9 @@ class _LogSetSheetState extends ConsumerState<_LogSetSheet> {
                               ? l10n.workoutLogNextTime
                               : l10n.workoutLogNextReps)
                         : l10n.workoutLogSaveSet,
-                    icon: onWeight ? Icons.chevron_right : Icons.check,
+                    icon: onWeight
+                        ? LucideIcons.chevronRight
+                        : LucideIcons.check,
                     // The chevron points at the step after this one; the tick
                     // describes the tap itself.
                     iconAfter: onWeight,
@@ -773,7 +776,7 @@ class _WorkTimerButton extends StatelessWidget {
       label: running
           ? context.l10n.workoutTimerStop
           : context.l10n.workoutTimerStart,
-      icon: running ? Icons.stop_rounded : Icons.play_arrow_rounded,
+      icon: running ? LucideIcons.square : LucideIcons.play,
       // Stopping is the destructive-looking half only in the sense that it
       // ends something; it is still the primary action while running, since
       // it is the one thing you will reach for.
@@ -906,7 +909,7 @@ class _Key extends StatelessWidget {
           borderRadius: radius,
           tier: GlassTier.quiet,
           fallbackColor: theme.colorScheme.surfaceContainerHighest,
-          child: const Center(child: Icon(Icons.backspace_outlined, size: 21)),
+          child: const Center(child: Icon(LucideIcons.delete, size: 21)),
         ),
       );
     }
@@ -1095,29 +1098,32 @@ class _SuggestionNote extends StatelessWidget {
 
     final (icon, text) = switch (suggestion.reason) {
       OverloadReason.earned => (
-        Icons.trending_up,
+        LucideIcons.trendingUp,
         l10n.workoutNoteEarned(weight),
       ),
       OverloadReason.deload => (
-        Icons.trending_down,
+        LucideIcons.trendingDown,
         l10n.workoutNoteDeload(weight),
       ),
-      OverloadReason.atLimit => (Icons.pause, l10n.workoutNoteAtLimit(weight)),
+      OverloadReason.atLimit => (
+        LucideIcons.pause,
+        l10n.workoutNoteAtLimit(weight),
+      ),
       OverloadReason.percentOfMax => (
-        Icons.percent,
+        LucideIcons.percent,
         l10n.workoutNotePercent(
           formatPercent(suggestion.targetPercent ?? 0, l10n: l10n),
           weight,
         ),
       ),
       OverloadReason.blockDeload => (
-        Icons.trending_down,
+        LucideIcons.trendingDown,
         l10n.workoutNoteBlockDeload(
           formatPercent(suggestion.deloadPercent ?? 0, l10n: l10n),
           weight,
         ),
       ),
-      _ => (Icons.remove, l10n.workoutNoteSame),
+      _ => (LucideIcons.minus, l10n.workoutNoteSame),
     };
 
     return GlassSurface(

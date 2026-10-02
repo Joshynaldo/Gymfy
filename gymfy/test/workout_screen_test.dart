@@ -12,6 +12,7 @@ import 'package:gymfy/features/workout/screens/workout_screen.dart';
 import 'package:gymfy/shared/database/app_database.dart';
 
 import 'support/default_accent.dart';
+import 'package:gymfy/shared/widgets/lucide_icons.dart';
 
 final _ppl = Split(
   id: 1,
@@ -157,12 +158,12 @@ void main() {
       ],
     );
 
-    await tester.tap(find.byIcon(Icons.swap_horiz));
+    await tester.tap(find.byIcon(LucideIcons.arrowLeftRight));
     await tester.pumpAndSettle();
 
     expect(find.text('Upper / Lower'), findsOneWidget);
-    expect(find.byIcon(Icons.radio_button_checked), findsOneWidget);
-    expect(find.byIcon(Icons.radio_button_unchecked), findsOneWidget);
+    expect(find.byIcon(LucideIcons.circleDot), findsOneWidget);
+    expect(find.byIcon(LucideIcons.circle), findsOneWidget);
     // The two ways out of a single-split app.
     expect(find.text('New split'), findsOneWidget);
     expect(find.text('Manage splits'), findsOneWidget);
@@ -176,7 +177,7 @@ void main() {
     expect(find.text('No splits yet'), findsOneWidget);
     expect(find.widgetWithText(FilledButton, 'New split'), findsOneWidget);
     // Nothing to switch between yet, so the app bar stays bare.
-    expect(find.byIcon(Icons.swap_horiz), findsNothing);
+    expect(find.byIcon(LucideIcons.arrowLeftRight), findsNothing);
   });
 
   testWidgets('splits but no active one asks which to follow', (tester) async {

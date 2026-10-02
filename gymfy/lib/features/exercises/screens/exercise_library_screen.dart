@@ -22,6 +22,7 @@ import 'widgets/add_to_day_sheet.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../app/theme/glass.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// The Exercises tab: a searchable, filterable list of the whole exercise
 /// library, read live from the database.
@@ -80,14 +81,14 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
       appBar: _selecting
           ? GlassAppBar(
               leading: IconButton(
-                icon: const Icon(Icons.close),
+                icon: const Icon(LucideIcons.x),
                 onPressed: () => setState(_selected.clear),
                 tooltip: l10n.exercisesCancelSelection,
               ),
               title: Text(l10n.exercisesSelected(_selected.length)),
               actions: [
                 IconButton(
-                  icon: const Icon(Icons.playlist_add),
+                  icon: const Icon(LucideIcons.listPlus),
                   onPressed: _addSelectedToDay,
                   tooltip: l10n.exercisesAddToDayTooltip,
                 ),
@@ -156,7 +157,7 @@ class _ExerciseLibraryScreenState extends ConsumerState<ExerciseLibraryScreen> {
           ? null
           : AppButton(
               label: l10n.exercisesAddExercise,
-              icon: Icons.add,
+              icon: LucideIcons.plus,
               expand: false,
               onPressed: () => context.go('/exercises/new'),
             ),
@@ -331,7 +332,7 @@ class _SearchFieldState extends State<_SearchField> {
           child: Row(
             children: [
               const SizedBox(width: 16),
-              Icon(Icons.search, size: 18, color: muted),
+              Icon(LucideIcons.search, size: 18, color: muted),
               const SizedBox(width: 10),
               Expanded(
                 child: TextField(
@@ -366,7 +367,7 @@ class _SearchFieldState extends State<_SearchField> {
               // quiet while you're only reading.
               if (_controller.text.isNotEmpty)
                 IconButton(
-                  icon: Icon(Icons.close, size: 17, color: muted),
+                  icon: Icon(LucideIcons.x, size: 17, color: muted),
                   visualDensity: VisualDensity.compact,
                   tooltip: context.l10n.exercisesClearSearch,
                   onPressed: _clear,
@@ -484,7 +485,7 @@ class _NoMatches extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.search_off,
+              LucideIcons.searchX,
               size: 56,
               color: theme.colorScheme.onSurfaceVariant,
             ),

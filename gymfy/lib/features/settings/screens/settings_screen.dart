@@ -26,6 +26,7 @@ import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../app/theme/glass.dart';
 import '../../../shared/widgets/glass_dialog.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Everything the user can change about the app.
 class SettingsScreen extends ConsumerWidget {
@@ -116,10 +117,10 @@ class _BackupTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return ListTile(
-      leading: const Icon(Icons.backup_outlined),
+      leading: const Icon(LucideIcons.archiveRestore),
       title: Text(l10n.settingsBackupTitle),
       subtitle: Text(l10n.settingsBackupSubtitle),
-      trailing: const Icon(Icons.chevron_right),
+      trailing: const Icon(LucideIcons.chevronRight),
       onTap: () => context.go('/more/settings/backup'),
     );
   }
@@ -137,10 +138,10 @@ class _ExportTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return ListTile(
-      leading: const Icon(Icons.save_alt),
+      leading: const Icon(LucideIcons.download),
       title: Text(l10n.settingsExportTitle),
       subtitle: Text(l10n.settingsExportSubtitle),
-      trailing: const Icon(Icons.chevron_right),
+      trailing: const Icon(LucideIcons.chevronRight),
       onTap: () => context.go('/more/settings/export'),
     );
   }
@@ -279,10 +280,10 @@ class _LanguageTile extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ListTile(
-          leading: const Icon(Icons.language),
+          leading: const Icon(LucideIcons.languages),
           title: Text(l10n.settingsLanguageTitle),
           subtitle: Text(labelOf(current)),
-          trailing: const Icon(Icons.chevron_right),
+          trailing: const Icon(LucideIcons.chevronRight),
           onTap: () async {
             final chosen = await showOptionPicker<AppLanguage>(
               context: context,
@@ -352,10 +353,10 @@ class _NameTile extends ConsumerWidget {
 
     final l10n = context.l10n;
     return ListTile(
-      leading: const Icon(Icons.person_outline),
+      leading: const Icon(LucideIcons.user),
       title: Text(l10n.settingsNameTitle),
       subtitle: Text(name ?? l10n.commonNotSet),
-      trailing: const Icon(Icons.chevron_right),
+      trailing: const Icon(LucideIcons.chevronRight),
       onTap: () => _edit(context, ref, name),
     );
   }
@@ -428,10 +429,10 @@ class _DefaultRestTile extends ConsumerWidget {
     final l10n = context.l10n;
 
     return ListTile(
-      leading: const Icon(Icons.timer_outlined),
+      leading: const Icon(LucideIcons.timer),
       title: Text(l10n.settingsDefaultRestTitle),
       subtitle: Text(l10n.settingsDefaultRestSubtitle(formatRest(seconds))),
-      trailing: const Icon(Icons.chevron_right),
+      trailing: const Icon(LucideIcons.chevronRight),
       onTap: () async {
         final chosen = await showRestLengthPicker(
           context,
@@ -465,14 +466,14 @@ class _RestTimerPreferences extends ConsumerWidget {
       children: [
         const _DefaultRestTile(),
         SwitchListTile(
-          secondary: const Icon(Icons.notifications_outlined),
+          secondary: const Icon(LucideIcons.bell),
           title: Text(l10n.settingsRestAlertsTitle),
           subtitle: Text(l10n.settingsRestAlertsSubtitle),
           value: alerts,
           onChanged: (value) => setFlag(ref, restTimerAlertsSetting, value),
         ),
         SwitchListTile(
-          secondary: const Icon(Icons.vibration),
+          secondary: const Icon(LucideIcons.vibrate),
           title: Text(l10n.settingsVibrateTitle),
           subtitle: Text(l10n.settingsVibrateSubtitle),
           value: vibrate,
@@ -487,7 +488,7 @@ class _RestTimerPreferences extends ConsumerWidget {
         // only, so nowhere else offers a switch that does nothing.
         if (WorkoutNotificationBridge.supported)
           SwitchListTile(
-            secondary: const Icon(Icons.fitness_center),
+            secondary: const Icon(LucideIcons.dumbbell),
             title: Text(l10n.settingsWorkoutNotificationTitle),
             subtitle: Text(l10n.settingsWorkoutNotificationSubtitle),
             value: workout,
@@ -518,7 +519,7 @@ class _LifterSexTile extends ConsumerWidget {
     final l10n = context.l10n;
 
     return ListTile(
-      leading: const Icon(Icons.accessibility_new),
+      leading: const Icon(LucideIcons.personStanding),
       title: Text(l10n.settingsBodyDiagramTitle),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -574,12 +575,12 @@ class _BodyProfileTiles extends ConsumerWidget {
     return Column(
       children: [
         ListTile(
-          leading: const Icon(Icons.height),
+          leading: const Icon(LucideIcons.ruler),
           title: Text(l10n.bodyProfileHeightLabel),
           subtitle: Text(
             height == null ? l10n.commonNotSet : formatHeight(height, unit),
           ),
-          trailing: const Icon(Icons.chevron_right),
+          trailing: const Icon(LucideIcons.chevronRight),
           onTap: () async {
             final picked = await showNumberPicker(
               context: context,
@@ -595,10 +596,10 @@ class _BodyProfileTiles extends ConsumerWidget {
           },
         ),
         ListTile(
-          leading: const Icon(Icons.cake_outlined),
+          leading: const Icon(LucideIcons.cake),
           title: Text(l10n.bodyProfileAgeLabel),
           subtitle: Text(age == null ? l10n.commonNotSet : '$age'),
-          trailing: const Icon(Icons.chevron_right),
+          trailing: const Icon(LucideIcons.chevronRight),
           onTap: () async {
             final picked = await showNumberPicker(
               context: context,

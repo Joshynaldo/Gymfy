@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/app_picker.dart';
 import '../data/logging_preferences.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// The Settings section for how sets are logged: effort rating and the
 /// warm-up ramp.
@@ -62,12 +63,12 @@ class LoggingSettingsPanel extends ConsumerWidget {
           ),
         ),
         ListTile(
-          leading: const Icon(Icons.stairs_outlined),
+          leading: const Icon(LucideIcons.footprints),
           title: Text(l10n.workoutWarmupRampTitle),
           subtitle: Text(
             l10n.workoutWarmupRampSubtitle(formatWarmupRamp(ramp)),
           ),
-          trailing: const Icon(Icons.chevron_right),
+          trailing: const Icon(LucideIcons.chevronRight),
           onTap: () async {
             final picked = await showOptionPicker<String>(
               context: context,

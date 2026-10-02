@@ -8,6 +8,7 @@ import '../data/feedback_mail.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../app/theme/glass.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Where the developer can be found.
 ///
@@ -59,32 +60,32 @@ class HelpScreen extends StatelessWidget {
             ),
           ),
           AppTile(
-            icon: Icons.mail_outline,
+            icon: LucideIcons.mail,
             title: l10n.helpFeedbackTitle,
             // Says up front what the mail will carry. There is no crash
             // reporting in this app, so a bug that is never written down is a
             // bug that is never fixed — but that is not a reason to attach
             // anything the user didn't agree to.
             subtitle: l10n.helpFeedbackSubtitle,
-            trailing: const Icon(Icons.open_in_new, size: 18),
+            trailing: const Icon(LucideIcons.externalLink, size: 18),
             onTap: () => sendFeedback(context),
           ),
           AppTile(
-            icon: Icons.code,
+            icon: LucideIcons.code,
             title: l10n.helpDeveloperTitle,
             subtitle: l10n.helpDeveloperSubtitle,
-            trailing: const Icon(Icons.open_in_new, size: 18),
+            trailing: const Icon(LucideIcons.externalLink, size: 18),
             onTap: () => openDeveloperPage(context),
           ),
           AppTile(
-            icon: Icons.animation,
+            icon: LucideIcons.sparkles,
             title: l10n.helpAnimationsTitle,
             subtitle: l10n.helpAnimationsSubtitle,
-            trailing: const Icon(Icons.open_in_new, size: 18),
+            trailing: const Icon(LucideIcons.externalLink, size: 18),
             onTap: () => openLink(context, exerciseAnimationCredit),
           ),
           AppTile(
-            icon: Icons.info_outline,
+            icon: LucideIcons.info,
             title: l10n.helpVersionTitle,
             subtitle: appVersion,
             // Nothing to tap, so no chevron promising otherwise.

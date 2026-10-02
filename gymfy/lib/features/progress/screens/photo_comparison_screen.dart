@@ -9,6 +9,7 @@ import '../widgets/photo_file_image.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../app/theme/glass.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Two progress photos stacked on top of each other, with a slider to fade
 /// between them.
@@ -405,7 +406,7 @@ class _NotEnoughPhotos extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.compare,
+              LucideIcons.columns2,
               size: 64,
               color: theme.colorScheme.onSurfaceVariant,
             ),

@@ -5,6 +5,7 @@ import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
 import '../data/rest_timer_repository.dart';
 import 'rest_length_picker.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Sets how long to rest between sets of one exercise.
 ///
@@ -49,7 +50,7 @@ class ExerciseRestTile extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Icon(Icons.timer_outlined, size: 20, color: accent),
+              Icon(LucideIcons.timer, size: 20, color: accent),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -74,7 +75,7 @@ class ExerciseRestTile extends ConsumerWidget {
                 ),
               ),
               Icon(
-                Icons.chevron_right,
+                LucideIcons.chevronRight,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ],

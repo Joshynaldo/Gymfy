@@ -13,6 +13,7 @@ import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../app/theme/glass.dart';
 import '../../../shared/widgets/glass_dialog.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Managing your programmes: every split you've made, which one is active, and
 /// the buttons to create or delete one.
@@ -33,7 +34,7 @@ class SplitListScreen extends ConsumerWidget {
         title: Text(context.l10n.workoutSplitsTitle),
         actions: [
           IconButton(
-            icon: const Icon(Icons.event_note_outlined),
+            icon: const Icon(LucideIcons.notebookText),
             tooltip: context.l10n.workoutBrowsePrograms,
             onPressed: () => context.go('/workout/programs'),
           ),
@@ -62,7 +63,7 @@ class SplitListScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => createSplit(context, ref),
-        icon: const Icon(Icons.add),
+        icon: const Icon(LucideIcons.plus),
         label: Text(context.l10n.workoutNewSplit),
       ),
     );
@@ -97,7 +98,7 @@ class _SplitTile extends ConsumerWidget {
     return ListTile(
       leading: CircleAvatar(
         backgroundColor: accent.withValues(alpha: 0.15),
-        child: Icon(Icons.calendar_view_week, color: accent),
+        child: Icon(LucideIcons.calendarRange, color: accent),
       ),
       title: Row(
         children: [
@@ -112,7 +113,7 @@ class _SplitTile extends ConsumerWidget {
         ],
       ),
       trailing: IconButton(
-        icon: const Icon(Icons.delete_outline),
+        icon: const Icon(LucideIcons.trash2),
         tooltip: context.l10n.workoutDeleteSplitTooltip,
         onPressed: () => _confirmDelete(context, ref, split),
       ),
@@ -188,7 +189,7 @@ class _EmptyState extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.calendar_view_week,
+              LucideIcons.calendarRange,
               size: 64,
               color: theme.colorScheme.onSurfaceVariant,
             ),

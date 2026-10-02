@@ -16,6 +16,7 @@ import '../widgets/today_card.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../app/theme/glass.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// The Home tab: today first, then what's coming, then what you last did.
 ///
@@ -45,7 +46,7 @@ class HomeScreen extends ConsumerWidget {
           // reference you reach from wherever you happen to be needs a door
           // on the tab you are most often standing on.
           GlassIconButton(
-            icon: Icons.search,
+            icon: LucideIcons.search,
             tooltip: l10n.homeFindExerciseTooltip,
             onPressed: () => context.go('/exercises'),
           ),

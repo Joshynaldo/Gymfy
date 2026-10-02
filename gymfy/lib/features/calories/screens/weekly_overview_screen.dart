@@ -10,6 +10,7 @@ import '../data/weekly_overview_repository.dart';
 import '../../../shared/widgets/glass_app_bar.dart';
 import '../../../shared/widgets/glass_scaffold.dart';
 import '../../../app/theme/glass.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// The weekly overview: the last seven days of calories against the daily goal.
 class WeeklyOverviewScreen extends ConsumerWidget {
@@ -67,7 +68,7 @@ class _CaloriesSection extends StatelessWidget {
     );
 
     return AppPanel(
-      icon: Icons.local_fire_department_outlined,
+      icon: LucideIcons.flame,
       title: l10n.caloriesWeekCalories,
       // Days with nothing logged show no bar rather than a misleading zero.
       subtitle: logged.isEmpty

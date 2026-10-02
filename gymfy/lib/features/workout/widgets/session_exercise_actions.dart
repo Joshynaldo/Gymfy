@@ -8,6 +8,7 @@ import '../../../shared/widgets/glass_sheet.dart';
 import '../data/session_repository.dart';
 import '../data/workout_repository.dart';
 import '../screens/widgets/exercise_picker.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 // The edits a running workout's exercise list allows: add, swap, superset,
 // reorder and remove. Kept out of active_workout_screen.dart, which is busy
@@ -290,7 +291,7 @@ class _SessionOrderSheetState extends State<SessionOrderSheet> {
                   trailing: ReorderableDragStartListener(
                     index: index,
                     child: Icon(
-                      Icons.drag_handle,
+                      LucideIcons.gripHorizontal,
                       semanticLabel: context.l10n.workoutDragToReorder,
                       color: theme.colorScheme.onSurfaceVariant,
                     ),

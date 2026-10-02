@@ -6,6 +6,7 @@ import '../../../l10n/l10n.dart';
 import '../../../shared/utils/weekday.dart';
 import '../../workout/data/workout_repository.dart';
 import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// What's coming after today.
 ///
@@ -31,7 +32,7 @@ class NextUpCard extends ConsumerWidget {
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: accent.withValues(alpha: 0.15),
-          child: Icon(Icons.event_outlined, color: accent),
+          child: Icon(LucideIcons.calendar, color: accent),
         ),
         title: Text(next.day.name),
         subtitle: Text(

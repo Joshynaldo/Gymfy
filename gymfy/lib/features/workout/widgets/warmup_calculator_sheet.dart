@@ -10,6 +10,7 @@ import '../../../shared/widgets/glass_sheet.dart';
 import '../../plates/data/plate_math.dart';
 import '../data/logging_preferences.dart';
 import '../data/warmup_calculator.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Opens the warm-up calculator for [exercise] and returns the ramp sets the
 /// user chose to log, or null if they closed it.
@@ -182,7 +183,7 @@ class _WarmupCalculatorPanelState extends State<WarmupCalculatorPanel> {
             Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.remove),
+                  icon: const Icon(LucideIcons.minus),
                   tooltip: l10n.workoutWarmupLighter,
                   onPressed: _workingKg > 0 ? () => _nudge(-1) : null,
                 ),
@@ -215,7 +216,7 @@ class _WarmupCalculatorPanelState extends State<WarmupCalculatorPanel> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.add),
+                  icon: const Icon(LucideIcons.plus),
                   tooltip: l10n.workoutWarmupHeavier,
                   onPressed: () => _nudge(1),
                 ),
@@ -250,7 +251,7 @@ class _WarmupCalculatorPanelState extends State<WarmupCalculatorPanel> {
             const SizedBox(height: 14),
             AppButton(
               label: l10n.workoutWarmupLogSets(chosen.length),
-              icon: Icons.check,
+              icon: LucideIcons.check,
               height: 52,
               onPressed: chosen.isEmpty
                   ? null

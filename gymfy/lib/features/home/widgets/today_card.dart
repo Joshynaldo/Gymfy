@@ -14,6 +14,7 @@ import '../../workout/widgets/free_workout.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../app/theme/motion.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// The centrepiece of the Home tab: what today is.
 ///
@@ -53,7 +54,7 @@ class TodayCard extends ConsumerWidget {
         'no-split',
         _MessageCard(
           weekday: weekday,
-          icon: Icons.help_outline,
+          icon: LucideIcons.circleHelp,
           title: l10n.homeTodayNoSplitTitle,
           // Names what the Workout tab now asks for, so the two screens agree.
           message: l10n.homeTodayNoSplitMessage,
@@ -66,7 +67,7 @@ class TodayCard extends ConsumerWidget {
         'rest',
         _MessageCard(
           weekday: weekday,
-          icon: Icons.bedtime_outlined,
+          icon: LucideIcons.moon,
           title: l10n.homeTodayRestTitle,
           message: l10n.homeTodayRestMessage(activeSplit.name),
           footer: const _FreeWorkoutFooter(),
@@ -179,19 +180,19 @@ class _WorkoutCard extends ConsumerWidget {
             // would split one workout's sets across both.
             AppButton(
               label: l10n.homeTodayResume(running.name),
-              icon: Icons.play_arrow,
+              icon: LucideIcons.play,
               onPressed: () => context.go('/workout/session/${running.id}'),
             )
           else if (planned.isNotEmpty)
             AppButton(
               label: l10n.homeTodayStart,
-              icon: Icons.play_arrow,
+              icon: LucideIcons.play,
               onPressed: () => _start(context, ref),
             )
           else
             AppButton(
               label: l10n.homeTodayAddExercises,
-              icon: Icons.add,
+              icon: LucideIcons.plus,
               kind: AppButtonKind.secondary,
               onPressed: () =>
                   context.go('/workout/split/${split.id}/day/${day.id}'),
@@ -293,13 +294,13 @@ class _FreeWorkoutFooter extends ConsumerWidget {
     if (running != null) {
       return AppButton(
         label: l10n.homeTodayResume(running.name),
-        icon: Icons.play_arrow,
+        icon: LucideIcons.play,
         onPressed: () => context.go('/workout/session/${running.id}'),
       );
     }
     return AppButton(
       label: l10n.homeTodayStartEmpty,
-      icon: Icons.bolt_outlined,
+      icon: LucideIcons.zap,
       // Secondary: on a rest day, resting is the plan. This is for the day
       // you train anyway, and it should not shout over the message above.
       kind: AppButtonKind.secondary,

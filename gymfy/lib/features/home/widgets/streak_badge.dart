@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
 import '../../workout/data/session_repository.dart';
+import '../../../shared/widgets/lucide_icons.dart';
 
 /// Days trained in a row, in the Home app bar.
 ///
@@ -39,7 +40,7 @@ class StreakBadge extends ConsumerWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.local_fire_department, size: 16, color: accent),
+                Icon(LucideIcons.flame, size: 16, color: accent),
                 const SizedBox(width: 4),
                 Text(
                   '$streak',
