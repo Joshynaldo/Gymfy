@@ -145,8 +145,11 @@ header::after {
   padding-top: 76px;
   padding-bottom: 40px;
 }
-.hero-grid { display: grid; gap: 44px; align-items: center; }
-@media (min-width: 900px) { .hero-grid { grid-template-columns: 1.15fr .85fr; gap: 56px; } }
+/* One centred column: the copy, then the app under it. The mockup is the
+   proof of the copy, so it sits on the same axis instead of off to one side. */
+.hero-copy { max-width: 46em; margin: 0 auto; text-align: center; }
+.hero-copy .lede { margin-left: auto; margin-right: auto; }
+.hero-copy .cta { justify-content: center; }
 
 .eyebrow {
   display: inline-flex; align-items: center; gap: 8px;
@@ -234,38 +237,215 @@ h1 .fade { color: var(--muted); }
 }
 .cta-note { font-size: .86rem; color: var(--muted); margin: 14px 0 0; }
 
-/* ---- Phone ------------------------------------------------------------- */
-.phone {
-  position: relative;
-  width: 100%; max-width: 288px; margin: 0 auto;
-  aspect-ratio: 9 / 19.5;
-  border-radius: 38px;
-  padding: 9px;
+/* ---- App mockup -----------------------------------------------------------
+   The Hyper theme as the Claude Design file draws it ("Gymfy Hyper",
+   GymfyPhone.dc.html): the same 393 × 852 screen, the same glass recipes and
+   the same sample data, rebuilt as plain HTML so the page needs no runtime.
+   Everything inside is scoped to .gf-app so the page's own styles can't leak
+   in. The accent is one variable, --gf-accent, so the swatches further down
+   can recolour the whole screen; tints are mixed from it with color-mix(). */
+.mock-stage { display: flex; justify-content: center; margin-top: 56px; scroll-margin-top: 80px; }
+.mock-note { text-align: center; font-size: .86rem; color: var(--muted); margin: 18px auto 0; max-width: 30em; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* Holds the scaled device at its scaled size, so the page flows around the
+   phone it can see rather than the 413 × 872 box it was drawn at. */
+.mock-fit { position: relative; width: calc(413px * var(--mock-scale, 1)); height: calc(872px * var(--mock-scale, 1)); }
+.mock-device {
+  position: absolute; top: 0; left: 0;
+  width: 413px; height: 872px; padding: 10px;
+  border-radius: 50px;
   background: linear-gradient(160deg, #2c2d45, #14141f 55%);
-  box-shadow: 0 32px 70px -22px rgba(0,0,0,.85), 0 0 0 1px rgba(255,255,255,.07);
+  box-shadow: 0 40px 90px -30px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.08);
+  transform: scale(var(--mock-scale, 1)); transform-origin: top left;
 }
-.phone .screen {
-  position: relative; width: 100%; height: 100%;
-  /* Concentric with the frame: parent radius minus padding, 38 - 9. A round
-     number here leaves a hairline of uneven bezel at the corners. */
-  border-radius: 29px; overflow: hidden;
-  background: var(--surface);
-  display: flex; align-items: center; justify-content: center;
-}
-.phone img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-/* A screenshot that is not there yet must not leave a broken-image glyph on
-   the page. The slot explains itself until the file is dropped in, and the
-   swap needs no code change — see screenshots/README.md. */
-.phone .slot {
-  display: none;
-  padding: 24px; text-align: center;
-  font-size: .8rem; color: var(--muted); line-height: 1.5;
+.gf-app, .gf-app *, .gf-app *::before, .gf-app *::after { box-sizing: border-box; }
+.gf-app {
+  --gf-accent: #7C6BFF;
+  --gf-ink: #F2F3FA; --gf-muted: #9EA0BC;
+  width: 393px; height: 852px; position: relative; overflow: hidden; isolation: isolate;
+  border-radius: 40px; background: #07070F; color: var(--gf-ink);
+  font-family: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif;
+  font-size: 15px; line-height: 1.35; text-align: left;
+  -webkit-font-smoothing: antialiased;
 }
-.phone.empty img { display: none; }
-.phone.empty .slot { display: block; }
-.phone .slot code { color: var(--accent-2); font-size: .74rem; word-break: break-all; }
-.phone .slot .k { display: block; font-weight: 600; color: var(--text); margin-bottom: 6px; font-size: .92rem; }
+/* `hidden` must win over any display a class sets (the chip is inline-flex). */
+.gf-app [hidden] { display: none !important; }
+:where(.gf-app) button { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; }
+:where(.gf-app) button:focus-visible { outline: 2px solid var(--gf-ink); outline-offset: 2px; }
+.gf-app svg { display: block; }
+.gf-muted { color: var(--gf-muted); }
+.gf-num { font-variant-numeric: tabular-nums; }
+.gf-caps { font-size: 11px; letter-spacing: 1.1px; color: var(--gf-muted); font-weight: 600; text-transform: uppercase; }
+.gf-ellip { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* The backdrop: three slow orbs in the accent family, as in the design. */
+.gf-orbs { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+.gf-orb { position: absolute; border-radius: 50%; opacity: .33; }
+.gf-orb.a { top: -110px; left: -95px; width: 400px; height: 400px; background: radial-gradient(circle, #8874FF 0%, #7C6BFF 26%, rgba(124,107,255,0) 72%); filter: blur(46px) saturate(118%); animation: gfOrbA 34s ease-in-out infinite; }
+.gf-orb.b { top: 310px; right: -150px; width: 360px; height: 360px; background: radial-gradient(circle, #6E54FA 0%, #5B45EE 28%, rgba(91,69,238,0) 72%); filter: blur(50px) saturate(118%); animation: gfOrbB 44s ease-in-out infinite; }
+.gf-orb.c { bottom: -130px; left: 20px; width: 380px; height: 380px; background: radial-gradient(circle, #5872FF 0%, #4761F7 28%, rgba(71,97,247,0) 72%); filter: blur(54px) saturate(118%); animation: gfOrbC 39s ease-in-out infinite; }
+@keyframes gfOrbA { 50% { transform: translate3d(60px,90px,0) scale(1.15); } }
+@keyframes gfOrbB { 0%,100% { transform: scale(1.1); } 50% { transform: translate3d(-70px,-60px,0) scale(.95); } }
+@keyframes gfOrbC { 50% { transform: translate3d(40px,-80px,0) scale(1.2); } }
+
+.gf-scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; z-index: 1; overscroll-behavior: contain; scrollbar-width: none; }
+.gf-scroll::-webkit-scrollbar, .gf-hscroll::-webkit-scrollbar { width: 0; height: 0; }
+.gf-hscroll { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+.gf-screen { padding: 108px 16px 108px; }
+.gf-screen[hidden], .gf-seg[hidden] { display: none; }
+.gf-screen.workout { padding-top: 196px; }
+.gf-screen.progress { padding-top: 152px; }
+
+/* Glass, as the design layers it: raised for cards, quiet for rows. */
+.gf-card {
+  border-radius: 24px; padding: 20px;
+  background: linear-gradient(176deg, rgba(255,255,255,.115) 0%, rgba(255,255,255,.052) 46%, rgba(255,255,255,.075) 100%);
+  border: 1px solid rgba(255,255,255,.095); border-top-color: rgba(255,255,255,.30);
+  box-shadow: 0 2px 30px -16px rgba(0,0,0,.9);
+}
+.gf-card.big { border-radius: 26px; padding: 22px; }
+.gf-quiet {
+  border-radius: 20px; padding: 16px 18px; display: flex; align-items: center; gap: 14px;
+  background: linear-gradient(176deg, rgba(255,255,255,.072) 0%, rgba(255,255,255,.032) 55%, rgba(255,255,255,.05) 100%);
+  border: 1px solid rgba(255,255,255,.075); border-top-color: rgba(255,255,255,.20);
+}
+.gf-stack { display: flex; flex-direction: column; gap: 10px; }
+.gf-gap22 { height: 22px; } .gf-gap34 { height: 34px; }
+.gf-h { display: flex; justify-content: space-between; align-items: baseline; padding: 0 4px; margin-bottom: 14px; }
+.gf-h b { font-size: 17px; font-weight: 600; }
+.gf-h span { font-size: 13px; color: var(--gf-muted); }
+.gf-big { font-size: 28px; font-weight: 600; letter-spacing: -.4px; }
+
+.gf-primary {
+  width: 100%; height: 54px; border-radius: 18px; position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  font-size: 16px; font-weight: 600; color: #fff;
+  background: var(--gf-accent);
+  box-shadow: 0 8px 26px -10px var(--gf-accent);
+}
+.gf-primary::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(178deg, rgba(255,255,255,.26) 0%, rgba(255,255,255,.04) 42%, rgba(0,0,0,.10) 100%); }
+.gf-primary:active { transform: scale(.985); }
+.gf-primary:disabled { opacity: .45; cursor: default; }
+.gf-secondary {
+  height: 50px; border-radius: 16px; display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 15px; font-weight: 600;
+  background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.16);
+}
+.gf-secondary:hover { background: rgba(255,255,255,.15); }
+
+/* Bars and rows */
+.gf-bars { display: flex; align-items: flex-end; gap: 8px; margin-top: 20px; }
+.gf-bar { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.gf-bar i { display: block; width: 100%; border-radius: 5px; background: rgba(255,255,255,.22); }
+.gf-bar span { font-size: 11px; color: var(--gf-muted); }
+.gf-track { flex: 1; height: 7px; border-radius: 4px; background: rgba(255,255,255,.09); overflow: hidden; }
+.gf-track i { display: block; height: 100%; border-radius: 4px; background: rgba(255,255,255,.40); }
+.gf-dots { display: flex; gap: 5px; flex: none; }
+.gf-dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.22); }
+.gf-dots i.on { background: var(--gf-accent); }
+.gf-rows > div { display: flex; align-items: baseline; gap: 12px; padding: 15px 0; }
+.gf-set { display: flex; align-items: center; gap: 12px; height: 36px; font-size: 16px; font-variant-numeric: tabular-nums; }
+.gf-set b { width: 20px; flex: none; font-size: 13px; font-weight: 600; }
+.gf-set span:nth-child(2) { flex: 1; }
+.gf-set em { font-style: normal; font-size: 11px; color: var(--gf-muted); letter-spacing: .6px; }
+.gf-set.warm { color: var(--gf-muted); }
+
+/* Top bar */
+.gf-top { position: absolute; top: 0; left: 0; right: 0; z-index: 3; pointer-events: none; border-bottom: 1px solid transparent; transition: background 180ms linear, border-color 180ms linear; }
+.gf-top.scrolled { background: linear-gradient(180deg, rgba(7,7,15,.78) 0%, rgba(7,7,15,.62) 100%); backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%); border-bottom-color: rgba(255,255,255,.12); }
+.gf-status { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 22px; font-size: 13px; font-weight: 600; letter-spacing: .2px; }
+.gf-status div { display: flex; align-items: center; gap: 5px; opacity: .9; }
+.gf-titlebar { height: 52px; display: flex; align-items: center; gap: 12px; padding: 0 18px; pointer-events: auto; }
+.gf-title { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 10px; }
+.gf-title strong { font-size: 19px; font-weight: 600; letter-spacing: -.2px; }
+.gf-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 11px; background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.13); font-size: 12px; font-weight: 600; color: var(--gf-muted); flex: none; }
+.gf-iconbtn { width: 36px; height: 36px; border-radius: 13px; display: flex; align-items: center; justify-content: center; flex: none; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.11); }
+.gf-finish { padding: 8px 14px; border-radius: 13px; font-size: 14px; font-weight: 600; color: var(--gf-muted); flex: none; }
+.gf-finish:hover { color: var(--gf-ink); background: rgba(255,255,255,.07); }
+.gf-segbar { padding: 2px 16px 12px; pointer-events: auto; }
+.gf-segs { display: flex; padding: 3px; border-radius: 15px; background: linear-gradient(174deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.04) 55%, rgba(255,255,255,.065) 100%); border: 1px solid rgba(255,255,255,.085); border-top-color: rgba(255,255,255,.24); }
+.gf-segs button { flex: 1; height: 34px; border-radius: 12px; font-size: 13.5px; font-weight: 500; color: var(--gf-muted); }
+.gf-segs button[aria-pressed="true"] { background: rgba(255,255,255,.13); color: var(--gf-ink); font-weight: 600; }
+.gf-ranges { display: flex; gap: 7px; margin-bottom: 22px; }
+.gf-ranges button { flex: 1; height: 34px; border-radius: 11px; font-size: 13px; font-weight: 500; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); color: var(--gf-muted); }
+.gf-ranges button[aria-pressed="true"] { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.18); color: var(--gf-ink); }
+
+/* Rest pane: the one blurred pane on the workout screen. */
+.gf-rest {
+  position: absolute; top: 96px; left: 14px; right: 14px; z-index: 4;
+  border-radius: 24px; overflow: hidden;
+  background: linear-gradient(176deg, color-mix(in srgb, var(--gf-accent) 22%, transparent) 0%, color-mix(in srgb, var(--gf-accent) 14%, transparent) 100%), rgba(11,11,21,.70);
+  border: 1px solid color-mix(in srgb, var(--gf-accent) 24%, transparent); border-top-color: rgba(255,255,255,.26);
+  box-shadow: 0 20px 44px -20px rgba(0,0,0,.88);
+  backdrop-filter: blur(30px) saturate(185%) brightness(1.08); -webkit-backdrop-filter: blur(30px) saturate(185%) brightness(1.08);
+  transition: background 260ms ease-out, border-color 260ms ease-out;
+}
+.gf-rest.done { background: linear-gradient(176deg, color-mix(in srgb, var(--gf-accent) 40%, transparent) 0%, color-mix(in srgb, var(--gf-accent) 30%, transparent) 100%), rgba(11,11,21,.70); border-color: color-mix(in srgb, var(--gf-accent) 46%, transparent); border-top-color: rgba(255,255,255,.36); }
+.gf-rest[hidden] { display: none; }
+.gf-rest-row { display: flex; align-items: center; gap: 16px; padding: 16px 16px 14px 20px; }
+.gf-clock { font-size: 38px; font-weight: 600; letter-spacing: -1px; line-height: 1.05; margin-top: 4px; color: var(--gf-accent); }
+.gf-rest.done .gf-clock { font-size: 34px; letter-spacing: -.8px; }
+.gf-plus30 { padding: 10px 14px; border-radius: 14px; font-size: 13.5px; font-weight: 600; flex: none; background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.16); }
+.gf-rest.done .gf-plus30 { display: none; }
+.gf-close { width: 36px; height: 36px; border-radius: 13px; display: flex; align-items: center; justify-content: center; flex: none; }
+.gf-close:hover { background: rgba(255,255,255,.10); }
+.gf-restbar { height: 3px; background: rgba(255,255,255,.10); }
+.gf-restbar i { display: block; height: 100%; background: var(--gf-accent); transition: width 900ms linear; }
+
+/* Bottom navigation pill */
+.gf-nav {
+  position: absolute; bottom: 14px; left: 14px; right: 14px; height: 62px; z-index: 5;
+  border-radius: 26px; display: flex; align-items: center; gap: 2px; padding: 5px;
+  background: linear-gradient(174deg, rgba(255,255,255,.115) 0%, rgba(255,255,255,.04) 48%, rgba(255,255,255,.075) 100%), rgba(11,11,21,.68);
+  border: 1px solid rgba(255,255,255,.10); border-top-color: rgba(255,255,255,.32);
+  box-shadow: 0 20px 40px -20px rgba(0,0,0,.95);
+  backdrop-filter: blur(30px) saturate(185%) brightness(1.10); -webkit-backdrop-filter: blur(30px) saturate(185%) brightness(1.10);
+}
+.gf-nav button { flex: 1; height: 50px; border-radius: 20px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; color: var(--gf-muted); transition: color 170ms ease-out; }
+.gf-nav button::before { content: ""; position: absolute; inset: 0; border-radius: 20px; opacity: 0; transition: opacity 190ms ease-out; background: linear-gradient(176deg, rgba(255,255,255,.165) 0%, rgba(255,255,255,.06) 58%, rgba(255,255,255,.095) 100%); border: 1px solid rgba(255,255,255,.07); border-top-color: rgba(255,255,255,.26); }
+.gf-nav button[aria-current="page"] { color: var(--gf-ink); }
+.gf-nav button[aria-current="page"]::before { opacity: 1; }
+.gf-nav svg { position: relative; }
+.gf-nav span { position: relative; font-size: 10.5px; font-weight: 500; letter-spacing: .2px; }
+.gf-nav button[aria-current="page"] span { font-weight: 600; }
+.gf-homebar { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); width: 118px; height: 4px; border-radius: 2px; background: rgba(242,243,250,.28); z-index: 9; pointer-events: none; }
+
+/* Log-set sheet */
+.gf-sheet-wrap { position: absolute; inset: 0; z-index: 8; }
+.gf-sheet-wrap[hidden] { display: none; }
+.gf-scrim { position: absolute; inset: 0; width: 100%; background: rgba(3,3,8,.62); cursor: default; }
+.gf-sheet {
+  position: absolute; bottom: 0; left: 0; right: 0; padding: 12px 18px 26px;
+  border-radius: 28px 28px 0 0;
+  background: linear-gradient(178deg, rgba(38,36,62,.80) 0%, rgba(18,18,32,.80) 38%, rgba(15,15,27,.84) 100%);
+  border-top: 1px solid rgba(255,255,255,.32);
+  box-shadow: 0 -28px 70px -26px rgba(0,0,0,.95);
+  backdrop-filter: blur(36px) saturate(190%) brightness(1.06); -webkit-backdrop-filter: blur(36px) saturate(190%) brightness(1.06);
+}
+.gf-grab { width: 38px; height: 4px; border-radius: 2px; background: rgba(255,255,255,.22); margin: 0 auto 16px; }
+.gf-toggle { flex: none; white-space: nowrap; padding: 8px 13px; border-radius: 13px; font-size: 12.5px; font-weight: 600; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.10); color: var(--gf-muted); }
+.gf-toggle[aria-pressed="true"] { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.24); color: var(--gf-ink); }
+.gf-hint { display: flex; align-items: center; gap: 8px; padding: 11px 14px; border-radius: 15px; font-size: 12.5px; color: var(--gf-muted); background: linear-gradient(176deg, rgba(255,255,255,.072) 0%, rgba(255,255,255,.032) 55%, rgba(255,255,255,.05) 100%); border: 1px solid rgba(255,255,255,.075); border-top-color: rgba(255,255,255,.20); }
+.gf-hint[hidden] { display: none; }
+.gf-readout { display: flex; align-items: baseline; justify-content: center; gap: 8px; margin: 26px 0 6px; }
+.gf-readout strong { font-size: 66px; font-weight: 600; letter-spacing: -2.5px; line-height: 1; }
+.gf-readout strong.empty { color: var(--gf-muted); }
+.gf-readout span { font-size: 20px; font-weight: 500; color: var(--gf-muted); }
+.gf-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-top: 22px; }
+.gf-pad button { height: 56px; border-radius: 17px; font-size: 23px; font-weight: 500; background: linear-gradient(174deg, rgba(255,255,255,.115) 0%, rgba(255,255,255,.045) 52%, rgba(255,255,255,.07) 100%); border: 1px solid rgba(255,255,255,.085); border-top-color: rgba(255,255,255,.26); }
+.gf-pad button:hover { filter: brightness(1.35); }
+.gf-pad button:active { transform: scale(.97); }
+.gf-pad button:disabled { visibility: hidden; }
+.gf-sheet-actions { display: flex; gap: 10px; margin-top: 16px; }
+.gf-sheet-actions button { flex: 1; height: 52px; border-radius: 17px; font-size: 14.5px; font-weight: 600; }
+.gf-repeat { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); }
+.gf-repeat:hover { background: rgba(255,255,255,.13); }
+
+@media (prefers-reduced-motion: reduce) {
+  .gf-orb { animation: none !important; }
+  .gf-app * { transition: none !important; }
+}
 
 /* ---- Claim strip -------------------------------------------------------- */
 .claims { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--outline);
@@ -317,18 +497,32 @@ h2 { font-size: clamp(1.65rem, 4vw, 2.3rem); letter-spacing: -.03em; line-height
 .card h3 { margin: 0 0 8px; font-size: 1.06rem; letter-spacing: -.015em; font-weight: 600; }
 .card p { margin: 0; color: var(--muted); font-size: .94rem; line-height: 1.58; }
 
-/* ---- Alternating deep dives -------------------------------------------- */
-.dive { display: grid; gap: 36px; align-items: center; padding: 30px 0; }
-@media (min-width: 900px) { .dive { grid-template-columns: 1fr 1fr; gap: 64px; } .dive.flip .copy { order: 2; } }
-.dive h3 { font-size: clamp(1.3rem, 3vw, 1.7rem); letter-spacing: -.025em; margin: 0 0 14px; font-weight: 700; }
-.dive p { color: var(--muted); margin: 0 0 14px; }
+/* ---- Deep dives ---------------------------------------------------------
+   Three panes, each ending in a button that puts the mockup above on the
+   screen it describes. The screenshots that used to sit beside them went; the
+   live preview says it better than a still could. */
+.dives { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 960px) { .dives { grid-template-columns: repeat(3, 1fr); } }
+.dive { padding: 28px 26px; display: flex; flex-direction: column; }
+.dive h3 { font-size: clamp(1.2rem, 2.4vw, 1.4rem); letter-spacing: -.02em; line-height: 1.25; margin: 0 0 14px; font-weight: 700; }
+.dive p { color: var(--muted); margin: 0 0 14px; font-size: .96rem; }
 .dive .pull { color: var(--text); font-weight: 500; border-left: 2px solid var(--accent); padding-left: 14px; }
+.dive .show { margin-top: auto; align-self: flex-start; padding: 11px 18px; font-size: .92rem; }
+.dive .show svg { width: 16px; height: 16px; }
 
-/* ---- Themes ------------------------------------------------------------- */
-.swatches { display: flex; flex-wrap: wrap; gap: 10px; }
-/* Circles. Rounded squares the size of a button read as buttons, and these
-   are colour samples — nothing happens when you press them. */
-.sw { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--fill-edge); }
+/* ---- Themes -------------------------------------------------------------
+   The swatches are controls now: each one recolours the mockup, so they are
+   real buttons with a pressed state, and the picked one says so. */
+.swatches { display: flex; flex-wrap: wrap; gap: 10px; margin: 4px 0 18px; }
+.sw {
+  width: 44px; height: 44px; border-radius: 50%; padding: 0; cursor: pointer;
+  border: 2px solid transparent; box-shadow: 0 0 0 1px var(--fill-edge) inset;
+  transition: transform .15s ease, border-color .15s ease;
+}
+.sw:hover { transform: scale(1.06); }
+.sw[aria-pressed="true"] { border-color: var(--text); }
+.sw:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .sw { transition: none; } .sw:hover { transform: none; } }
 
 .card code { font-size: .88em; color: var(--text); }
 
@@ -386,44 +580,302 @@ footer a:hover { text-decoration: underline; }
 
 <!-- ================= HERO ================= -->
 <div class="wrap hero">
-  <div class="hero-grid">
-    <div>
-      <span class="eyebrow"><span class="dot"></span> Out now on Android</span>
-      <h1>Your gym log.<br>On your phone.<br><span class="fade">Only on your phone.</span></h1>
-      <!-- Outcome first, mechanism as the evidence behind it. The earlier
-           draft opened with "no networking code", which is how the app is
-           built rather than what you get from it. -->
-      <p class="lede">
-        Gymfy plans your split, logs your sets and shows you the numbers moving.
-        <strong>Your training stays on the phone</strong> — there is no
-        account, no ads, and no networking code in the app to send it anywhere.
-      </p>
-      <div class="cta">
-        <!-- The APK is attached to each GitHub release by
-             .github/workflows/release-apk.yml; /latest always resolves to the
-             newest one, so this link never needs editing per version. -->
-        <a class="btn btn-primary" href="https://github.com/Joshynaldo/Gymfy/releases/latest">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>
-          Download for Android
-        </a>
-        <a class="btn btn-ghost" href="#features">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          See what it does
-        </a>
-      </div>
-      <p class="cta-note">Free, and staying that way. Google Play and the App Store are coming soon.</p>
+  <div class="hero-copy">
+    <span class="eyebrow"><span class="dot"></span> Out now on Android</span>
+    <h1>Your gym log.<br>On your phone.<br><span class="fade">Only on your phone.</span></h1>
+    <!-- Outcome first, mechanism as the evidence behind it. The earlier
+         draft opened with "no networking code", which is how the app is
+         built rather than what you get from it. -->
+    <p class="lede">
+      Gymfy plans your split, logs your sets and shows you the numbers moving.
+      <strong>Your training stays on the phone</strong> — there is no
+      account, no ads, and no networking code in the app to send it anywhere.
+    </p>
+    <div class="cta">
+      <!-- The APK is attached to each GitHub release by
+           .github/workflows/release-apk.yml; /latest always resolves to the
+           newest one, so this link never needs editing per version. -->
+      <a class="btn btn-primary" href="https://github.com/Joshynaldo/Gymfy/releases/latest">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>
+        Download for Android
+      </a>
+      <a class="btn btn-ghost" href="#features">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        See what it does
+      </a>
     </div>
+    <p class="cta-note">Free, and staying that way. Google Play and the App Store are coming soon.</p>
+  </div>
 
-    <div class="phone" data-shot="screenshots/active-workout.jpg">
-      <div class="screen">
-        <img src="screenshots/active-workout.jpg" alt="Gymfy logging a set during a workout">
-        <div class="slot">
-          <span class="k">Screenshot slot</span>
-          Drop a 9:19.5 PNG at<br><code>screenshots/active-workout.jpg</code>
+  <!-- ================= APP MOCKUP =================
+       The Hyper theme from the Claude Design file, rebuilt as plain HTML.
+       Sample data throughout; the script at the bottom of the page wires up
+       the tabs, the rest timer, the log-set sheet and the Progress views. -->
+  <div class="mock-stage" id="preview">
+    <div class="mock-fit">
+      <div class="mock-device">
+        <div class="gf-app" id="gf" role="region" aria-label="Interactive preview of the Gymfy app, with sample data">
+
+          <div class="gf-orbs" aria-hidden="true"><div class="gf-orb a"></div><div class="gf-orb b"></div><div class="gf-orb c"></div></div>
+
+          <div class="gf-scroll" id="gf-scroll">
+
+            <!-- Home -->
+            <div class="gf-screen" data-view="home">
+              <div class="gf-card big">
+                <div class="gf-caps" style="display:flex;justify-content:space-between"><span>Wednesday</span><span>Push · Pull · Legs</span></div>
+                <div style="font-size:32px;line-height:1.1;font-weight:600;margin-top:10px;letter-spacing:-.5px">Push day</div>
+                <div style="display:flex;flex-direction:column;gap:11px;margin-top:20px">
+                  <div style="display:flex;justify-content:space-between;gap:14px"><span class="gf-ellip">Barbell bench press</span><span class="gf-muted gf-num">4 × 6–8</span></div>
+                  <div style="display:flex;justify-content:space-between;gap:14px"><span class="gf-ellip">Incline dumbbell press</span><span class="gf-muted gf-num">3 × 8–10</span></div>
+                  <div style="display:flex;justify-content:space-between;gap:14px"><span class="gf-ellip">Dumbbell shoulder press</span><span class="gf-muted gf-num">3 × 10</span></div>
+                  <div style="display:flex;justify-content:space-between;gap:14px"><span class="gf-ellip">Cable fly</span><span class="gf-muted gf-num">3 × 12–15</span></div>
+                  <div style="display:flex;justify-content:space-between;gap:14px"><span class="gf-ellip">Rope triceps pushdown</span><span class="gf-muted gf-num">3 × 12</span></div>
+                </div>
+                <button type="button" class="gf-primary" data-go="workout" style="margin-top:24px">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="#fff" aria-hidden="true"><path d="M4 2.6v10.8l9-5.4z"/></svg>Start workout
+                </button>
+              </div>
+              <div class="gf-gap22"></div>
+              <div class="gf-card">
+                <div class="gf-caps">Last workout</div>
+                <div style="font-size:19px;font-weight:600;margin-top:8px">Pull day</div>
+                <div class="gf-muted" style="font-size:13px;margin-top:4px">Monday · 1 h 12 min</div>
+                <div style="margin-top:12px">22 sets · 9,480 kg</div>
+              </div>
+              <div class="gf-gap34"></div>
+              <div class="gf-h"><b>This week</b><span>4 workouts</span></div>
+              <div class="gf-card">
+                <div class="gf-big">38,240 kg</div>
+                <div class="gf-muted" style="font-size:13px;margin-top:3px">lifted since Monday</div>
+                <div class="gf-bars" style="height:76px" aria-hidden="true">
+                  <div class="gf-bar"><i style="height:47px"></i><span>Mon</span></div>
+                  <div class="gf-bar"><i style="height:2px"></i><span>Tue</span></div>
+                  <div class="gf-bar"><i style="height:56px"></i><span>Wed</span></div>
+                  <div class="gf-bar"><i style="height:2px"></i><span>Thu</span></div>
+                  <div class="gf-bar"><i style="height:44px"></i><span>Fri</span></div>
+                  <div class="gf-bar"><i style="height:44px"></i><span>Sat</span></div>
+                  <div class="gf-bar"><i style="height:2px"></i><span>Sun</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Active workout -->
+            <div class="gf-screen workout" data-view="workout" hidden>
+              <div class="gf-card big" style="padding:0;overflow:hidden">
+                <div style="padding:20px 20px 6px">
+                  <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
+                    <span style="font-size:19px;font-weight:600">Barbell bench press</span>
+                    <span class="gf-muted" style="font-size:12px;flex:none">4 × 6–8</span>
+                  </div>
+                  <div class="gf-muted" style="display:flex;align-items:center;gap:7px;margin-top:9px;font-size:13px">
+                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 11l4-4 3.5 3L14 5"/></svg>
+                    You hit every set last time — going up to 102.5 kg
+                  </div>
+                </div>
+                <div id="gf-sets" style="display:flex;flex-direction:column;gap:2px;padding:14px 20px 6px"></div>
+                <button type="button" class="gf-secondary" id="gf-log" style="margin:14px 16px 16px;width:calc(100% - 32px)">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg><span>Log set 3</span>
+                </button>
+              </div>
+              <div style="height:28px"></div>
+              <div class="gf-caps" style="padding:0 6px">Up next</div>
+              <div style="height:12px"></div>
+              <div class="gf-stack">
+                <div class="gf-quiet"><div style="flex:1;min-width:0"><div class="gf-ellip" style="font-weight:500">Incline dumbbell press</div><div class="gf-muted gf-num" style="font-size:12px;margin-top:3px">3 × 8–10</div></div><div class="gf-dots" aria-hidden="true"><i></i><i></i><i></i></div></div>
+                <div class="gf-quiet"><div style="flex:1;min-width:0"><div class="gf-ellip" style="font-weight:500">Dumbbell shoulder press</div><div class="gf-muted gf-num" style="font-size:12px;margin-top:3px">3 × 10</div></div><div class="gf-dots" aria-hidden="true"><i></i><i></i><i></i></div></div>
+                <div class="gf-quiet"><div style="flex:1;min-width:0"><div class="gf-ellip" style="font-weight:500">Cable fly</div><div class="gf-muted gf-num" style="font-size:12px;margin-top:3px">3 × 12–15</div></div><div class="gf-dots" aria-hidden="true"><i></i><i></i><i></i></div></div>
+                <div class="gf-quiet"><div style="flex:1;min-width:0"><div class="gf-ellip" style="font-weight:500">Rope triceps pushdown</div><div class="gf-muted gf-num" style="font-size:12px;margin-top:3px">3 × 12</div></div><div class="gf-dots" aria-hidden="true"><i></i><i></i><i></i></div></div>
+              </div>
+            </div>
+
+            <!-- Progress -->
+            <div class="gf-screen progress" data-view="progress" hidden>
+              <div class="gf-seg" data-seg="Trends">
+                <div class="gf-ranges" id="gf-ranges">
+                  <button type="button" aria-pressed="true" data-range="Week">Week</button>
+                  <button type="button" aria-pressed="false" data-range="Month">Month</button>
+                  <button type="button" aria-pressed="false" data-range="Year">Year</button>
+                </div>
+                <div class="gf-card big" style="padding:22px 20px 16px">
+                  <div class="gf-caps">Volume</div>
+                  <div id="gf-vol" style="font-size:34px;font-weight:600;letter-spacing:-.6px;margin-top:8px">38,240 kg</div>
+                  <div id="gf-vol-detail" class="gf-muted" style="font-size:13px;margin-top:2px">lifted in the last week</div>
+                  <svg id="gf-chart" width="309" height="150" viewBox="0 0 309 150" style="margin-top:22px;overflow:visible" aria-hidden="true">
+                    <defs><linearGradient id="gfArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" style="stop-color:var(--gf-accent);stop-opacity:.34"/><stop offset="100%" style="stop-color:var(--gf-accent);stop-opacity:0"/></linearGradient></defs>
+                    <g stroke="rgba(255,255,255,0.07)"><line x1="0" y1="4" x2="309" y2="4"/><line x1="0" y1="41" x2="309" y2="41"/><line x1="0" y1="78" x2="309" y2="78"/><line x1="0" y1="115" x2="309" y2="115"/></g>
+                    <path id="gf-area" fill="url(#gfArea)"/>
+                    <path id="gf-line" fill="none" style="stroke:var(--gf-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <g id="gf-points" style="fill:var(--gf-accent)"></g>
+                    <g id="gf-labels" fill="#9EA0BC" font-size="10.5" text-anchor="middle" font-family="Schibsted Grotesk, sans-serif"></g>
+                  </svg>
+                </div>
+                <div style="height:18px"></div>
+                <div class="gf-card">
+                  <div class="gf-caps">Workouts</div>
+                  <div id="gf-sess" class="gf-big" style="margin-top:8px">4</div>
+                  <div id="gf-sess-detail" class="gf-muted" style="font-size:13px;margin-top:2px">sessions · 1 personal record</div>
+                  <div class="gf-bars" id="gf-sess-bars" style="height:64px;gap:6px;margin-top:18px" aria-hidden="true"></div>
+                </div>
+                <div style="height:18px"></div>
+                <div class="gf-card">
+                  <div class="gf-caps">What you trained</div>
+                  <div style="font-size:20px;font-weight:600;margin-top:8px">Chest took the most sets</div>
+                  <div id="gf-muscles" style="display:flex;flex-direction:column;gap:11px;margin-top:20px"></div>
+                </div>
+              </div>
+
+              <div class="gf-seg" data-seg="All-time" hidden>
+                <div style="display:flex;gap:10px">
+                  <div class="gf-card" style="flex:1;border-radius:22px;padding:18px 14px"><div style="font-size:23px;font-weight:600;letter-spacing:-.4px">312</div><div class="gf-muted" style="font-size:11px;margin-top:5px;letter-spacing:.4px">WORKOUTS</div></div>
+                  <div class="gf-card" style="flex:1;border-radius:22px;padding:18px 14px"><div style="font-size:23px;font-weight:600;letter-spacing:-.4px">8,942</div><div class="gf-muted" style="font-size:11px;margin-top:5px;letter-spacing:.4px">SETS</div></div>
+                  <div class="gf-card" style="flex:1;border-radius:22px;padding:18px 14px"><div style="font-size:23px;font-weight:600;letter-spacing:-.4px">2.42M</div><div class="gf-muted" style="font-size:11px;margin-top:5px;letter-spacing:.4px">KG LIFTED</div></div>
+                </div>
+                <div style="height:30px"></div>
+                <div class="gf-h" style="margin-bottom:12px"><b>Activity</b></div>
+                <div class="gf-card" style="padding:18px 0 18px 18px;overflow:hidden">
+                  <div class="gf-hscroll" id="gf-heat-scroll" style="padding-right:18px">
+                    <canvas id="gf-heat" width="1590" height="240" style="width:795px;height:120px;display:block" aria-label="A year of training days"></canvas>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;margin-top:14px;padding-right:18px;font-size:11px" class="gf-muted">
+                    <span style="font-size:12px;flex:1">312 days · 389 h this year</span><span>Less</span>
+                    <div style="display:flex;gap:3px" aria-hidden="true">
+                      <i style="width:11px;height:11px;border-radius:3px;background:rgba(242,243,250,0.08)"></i>
+                      <i style="width:11px;height:11px;border-radius:3px;background:color-mix(in srgb, var(--gf-accent) 28%, transparent)"></i>
+                      <i style="width:11px;height:11px;border-radius:3px;background:color-mix(in srgb, var(--gf-accent) 50%, transparent)"></i>
+                      <i style="width:11px;height:11px;border-radius:3px;background:color-mix(in srgb, var(--gf-accent) 74%, transparent)"></i>
+                      <i style="width:11px;height:11px;border-radius:3px;background:var(--gf-accent)"></i>
+                    </div>
+                    <span>More</span>
+                  </div>
+                </div>
+                <div style="height:30px"></div>
+                <div class="gf-h" style="margin-bottom:12px"><b>Records</b></div>
+                <div class="gf-card gf-rows" style="padding:6px 20px">
+                  <div><div style="flex:1;min-width:0"><div class="gf-ellip" style="font-weight:500">Deadlift</div><div class="gf-muted" style="font-size:12px;margin-top:3px">14 Aug</div></div><div class="gf-num" style="font-size:17px;font-weight:600">195 kg × 1</div></div>
+                  <div><div style="flex:1;min-width:0"><div class="gf-ellip" style="font-weight:500">Barbell back squat</div><div class="gf-muted" style="font-size:12px;margin-top:3px">2 Aug</div></div><div class="gf-num" style="font-size:17px;font-weight:600">160 kg × 1</div></div>
+                  <div><div style="flex:1;min-width:0"><div class="gf-ellip" style="font-weight:500">Barbell bench press</div><div class="gf-muted" style="font-size:12px;margin-top:3px">28 Jul</div></div><div class="gf-num" style="font-size:17px;font-weight:600">122.5 kg × 1</div></div>
+                  <div><div style="flex:1;min-width:0"><div class="gf-ellip" style="font-weight:500">Barbell row</div><div class="gf-muted" style="font-size:12px;margin-top:3px">11 Aug</div></div><div class="gf-num" style="font-size:17px;font-weight:600">100 kg × 5</div></div>
+                </div>
+                <div style="height:30px"></div>
+                <div class="gf-h" style="margin-bottom:12px"><b>Strength rank</b></div>
+                <div class="gf-stack" style="gap:12px">
+                  <div class="gf-card" style="border-radius:22px;padding:18px 20px"><div style="display:flex;align-items:baseline;gap:12px"><span class="gf-ellip" style="flex:1;font-weight:500">Deadlift</span><span style="font-size:13px;font-weight:600">Advanced</span></div><div class="gf-track" style="height:6px;margin-top:14px"><i style="width:71%"></i></div><div class="gf-muted" style="display:flex;justify-content:space-between;margin-top:9px;font-size:12px"><span>2.44 × bodyweight</span><span>+27 kg to Elite</span></div></div>
+                  <div class="gf-card" style="border-radius:22px;padding:18px 20px"><div style="display:flex;align-items:baseline;gap:12px"><span class="gf-ellip" style="flex:1;font-weight:500">Barbell back squat</span><span class="gf-muted" style="font-size:13px;font-weight:600">Intermediate</span></div><div class="gf-track" style="height:6px;margin-top:14px"><i style="width:58%"></i></div><div class="gf-muted" style="display:flex;justify-content:space-between;margin-top:9px;font-size:12px"><span>2.00 × bodyweight</span><span>+22 kg to Advanced</span></div></div>
+                  <div class="gf-card" style="border-radius:22px;padding:18px 20px"><div style="display:flex;align-items:baseline;gap:12px"><span class="gf-ellip" style="flex:1;font-weight:500">Barbell bench press</span><span class="gf-muted" style="font-size:13px;font-weight:600">Intermediate</span></div><div class="gf-track" style="height:6px;margin-top:14px"><i style="width:52%"></i></div><div class="gf-muted" style="display:flex;justify-content:space-between;margin-top:9px;font-size:12px"><span>1.53 × bodyweight</span><span>+18 kg to Advanced</span></div></div>
+                </div>
+                <div style="height:30px"></div>
+                <div class="gf-h" style="margin-bottom:12px"><b>Streak</b></div>
+                <div class="gf-card" style="display:flex;gap:20px">
+                  <div style="flex:1"><div style="font-size:26px;font-weight:600">12 days</div><div class="gf-muted" style="font-size:12px;margin-top:4px">current</div></div>
+                  <div style="width:1px;background:rgba(255,255,255,0.10)"></div>
+                  <div style="flex:1"><div style="font-size:26px;font-weight:600">23 days</div><div class="gf-muted" style="font-size:12px;margin-top:4px">best ever</div></div>
+                </div>
+              </div>
+
+              <div class="gf-seg" data-seg="Body" hidden>
+                <div class="gf-card gf-rows" style="padding:6px 20px">
+                  <div><span style="flex:1">Bodyweight</span><span class="gf-num" style="font-size:17px;font-weight:600">80.4 kg</span><span class="gf-muted gf-num" style="font-size:12px;width:52px;text-align:right">+0.6</span></div>
+                  <div><span style="flex:1">Chest</span><span class="gf-num" style="font-size:17px;font-weight:600">106 cm</span><span class="gf-muted gf-num" style="font-size:12px;width:52px;text-align:right">+1.0</span></div>
+                  <div><span style="flex:1">Waist</span><span class="gf-num" style="font-size:17px;font-weight:600">84 cm</span><span class="gf-muted gf-num" style="font-size:12px;width:52px;text-align:right">−0.5</span></div>
+                  <div><span style="flex:1">Upper arm</span><span class="gf-num" style="font-size:17px;font-weight:600">38.5 cm</span><span class="gf-muted gf-num" style="font-size:12px;width:52px;text-align:right">+0.4</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- More -->
+            <div class="gf-screen" data-view="more" hidden>
+              <div class="gf-stack" id="gf-tools"></div>
+            </div>
+          </div>
+
+          <!-- Top bar -->
+          <div class="gf-top" id="gf-top">
+            <div class="gf-status" aria-hidden="true">
+              <span>9:41</span>
+              <div>
+                <svg width="15" height="11" viewBox="0 0 15 11" fill="#F2F3FA"><rect x="0" y="7" width="2.6" height="4" rx="0.8"/><rect x="4" y="5" width="2.6" height="6" rx="0.8"/><rect x="8" y="2.6" width="2.6" height="8.4" rx="0.8"/><rect x="12" y="0" width="2.6" height="11" rx="0.8"/></svg>
+                <svg width="20" height="11" viewBox="0 0 20 11" fill="none"><rect x="0.6" y="0.6" width="16" height="9.8" rx="2.6" stroke="rgba(242,243,250,0.6)"/><rect x="2.2" y="2.2" width="11" height="6.6" rx="1.4" fill="#F2F3FA"/><path d="M18.4 3.8v3.4a2.2 2.2 0 000-3.4z" fill="rgba(242,243,250,0.6)"/></svg>
+              </div>
+            </div>
+            <div class="gf-titlebar">
+              <div class="gf-title">
+                <strong id="gf-title" class="gf-ellip">Hi, Jonas</strong>
+                <span class="gf-chip" id="gf-streak"><svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor" aria-hidden="true"><path d="M5 0C3 3 0 4 0 7.2A4.8 4.8 0 005 12a4.8 4.8 0 005-4.8C10 4.4 7.6 3.6 5 0z"/></svg>12<span class="sr-only"> day streak</span></span>
+              </div>
+              <span class="gf-iconbtn" id="gf-search" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#F2F3FA" stroke-width="1.8"><circle cx="6.8" cy="6.8" r="4.8"/><path d="M10.4 10.4L14 14"/></svg></span>
+              <button type="button" class="gf-finish" id="gf-finish" data-go="home" hidden>Finish</button>
+            </div>
+            <div class="gf-segbar" id="gf-segbar" hidden>
+              <div class="gf-segs">
+                <button type="button" aria-pressed="false" data-seg-btn="Body">Body</button>
+                <button type="button" aria-pressed="true" data-seg-btn="Trends">Trends</button>
+                <button type="button" aria-pressed="false" data-seg-btn="All-time">All-time</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rest timer -->
+          <div class="gf-rest" id="gf-rest" hidden>
+            <div class="gf-rest-row">
+              <div style="flex:1;min-width:0">
+                <div class="gf-caps" id="gf-rest-caps">Resting</div>
+                <div class="gf-clock" id="gf-clock" role="timer" aria-live="off">1:47</div>
+                <div class="gf-muted" style="font-size:12.5px;margin-top:2px">Barbell bench press</div>
+              </div>
+              <button type="button" class="gf-plus30" id="gf-plus30">+30s</button>
+              <button type="button" class="gf-close" id="gf-rest-close" aria-label="Dismiss the rest timer">
+                <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#9EA0BC" stroke-width="1.8" aria-hidden="true"><path d="M1.5 1.5l11 11M12.5 1.5l-11 11"/></svg>
+              </button>
+            </div>
+            <div class="gf-restbar"><i id="gf-restbar"></i></div>
+          </div>
+
+          <!-- Tab bar -->
+          <nav class="gf-nav" aria-label="App tabs">
+            <button type="button" data-tab="home" aria-current="page"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M2.6 8.4L10 2.6l7.4 5.8v8.2a.8.8 0 01-.8.8h-4V12h-5v5.4h-4a.8.8 0 01-.8-.8z"/></svg><span>Home</span></button>
+            <button type="button" data-tab="workout"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4.4 7v6M2.2 8.4v3.2M15.6 7v6M17.8 8.4v3.2M4.4 10h11.2"/></svg><span>Workout</span></button>
+            <button type="button" data-tab="progress"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.4 14.2l4.4-4.6 3.4 2.8 7.4-7.6"/><path d="M13.4 4.8h4.2V9"/></svg><span>Progress</span></button>
+            <button type="button" data-tab="more"><svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4" cy="10" r="1.7"/><circle cx="10" cy="10" r="1.7"/><circle cx="16" cy="10" r="1.7"/></svg><span>More</span></button>
+          </nav>
+
+          <!-- Log-set sheet -->
+          <div class="gf-sheet-wrap" id="gf-sheet" hidden>
+            <button type="button" class="gf-scrim" id="gf-scrim" aria-label="Close"></button>
+            <div class="gf-sheet" role="dialog" aria-label="Log a set">
+              <div class="gf-grab"></div>
+              <div style="display:flex;align-items:flex-start;gap:12px">
+                <div style="flex:1;min-width:0">
+                  <div class="gf-ellip" style="font-size:18px;font-weight:600">Barbell bench press</div>
+                  <div class="gf-muted" id="gf-sheet-sub" style="font-size:12.5px;margin-top:3px">Set 3 · working set</div>
+                </div>
+                <button type="button" class="gf-toggle" id="gf-warmup" aria-pressed="false">Warm-up</button>
+              </div>
+              <div class="gf-hint" id="gf-sheet-hint" style="margin-top:14px">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" style="flex:none" aria-hidden="true"><path d="M2 11l4-4 3.5 3L14 5"/></svg>
+                You hit every set last time — going up to 102.5 kg
+              </div>
+              <div class="gf-readout"><strong id="gf-pad-value">102.5</strong><span id="gf-pad-unit">kg</span></div>
+              <div class="gf-caps" id="gf-pad-step" style="text-align:center;letter-spacing:1.2px">Step 1 — weight</div>
+              <div class="gf-pad" id="gf-pad">
+                <button type="button">1</button><button type="button">2</button><button type="button">3</button>
+                <button type="button">4</button><button type="button">5</button><button type="button">6</button>
+                <button type="button">7</button><button type="button">8</button><button type="button">9</button>
+                <button type="button" id="gf-dot">.</button><button type="button">0</button><button type="button" aria-label="Delete">⌫</button>
+              </div>
+              <div class="gf-sheet-actions">
+                <button type="button" class="gf-repeat" id="gf-repeat">Repeat last set</button>
+                <button type="button" class="gf-primary" id="gf-next" style="height:52px;border-radius:17px;font-size:14.5px">Next: reps</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="gf-homebar" aria-hidden="true"></div>
         </div>
       </div>
     </div>
   </div>
+  <p class="mock-note">An interactive preview with sample data, not a screenshot. Tap the tabs, start the workout and log a set.</p>
 
   <div class="claims">
     <div class="claim"><b>No account</b><span>Nothing to sign up for</span></div>
@@ -557,60 +1009,47 @@ footer a:hover { text-decoration: underline; }
 <!-- ================= DEEP DIVES ================= -->
 <section style="padding-top:20px">
   <div class="wrap">
+    <div class="dives">
 
-    <div class="dive">
-      <div class="copy">
+      <div class="pane dive">
         <h3>It suggests the next weight, and tells you why</h3>
         <p>Most trackers are a spreadsheet you fill in. Gymfy reads your last session for an exercise and puts a number in the field before you touch it.</p>
         <p class="pull">Hit every target rep and the weight steps up. Fall short and it holds you there — because the app that pushes you up regardless is the one you stop trusting.</p>
         <p>The rules are yours: increment, rep target, how many sessions at a weight before it moves.</p>
+        <button type="button" class="btn btn-ghost show" data-show="workout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+          Show it in the preview
+        </button>
       </div>
-      <div class="phone" data-shot="screenshots/overload.jpg">
-        <div class="screen">
-          <img src="screenshots/overload.jpg" alt="Gymfy home screen with today's Push workout ready to start">
-          <div class="slot"><span class="k">Screenshot slot</span>Drop a 9:19.5 PNG at<br><code>screenshots/overload.jpg</code></div>
-        </div>
-      </div>
-    </div>
 
-    <div class="dive flip">
-      <div class="copy">
+      <div class="pane dive">
         <h3>See the week you actually trained</h3>
         <p>Per-exercise charts for top set, volume and estimated 1RM, with personal records dated so you know when you set them.</p>
         <p class="pull">And a body map shaded by the volume each muscle took — the fastest way to notice that your rear delts have not been touched since March.</p>
         <p>Plus a bodyweight-relative strength rank, so the comparison is to people your size rather than to a number on the internet.</p>
+        <button type="button" class="btn btn-ghost show" data-show="progress">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+          Show it in the preview
+        </button>
       </div>
-      <div class="phone" data-shot="screenshots/muscle-map.jpg">
-        <div class="screen">
-          <img src="screenshots/muscle-map.jpg" alt="Gymfy's muscle map shaded by weekly training volume">
-          <div class="slot"><span class="k">Screenshot slot</span>Drop a 9:19.5 PNG at<br><code>screenshots/muscle-map.jpg</code></div>
-        </div>
-      </div>
-    </div>
 
-    <div class="dive">
-      <div class="copy">
+      <div class="pane dive">
         <h3>Eight themes, one of them glass</h3>
-        <p>AMOLED black that actually turns the pixels off. High contrast for gym lighting. Tokyo Night, Dracula, Catppuccin and Gruvbox for the editor crowd. And Hyper — translucent panes over a slowly drifting colour field, which is what this page is wearing.</p>
-        <p class="pull">Pick any accent colour. Every animation respects your system reduce-motion setting, and respecting it means stopping, not going faster.</p>
-        <div class="swatches" aria-label="Accent colours">
-          <span class="sw" style="background:#7C6BFF"></span>
-          <span class="sw" style="background:#4F8CFF"></span>
-          <span class="sw" style="background:#2FD8C6"></span>
-          <span class="sw" style="background:#35C56A"></span>
-          <span class="sw" style="background:#FF8A3D"></span>
-          <span class="sw" style="background:#FF5C8A"></span>
-          <span class="sw" style="background:#9B6BFF"></span>
+        <p>AMOLED black that actually turns the pixels off. High contrast for gym lighting. Tokyo Night, Dracula, Catppuccin and Gruvbox for the editor crowd. And Hyper — translucent panes over a slowly drifting colour field, which is what this page and the preview are wearing.</p>
+        <p class="pull">Pick any accent colour. Try one: the preview changes with it.</p>
+        <div class="swatches" role="group" aria-label="Accent colour of the preview">
+          <button type="button" class="sw" style="background:#7C6BFF" data-accent="#7C6BFF" aria-label="Violet" aria-pressed="true"></button>
+          <button type="button" class="sw" style="background:#4F8CFF" data-accent="#4F8CFF" aria-label="Blue" aria-pressed="false"></button>
+          <button type="button" class="sw" style="background:#2FD8C6" data-accent="#2FD8C6" aria-label="Teal" aria-pressed="false"></button>
+          <button type="button" class="sw" style="background:#35C56A" data-accent="#35C56A" aria-label="Green" aria-pressed="false"></button>
+          <button type="button" class="sw" style="background:#FF8A3D" data-accent="#FF8A3D" aria-label="Orange" aria-pressed="false"></button>
+          <button type="button" class="sw" style="background:#FF5C8A" data-accent="#FF5C8A" aria-label="Pink" aria-pressed="false"></button>
+          <button type="button" class="sw" style="background:#9B6BFF" data-accent="#9B6BFF" aria-label="Purple" aria-pressed="false"></button>
         </div>
+        <p>Every animation respects your system reduce-motion setting, and respecting it means stopping, not going faster.</p>
       </div>
-      <div class="phone" data-shot="screenshots/themes.jpg">
-        <div class="screen">
-          <img src="screenshots/themes.jpg" alt="Gymfy's settings with the theme and accent picker">
-          <div class="slot"><span class="k">Screenshot slot</span>Drop a 9:19.5 PNG at<br><code>screenshots/themes.jpg</code></div>
-        </div>
-      </div>
-    </div>
 
+    </div>
   </div>
 </section>
 
@@ -696,16 +1135,307 @@ footer a:hover { text-decoration: underline; }
 </footer>
 
 <script>
-// Mark a phone whose screenshot is missing so the slot copy shows instead of
-// a broken-image icon. Runs on error and on load, because a cached 404 does
-// not always fire error in every browser.
-document.querySelectorAll('.phone').forEach(function (phone) {
-  var img = phone.querySelector('img');
-  if (!img) return;
-  function miss() { phone.classList.add('empty'); }
-  if (img.complete && img.naturalWidth === 0) miss();
-  img.addEventListener('error', miss);
-});
+// The app mockup. Plain DOM, no framework: the markup above is the design's,
+// and this only switches what is shown and fills in what moves. Sample data
+// is the Claude Design file's, so the preview and the design read the same.
+(function () {
+  var app = document.getElementById('gf');
+  if (!app) return;
+  var $ = function (sel, root) { return (root || app).querySelector(sel); };
+  var $$ = function (sel, root) { return Array.prototype.slice.call((root || app).querySelectorAll(sel)); };
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var RANGES = {
+    Week: { headline: '38,240 kg', detail: 'lifted in the last week',
+      points: [9480, 0, 11200, 0, 8760, 8800, 0], labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      sessions: [1, 0, 1, 0, 1, 1, 0], sessHeadline: '4', sessDetail: 'sessions · 1 personal record' },
+    Month: { headline: '158,900 kg', detail: 'lifted in the last month',
+      points: [34600, 41200, 44860, 38240], labels: ['W1', 'W2', 'W3', 'W4'],
+      sessions: [4, 5, 5, 4], sessHeadline: '18', sessDetail: 'sessions · 3 personal records' },
+    Year: { headline: '1,842,400 kg', detail: 'lifted in the last year',
+      points: [112000, 128400, 141200, 133800, 152600, 164000, 158200, 171400, 166800, 174200, 169600, 158900],
+      labels: ['O', 'N', 'D', 'J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S'],
+      sessions: [12, 14, 11, 15, 14, 16, 15, 17, 16, 18, 17, 18], sessHeadline: '183', sessDetail: 'sessions · 24 personal records' }
+  };
+  var MUSCLES = [['Chest', 14], ['Front deltoid', 12], ['Triceps', 11], ['Lats', 9], ['Biceps', 8], ['Quads', 6], ['Side deltoid', 5], ['Glutes', 4]];
+  var TITLES = { home: 'Hi, Jonas', workout: 'Push day', progress: 'Progress', more: 'More' };
+
+  var ICON = function (paths, extra) {
+    return '<svg width="19" height="19" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"' + (extra || '') + '>' + paths + '</svg>';
+  };
+  var TOOLS = [
+    ['Exercise library', '1,270 movements, searchable', ICON('<path d="M10 5.4C8.6 4 6.6 3.6 3.4 3.6v10.6c3.2 0 5.2.4 6.6 1.8 1.4-1.4 3.4-1.8 6.6-1.8V3.6c-3.2 0-5.2.4-6.6 1.8z"/><path d="M10 5.4v10.6"/>')],
+    ['Muscle map', 'What this week actually hit', ICON('<circle cx="10" cy="3.9" r="2.1"/><path d="M10 6.4c-2.6 0-4 1.1-4 3.1 0 1.5.7 2.3 1.5 2.6l-.5 5.2h6l-.5-5.2c.8-.3 1.5-1.1 1.5-2.6 0-2-1.4-3.1-4-3.1z"/>')],
+    ['Programs', 'Six ready-made plans to start from', ICON('<path d="M10 2.6l7.4 3.8L10 10.2 2.6 6.4z"/><path d="M2.6 10l7.4 3.8 7.4-3.8M2.6 13.6l7.4 3.8 7.4-3.8"/>')],
+    ['1RM calculator', 'Estimate your max from any set', ICON('<rect x="3.6" y="2.4" width="12.8" height="15.2" rx="2.2"/><path d="M6.4 6h7.2M6.6 10h.02M10 10h.02M13.4 10h.02M6.6 13.6h.02M10 13.6h.02M13.4 13.6h.02"/>')],
+    ['Plate calculator', 'What to put on the bar', ICON('<circle cx="10" cy="10" r="7.2"/><circle cx="10" cy="10" r="2.6"/>')],
+    ['Strength rank', 'Your lifts against your bodyweight', ICON('<circle cx="10" cy="12.6" r="4.6"/><path d="M7.4 8.2L5.2 2.6h9.6l-2.2 5.6M10 10.4v4.4"/>')],
+    ['Share a plan', 'Send your splits, or import theirs', ICON('<path d="M10 2.6v8.8M6.8 5.8L10 2.6l3.2 3.2"/><path d="M4.6 11v4.6a1.8 1.8 0 001.8 1.8h7.2a1.8 1.8 0 001.8-1.8V11"/>')],
+    ['Settings', 'Accent, units, language, rest timer', ICON('<circle cx="10" cy="10" r="2.6"/><path d="M10 2.4v2M10 15.6v2M3.6 10h2M14.4 10h2M5.5 5.5l1.4 1.4M13.1 13.1l1.4 1.4M14.5 5.5l-1.4 1.4M6.9 13.1l-1.4 1.4"/>')],
+    ['Help', 'About Gymfy and who made it', ICON('<circle cx="10" cy="10" r="7.2"/><path d="M7.9 7.6a2.1 2.1 0 114.1.7c-.2.9-1.2 1.3-1.7 1.9-.3.4-.3.8-.3 1.2"/><path d="M10 14.3h.02"/>')]
+  ];
+
+  var state = {
+    view: 'home', seg: 'Trends', range: 'Week',
+    rest: 107, timerOn: false, timerStarted: false,
+    sheet: false, padStep: 'weight', weight: '102.5', reps: '', warmup: false,
+    sets: [
+      { warm: true, weight: '60', reps: '10' },
+      { warm: true, weight: '80', reps: '5' },
+      { warm: false, weight: '100', reps: '8' },
+      { warm: false, weight: '100', reps: '7' }
+    ],
+    heatPainted: false
+  };
+
+  // --- Screens and the top bar -------------------------------------------
+  var scroller = $('#gf-scroll');
+  var top = $('#gf-top');
+
+  function go(view) {
+    state.view = view;
+    $$('.gf-screen').forEach(function (el) { el.hidden = el.getAttribute('data-view') !== view; });
+    $('#gf-title').textContent = TITLES[view];
+    $('#gf-streak').hidden = view !== 'home';
+    $('#gf-search').style.display = view === 'workout' ? 'none' : '';
+    $('#gf-finish').hidden = view !== 'workout';
+    $('#gf-segbar').hidden = view !== 'progress';
+    $$('.gf-nav button').forEach(function (b) {
+      if (b.getAttribute('data-tab') === view) b.setAttribute('aria-current', 'page');
+      else b.removeAttribute('aria-current');
+    });
+    if (view === 'workout' && !state.timerStarted) {
+      // The timer starts the first time the workout is opened, so a visitor
+      // sees it count rather than arrive at a number that ran out unseen.
+      state.timerStarted = true;
+      state.timerOn = true;
+    }
+    if (view !== 'workout') closeSheet();
+    scroller.scrollTop = 0;
+    top.classList.remove('scrolled');
+    renderRest();
+    if (view === 'progress') showSeg(state.seg);
+  }
+
+  scroller.addEventListener('scroll', function () {
+    top.classList.toggle('scrolled', scroller.scrollTop > 8);
+  }, { passive: true });
+
+  $$('[data-go]').forEach(function (b) { b.addEventListener('click', function () { go(b.getAttribute('data-go')); }); });
+  $$('.gf-nav button').forEach(function (b) { b.addEventListener('click', function () { go(b.getAttribute('data-tab')); }); });
+
+  // --- Rest timer ---------------------------------------------------------
+  var rest = $('#gf-rest');
+  function renderRest() {
+    rest.hidden = !(state.timerOn && state.view === 'workout');
+    var done = state.rest <= 0;
+    rest.classList.toggle('done', done);
+    $('#gf-rest-caps').textContent = done ? 'Next set' : 'Resting';
+    $('#gf-clock').textContent = done ? 'Rest over'
+      : Math.floor(state.rest / 60) + ':' + String(state.rest % 60).padStart(2, '0');
+    $('#gf-restbar').style.width = Math.max(0, Math.min(100, (state.rest / 150) * 100)) + '%';
+  }
+  setInterval(function () {
+    if (!state.timerOn || state.rest <= 0) return;
+    state.rest -= 1;
+    renderRest();
+  }, 1000);
+  $('#gf-plus30').addEventListener('click', function () { state.rest += 30; renderRest(); });
+  $('#gf-rest-close').addEventListener('click', function () { state.timerOn = false; renderRest(); });
+
+  // --- Logged sets --------------------------------------------------------
+  function workingCount() { return state.sets.filter(function (s) { return !s.warm; }).length; }
+  function renderSets() {
+    var n = 0;
+    $('#gf-sets').innerHTML = state.sets.map(function (s) {
+      var label = s.weight + ' kg × ' + s.reps;
+      if (s.warm) return '<div class="gf-set warm"><b>W</b><span>' + label + '</span><em>WARM-UP</em></div>';
+      n += 1;
+      return '<div class="gf-set"><b>' + n + '</b><span>' + label + '</span><em></em></div>';
+    }).join('');
+    $('#gf-log span').textContent = 'Log set ' + (workingCount() + 1);
+  }
+
+  // --- Log-set sheet ------------------------------------------------------
+  var sheet = $('#gf-sheet');
+  var keys = $$('#gf-pad button');
+  var next = $('#gf-next');
+
+  function renderSheet() {
+    sheet.hidden = !state.sheet;
+    if (!state.sheet) return;
+    var onWeight = state.padStep === 'weight';
+    $('#gf-sheet-sub').textContent = state.warmup ? 'Warm-up · ramping up' : 'Set ' + (workingCount() + 1) + ' · working set';
+    $('#gf-warmup').setAttribute('aria-pressed', String(state.warmup));
+    $('#gf-sheet-hint').hidden = state.warmup;
+    var value = onWeight ? (state.weight || '0') : (state.reps || '—');
+    var readout = $('#gf-pad-value');
+    readout.textContent = value;
+    readout.classList.toggle('empty', !onWeight && !state.reps);
+    $('#gf-pad-unit').textContent = onWeight ? 'kg' : 'reps';
+    $('#gf-pad-step').textContent = onWeight ? 'Step 1 — weight' : 'Step 2 — reps';
+    $('#gf-dot').disabled = !onWeight;
+    next.textContent = onWeight ? 'Next: reps' : 'Save set';
+    next.disabled = !onWeight && !state.reps;
+  }
+  function openSheet() {
+    state.sheet = true; state.padStep = 'weight'; state.weight = '102.5'; state.reps = ''; state.warmup = false;
+    renderSheet();
+    keys[0].focus({ preventScroll: true });
+  }
+  function closeSheet() {
+    if (!state.sheet) return;
+    state.sheet = false;
+    renderSheet();
+  }
+  function logSet(set) {
+    state.sets.push(set);
+    renderSets();
+    state.sheet = false;
+    renderSheet();
+    state.rest = 150; state.timerOn = true;
+    renderRest();
+    $('#gf-log').focus({ preventScroll: true });
+  }
+
+  $('#gf-log').addEventListener('click', openSheet);
+  $('#gf-scrim').addEventListener('click', closeSheet);
+  sheet.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeSheet(); $('#gf-log').focus({ preventScroll: true }); } });
+  $('#gf-warmup').addEventListener('click', function () { state.warmup = !state.warmup; renderSheet(); });
+  keys.forEach(function (key) {
+    key.addEventListener('click', function () {
+      var k = key.textContent;
+      var field = state.padStep === 'weight' ? 'weight' : 'reps';
+      if (k === '⌫') { state[field] = state[field].slice(0, -1); }
+      else if (k === '.') { if (state.weight.indexOf('.') === -1) state.weight += '.'; }
+      else if (field === 'weight') { if (state.weight.length < 6) state.weight += k; }
+      else if (state.reps.length < 2) { state.reps = (state.reps === '0' ? '' : state.reps) + k; }
+      renderSheet();
+    });
+  });
+  next.addEventListener('click', function () {
+    if (state.padStep === 'weight') { state.padStep = 'reps'; state.reps = ''; renderSheet(); return; }
+    if (state.reps) logSet({ warm: state.warmup, weight: state.weight || '0', reps: state.reps });
+  });
+  $('#gf-repeat').addEventListener('click', function () {
+    var last = state.sets.filter(function (s) { return !s.warm; }).pop() || state.sets[state.sets.length - 1];
+    logSet({ warm: false, weight: last.weight, reps: last.reps });
+  });
+
+  // --- Progress -----------------------------------------------------------
+  function showSeg(seg) {
+    state.seg = seg;
+    $$('[data-seg]').forEach(function (el) { el.hidden = el.getAttribute('data-seg') !== seg; });
+    $$('[data-seg-btn]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-seg-btn') === seg)); });
+    scroller.scrollTop = 0;
+    top.classList.remove('scrolled');
+    if (seg === 'All-time') paintHeat();
+  }
+  $$('[data-seg-btn]').forEach(function (b) { b.addEventListener('click', function () { showSeg(b.getAttribute('data-seg-btn')); }); });
+
+  var W = 309, H = 120;
+  function renderRange() {
+    var R = RANGES[state.range];
+    var max = Math.max.apply(null, R.points.concat([1])) * 1.12;
+    var n = R.points.length;
+    var xs = function (i) { return n === 1 ? W / 2 : (i / (n - 1)) * W; };
+    var ys = function (v) { return H - (v / max) * H; };
+    var d = R.points.map(function (v, i) { return (i ? 'L' : 'M') + xs(i).toFixed(1) + ',' + ys(v).toFixed(1); }).join(' ');
+    $('#gf-line').setAttribute('d', d);
+    $('#gf-area').setAttribute('d', d + ' L' + W + ',' + H + ' L0,' + H + ' Z');
+    $('#gf-points').innerHTML = R.points.map(function (v, i) { return '<circle cx="' + xs(i).toFixed(1) + '" cy="' + ys(v).toFixed(1) + '" r="3.5"/>'; }).join('');
+    $('#gf-labels').innerHTML = R.labels.map(function (l, i) { return '<text x="' + xs(i).toFixed(1) + '" y="140">' + l + '</text>'; }).join('');
+    $('#gf-vol').textContent = R.headline;
+    $('#gf-vol-detail').textContent = R.detail;
+    $('#gf-sess').textContent = R.sessHeadline;
+    $('#gf-sess-detail').textContent = R.sessDetail;
+    var sessMax = Math.max.apply(null, R.sessions.concat([1]));
+    $('#gf-sess-bars').innerHTML = R.sessions.map(function (s, i) {
+      var h = s === 0 ? 2 : Math.max(7, (s / sessMax) * 44);
+      return '<div class="gf-bar" style="gap:7px"><div style="width:100%;height:44px;display:flex;align-items:flex-end"><i style="height:' + h + 'px;border-radius:4px"></i></div><span style="font-size:10.5px">' + R.labels[i] + '</span></div>';
+    }).join('');
+    $$('#gf-ranges button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-range') === state.range)); });
+  }
+  $$('#gf-ranges button').forEach(function (b) { b.addEventListener('click', function () { state.range = b.getAttribute('data-range'); renderRange(); }); });
+
+  $('#gf-muscles').innerHTML = MUSCLES.map(function (m) {
+    return '<div style="display:flex;align-items:center;gap:12px"><span class="gf-ellip" style="width:86px;flex:none;font-size:12.5px">' + m[0] + '</span><div class="gf-track"><i style="width:' + (m[1] / 14 * 100) + '%"></i></div><span class="gf-muted gf-num" style="width:44px;flex:none;text-align:right;font-size:12px">' + m[1] + ' sets</span></div>';
+  }).join('');
+
+  // A year of training days, as one canvas paint on a fixed pitch — the same
+  // seeded pattern the design draws, so it looks the same every visit.
+  function paintHeat() {
+    var c = $('#gf-heat');
+    var ctx = c.getContext && c.getContext('2d');
+    if (!ctx) return;
+    var accent = getComputedStyle(app).getPropertyValue('--gf-accent').trim() || '#7C6BFF';
+    var rgb = parseInt(accent.replace('#', ''), 16);
+    var tint = function (a) { return 'rgba(' + ((rgb >> 16) & 255) + ',' + ((rgb >> 8) & 255) + ',' + (rgb & 255) + ',' + a + ')'; };
+    var shades = ['rgba(242,243,250,0.08)', tint(0.28), tint(0.5), tint(0.74), accent];
+    ctx.setTransform(2, 0, 0, 2, 0, 0);
+    ctx.clearRect(0, 0, c.width, c.height);
+    var seed = 7;
+    var rnd = function () { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
+    for (var w = 0; w < 53; w++) {
+      for (var d = 0; d < 7; d++) {
+        var r = rnd();
+        var lvl = d === 6 ? (r > 0.8 ? 1 : 0) : r > 0.42 ? Math.min(4, 1 + Math.floor(r * 4.2)) : 0;
+        ctx.fillStyle = shades[lvl];
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(w * 15, d * 15, 12, 12, 3.5); else ctx.rect(w * 15, d * 15, 12, 12);
+        ctx.fill();
+      }
+    }
+    if (!state.heatPainted) {
+      state.heatPainted = true;
+      $('#gf-heat-scroll').scrollLeft = 99999;
+    }
+  }
+
+  // --- More ---------------------------------------------------------------
+  $('#gf-tools').innerHTML = TOOLS.map(function (t) {
+    return '<div class="gf-quiet" style="gap:15px"><span style="width:40px;height:40px;border-radius:13px;flex:none;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.10);display:flex;align-items:center;justify-content:center;color:#9EA0BC">' + t[2] + '</span><span style="flex:1;min-width:0"><span style="display:block;font-weight:500">' + t[0] + '</span><span class="gf-muted gf-ellip" style="display:block;font-size:12.5px;margin-top:3px">' + t[1] + '</span></span><svg width="8" height="13" viewBox="0 0 8 13" fill="none" stroke="rgba(158,160,188,0.7)" stroke-width="1.8" aria-hidden="true" style="flex:none"><path d="M1.5 1.5L6.5 6.5l-5 5"/></svg></div>';
+  }).join('');
+
+  // --- The page around it --------------------------------------------------
+  // Accent swatches recolour the preview.
+  $$('.sw[data-accent]', document).forEach(function (b) {
+    b.addEventListener('click', function () {
+      app.style.setProperty('--gf-accent', b.getAttribute('data-accent'));
+      $$('.sw[data-accent]', document).forEach(function (o) { o.setAttribute('aria-pressed', String(o === b)); });
+      if (state.heatPainted) paintHeat();
+    });
+  });
+
+  // "Show it in the preview" puts the phone on the screen a section describes.
+  $$('[data-show]', document).forEach(function (b) {
+    b.addEventListener('click', function () {
+      var view = b.getAttribute('data-show');
+      if (view === 'progress') state.seg = 'Trends';
+      go(view);
+      var preview = document.getElementById('preview');
+      preview.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
+      // Some embedded browsers never run a smooth scroll; land there anyway.
+      setTimeout(function () {
+        var r = preview.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > window.innerHeight) preview.scrollIntoView({ block: 'center' });
+      }, 900);
+    });
+  });
+
+  // The device is drawn at 413 × 872 and scaled down to fit narrow screens.
+  var stage = document.getElementById('preview');
+  function fit() {
+    var scale = Math.min(1, (stage.clientWidth || 413) / 413);
+    stage.style.setProperty('--mock-scale', scale.toFixed(4));
+  }
+  window.addEventListener('resize', fit, { passive: true });
+  fit();
+
+  renderSets();
+  renderRange();
+  go('home');
+})();
 </script>
 
 </body>

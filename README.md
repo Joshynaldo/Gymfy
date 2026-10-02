@@ -17,10 +17,8 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/active-workout.jpg" alt="Logging a set mid-workout" width="200">
-  <img src="docs/screenshots/overload.jpg" alt="Home screen with today's workout" width="200">
-  <img src="docs/screenshots/muscle-map.jpg" alt="Muscle map shaded by weekly volume" width="200">
-  <img src="docs/screenshots/themes.jpg" alt="Theme and accent picker" width="200">
+  <a href="https://joshynaldo.github.io/Gymfy/#preview"><b>Try the interactive preview</b></a>:
+  the app's Hyper theme, running in your browser with sample data.
 </p>
 
 ---

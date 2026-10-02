@@ -8,7 +8,6 @@ docs/
   index.html           the landing page
   privacy-policy.html  a copy of gymfy/store/privacy-policy.html
   icon.png             the app icon, 1024px
-  screenshots/         four slots — see screenshots/README.md
 ```
 
 ## Every interactive element, and what it does
@@ -27,7 +26,13 @@ a button that works.
 | Get Gymfy · Google Play / App Store | nothing, marked "Coming soon" | not links until the listings exist |
 | Privacy · Read the full privacy policy | `privacy-policy.html` | yes |
 | Footer · Features / Download / Privacy / Source code | as above | yes |
-| Accent swatches | nothing, they are colour samples | **not controls**, so they are circles; rounded squares the size of a button read as buttons |
+| Deep dives · Show it in the preview | switches the mockup to that screen and scrolls to it | yes |
+| Accent swatches | recolour the mockup | yes, real buttons with a pressed state |
+| Mockup · tab bar, Start workout, Finish | switch the mockup's screen | yes |
+| Mockup · Log set, number pad, Next / Save set, Repeat last set | log a sample set and restart the rest timer | yes |
+| Mockup · +30s, dismiss | change or close the rest timer | yes |
+| Mockup · Progress segments, Week / Month / Year | switch the view and re-draw the charts | yes |
+| Mockup · search icon, More rows | nothing | drawn as in the design, not buttons, so they aren't in the tab order |
 
 When the Play Store or App Store listing goes live, turn its card's badge into
 `badge live` and add a link to the listing.
@@ -58,8 +63,23 @@ cp gymfy/store/privacy-policy.html docs/privacy-policy.html
 of a legal document is exactly the arrangement where the published one quietly
 goes stale.
 
-## Screenshots
+## The app mockup
 
-All four slots are filled with real phone captures, scaled to 720 px wide and
-saved as JPEG so the page stays light. Names and capture notes:
-`screenshots/README.md`.
+The phone in the hero is the "Gymfy Hyper" design from Claude Design
+(`GymfyPhone.dc.html`), rebuilt as plain HTML, CSS and a small script at the
+bottom of `index.html`, so the page still needs no runtime and no build step.
+It replaced the four phone screenshots. The screens, glass styles and sample
+data are the design's. A few things differ on purpose:
+
+- The More list names today's tools (1,270 exercises, Programs, language in
+  Settings) instead of the design's older ones.
+- On the reps step, Save set has to be tapped, as in the app, rather than the
+  first digit saving the set.
+- The body diagrams are left out (the small map on Home and the map in
+  Progress → Body). They come from a purchased pack licensed for use in the
+  app (see `gymfy/assets/musclemap/README.md`), and a marketing page isn't the
+  app.
+
+The device is drawn at 413 × 872 px and scaled down to fit narrow screens.
+Every colour that follows the accent reads `--gf-accent`, which is how the
+swatches recolour it.
