@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
@@ -31,7 +32,7 @@ class NextUpCard extends ConsumerWidget {
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: accent.withValues(alpha: 0.15),
-          child: Icon(Icons.event_outlined, color: accent),
+          child: Icon(LucideIcons.calendar, color: accent),
         ),
         title: Text(next.day.name),
         subtitle: Text(

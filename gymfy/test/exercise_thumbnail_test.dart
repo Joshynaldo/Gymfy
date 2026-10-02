@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/shared/widgets/exercise_thumbnail.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'support/default_accent.dart';
 
@@ -91,7 +92,7 @@ void main() {
     testWidgets('an exercise with no animation keeps the icon', (tester) async {
       await pump(tester, const ExerciseThumbnail(gifPath: null));
 
-      expect(find.byIcon(Icons.fitness_center), findsOneWidget);
+      expect(find.byIcon(LucideIcons.dumbbell), findsOneWidget);
       expect(find.byType(Image), findsNothing);
     });
 
@@ -103,7 +104,7 @@ void main() {
         const ExerciseThumbnail(gifPath: '/data/user/0/files/mine.jpg'),
       );
 
-      expect(find.byIcon(Icons.fitness_center), findsOneWidget);
+      expect(find.byIcon(LucideIcons.dumbbell), findsOneWidget);
     });
 
     testWidgets('selection replaces the still with a tick', (tester) async {
@@ -114,7 +115,7 @@ void main() {
         const ExerciseThumbnail(gifPath: _realAsset, selected: true),
       );
 
-      expect(find.byIcon(Icons.check), findsOneWidget);
+      expect(find.byIcon(LucideIcons.check), findsOneWidget);
       expect(find.byType(Image), findsNothing);
     });
 

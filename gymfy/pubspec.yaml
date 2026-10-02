@@ -86,6 +86,7 @@ dependencies:
   # so it tracks Flutter's own Gradle and Xcode requirements rather than
   # pinning its own (which is what broke share_plus and file_picker 11 here).
   url_launcher: ^6.3.1
+  lucide_icons_flutter: ^3.1.21
 
 dev_dependencies:
   flutter_test:

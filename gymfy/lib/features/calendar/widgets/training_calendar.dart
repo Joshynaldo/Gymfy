@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
@@ -76,7 +77,7 @@ class _TrainingCalendarState extends ConsumerState<TrainingCalendar> {
                 children: [
                   IconButton(
                     tooltip: l10n.calendarPreviousMonth,
-                    icon: const Icon(Icons.chevron_left),
+                    icon: const Icon(LucideIcons.chevronLeft),
                     onPressed: () => _moveMonth(-1),
                   ),
                   Expanded(
@@ -92,7 +93,7 @@ class _TrainingCalendarState extends ConsumerState<TrainingCalendar> {
                   ),
                   IconButton(
                     tooltip: l10n.calendarNextMonth,
-                    icon: const Icon(Icons.chevron_right),
+                    icon: const Icon(LucideIcons.chevronRight),
                     // The future has nothing in it to look at.
                     onPressed: atCurrentMonth ? null : () => _moveMonth(1),
                   ),
@@ -325,7 +326,7 @@ class _DayList extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             leading: Icon(
-              session.free ? Icons.bolt_outlined : Icons.fitness_center,
+              session.free ? LucideIcons.zap : LucideIcons.dumbbell,
               color: theme.colorScheme.onSurfaceVariant,
             ),
             title: Text(
@@ -345,7 +346,7 @@ class _DayList extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            trailing: const Icon(Icons.chevron_right, size: 20),
+            trailing: const Icon(LucideIcons.chevronRight, size: 20),
             // Within the Progress tab, so back returns here rather than
             // dropping you on the Workout tab.
             onTap: () => context.go('/progress/session/${session.id}'),

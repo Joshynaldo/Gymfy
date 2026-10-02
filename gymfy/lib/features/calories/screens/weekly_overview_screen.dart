@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../../shared/utils/format.dart';
@@ -67,7 +68,7 @@ class _CaloriesSection extends StatelessWidget {
     );
 
     return AppPanel(
-      icon: Icons.local_fire_department_outlined,
+      icon: LucideIcons.flame,
       title: l10n.caloriesWeekCalories,
       // Days with nothing logged show no bar rather than a misleading zero.
       subtitle: logged.isEmpty

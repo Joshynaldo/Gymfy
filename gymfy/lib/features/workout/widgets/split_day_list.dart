@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
@@ -91,7 +92,7 @@ class DayCard extends ConsumerWidget {
           ListTile(
             leading: CircleAvatar(
               backgroundColor: accent.withValues(alpha: 0.15),
-              child: Icon(Icons.today, color: accent),
+              child: Icon(LucideIcons.calendarCheck, color: accent),
             ),
             title: Text(
               day.name,
@@ -109,7 +110,7 @@ class DayCard extends ConsumerWidget {
               ),
             ),
             trailing: IconButton(
-              icon: const Icon(Icons.delete_outline),
+              icon: const Icon(LucideIcons.trash2),
               tooltip: l10n.workoutDeleteDayTooltip,
               onPressed: () => _confirmDelete(context, ref),
             ),
@@ -236,7 +237,7 @@ class NoDaysYet extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.today,
+              LucideIcons.calendarCheck,
               size: 64,
               color: theme.colorScheme.onSurfaceVariant,
             ),

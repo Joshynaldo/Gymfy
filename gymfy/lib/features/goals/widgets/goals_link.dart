@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/app_card.dart';
@@ -25,7 +26,7 @@ class GoalsLink extends ConsumerWidget {
       children: [
         AppSectionHeader(title: l10n.goalsTitle),
         AppTile(
-          icon: Icons.flag_outlined,
+          icon: LucideIcons.flag,
           title: active == 0 ? l10n.goalsSetGoal : l10n.goalsLinkYourGoals,
           subtitle: switch ((active, reached)) {
             (0, 0) => l10n.goalsLinkEmpty,

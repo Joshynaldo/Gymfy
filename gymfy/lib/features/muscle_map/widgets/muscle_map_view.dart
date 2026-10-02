@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../../shared/utils/exercise_display.dart';
@@ -109,7 +110,7 @@ class _MuscleMapViewState extends State<MuscleMapView> {
               ),
               IconButton(
                 icon: Icon(
-                  _isContrast ? Icons.palette : Icons.palette_outlined,
+                  _isContrast ? LucideIcons.palette : LucideIcons.palette,
                   size: 20,
                 ),
                 visualDensity: VisualDensity.compact,

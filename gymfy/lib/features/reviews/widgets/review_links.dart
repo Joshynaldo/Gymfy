@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/app_card.dart';
@@ -36,7 +37,7 @@ class ReviewLinks extends ConsumerWidget {
       children: [
         AppSectionHeader(title: l10n.reviewsTitle),
         AppTile(
-          icon: Icons.calendar_view_month,
+          icon: LucideIcons.calendarDays,
           title: l10n.reviewsMonthlyTitle,
           subtitle: l10n.reviewsMonthlySubtitle(month.localizedLabel(l10n)),
           onTap: () => context.go(
@@ -44,7 +45,7 @@ class ReviewLinks extends ConsumerWidget {
           ),
         ),
         AppTile(
-          icon: Icons.auto_awesome_outlined,
+          icon: LucideIcons.sparkles,
           title: l10n.reviewsYearTitle,
           subtitle: l10n.reviewsYearSubtitle(year.localizedLabel(l10n)),
           onTap: () => context.go('/progress/review/year/${year.start.year}'),

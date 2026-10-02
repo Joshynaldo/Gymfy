@@ -10,6 +10,7 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
@@ -45,7 +46,7 @@ class TrainingBlockAction extends ConsumerWidget {
       // Tinted while a block runs, so the button also answers "is this split
       // on a block?" without being opened.
       icon: Icon(
-        Icons.event_repeat,
+        LucideIcons.calendarSync,
         color: hasBlock ? ref.watch(accentColorProvider) : null,
       ),
       tooltip: context.l10n.programsBlockTitle,
@@ -183,7 +184,7 @@ class _TrainingBlockSheetState extends State<TrainingBlockSheet> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.remove),
+                  icon: const Icon(LucideIcons.minus),
                   tooltip: l10n.programsBlockFewerWeeks,
                   onPressed: _weeks > 1 ? () => setState(() => _weeks--) : null,
                 ),
@@ -203,7 +204,7 @@ class _TrainingBlockSheetState extends State<TrainingBlockSheet> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.add),
+                  icon: const Icon(LucideIcons.plus),
                   tooltip: l10n.programsBlockMoreWeeks,
                   onPressed: _weeks < maxBlockWeeks
                       ? () => setState(() => _weeks++)
@@ -325,7 +326,9 @@ class TrainingBlockBanner extends ConsumerWidget {
           Row(
             children: [
               Icon(
-                week.isDeload ? Icons.trending_down : Icons.event_repeat,
+                week.isDeload
+                    ? LucideIcons.trendingDown
+                    : LucideIcons.calendarSync,
                 size: 18,
                 color: accent,
               ),

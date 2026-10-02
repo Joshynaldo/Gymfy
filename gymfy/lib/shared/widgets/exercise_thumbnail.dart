@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show SynchronousFuture;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../app/theme/accent_color.dart';
 import '../models/exercise.dart' show isBundledAsset;
@@ -144,7 +145,7 @@ class _Fallback extends StatelessWidget {
         borderRadius: BorderRadius.circular(size / 3.2),
       ),
       child: Icon(
-        selected ? Icons.check : exerciseIcon,
+        selected ? LucideIcons.check : exerciseIcon,
         size: size / 2,
         color: selected ? Colors.white : accent,
       ),

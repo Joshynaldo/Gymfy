@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
@@ -228,7 +229,7 @@ class _ExerciseDetailBody extends ConsumerWidget {
           child: ExerciseRestTile(exerciseId: exercise.id),
         ),
         AppPanel(
-          icon: Icons.accessibility_new,
+          icon: LucideIcons.personStanding,
           title: l10n.exercisesMusclesWorked,
           child: Wrap(
             spacing: 8,
@@ -368,7 +369,7 @@ class _Placeholder extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.fitness_center,
+            LucideIcons.dumbbell,
             size: 56,
             color: accent.withValues(alpha: 0.6),
           ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../../shared/utils/format.dart';
@@ -349,7 +350,7 @@ class _BarButton extends ConsumerWidget {
             value: bar,
             child: Row(
               children: [
-                Icon(bar == current ? Icons.check : null, size: 18),
+                Icon(bar == current ? LucideIcons.check : null, size: 18),
                 const SizedBox(width: 8),
                 Text(formatBar(bar, unit, l10n: l10n)),
               ],
@@ -365,7 +366,7 @@ class _BarButton extends ConsumerWidget {
               formatBar(current, unit, l10n: l10n),
               style: Theme.of(context).textTheme.labelLarge,
             ),
-            const Icon(Icons.arrow_drop_down, size: 18),
+            const Icon(LucideIcons.chevronDown, size: 18),
           ],
         ),
       ),

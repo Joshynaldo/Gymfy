@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../app/theme/glass.dart';
@@ -101,7 +102,7 @@ class RecordCelebration extends ConsumerWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.emoji_events, color: accent, size: 28),
+                  Icon(LucideIcons.trophy, color: accent, size: 28),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -175,7 +176,7 @@ class SessionRecordsList extends ConsumerWidget {
       children: [
         Row(
           children: [
-            Icon(Icons.emoji_events, color: accent, size: 20),
+            Icon(LucideIcons.trophy, color: accent, size: 20),
             const SizedBox(width: 8),
             Text(
               context.l10n.workoutRecordCount(count),

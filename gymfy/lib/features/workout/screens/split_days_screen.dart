@@ -2,6 +2,7 @@
 // here unambiguously means our Drift row class.
 import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
@@ -54,7 +55,7 @@ class SplitDaysScreen extends ConsumerWidget {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: AppButton(
         label: context.l10n.workoutAddDay,
-        icon: Icons.add,
+        icon: LucideIcons.plus,
         expand: false,
         onPressed: () => addDayTo(context, ref, splitId),
       ),
@@ -98,7 +99,7 @@ class ActiveSplitAction extends ConsumerWidget {
         child: Center(
           child: Row(
             children: [
-              Icon(Icons.check_circle, size: 18, color: accent),
+              Icon(LucideIcons.circleCheck, size: 18, color: accent),
               const SizedBox(width: 6),
               Text(
                 context.l10n.commonActive,

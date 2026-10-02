@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../l10n/l10n.dart';
 import '../models/muscle_ids.dart';
@@ -55,4 +56,4 @@ String? _muscleName(String id, AppLocalizations l10n) => switch (id) {
 /// they train, and a per-exercise icon would have to invent some other
 /// classification to vary on. The muscle names sit right there in the subtitle
 /// and say more than a glyph could.
-const IconData exerciseIcon = Icons.fitness_center;
+const IconData exerciseIcon = LucideIcons.dumbbell;

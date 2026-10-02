@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/glass.dart';
 import '../../../l10n/l10n.dart';
@@ -156,9 +157,7 @@ class ExerciseNoteTile extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(
-                note == null
-                    ? Icons.sticky_note_2_outlined
-                    : Icons.sticky_note_2,
+                note == null ? LucideIcons.stickyNote : LucideIcons.stickyNote,
                 size: dense ? 15 : 17,
                 color: theme.colorScheme.onSurfaceVariant,
               ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
@@ -47,7 +48,7 @@ class _OneRmCalculatorScreenState extends ConsumerState<OneRmCalculatorScreen> {
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32) + barInsets(context),
         children: [
           AppPanel(
-            icon: Icons.fitness_center,
+            icon: LucideIcons.dumbbell,
             title: l10n.calculatorOneRmSetTitle,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -188,7 +189,7 @@ class _Result extends ConsumerWidget {
                 context,
                 weight: weightIn(roundToLoadable(oneRm, unit), unit),
               ),
-              icon: const Icon(Icons.donut_large_outlined, size: 18),
+              icon: const Icon(LucideIcons.chartPie, size: 18),
               label: Text(l10n.calculatorOneRmPlates),
             ),
           ),
@@ -222,7 +223,7 @@ class _Caveat extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
-            Icons.info_outline,
+            LucideIcons.info,
             size: 18,
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -257,7 +258,7 @@ class _FormulaComparison extends ConsumerWidget {
       ..sort((a, b) => b.value.compareTo(a.value));
 
     return AppPanel(
-      icon: Icons.functions,
+      icon: LucideIcons.sigma,
       title: l10n.calculatorFormulaTitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -317,7 +318,7 @@ class _PercentageTable extends ConsumerWidget {
     final accent = ref.watch(accentColorProvider);
 
     return AppPanel(
-      icon: Icons.table_rows_outlined,
+      icon: LucideIcons.rows3,
       title: l10n.calculatorLoadTitle,
       subtitle: l10n.calculatorLoadSubtitle,
       child: Column(

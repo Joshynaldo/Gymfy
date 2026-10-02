@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../app/theme/motion.dart';
@@ -360,7 +361,7 @@ class _BodyweightPage extends ConsumerWidget {
             children: [
               Expanded(
                 child: AppPickerField(
-                  icon: Icons.height,
+                  icon: LucideIcons.ruler,
                   label: l10n.bodyProfileHeightLabel,
                   value: heightCm == null
                       ? l10n.onboardingSkipped
@@ -381,7 +382,7 @@ class _BodyweightPage extends ConsumerWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: AppPickerField(
-                  icon: Icons.cake_outlined,
+                  icon: LucideIcons.cake,
                   label: l10n.bodyProfileAgeLabel,
                   value: age == null ? l10n.onboardingSkipped : '$age',
                   onTap: () async {

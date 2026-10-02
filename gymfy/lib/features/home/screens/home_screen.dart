@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../goals/widgets/goals_card.dart';
@@ -45,7 +46,7 @@ class HomeScreen extends ConsumerWidget {
           // reference you reach from wherever you happen to be needs a door
           // on the tab you are most often standing on.
           GlassIconButton(
-            icon: Icons.search,
+            icon: LucideIcons.search,
             tooltip: l10n.homeFindExerciseTooltip,
             onPressed: () => context.go('/exercises'),
           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
@@ -125,7 +126,7 @@ class RankSection extends ConsumerWidget {
 
     if (inputs.sex == null || inputs.bodyweightKg == null) {
       return AppPanel(
-        icon: Icons.military_tech_outlined,
+        icon: LucideIcons.medal,
         title: l10n.calculatorRankTitle,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,7 +152,7 @@ class RankSection extends ConsumerWidget {
 
     if (lifts.ranked.isEmpty) {
       return AppPanel(
-        icon: Icons.military_tech_outlined,
+        icon: LucideIcons.medal,
         title: l10n.calculatorRankTitle,
         child: Text(
           l10n.statsRankEmpty,
@@ -344,21 +345,21 @@ class TotalsSection extends ConsumerWidget {
               Row(
                 children: [
                   _Stat(
-                    icon: Icons.event_available,
+                    icon: LucideIcons.calendarCheck,
                     value: '${totals.workouts}',
                     count: totals.workouts.toDouble(),
                     format: (value) => '${value.round()}',
                     label: l10n.statsTotalsWorkouts(totals.workouts),
                   ),
                   _Stat(
-                    icon: Icons.repeat,
+                    icon: LucideIcons.repeat,
                     value: '${totals.sets}',
                     count: totals.sets.toDouble(),
                     format: (value) => '${value.round()}',
                     label: l10n.statsTotalsSets(totals.sets),
                   ),
                   _Stat(
-                    icon: Icons.timer_outlined,
+                    icon: LucideIcons.timer,
                     value: formatDuration(Duration(minutes: totals.minutes)),
                     label: l10n.statsTotalsTrained,
                   ),
@@ -368,19 +369,19 @@ class TotalsSection extends ConsumerWidget {
               Row(
                 children: [
                   _Stat(
-                    icon: Icons.fitness_center,
+                    icon: LucideIcons.dumbbell,
                     value: formatWeightUnit(totals.volumeKg, unit, l10n: l10n),
                     count: totals.volumeKg,
                     format: (v) => formatWeightUnit(v, unit, l10n: l10n),
                     label: l10n.statsTotalsLifted,
                   ),
                   _Stat(
-                    icon: Icons.calendar_month,
+                    icon: LucideIcons.calendarDays,
                     value: '${totals.days}',
                     label: l10n.statsTotalsDays(totals.days),
                   ),
                   _Stat(
-                    icon: Icons.local_fire_department,
+                    icon: LucideIcons.flame,
                     value: '$streak',
                     label: l10n.statsTotalsStreak(streak),
                   ),

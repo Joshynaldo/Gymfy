@@ -2,6 +2,7 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../app/theme/glass.dart';
@@ -137,7 +138,7 @@ class RestTimerBar extends ConsumerWidget {
                           : context.l10n.workoutRestSkipTooltip,
                       square: true,
                       child: Icon(
-                        Icons.close,
+                        LucideIcons.x,
                         size: 17,
                         color: theme.colorScheme.onSurfaceVariant,
                       ),

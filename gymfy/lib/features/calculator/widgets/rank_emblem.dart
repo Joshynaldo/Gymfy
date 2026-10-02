@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../data/strength_standards.dart';
 import '../data/tier_style.dart';
@@ -27,7 +28,7 @@ class RankEmblem extends StatelessWidget {
         painter: _EmblemPainter(color: color, pips: tierPips(tier)),
         child: Center(
           child: Icon(
-            Icons.military_tech,
+            LucideIcons.medal,
             // Leaves room for the pip row along the bottom edge.
             size: size * 0.38,
             color: color,

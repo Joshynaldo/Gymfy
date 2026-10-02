@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../data/rest_timer_repository.dart';
 
@@ -36,14 +37,14 @@ Future<int?> showRestLengthPicker(
             ListTile(
               title: Text(formatRest(seconds)),
               trailing: seconds == current
-                  ? Icon(Icons.check, color: theme.colorScheme.primary)
+                  ? Icon(LucideIcons.check, color: theme.colorScheme.primary)
                   : null,
               onTap: () => Navigator.of(context).pop(seconds),
             ),
           if (clearLabel != null) ...[
             const Divider(height: 1),
             ListTile(
-              leading: const Icon(Icons.settings_backup_restore),
+              leading: const Icon(LucideIcons.rotateCcw),
               title: Text(clearLabel),
               onTap: () => Navigator.of(context).pop(clearRestLength),
             ),

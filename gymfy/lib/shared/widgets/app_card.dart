@@ -6,10 +6,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../app/theme/accent_color.dart';
 import '../../app/theme/glass.dart';
 import '../../app/theme/motion.dart';
+import 'glyph_icon.dart';
 import 'pressable.dart';
 
 /// A tappable card, styled like the ones on the Home tab.
@@ -234,14 +236,19 @@ class AppTile extends ConsumerWidget {
     required this.title,
     this.subtitle,
     this.titleTrailing,
-    this.trailing = const Icon(Icons.chevron_right, size: 20),
+    this.trailing = const Icon(LucideIcons.chevronRight, size: 20),
     this.onTap,
     this.onLongPress,
     this.selected = false,
     this.leading,
+    this.glyph,
   });
 
   final IconData icon;
+
+  /// Drawn in place of [icon] when given — the design's own icons, which the
+  /// More tab uses for its tools. See [MockupGlyph].
+  final MockupGlyph? glyph;
 
   /// Replaces the [AppGlyph] built from [icon].
   ///
@@ -286,7 +293,7 @@ class AppTile extends ConsumerWidget {
           : const EdgeInsets.fromLTRB(12, 12, 8, 12),
       child: Row(
         children: [
-          leading ?? AppGlyph(icon: icon, selected: selected),
+          leading ?? AppGlyph(icon: icon, glyph: glyph, selected: selected),
           const SizedBox(width: 15),
           Expanded(
             child: Column(
@@ -352,9 +359,17 @@ class AppTile extends ConsumerWidget {
 
 /// The leading square of an [AppTile]: an icon, or a tick once it's picked.
 class AppGlyph extends ConsumerWidget {
-  const AppGlyph({super.key, required this.icon, this.selected = false});
+  const AppGlyph({
+    super.key,
+    required this.icon,
+    this.glyph,
+    this.selected = false,
+  });
 
   final IconData icon;
+
+  /// Drawn instead of [icon] when given. See [MockupGlyph].
+  final MockupGlyph? glyph;
   final bool selected;
 
   @override
@@ -391,11 +406,11 @@ class AppGlyph extends ConsumerWidget {
             ? Border.all(color: Colors.white.withValues(alpha: 0.10))
             : null,
       ),
-      child: Icon(
-        selected ? Icons.check : icon,
-        size: 21,
-        color: selected ? Colors.white : restingInk,
-      ),
+      child: selected
+          ? const Icon(LucideIcons.check, size: 21, color: Colors.white)
+          : glyph != null
+          ? GlyphIcon(glyph!, size: 20, color: restingInk)
+          : Icon(icon, size: 21, color: restingInk),
     );
   }
 }

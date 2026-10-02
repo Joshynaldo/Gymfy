@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../app/theme/glass.dart';
@@ -39,7 +40,7 @@ class ProgramsScreen extends StatelessWidget {
             FadeSlideIn(
               delay: Duration(milliseconds: 25 * (index > 6 ? 6 : index)),
               child: AppTile(
-                icon: Icons.event_note_outlined,
+                icon: LucideIcons.notebookText,
                 title: program.name,
                 subtitle:
                     '${programFacts(program, l10n: l10n)}\n'
@@ -144,7 +145,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
             const SizedBox(height: 8),
             AppButton(
               label: l10n.programsAddToSplits,
-              icon: Icons.add,
+              icon: LucideIcons.plus,
               onPressed: _busy ? null : () => _add(program, document),
             ),
             const SizedBox(height: 8),

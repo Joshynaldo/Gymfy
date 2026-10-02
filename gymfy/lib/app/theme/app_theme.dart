@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../l10n/l10n.dart';
 import '../../shared/data/settings_repository.dart';
@@ -552,6 +553,13 @@ ThemeData buildAppTheme(AppTheme theme, Color accent) {
               palette,
             ).titleMedium?.copyWith(fontFamily: 'Schibsted Grotesk')
           : null,
+    ),
+    // The back and close buttons Flutter draws itself, in the same Lucide
+    // line style as every other icon (see glyph_icon.dart). Left to Material
+    // they'd be the only filled arrows in the app.
+    actionIconTheme: ActionIconThemeData(
+      backButtonIconBuilder: (_) => const Icon(LucideIcons.chevronLeft),
+      closeButtonIconBuilder: (_) => const Icon(LucideIcons.x),
     ),
     dividerTheme: DividerThemeData(
       color: palette.outline,

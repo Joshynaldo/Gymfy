@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
@@ -55,7 +56,7 @@ class _SexPrompt extends ConsumerWidget {
     final l10n = context.l10n;
 
     return _PromptCard(
-      icon: Icons.people_outline,
+      icon: LucideIcons.users,
       title: l10n.calculatorSetupSexTitle,
       // Being explicit about why beats a bare question — this is the sort of
       // field people are (rightly) suspicious of an app asking for.
@@ -90,14 +91,14 @@ class _BodyweightPrompt extends ConsumerWidget {
     final l10n = context.l10n;
 
     return _PromptCard(
-      icon: Icons.monitor_weight_outlined,
+      icon: LucideIcons.weight,
       title: l10n.calculatorSetupBodyweightTitle,
       body: l10n.calculatorSetupBodyweightMessage,
       action: Align(
         alignment: Alignment.centerLeft,
         child: FilledButton.icon(
           onPressed: () => context.go('/progress/measurements'),
-          icon: const Icon(Icons.straighten),
+          icon: const Icon(LucideIcons.ruler),
           label: Text(l10n.calculatorSetupOpenMeasurements),
         ),
       ),

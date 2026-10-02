@@ -1,6 +1,7 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../../shared/data/week_start.dart';
@@ -129,7 +130,7 @@ class _GoalFormState extends ConsumerState<GoalForm> {
             const SizedBox(height: 14),
             AppPickerField(
               label: l10n.goalsFormBy,
-              icon: Icons.event_outlined,
+              icon: LucideIcons.calendar,
               value: _deadline == null
                   ? l10n.goalsFormNoDeadline
                   : formatDate(_deadline!, l10n: l10n),
@@ -181,7 +182,7 @@ class _GoalFormState extends ConsumerState<GoalForm> {
     return [
       AppPickerField(
         label: l10n.goalsExercise,
-        icon: Icons.fitness_center,
+        icon: LucideIcons.dumbbell,
         value: name ?? l10n.goalsFormChooseExercise,
         onTap: _pickExercise,
         // Fixed once set: the goal's starting point was that lift's best, so
@@ -240,7 +241,7 @@ class _GoalFormState extends ConsumerState<GoalForm> {
     return [
       AppPickerField(
         label: l10n.goalsFormHowOften,
-        icon: Icons.event_repeat,
+        icon: LucideIcons.calendarSync,
         value: workoutsPerWeekLabel(_perWeek, l10n: l10n),
         onTap: () async {
           final picked = await showNumberPicker(

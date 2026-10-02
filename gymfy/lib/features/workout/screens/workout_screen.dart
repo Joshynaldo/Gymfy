@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
@@ -105,7 +106,7 @@ class WorkoutScreen extends ConsumerWidget {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: AppButton(
         label: context.l10n.workoutAddDay,
-        icon: Icons.add,
+        icon: LucideIcons.plus,
         expand: false,
         onPressed: () => addDayTo(context, ref, active.id),
       ),
@@ -124,7 +125,7 @@ class _FreeWorkoutAction extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return IconButton(
-      icon: const Icon(Icons.bolt_outlined),
+      icon: const Icon(LucideIcons.zap),
       tooltip: context.l10n.workoutStartEmptyTooltip,
       onPressed: () => startFreeWorkout(context, ref),
     );
@@ -145,7 +146,7 @@ class _SwitcherAction extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return IconButton(
-      icon: const Icon(Icons.swap_horiz),
+      icon: const Icon(LucideIcons.arrowLeftRight),
       tooltip: context.l10n.workoutSwitchSplitTooltip,
       onPressed: () => _openSwitcher(context, ref, splits, activeId),
     );
@@ -238,8 +239,8 @@ class _SwitcherSheet extends ConsumerWidget {
                   ListTile(
                     leading: Icon(
                       split.id == activeId
-                          ? Icons.radio_button_checked
-                          : Icons.radio_button_unchecked,
+                          ? LucideIcons.circleDot
+                          : LucideIcons.circle,
                       color: split.id == activeId ? accent : null,
                     ),
                     title: Text(split.name),
@@ -256,19 +257,19 @@ class _SwitcherSheet extends ConsumerWidget {
           ),
           const Divider(height: 1),
           ListTile(
-            leading: const Icon(Icons.add),
+            leading: const Icon(LucideIcons.plus),
             title: Text(context.l10n.workoutNewSplit),
             onTap: () =>
                 Navigator.of(context).pop(const _SwitcherChoice.create()),
           ),
           ListTile(
-            leading: const Icon(Icons.event_note_outlined),
+            leading: const Icon(LucideIcons.notebookText),
             title: Text(context.l10n.workoutBrowsePrograms),
             onTap: () =>
                 Navigator.of(context).pop(const _SwitcherChoice.programs()),
           ),
           ListTile(
-            leading: const Icon(Icons.tune),
+            leading: const Icon(LucideIcons.slidersHorizontal),
             title: Text(context.l10n.workoutManageSplits),
             onTap: () =>
                 Navigator.of(context).pop(const _SwitcherChoice.manage()),
@@ -307,7 +308,7 @@ class _NoSplitsYet extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.calendar_view_week,
+              LucideIcons.calendarRange,
               size: 64,
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -322,13 +323,13 @@ class _NoSplitsYet extends StatelessWidget {
             const SizedBox(height: 24),
             FilledButton.icon(
               onPressed: onCreate,
-              icon: const Icon(Icons.add),
+              icon: const Icon(LucideIcons.plus),
               label: Text(l10n.workoutNewSplit),
             ),
             const SizedBox(height: 8),
             TextButton.icon(
               onPressed: onBrowse,
-              icon: const Icon(Icons.event_note_outlined),
+              icon: const Icon(LucideIcons.notebookText),
               label: Text(l10n.workoutNoSplitsFromProgram),
             ),
             // Last, and quietest: someone opening the app for the first time
@@ -363,7 +364,7 @@ class _NoActiveSplit extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.swap_horiz,
+              LucideIcons.arrowLeftRight,
               size: 64,
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -381,7 +382,7 @@ class _NoActiveSplit extends StatelessWidget {
             const SizedBox(height: 24),
             FilledButton.icon(
               onPressed: onChoose,
-              icon: const Icon(Icons.swap_horiz),
+              icon: const Icon(LucideIcons.arrowLeftRight),
               label: Text(l10n.workoutNoActiveSplitAction),
             ),
           ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../app/theme/accent_color.dart';
 import '../../l10n/l10n.dart';
@@ -100,7 +101,7 @@ class AppPickerField extends ConsumerWidget {
                   ),
                 ),
                 Icon(
-                  Icons.keyboard_arrow_down_rounded,
+                  LucideIcons.chevronDown,
                   color: accent.withValues(alpha: 0.8),
                 ),
               ],
@@ -222,7 +223,7 @@ class _OptionRow<T> extends ConsumerWidget {
       subtitle: option.subtitle == null ? null : Text(option.subtitle!),
       // A tick only on the chosen row rather than a radio on every one: the
       // question is "which is it", not "here are six switches".
-      trailing: selected ? Icon(Icons.check, color: accent) : null,
+      trailing: selected ? Icon(LucideIcons.check, color: accent) : null,
       selected: selected,
       selectedTileColor: accent.withValues(alpha: 0.10),
       onTap: onTap,

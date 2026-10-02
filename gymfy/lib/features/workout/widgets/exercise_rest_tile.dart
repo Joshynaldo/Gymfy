@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
@@ -49,7 +50,7 @@ class ExerciseRestTile extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Icon(Icons.timer_outlined, size: 20, color: accent),
+              Icon(LucideIcons.timer, size: 20, color: accent),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -74,7 +75,7 @@ class ExerciseRestTile extends ConsumerWidget {
                 ),
               ),
               Icon(
-                Icons.chevron_right,
+                LucideIcons.chevronRight,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ],

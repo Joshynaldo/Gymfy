@@ -15,6 +15,7 @@ import 'package:gymfy/features/workout/widgets/log_set_sheet.dart';
 import 'package:gymfy/shared/database/app_database.dart';
 import 'package:gymfy/shared/models/set_type.dart';
 import 'package:gymfy/shared/utils/units.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'support/default_accent.dart';
 
@@ -150,7 +151,7 @@ void main() {
       // is why there is now a test.
       await _open(tester);
 
-      expect(find.byIcon(Icons.backspace_outlined), findsOneWidget);
+      expect(find.byIcon(LucideIcons.delete), findsOneWidget);
       expect(find.text('backspace'), findsNothing);
       expect(find.text('⌫'), findsNothing);
     });

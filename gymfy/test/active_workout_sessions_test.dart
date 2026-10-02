@@ -24,6 +24,7 @@ import 'package:gymfy/features/workout/data/workout_repository.dart';
 import 'package:gymfy/features/workout/screens/active_workout_screen.dart';
 import 'package:gymfy/shared/database/app_database.dart' hide RestTimer;
 import 'package:gymfy/shared/widgets/app_card.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'support/default_accent.dart';
 
@@ -724,7 +725,7 @@ void main() {
       expect(find.text('Reorder exercises'), findsOneWidget);
 
       // Drag the bench below the row by its handle.
-      final handle = find.byIcon(Icons.drag_handle).first;
+      final handle = find.byIcon(LucideIcons.gripHorizontal).first;
       final gesture = await tester.startGesture(tester.getCenter(handle));
       await tester.pump();
       // In steps, the way a finger moves: one jump is not a drag.

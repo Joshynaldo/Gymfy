@@ -17,6 +17,7 @@ import 'package:gymfy/features/workout/data/session_repository.dart';
 import 'package:gymfy/features/workout/screens/workout_summary_screen.dart';
 import 'package:gymfy/shared/data/week_start.dart';
 import 'package:gymfy/shared/database/app_database.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'support/default_accent.dart';
 
@@ -267,7 +268,7 @@ void main() {
 
       final next = tester.widget<IconButton>(
         find.ancestor(
-          of: find.byIcon(Icons.chevron_right),
+          of: find.byIcon(LucideIcons.chevronRight),
           matching: find.byType(IconButton),
         ),
       );

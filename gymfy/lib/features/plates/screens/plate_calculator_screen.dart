@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
@@ -76,7 +77,7 @@ class _PlateCalculatorScreenState extends ConsumerState<PlateCalculatorScreen> {
           // cards made the bar look like a separate setting you had to go
           // and configure.
           AppPanel(
-            icon: Icons.tune,
+            icon: LucideIcons.slidersHorizontal,
             title: l10n.platesLoadingTitle,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,7 +192,7 @@ class _Result extends StatelessWidget {
         // was previously at the very bottom, under the diagram and the chips.
         _TotalPanel(load: load, unit: unit),
         AppPanel(
-          icon: Icons.fitness_center,
+          icon: LucideIcons.dumbbell,
           title: l10n.platesEachSide,
           // No "nothing to load" subtitle here: the diagram already says
           // "Just the bar", and saying it twice on one card reads as a bug.

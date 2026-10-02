@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
@@ -101,7 +102,7 @@ class EquipmentFilterButton extends ConsumerWidget {
                       ? Colors.white
                       : Colors.black,
                   child: Icon(
-                    active ? Icons.filter_alt : Icons.filter_alt_outlined,
+                    active ? LucideIcons.funnel : LucideIcons.funnel,
                     size: 19,
                     color: active
                         ? theme.colorScheme.onSurface
@@ -197,7 +198,7 @@ class _AllRow extends ConsumerWidget {
 
     return ListTile(
       title: Text(context.l10n.exercisesAllEquipment),
-      trailing: active ? Icon(Icons.check, color: accent) : null,
+      trailing: active ? Icon(LucideIcons.check, color: accent) : null,
       selected: active,
       selectedTileColor: accent.withValues(alpha: 0.10),
       // Already showing everything, so this would be a no-op tap.
@@ -226,7 +227,7 @@ class _EquipmentRow extends ConsumerWidget {
       // A tick rather than a checkbox: the rows already behave like a
       // multi-select, and a column of empty boxes is louder than the five
       // words it decorates.
-      trailing: selected ? Icon(Icons.check, color: accent) : null,
+      trailing: selected ? Icon(LucideIcons.check, color: accent) : null,
       selected: selected,
       selectedTileColor: accent.withValues(alpha: 0.10),
       onTap: onTap,

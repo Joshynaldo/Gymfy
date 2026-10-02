@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/app_picker.dart';
@@ -62,12 +63,12 @@ class LoggingSettingsPanel extends ConsumerWidget {
           ),
         ),
         ListTile(
-          leading: const Icon(Icons.stairs_outlined),
+          leading: const Icon(LucideIcons.footprints),
           title: Text(l10n.workoutWarmupRampTitle),
           subtitle: Text(
             l10n.workoutWarmupRampSubtitle(formatWarmupRamp(ramp)),
           ),
-          trailing: const Icon(Icons.chevron_right),
+          trailing: const Icon(LucideIcons.chevronRight),
           onTap: () async {
             final picked = await showOptionPicker<String>(
               context: context,

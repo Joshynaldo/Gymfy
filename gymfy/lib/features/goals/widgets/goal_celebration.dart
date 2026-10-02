@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../app/theme/motion.dart';
@@ -65,7 +66,7 @@ class _GoalCelebrationState extends ConsumerState<GoalCelebration> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.emoji_events, color: accent, size: 28),
+              Icon(LucideIcons.trophy, color: accent, size: 28),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(

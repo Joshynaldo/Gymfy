@@ -25,6 +25,7 @@ import 'package:gymfy/features/reviews/data/review.dart';
 import 'package:gymfy/features/reviews/screens/review_screen.dart';
 import 'package:gymfy/features/reviews/widgets/review_links.dart';
 import 'package:gymfy/features/workout/data/personal_records.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'support/default_accent.dart';
 
@@ -125,7 +126,7 @@ void main() {
       expect(find.textContaining('not over yet'), findsOneWidget);
       final later = tester.widget<IconButton>(
         find.ancestor(
-          of: find.byIcon(Icons.chevron_right),
+          of: find.byIcon(LucideIcons.chevronRight),
           matching: find.byType(IconButton),
         ),
       );

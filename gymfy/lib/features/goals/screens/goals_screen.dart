@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/glass.dart';
 import '../../../l10n/l10n.dart';
@@ -35,7 +36,7 @@ class GoalsScreen extends ConsumerWidget {
         title: Text(l10n.goalsTitle),
         actions: [
           GlassIconButton(
-            icon: Icons.add,
+            icon: LucideIcons.plus,
             tooltip: l10n.goalsNew,
             onPressed: () => showGoalForm(context),
           ),
@@ -126,7 +127,7 @@ class _GoalTile extends ConsumerWidget {
             Expanded(child: GoalProgressRow(status: status)),
             IconButton(
               tooltip: context.l10n.goalsActionsTooltip,
-              icon: const Icon(Icons.more_vert),
+              icon: const Icon(LucideIcons.ellipsisVertical),
               onPressed: () => _showActions(context, ref),
             ),
           ],
@@ -151,7 +152,7 @@ class _GoalTile extends ConsumerWidget {
             children: [
               if (!status.archived)
                 AppTile(
-                  icon: Icons.edit_outlined,
+                  icon: LucideIcons.pencil,
                   title: l10n.commonEdit,
                   trailing: null,
                   onTap: () {
@@ -161,8 +162,8 @@ class _GoalTile extends ConsumerWidget {
                 ),
               AppTile(
                 icon: status.archived
-                    ? Icons.unarchive_outlined
-                    : Icons.archive_outlined,
+                    ? LucideIcons.archiveRestore
+                    : LucideIcons.archive,
                 title: status.archived ? l10n.goalsRestore : l10n.goalsArchive,
                 subtitle: status.archived
                     ? l10n.goalsRestoreSubtitle
@@ -174,7 +175,7 @@ class _GoalTile extends ConsumerWidget {
                 },
               ),
               AppTile(
-                icon: Icons.delete_outline,
+                icon: LucideIcons.trash2,
                 title: l10n.commonDelete,
                 trailing: null,
                 onTap: () async {
@@ -228,7 +229,7 @@ class _NoGoals extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(32, 40, 32, 24) + barInsets(context),
       children: [
         Icon(
-          Icons.flag_outlined,
+          LucideIcons.flag,
           size: 56,
           color: theme.colorScheme.onSurfaceVariant,
         ),
@@ -247,7 +248,7 @@ class _NoGoals extends StatelessWidget {
         const SizedBox(height: 24),
         AppButton(
           label: l10n.goalsSetGoal,
-          icon: Icons.flag_outlined,
+          icon: LucideIcons.flag,
           onPressed: () => showGoalForm(context),
         ),
       ],

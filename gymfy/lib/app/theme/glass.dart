@@ -365,7 +365,7 @@ class GlassSurface extends StatelessWidget {
     Widget content = CustomPaint(
       // The edge is painted over the child, not under it: it is the lip of the
       // pane, and anything inside sits beneath that surface.
-      foregroundPainter: _EdgePainter(
+      foregroundPainter: GlassEdgePainter(
         borderRadius: borderRadius,
         edge: _lift(pane.edge, edgeLift),
         topEdge: _lift(pane.topEdge, outlined ? 1.15 : lift),
@@ -472,8 +472,8 @@ Color _lift(Color colour, double factor) => factor == 1
 /// expressible there at all; and a highlight painted as a *fill* washes down
 /// over the pane's contents, where what is wanted is a lit edge one pixel wide
 /// that follows the corners round.
-class _EdgePainter extends CustomPainter {
-  const _EdgePainter({
+class GlassEdgePainter extends CustomPainter {
+  const GlassEdgePainter({
     required this.borderRadius,
     required this.edge,
     required this.topEdge,
@@ -507,7 +507,7 @@ class _EdgePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_EdgePainter old) =>
+  bool shouldRepaint(GlassEdgePainter old) =>
       old.edge != edge ||
       old.topEdge != topEdge ||
       old.borderRadius != borderRadius;

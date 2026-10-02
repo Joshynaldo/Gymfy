@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
@@ -160,7 +161,7 @@ class _SetupNudge extends ConsumerWidget {
       onTap: () => context.go('/more/rank'),
       child: Row(
         children: [
-          Icon(Icons.military_tech_outlined, size: 20, color: accent),
+          Icon(LucideIcons.medal, size: 20, color: accent),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -181,7 +182,10 @@ class _SetupNudge extends ConsumerWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
+          Icon(
+            LucideIcons.chevronRight,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ],
       ),
     );

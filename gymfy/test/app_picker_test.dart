@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gymfy/shared/widgets/app_picker.dart';
 import 'package:gymfy/shared/widgets/number_wheel.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'support/default_accent.dart';
 
@@ -167,7 +168,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // The question is "which is it", not "here are three switches".
-      expect(find.byIcon(Icons.check), findsOneWidget);
+      expect(find.byIcon(LucideIcons.check), findsOneWidget);
     });
   });
 }

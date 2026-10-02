@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../../shared/widgets/app_button.dart';
@@ -290,7 +291,7 @@ class _SessionOrderSheetState extends State<SessionOrderSheet> {
                   trailing: ReorderableDragStartListener(
                     index: index,
                     child: Icon(
-                      Icons.drag_handle,
+                      LucideIcons.gripHorizontal,
                       semanticLabel: context.l10n.workoutDragToReorder,
                       color: theme.colorScheme.onSurfaceVariant,
                     ),

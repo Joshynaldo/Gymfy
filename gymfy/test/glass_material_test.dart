@@ -18,6 +18,7 @@ import 'package:gymfy/app/theme/app_theme.dart';
 import 'package:gymfy/app/theme/glass.dart';
 import 'package:gymfy/shared/widgets/app_card.dart';
 import 'package:gymfy/shared/widgets/app_chip.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'support/default_accent.dart';
 
@@ -157,7 +158,7 @@ void main() {
     testWidgets('a tile is a row', (tester) async {
       final surface = await pump(
         tester,
-        const AppTile(icon: Icons.menu_book, title: 'Barbell bench press'),
+        const AppTile(icon: LucideIcons.bookOpen, title: 'Barbell bench press'),
       );
 
       expect(surface.tier, GlassTier.quiet);
@@ -168,7 +169,7 @@ void main() {
       // stack of cards that happen to be short.
       final surface = await pump(
         tester,
-        const AppTile(icon: Icons.menu_book, title: 'Barbell bench press'),
+        const AppTile(icon: LucideIcons.bookOpen, title: 'Barbell bench press'),
       );
 
       expect(surface.borderRadius, BorderRadius.circular(20));

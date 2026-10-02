@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/glass.dart';
 import '../../../l10n/l10n.dart';
@@ -65,7 +66,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         actions: [
           if (canShare)
             GlassIconButton(
-              icon: Icons.ios_share,
+              icon: LucideIcons.share,
               tooltip: l10n.reviewsShareTooltip,
               onPressed: _sharing ? () {} : _share,
             ),
@@ -168,7 +169,7 @@ class _PeriodStepper extends StatelessWidget {
         children: [
           IconButton(
             tooltip: l10n.reviewsEarlier,
-            icon: const Icon(Icons.chevron_left),
+            icon: const Icon(LucideIcons.chevronLeft),
             onPressed: onPrevious,
           ),
           Expanded(
@@ -184,7 +185,7 @@ class _PeriodStepper extends StatelessWidget {
           ),
           IconButton(
             tooltip: l10n.reviewsLater,
-            icon: const Icon(Icons.chevron_right),
+            icon: const Icon(LucideIcons.chevronRight),
             onPressed: onNext,
           ),
         ],
@@ -210,7 +211,7 @@ class _NothingLogged extends StatelessWidget {
       child: Column(
         children: [
           Icon(
-            Icons.event_busy_outlined,
+            LucideIcons.calendarX,
             size: 40,
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -268,7 +269,7 @@ class _ExerciseList extends ConsumerWidget {
               l10n.reviewsWorkouts(exercise.workouts),
               formatWeightUnit(exercise.volumeKg, unit, l10n: l10n),
             ].join(' · '),
-            trailing: const Icon(Icons.show_chart, size: 20),
+            trailing: const Icon(LucideIcons.chartLine, size: 20),
             // Pushed rather than gone to, so back returns to this review
             // instead of to the top of Progress.
             onTap: () =>

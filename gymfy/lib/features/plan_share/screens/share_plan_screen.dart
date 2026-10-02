@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:printing/printing.dart';
 
 import '../../../l10n/l10n.dart';
@@ -89,7 +90,7 @@ class _SharePlanScreenState extends ConsumerState<SharePlanScreen> {
             ],
             AppSectionHeader(title: l10n.planShareReceive),
             AppTile(
-              icon: Icons.download,
+              icon: LucideIcons.download,
               title: l10n.planShareImportTitle,
               subtitle: l10n.planShareImportSubtitle,
               trailing: null,
@@ -233,7 +234,7 @@ class _SplitCheckbox extends ConsumerWidget {
     // border, tinted surface, tick in place of the glyph — so a checkbox would
     // be a second, competing way to say the same thing.
     return AppTile(
-      icon: Icons.calendar_view_week,
+      icon: LucideIcons.calendarRange,
       title: split.name,
       subtitle: split.isActive ? context.l10n.commonActive : null,
       trailing: null,
@@ -263,7 +264,7 @@ class _Actions extends StatelessWidget {
           Expanded(
             child: FilledButton.icon(
               onPressed: enabled ? onSave : null,
-              icon: const Icon(Icons.save_alt),
+              icon: const Icon(LucideIcons.download),
               label: Text(context.l10n.planShareSaveFile),
             ),
           ),
@@ -271,7 +272,7 @@ class _Actions extends StatelessWidget {
           Expanded(
             child: OutlinedButton.icon(
               onPressed: enabled ? onPrint : null,
-              icon: const Icon(Icons.picture_as_pdf),
+              icon: const Icon(LucideIcons.fileText),
               label: Text(context.l10n.planSharePdf),
             ),
           ),

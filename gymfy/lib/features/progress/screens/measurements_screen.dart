@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show FilteringTextInputFormatter;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
@@ -52,7 +53,7 @@ class _MeasurementsScreenState extends ConsumerState<MeasurementsScreen> {
         title: Text(l10n.progressMeasurementsTitle),
         actions: [
           IconButton(
-            icon: const Icon(Icons.show_chart),
+            icon: const Icon(LucideIcons.chartLine),
             tooltip: l10n.progressMeasurementsHistoryTooltip,
             onPressed: () => context.go('/progress/measurements/history'),
           ),
@@ -137,7 +138,7 @@ class _DayNavigator extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
-            icon: const Icon(Icons.chevron_left),
+            icon: const Icon(LucideIcons.chevronLeft),
             onPressed: onPrevious,
             tooltip: l10n.commonPreviousDay,
           ),
@@ -146,7 +147,7 @@ class _DayNavigator extends StatelessWidget {
             style: theme.textTheme.titleMedium,
           ),
           IconButton(
-            icon: const Icon(Icons.chevron_right),
+            icon: const Icon(LucideIcons.chevronRight),
             onPressed: onNext,
             tooltip: l10n.commonNextDay,
           ),
@@ -282,12 +283,12 @@ class _FieldTile extends ConsumerWidget {
 /// A glyph per measurement, so the rows are distinguishable at a glance rather
 /// than being six identical squares down the left edge.
 IconData _iconFor(MeasurementField field) => switch (field) {
-  MeasurementField.weight => Icons.monitor_weight_outlined,
-  MeasurementField.chest => Icons.airline_seat_flat_outlined,
-  MeasurementField.waist => Icons.straighten,
-  MeasurementField.hips => Icons.accessibility_new,
-  MeasurementField.arms => Icons.fitness_center,
-  MeasurementField.legs => Icons.directions_walk,
+  MeasurementField.weight => LucideIcons.weight,
+  MeasurementField.chest => LucideIcons.bedSingle,
+  MeasurementField.waist => LucideIcons.ruler,
+  MeasurementField.hips => LucideIcons.personStanding,
+  MeasurementField.arms => LucideIcons.dumbbell,
+  MeasurementField.legs => LucideIcons.footprints,
 };
 
 /// Number entry for one measurement. Pre-fills with today's value, or the last

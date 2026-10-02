@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
@@ -82,7 +83,7 @@ class DayBuilderScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               child: AppButton(
                 label: context.l10n.workoutStartWorkout,
-                icon: Icons.play_arrow,
+                icon: LucideIcons.play,
                 onPressed: () => _startWorkout(context, ref, title),
               ),
             ),
@@ -123,7 +124,7 @@ class DayBuilderScreen extends ConsumerWidget {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: AppButton(
         label: context.l10n.workoutAddExercises,
-        icon: Icons.add,
+        icon: LucideIcons.plus,
         expand: false,
         onPressed: () => _addExercises(context, ref),
       ),
@@ -241,13 +242,16 @@ class _PlannedExerciseTile extends ConsumerWidget {
           // Hidden on a one-exercise day, where there is nothing to pair with.
           if (canLink || place != null)
             IconButton(
-              icon: Icon(Icons.link, color: place != null ? accent : null),
+              icon: Icon(
+                LucideIcons.link,
+                color: place != null ? accent : null,
+              ),
               tooltip: l10n.workoutSuperset,
               visualDensity: VisualDensity.compact,
               onPressed: () => _editSuperset(context, ref),
             ),
           IconButton(
-            icon: const Icon(Icons.delete_outline),
+            icon: const Icon(LucideIcons.trash2),
             tooltip: l10n.workoutRemoveExerciseTooltip,
             visualDensity: VisualDensity.compact,
             onPressed: () => ref
@@ -259,7 +263,7 @@ class _PlannedExerciseTile extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.only(left: 4),
               child: Icon(
-                Icons.drag_handle,
+                LucideIcons.gripHorizontal,
                 semanticLabel: l10n.workoutDragToReorder,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -282,7 +286,7 @@ class _PlannedExerciseTile extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
             child: Row(
               children: [
-                Icon(Icons.link, size: 14, color: accent),
+                Icon(LucideIcons.link, size: 14, color: accent),
                 const SizedBox(width: 5),
                 // Wraps rather than running off the edge: in German, or at a
                 // large text size, the caps line is wider than the screen.
@@ -651,7 +655,7 @@ class _EmptyState extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.fitness_center,
+              LucideIcons.dumbbell,
               size: 64,
               color: theme.colorScheme.onSurfaceVariant,
             ),

@@ -18,6 +18,7 @@ import 'package:gymfy/shared/widgets/glass_nav_bar.dart';
 import 'package:gymfy/shared/widgets/glass_scaffold.dart';
 
 import 'package:gymfy/shared/widgets/app_button.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'support/default_accent.dart';
 
@@ -54,7 +55,7 @@ Future<void> _pumpShell(WidgetTester tester, {required AppTheme theme}) async {
                   FloatingActionButtonLocation.centerFloat,
               floatingActionButton: AppButton(
                 label: 'Add exercises',
-                icon: Icons.add,
+                icon: LucideIcons.plus,
                 expand: false,
                 onPressed: () {},
               ),
@@ -77,7 +78,14 @@ void main() {
     await _pumpShell(tester, theme: AppTheme.hyper);
 
     final fabBottom = tester.getBottomLeft(_button).dy;
-    final pillTop = tester.getTopLeft(find.byType(NavigationBar)).dy;
+    final pillTop = tester
+        .getTopLeft(
+          find.descendant(
+            of: find.byType(GlassNavBar),
+            matching: find.byType(GlassSurface),
+          ),
+        )
+        .dy;
 
     expect(
       fabBottom,

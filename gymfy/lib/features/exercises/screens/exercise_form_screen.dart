@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../../shared/database/app_database.dart';
@@ -174,7 +175,7 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
           AppPickerField(
             label: l10n.exercisesEquipment,
             value: _equipment.localizedLabel(l10n),
-            icon: Icons.fitness_center,
+            icon: LucideIcons.dumbbell,
             onTap: () async {
               final picked = await showOptionPicker<Equipment>(
                 context: context,
@@ -223,7 +224,7 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _canSave && !_busy ? _save : null,
-        icon: const Icon(Icons.check),
+        icon: const Icon(LucideIcons.check),
         label: Text(widget.isEditing ? l10n.commonSave : l10n.commonCreate),
       ),
     );
@@ -322,7 +323,7 @@ class _ImagePickerTile extends StatelessWidget {
     if (preview == null) {
       return OutlinedButton.icon(
         onPressed: onPick,
-        icon: const Icon(Icons.image_outlined),
+        icon: const Icon(LucideIcons.image),
         label: Text(context.l10n.exercisesChooseImage),
       );
     }
@@ -346,7 +347,7 @@ class _ImagePickerTile extends StatelessWidget {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: onPick,
-                icon: const Icon(Icons.swap_horiz),
+                icon: const Icon(LucideIcons.arrowLeftRight),
                 label: Text(context.l10n.exercisesReplaceImage),
               ),
             ),
@@ -354,7 +355,7 @@ class _ImagePickerTile extends StatelessWidget {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: onClear,
-                icon: const Icon(Icons.delete_outline),
+                icon: const Icon(LucideIcons.trash2),
                 label: Text(context.l10n.exercisesRemoveImage),
               ),
             ),

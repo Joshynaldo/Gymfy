@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/accent_color.dart';
 import '../../../l10n/l10n.dart';
@@ -62,7 +63,7 @@ class ReviewShareCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.insights, size: 18, color: accent),
+                Icon(LucideIcons.chartLine, size: 18, color: accent),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(

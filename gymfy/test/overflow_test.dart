@@ -23,6 +23,7 @@ import 'package:gymfy/l10n/l10n.dart';
 import 'package:gymfy/shared/widgets/app_button.dart';
 import 'package:gymfy/shared/widgets/app_segmented.dart';
 import 'package:gymfy/shared/widgets/glass_nav_bar.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'support/default_accent.dart';
 
@@ -125,7 +126,7 @@ void main() {
             tester,
             AppButton(
               label: 'Start workout',
-              icon: Icons.play_arrow,
+              icon: LucideIcons.play,
               onPressed: () {},
             ),
             scale: scale,
@@ -200,7 +201,7 @@ void main() {
             Builder(
               builder: (context) => AppButton(
                 label: context.l10n.homeTodayStartEmpty,
-                icon: Icons.bolt_outlined,
+                icon: LucideIcons.zap,
                 onPressed: () {},
               ),
             ),

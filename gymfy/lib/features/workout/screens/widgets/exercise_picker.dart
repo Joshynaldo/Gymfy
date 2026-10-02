@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../app/theme/accent_color.dart';
 import '../../../../l10n/l10n.dart';
@@ -126,7 +127,7 @@ class _ExercisePickerSheetState extends ConsumerState<_ExercisePickerSheet> {
                   // invisible: "chest" finding the bench press looks like magic
                   // or a bug.
                   hintText: l10n.exercisesSearchHint,
-                  prefixIcon: const Icon(Icons.search),
+                  prefixIcon: const Icon(LucideIcons.search),
                   filled: true,
                   isDense: true,
                   border: OutlineInputBorder(
@@ -333,7 +334,7 @@ class _ConfirmBar extends StatelessWidget {
             ),
             FilledButton.icon(
               onPressed: onConfirm,
-              icon: const Icon(Icons.playlist_add),
+              icon: const Icon(LucideIcons.listPlus),
               label: Text(
                 count <= 1
                     ? context.l10n.commonAdd

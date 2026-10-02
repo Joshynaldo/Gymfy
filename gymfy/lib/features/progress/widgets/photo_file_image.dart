@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Renders a progress photo from disk.
 ///
@@ -44,7 +45,7 @@ class PhotoFileImage extends StatelessWidget {
         color: theme.colorScheme.surfaceContainerHighest,
         child: Center(
           child: Icon(
-            Icons.broken_image_outlined,
+            LucideIcons.imageOff,
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),

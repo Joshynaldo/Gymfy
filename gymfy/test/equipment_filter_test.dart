@@ -17,6 +17,7 @@ import 'package:gymfy/shared/database/app_database.dart';
 import 'package:gymfy/shared/models/equipment.dart';
 import 'package:gymfy/features/exercises/widgets/equipment_filter_sheet.dart';
 import 'package:gymfy/shared/utils/exercise_search.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'support/default_accent.dart';
 
@@ -319,13 +320,16 @@ void main() {
       // does not rebuild a route already on the stack, so reading the
       // caller's set would leave the ticks stale.
       await pump(tester);
-      expect(find.byIcon(Icons.check), findsOneWidget); // "All equipment"
+      expect(find.byIcon(LucideIcons.check), findsOneWidget); // "All equipment"
 
       await tester.tap(find.text('Dumbbell'));
       await tester.pumpAndSettle();
 
       expect(find.text('Dumbbell'), findsOneWidget, reason: 'still open');
-      expect(find.byIcon(Icons.check), findsOneWidget); // moved to Dumbbell
+      expect(
+        find.byIcon(LucideIcons.check),
+        findsOneWidget,
+      ); // moved to Dumbbell
     });
 
     testWidgets('"All equipment" clears the lot', (tester) async {
@@ -357,7 +361,7 @@ void main() {
     testWidgets('says nothing when no filter is on', (tester) async {
       await pumpButton(tester, 0);
 
-      expect(find.byIcon(Icons.filter_alt_outlined), findsOneWidget);
+      expect(find.byIcon(LucideIcons.funnel), findsOneWidget);
       expect(find.text('0'), findsNothing);
     });
 
@@ -367,7 +371,7 @@ void main() {
       await pumpButton(tester, 2);
 
       expect(find.text('2'), findsOneWidget);
-      expect(find.byIcon(Icons.filter_alt), findsOneWidget);
+      expect(find.byIcon(LucideIcons.funnel), findsOneWidget);
     });
   });
 
